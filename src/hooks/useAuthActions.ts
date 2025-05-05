@@ -95,7 +95,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       const { data, error } = await authService.signIn(email, password);
       
       if (error) {
-        let errorMessage = 'Erro ao fazer login';
+        let errorMessage = 'Erro ao fazer login' + error;
         
         if (error.message?.includes('credentials')) {
           errorMessage = 'Email ou senha incorretos.';
