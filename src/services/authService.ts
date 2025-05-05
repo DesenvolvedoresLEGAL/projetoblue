@@ -118,10 +118,61 @@ export const authService = {
   },
 
   async signIn(email: string, password: string) {
-    return supabase.auth.signInWithPassword({ email, password });
+    console.log('Tentando login para:', email);
+    try {
+      // Add a retry mechanism for auth sign-in
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+
+      while (attempts < maxAttempts) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({ 
+            email, 
+            password 
+          });
+          
+          if (error) {
+            console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
+            lastError = error;
+            // Wait a bit longer between each retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+            attempts++;
+            continue;
+          }
+          
+          // Success! Return the data
+          return { data, error: null };
+        } catch (fetchError: any) {
+          console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
+          lastError = fetchError;
+          // Wait a bit longer between each retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+          attempts++;
+        }
+      }
+
+      // If we got here, all attempts failed
+      console.error('Todas as tentativas de login falharam:', lastError);
+      return { 
+        data: { session: null, user: null }, 
+        error: lastError || new Error('Falha ao conectar com o servidor de autenticação após múltiplas tentativas') 
+      };
+    } catch (error: any) {
+      console.error('Erro não tratado durante login:', error);
+      return { 
+        data: { session: null, user: null }, 
+        error: error 
+      };
+    }
   },
 
   async signOut() {
-    return supabase.auth.signOut();
+    try {
+      return await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      throw error;
+    }
   }
 };
