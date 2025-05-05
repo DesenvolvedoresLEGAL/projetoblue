@@ -6,6 +6,12 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { NamedLogo } from '@/components/ui/namedlogo';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
+import { createClient } from '@supabase/supabase-js';
+
+
+const supabaseUrl = 'https://fuhyzcpkmgitfxujjhwl.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1aHl6Y3BrbWdpdGZ4dWpqaHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NTg3OTAsImV4cCI6MjA2MjAzNDc5MH0.RUBJxHWZylKj-FROhM0r7CBxMotrqA8PUtMNziLEPfA';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const Signup = () => {
   const { signUp, isAuthenticated, error, isLoading } = useAuth();
@@ -45,6 +51,15 @@ const Signup = () => {
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
       await signUp(email, password);
+
+      const { data, error } = await supabase
+              .from('users')
+              .insert([
+                { email: email, 
+                  password: password,
+                  id_role: 2,
+                  is_approved: false},
+              ]);
     } catch (error: any) {
       console.error("Erro capturado no componente Signup:", error);
       
