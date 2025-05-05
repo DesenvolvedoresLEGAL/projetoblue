@@ -9,7 +9,7 @@ import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { createClient } from '@supabase/supabase-js';
 
 
-const supabaseUrl = 'https://fuhyzcpkmgitfxujjhwl.supabase.co';
+const supabaseUrl = 'postgresql://postgres.kndzrhisxnahajopzhdl:MUbR0npbq9chNZir@aws-0-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1aHl6Y3BrbWdpdGZ4dWpqaHdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NTg3OTAsImV4cCI6MjA2MjAzNDc5MH0.RUBJxHWZylKj-FROhM0r7CBxMotrqA8PUtMNziLEPfA';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
