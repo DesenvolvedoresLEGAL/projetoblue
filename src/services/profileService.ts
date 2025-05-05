@@ -19,7 +19,7 @@ export const profileService = {
       if (data) {
         await supabase
           .from('users')
-          .update({ last_login: new Date().toISOString() })
+          .update({ is_approved: data.is_approved })
           .eq('uuid', userId);
       }
 
@@ -29,8 +29,8 @@ export const profileService = {
           id: data.uuid,
           email: data.email,
           role: data.id_role === 1 ? 'admin' : 'analyst',
-          created_at: data.created_at || new Date().toISOString(),
-          last_login: data.last_login,
+          created_at: new Date().toISOString(), // Use current date since field doesn't exist
+          last_login: new Date().toISOString(), // Use current date since field doesn't exist
           is_active: Boolean(data.is_approved),
           is_approved: Boolean(data.is_approved)
         };
