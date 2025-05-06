@@ -6,9 +6,9 @@ export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('uuid', userId)
         .maybeSingle();
 
       if (error) {
@@ -18,12 +18,25 @@ export const profileService = {
 
       if (data) {
         await supabase
-          .from('profiles')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', userId);
+          .from('users')
+          .update({ is_approved: data.is_approved })
+          .eq('uuid', userId);
       }
 
-      return data as UserProfile;
+      if (data) {
+        // Map the users table fields to the UserProfile type
+        return {
+          id: data.uuid,
+          email: data.email,
+          role: data.id_role === 1 ? 'admin' : 'analyst',
+          created_at: new Date().toISOString(), // Use current date since field doesn't exist
+          last_login: new Date().toISOString(), // Use current date since field doesn't exist
+          is_active: Boolean(data.is_approved),
+          is_approved: Boolean(data.is_approved)
+        };
+      }
+
+      return null;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       return null;

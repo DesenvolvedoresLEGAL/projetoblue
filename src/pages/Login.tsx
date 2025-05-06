@@ -7,20 +7,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
-import { MoonStar, Sun } from 'lucide-react';
+import { MoonStar, Sun, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRetrying, setIsRetrying] = useState(false);
   const { signIn, isAuthenticated, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsRetrying(false);
     await signIn(email, password);
+  };
+
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await signIn(email, password);
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   useEffect(() => {
@@ -32,6 +43,15 @@ const Login = () => {
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
   };
+
+  // Determine if the error is related to network connectivity
+  const isNetworkError = error && (
+    error.includes('conectar') || 
+    error.includes('conexão') || 
+    error.includes('rede') || 
+    error.includes('internet') ||
+    error.includes('fetch')
+  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -63,8 +83,29 @@ const Login = () => {
               />
             </div>
             {error && (
-              <div className="text-sm text-red-500 mt-2">
+              <div className="text-sm text-red-500 mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md">
                 {error}
+                {isNetworkError && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="ml-2 mt-2"
+                    onClick={handleRetry}
+                    disabled={isLoading || isRetrying}
+                  >
+                    {isRetrying ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Tentando novamente...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Tentar novamente
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             )}
             <Button 
@@ -72,7 +113,12 @@ const Login = () => {
               className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? 'Aguarde...' : 'Entrar'}
+              {isLoading ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Aguarde...
+                </>
+              ) : 'Entrar'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

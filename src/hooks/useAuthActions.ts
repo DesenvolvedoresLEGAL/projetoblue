@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/authService';
@@ -101,6 +102,8 @@ export function useAuthActions(updateState: (state: any) => void) {
           errorMessage = 'Email ou senha incorretos.';
         } else if (error.message?.includes('disabled')) {
           errorMessage = 'Esta conta está desativada. Entre em contato com o administrador.';
+        } else if (error.message?.includes('fetch') || error.message?.includes('conectar')) {
+          errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.';
         }
         
         throw new Error(errorMessage);

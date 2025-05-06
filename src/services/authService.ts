@@ -43,15 +43,13 @@ export const authService = {
     console.log('Iniciando processo de cadastro:', { email });
     
     try {
-      // Estrutura de dados simplificada para o Supabase
-      // Enviando apenas o necessário sem campos redundantes
+      // Register in Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            role: 'analyst' 
-            // Não precisamos incluir is_approved, pois está definido como true por padrão na função handle_new_user
+            role: 'analyst'
           }
         }
       });
@@ -64,7 +62,7 @@ export const authService = {
           stack: error.stack
         });
         
-        // Traduz os erros mais comuns do Supabase
+        // Translate the most common Supabase errors
         if (error.message?.includes('already registered')) {
           throw new Error('Este email já está cadastrado.');
         } else if (error.message?.includes('password')) {
@@ -76,10 +74,30 @@ export const authService = {
         throw error;
       }
       
-      // Verificar se o usuário foi criado com sucesso
+      // Check if the user was created successfully
       if (!data.user || !data.user.id) {
         console.error('Usuário não foi criado corretamente:', data);
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
+      }
+      
+      // Create an entry in the users table
+      try {
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            uuid: data.user.id,
+            email: email,
+            password: '[AUTH VIA SUPABASE]', // We don't store the actual password
+            is_approved: true,
+            id_role: 2 // Default role (analyst)
+          });
+          
+        if (userError) {
+          console.error('Error creating user in users table:', userError);
+          // Don't fail the sign-up if this fails, but log it
+        }
+      } catch (userInsertError) {
+        console.error('Exception when creating user record:', userInsertError);
       }
       
       console.log('Usuário criado com sucesso:', {
@@ -100,10 +118,61 @@ export const authService = {
   },
 
   async signIn(email: string, password: string) {
-    return supabase.auth.signInWithPassword({ email, password });
+    console.log('Tentando login para:', email);
+    try {
+      // Add a retry mechanism for auth sign-in
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+
+      while (attempts < maxAttempts) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({ 
+            email, 
+            password 
+          });
+          
+          if (error) {
+            console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
+            lastError = error;
+            // Wait a bit longer between each retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+            attempts++;
+            continue;
+          }
+          
+          // Success! Return the data
+          return { data, error: null };
+        } catch (fetchError: any) {
+          console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
+          lastError = fetchError;
+          // Wait a bit longer between each retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+          attempts++;
+        }
+      }
+
+      // If we got here, all attempts failed
+      console.error('Todas as tentativas de login falharam:', lastError);
+      return { 
+        data: { session: null, user: null }, 
+        error: lastError || new Error('Falha ao conectar com o servidor de autenticação após múltiplas tentativas') 
+      };
+    } catch (error: any) {
+      console.error('Erro não tratado durante login:', error);
+      return { 
+        data: { session: null, user: null }, 
+        error: error 
+      };
+    }
   },
 
   async signOut() {
-    return supabase.auth.signOut();
+    try {
+      return await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      throw error;
+    }
   }
 };
