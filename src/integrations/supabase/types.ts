@@ -9,47 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chips: {
-        Row: {
-          created_at: string
-          iccid: string
-          id: string
-          numero: string
-          observacoes: string | null
-          operadora: string
-          status_id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          iccid: string
-          id?: string
-          numero: string
-          observacoes?: string | null
-          operadora: string
-          status_id?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          iccid?: string
-          id?: string
-          numero?: string
-          observacoes?: string | null
-          operadora?: string
-          status_id?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chips_status_id_fkey"
-            columns: ["status_id"]
-            isOneToOne: false
-            referencedRelation: "status"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       roles: {
         Row: {
           id: number
@@ -62,83 +21,6 @@ export type Database = {
         Update: {
           id?: never
           role_name?: string
-        }
-        Relationships: []
-      }
-      roteadores: {
-        Row: {
-          created_at: string
-          id: string
-          id_unico: string
-          imei: string | null
-          ip_gerencia: string | null
-          marca: string
-          modelo: string
-          numero_serie: string | null
-          observacoes: string | null
-          senha_admin: string | null
-          senha_wifi: string | null
-          ssid: string | null
-          status_id: number
-          updated_at: string
-          usuario_admin: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          id_unico: string
-          imei?: string | null
-          ip_gerencia?: string | null
-          marca: string
-          modelo: string
-          numero_serie?: string | null
-          observacoes?: string | null
-          senha_admin?: string | null
-          senha_wifi?: string | null
-          ssid?: string | null
-          status_id?: number
-          updated_at?: string
-          usuario_admin?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          id_unico?: string
-          imei?: string | null
-          ip_gerencia?: string | null
-          marca?: string
-          modelo?: string
-          numero_serie?: string | null
-          observacoes?: string | null
-          senha_admin?: string | null
-          senha_wifi?: string | null
-          ssid?: string | null
-          status_id?: number
-          updated_at?: string
-          usuario_admin?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "roteadores_status_id_fkey"
-            columns: ["status_id"]
-            isOneToOne: false
-            referencedRelation: "status"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      status: {
-        Row: {
-          id: number
-          nome: string
-        }
-        Insert: {
-          id?: number
-          nome: string
-        }
-        Update: {
-          id?: number
-          nome?: string
         }
         Relationships: []
       }
