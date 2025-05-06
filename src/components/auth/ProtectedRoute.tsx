@@ -2,17 +2,18 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/types/auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<'admin' | 'manager' | 'employee'>;
+  allowedRoles?: UserRole[];
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   allowedRoles = ['admin', 'manager', 'employee'] 
 }) => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, profile, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -27,8 +28,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Se o usuário não tem um papel ou se seu papel não está entre os permitidos
-  if (user?.role && !allowedRoles.includes(user.role)) {
+  // Check if the user has a profile with a role, and if that role is allowed
+  if (profile?.role && !allowedRoles.includes(profile.role)) {
     return <Navigate to="/" replace />;
   }
 

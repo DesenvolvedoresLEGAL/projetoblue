@@ -1,6 +1,6 @@
 
 import { User, Session } from '@supabase/supabase-js';
-import { UserProfile } from './auth';
+import { UserProfile, UserRole } from './auth';
 
 export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;

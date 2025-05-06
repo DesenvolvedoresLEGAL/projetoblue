@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { UserRole } from "@/types/auth";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
@@ -26,9 +27,11 @@ export function Header() {
   // Use user information if available, otherwise default values
   const userEmail = user?.email || "usuario@sistema.com";
   const userInitial = userEmail ? userEmail[0].toUpperCase() : "U";
-  const roleName = user?.role === 'admin' ? 'Administrador' : 
-                   user?.role === 'manager' ? 'Gerente' : 
-                   user?.role === 'employee' ? 'Funcionário' : 'Usuário';
+  
+  const userRole = profile?.role || 'analyst';
+  const roleName = userRole === 'admin' ? 'Administrador' : 
+                   userRole === 'manager' ? 'Gerente' : 
+                   userRole === 'employee' ? 'Funcionário' : 'Usuário';
 
   const handleLogout = async () => {
     await logout();
@@ -39,7 +42,7 @@ export function Header() {
       <MobileNavigation />
       
       {/* Admin links */}
-      {user?.role === 'admin' && (
+      {profile?.role === 'admin' && (
         <div className="ml-6 hidden md:flex space-x-4">
           <Link to="/cadastro-gerente">
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -57,7 +60,7 @@ export function Header() {
       )}
       
       {/* Manager links */}
-      {user?.role === 'manager' && (
+      {profile?.role === 'manager' && (
         <div className="ml-6 hidden md:flex space-x-4">
           <Link to="/cadastro-funcionario">
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -99,7 +102,7 @@ export function Header() {
             <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            {user?.role === 'admin' && (
+            {profile?.role === 'admin' && (
               <>
                 <DropdownMenuItem className="cursor-pointer">
                   <Link to="/cadastro-gerente" className="flex w-full">
@@ -114,7 +117,7 @@ export function Header() {
                 <DropdownMenuSeparator />
               </>
             )}
-            {user?.role === 'manager' && (
+            {profile?.role === 'manager' && (
               <>
                 <DropdownMenuItem className="cursor-pointer">
                   <Link to="/cadastro-funcionario" className="flex w-full">
