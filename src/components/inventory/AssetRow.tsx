@@ -226,9 +226,19 @@ const AssetRow = ({
               <DropdownMenuSeparator />
               
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("DISPONÍVEL", 1)}
+                onClick={() => handleStatusUpdate("DISPONIVEL", 1)}
               >
                 Marcar como Disponível
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleStatusUpdate("ALUGADO", 2)}
+              >
+                Marcar como Alugado
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleStatusUpdate("ASSINATURA", 3)}
+              >
+                Marcar como Assinatura
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleStatusUpdate("SEM DADOS", 4)}
