@@ -1,12 +1,18 @@
-// Atualizando para lidar com o erro de clients não existindo no tipo AssetContextType
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { ChipAsset } from '@/types/asset';
 import { useAssets } from './useAssets';
+import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
 
 // Definição do contexto
 export interface DataUsageContextType {
   dataUsage: Record<string, { download: number; upload: number }>;
   updateDataUsage: (assetId: string, download: number, upload: number) => void;
+  // Added missing methods
+  getActiveChipsWithMetrics: () => ChipWithMetrics[];
+  getAvailableCarriers: () => string[];
+  getAvailableClients: () => string[];
+  getAvailableRegions: () => string[];
 }
 
 export const DataUsageContext = createContext<DataUsageContextType | undefined>(undefined);
@@ -31,10 +37,81 @@ export const DataUsageProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   };
 
+  // Implement the missing methods
+  const getActiveChipsWithMetrics = (): ChipWithMetrics[] => {
+    return assets
+      .filter(asset => asset.type === 'CHIP')
+      .map(asset => {
+        const chipAsset = asset as ChipAsset;
+        const metrics = dataUsage[asset.id] || { download: 0, upload: 0 };
+        
+        // Generate mock quality data
+        const signalStrength = Math.random() * 100;
+        let quality: SignalQuality | undefined;
+        
+        if (signalStrength > 70) {
+          quality = { status: 'GOOD', message: 'Sinal forte e estável' };
+        } else if (signalStrength > 40) {
+          quality = { status: 'UNSTABLE', message: 'Sinal instável' };
+        } else {
+          quality = { status: 'POOR', message: 'Sinal fraco' };
+        }
+        
+        return {
+          id: asset.id,
+          phoneNumber: chipAsset.phoneNumber,
+          carrier: chipAsset.carrier,
+          clientId: asset.clientId,
+          clientName: asset.clientId ? 'Cliente ' + asset.clientId.substring(0, 8) : undefined,
+          iccid: chipAsset.iccid,
+          region: Math.random() > 0.5 ? 'Sul' : Math.random() > 0.5 ? 'Sudeste' : 'Norte',
+          isOnline: Math.random() > 0.2,
+          metrics: {
+            download: metrics.download,
+            upload: metrics.upload,
+            signalStrength,
+            lastUpdated: new Date().toISOString()
+          },
+          download: metrics.download, // For direct access in charts
+          upload: metrics.upload,     // For direct access in charts
+          quality
+        };
+      });
+  };
+
+  const getAvailableCarriers = (): string[] => {
+    const carriers = new Set<string>();
+    assets.forEach(asset => {
+      if (asset.type === 'CHIP') {
+        carriers.add((asset as ChipAsset).carrier);
+      }
+    });
+    return Array.from(carriers);
+  };
+
+  const getAvailableClients = (): string[] => {
+    const clientNames = new Set<string>();
+    assets.forEach(asset => {
+      if (asset.clientId) {
+        clientNames.add('Cliente ' + asset.clientId.substring(0, 8));
+      }
+    });
+    return Array.from(clientNames);
+  };
+
+  const getAvailableRegions = (): string[] => {
+    // Mock regions
+    return ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+  };
+
   return (
     <DataUsageContext.Provider value={{ 
       dataUsage,
       updateDataUsage,
+      getActiveChipsWithMetrics,
+      getAvailableCarriers,
+      getAvailableClients,
+      getAvailableRegions
     }}>
       {children}
     </DataUsageContext.Provider>

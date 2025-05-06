@@ -6,6 +6,7 @@ export interface AssetContextType {
   assets: Asset[];
   clients: Client[];
   history: AssetHistoryEntry[];
+  loading: boolean;  // Added missing loading property
   addAsset: (asset: Omit<Asset, "id" | "status">) => Promise<Asset | null>;
   updateAsset: (id: string, asset: Partial<Asset>) => Promise<Asset | null>;
   deleteAsset: (id: string) => Promise<boolean>;
@@ -24,4 +25,5 @@ export interface AssetContextType {
   addHistoryEntry: (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => void;
   getAssetHistory: (assetId: string) => AssetHistoryEntry[];
   getClientHistory: (clientId: string) => AssetHistoryEntry[];
+  filterAssets?: (criteria: any) => Asset[];  // Added optional filterAssets method
 }
