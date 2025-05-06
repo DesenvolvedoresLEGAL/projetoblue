@@ -31,9 +31,10 @@ import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/a
 import { Download, Filter, MoreHorizontal, Pencil, Search, Smartphone, Wifi, AlertTriangle } from "lucide-react";
 import EditAssetDialog from "@/components/inventory/EditAssetDialog";
 import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
+import AssetStatusDropdown from "@/components/inventory/AssetStatusDropdown";
 
 const Inventory = () => {
-  const { assets, updateAsset, deleteAsset } = useAssets();
+  const { assets, updateAsset, deleteAsset, statusRecords } = useAssets();
   const [search, setSearch] = useState("");
   const [phoneSearch, setPhoneSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -171,6 +172,19 @@ const Inventory = () => {
     setSelectedAsset(null);
   };
 
+  // Helper function to map status names to filter values
+  function mapStatusToFilter(statusName: string): string {
+    switch (statusName) {
+      case 'Disponível': return 'DISPONÍVEL';
+      case 'Alugado': return 'ALUGADO';
+      case 'Assinatura': return 'ASSINATURA';
+      case 'Sem dados': return 'SEM DADOS';
+      case 'Bloqueado': return 'BLOQUEADO';
+      case 'Em manutenção': return 'MANUTENÇÃO';
+      default: return statusName.toUpperCase();
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -226,12 +240,11 @@ const Inventory = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
-                <SelectItem value="DISPONÍVEL">Disponível</SelectItem>
-                <SelectItem value="ALUGADO">Alugado</SelectItem>
-                <SelectItem value="ASSINATURA">Assinatura</SelectItem>
-                <SelectItem value="SEM DADOS">Sem Dados</SelectItem>
-                <SelectItem value="BLOQUEADO">Bloqueado</SelectItem>
-                <SelectItem value="MANUTENÇÃO">Manutenção</SelectItem>
+                {statusRecords.map((status) => (
+                  <SelectItem key={status.id} value={mapStatusToFilter(status.nome)}>
+                    {status.nome}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -320,10 +333,17 @@ const Inventory = () => {
                       <TableCell>
                         {new Date(asset.registrationDate).toLocaleDateString("pt-BR")}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <Badge className={getStatusBadgeStyle(asset.status)}>
                           {asset.status}
                         </Badge>
+                        {/* Novo dropdown para atualizar status */}
+                        <div className="mt-1">
+                          <AssetStatusDropdown 
+                            asset={asset} 
+                            statusRecords={statusRecords} 
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
@@ -332,7 +352,7 @@ const Inventory = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="bg-white">
                             <DropdownMenuLabel>Ações</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             

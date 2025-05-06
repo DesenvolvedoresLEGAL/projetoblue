@@ -13,7 +13,8 @@ const defaultContextValue: AssetContextType = {
   assets: [],
   clients: [],
   history: [],
-  loading: false, // Fixed missing loading property
+  loading: false,
+  statusRecords: [],
   addAsset: async () => null,
   updateAsset: async () => null,
   deleteAsset: async () => false,
@@ -58,7 +59,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   // Helper function to map status_id to AssetStatus
-  const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
+  const mapStatusIdToAssetStatus = (statusId: number) => {
     const found = statusRecords.find(s => s.id === statusId);
     if (found) {
       switch (found.nome) {
@@ -75,7 +76,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Helper function to map AssetStatus to status_id
-  const mapAssetStatusToId = (status: AssetStatus): number => {
+  const mapAssetStatusToId = (status: AssetStatus) => {
     const statusMap: Record<AssetStatus, string> = {
       'DISPONÍVEL': 'Disponível',
       'ALUGADO': 'Alugado',
@@ -283,6 +284,13 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let statusId = existingAsset.statusId;
       if (assetData.status) {
         statusId = mapAssetStatusToId(assetData.status);
+      } else if (assetData.statusId) {
+        statusId = assetData.statusId;
+        // Map the statusId back to a status name for the UI
+        const statusRecord = statusRecords.find(s => s.id === statusId);
+        if (statusRecord) {
+          assetData.status = mapStatusIdToAssetStatus(statusId);
+        }
       }
       
       if (existingAsset.type === 'CHIP') {
@@ -337,6 +345,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Update with status derived from statusId if it was changed
       if (assetData.status) {
         assetData.statusId = statusId;
+      } else if (assetData.statusId) {
+        assetData.status = mapStatusIdToAssetStatus(statusId);
       }
       
       // Atualizar o estado
@@ -451,6 +461,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clients,
         history,
         loading,
+        statusRecords,
         addAsset,
         updateAsset,
         deleteAsset,
