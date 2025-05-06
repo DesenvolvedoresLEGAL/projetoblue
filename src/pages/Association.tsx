@@ -1,312 +1,219 @@
-import { useState, useEffect } from "react";
-import { useAssets } from "@/context/useAssets";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChipAsset, RouterAsset, Asset } from "@/types/asset";
-import { Search, XCircle } from "lucide-react";
+import { useAssets } from "@/context/useAssets";
+import { Asset, ChipAsset, RouterAsset } from "@/types/asset";
+import { Client } from "@/types/asset";
 import { toast } from "@/utils/toast";
 
 const Association = () => {
-  const { assets, clients, associateAssetToClient, removeAssetFromClient, returnAssetsToStock, addHistoryEntry } = useAssets();
-  const [searchAsset, setSearchAsset] = useState("");
-  const [searchClient, setSearchClient] = useState("");
-  const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
-  const [filteredClients, setFilteredClients] = useState(clients);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [selectedClient, setSelectedClient] = useState(null);
+  const { assets, clients, associateAssetToClient, removeAssetFromClient, addHistoryEntry } = useAssets();
+  const [assetId, setAssetId] = useState<string>('');
+  const [clientId, setClientId] = useState<string>('');
+  const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(undefined);
+  const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
 
   useEffect(() => {
-    setFilteredClients(clients);
-  }, [clients]);
+    // Find the asset when the assetId changes
+    setSelectedAsset(assets.find(asset => asset.id === assetId));
+  }, [assetId, assets]);
 
   useEffect(() => {
-    const debouncedFilterAssets = setTimeout(() => {
-      if (searchAsset) {
-        const results = assets.filter((asset) => {
-          if (asset.type === "CHIP") {
-            const chip = asset as ChipAsset;
-            return (
-              chip.iccid.toLowerCase().includes(searchAsset.toLowerCase()) ||
-              chip.phoneNumber.toLowerCase().includes(searchAsset.toLowerCase())
-            );
-          } else {
-            const router = asset as RouterAsset;
-            return router.uniqueId.toLowerCase().includes(searchAsset.toLowerCase());
+    // Find the client when the clientId changes
+    setSelectedClient(clients.find(client => client.id === clientId));
+  }, [clientId, clients]);
+
+  const handleAssociate = async () => {
+    if (!assetId) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um ID de ativo.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!clientId) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um ID de cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (assetId && clientId) {
+      try {
+        await associateAssetToClient(assetId, clientId);
+        toast({
+          title: "Sucesso",
+          description: "Ativo associado ao cliente com sucesso.",
+        });
+
+        // Fix the history entry
+        addHistoryEntry({
+          type: "ASSOCIATION",
+          description: `Ativo associado ao cliente`,
+          assetIds: [assetId],
+          clientId: clientId,
+          details: {
+            assetType: selectedAsset?.type,
+            assetIdentifier: selectedAsset?.type === 'CHIP' 
+              ? (selectedAsset as ChipAsset).iccid 
+              : (selectedAsset as RouterAsset).uniqueId,
+            clientName: selectedClient?.name
           }
         });
-        setFilteredAssets(results);
-      } else {
-        setFilteredAssets([]);
+      } catch (error) {
+        console.error("Erro ao associar ativo ao cliente:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao associar ativo ao cliente.",
+          variant: "destructive"
+        });
       }
-    }, 300);
-
-    return () => clearTimeout(debouncedFilterAssets);
-  }, [searchAsset, assets]);
-
-  useEffect(() => {
-    const debouncedFilterClients = setTimeout(() => {
-      if (searchClient) {
-        const results = clients.filter((client) =>
-          client.name.toLowerCase().includes(searchClient.toLowerCase()) ||
-          client.document.toLowerCase().includes(searchClient.toLowerCase())
-        );
-        setFilteredClients(results);
-      } else {
-        setFilteredClients(clients);
-      }
-    }, 300);
-
-    return () => clearTimeout(debouncedFilterClients);
-  }, [searchClient, clients]);
-
-  const handleAssetSelection = (assetId: string) => {
-    const asset = assets.find((asset) => asset.id === assetId);
-    setSelectedAsset(asset || null);
-  };
-
-  const handleClientSelection = (clientId: string) => {
-    const client = clients.find((client) => client.id === clientId);
-    setSelectedClient(client || null);
-  };
-
-  const handleAssociate = () => {
-    if (selectedClient && selectedAsset) {
-      associateAssetToClient(selectedAsset.id, selectedClient.id);
-      addHistoryEntry({
-        action: "asset_assign",
-        description: `Ativo ${selectedAsset.type === "CHIP" ? "Chip" : "Roteador"} ${selectedAsset.type === "CHIP" ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId} associado ao cliente ${selectedClient.name}`,
-        assetIds: [selectedAsset.id],
-        clientId: selectedClient.id,
-      });
-      toast.success(`${selectedAsset.type === 'CHIP' ? 'Chip' : 'Roteador'} associado com sucesso ao cliente ${selectedClient.name}`);
-      setSelectedAsset(null);
-      setSelectedClient(null);
     }
   };
 
-  const handleRemoveAsset = (assetId: string, clientId: string) => {
-    removeAssetFromClient(assetId, clientId);
-    addHistoryEntry({
-      action: "asset_unassign",
-      description: `Ativo ${asset.type === "CHIP" ? "Chip" : "Roteador"} ${asset.type === "CHIP" ? (asset as ChipAsset).iccid : (asset as RouterAsset).uniqueId} removido do cliente ${client.name}`,
-      assetIds: [asset.id],
-      clientId: client.id,
-    });
-    toast.success("Ativo removido do cliente");
-  };
+  const handleRemoveAssociation = async () => {
+    if (!assetId) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um ID de ativo.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (!clientId) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira um ID de cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  // Corrigir as variáveis e referências para return dialog
-  const handleReturnAssets = () => {
-    if (selectedAsset) {
-      returnAssetsToStock([selectedAsset.id]);
-      setSelectedAsset(null);
-      toast.success("Ativo devolvido ao estoque");
+    if (assetId && clientId) {
+      try {
+        await removeAssetFromClient(assetId, clientId);
+        toast({
+          title: "Sucesso",
+          description: "Ativo removido do cliente com sucesso.",
+        });
+
+        // Fix the history entry
+        addHistoryEntry({
+          type: "DISASSOCIATION",
+          description: `Ativo removido do cliente`,
+          assetIds: [assetId],
+          clientId: clientId,
+          details: {
+            assetType: selectedAsset?.type,
+            assetIdentifier: selectedAsset?.type === 'CHIP' 
+              ? (selectedAsset as ChipAsset).iccid 
+              : (selectedAsset as RouterAsset).uniqueId,
+            clientName: selectedClient?.name
+          }
+        });
+      } catch (error) {
+        console.error("Erro ao remover associação do ativo:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover associação do ativo.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Associação de Ativos a Clientes</h1>
-
-      {/* Seleção de Ativo */}
-      <Card className="mb-6">
+    <div className="flex flex-col md:flex-row gap-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Selecione um Ativo</CardTitle>
+          <CardTitle>Associar Ativo ao Cliente</CardTitle>
+          <CardDescription>
+            Associe um ativo existente a um cliente.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="asset-id">ID do Ativo</Label>
             <Input
               type="text"
-              placeholder="Buscar por ICCID/ID do Ativo..."
-              value={searchAsset}
-              onChange={(e) => setSearchAsset(e.target.value)}
-              className="pl-8"
+              id="asset-id"
+              value={assetId}
+              onChange={(e) => setAssetId(e.target.value)}
             />
+            {selectedAsset && (
+              <div className="text-sm text-muted-foreground">
+                Ativo selecionado: {selectedAsset.type === 'CHIP' ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId}
+              </div>
+            )}
           </div>
-          {filteredAssets.length > 0 && (
-            <div className="mt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>ID / ICCID</TableHead>
-                    <TableHead>Número / ID Único</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAssets.map((asset) => (
-                    <TableRow key={asset.id}>
-                      <TableCell>{asset.type === "CHIP" ? "Chip" : "Roteador"}</TableCell>
-                      <TableCell>
-                        {asset.type === "CHIP" ? (asset as ChipAsset).iccid : (asset as RouterAsset).uniqueId}
-                      </TableCell>
-                      <TableCell>
-                        {asset.type === "CHIP" ? (asset as ChipAsset).phoneNumber : (asset as RouterAsset).uniqueId}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => handleAssetSelection(asset.id)}>
-                          Selecionar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-          {selectedAsset && (
-            <div className="mt-4 p-4 border rounded-md bg-gray-50">
-              <h3 className="text-lg font-semibold">Ativo Selecionado:</h3>
-              <p>
-                Tipo: {selectedAsset.type === "CHIP" ? "Chip" : "Roteador"}
-              </p>
-              <p>
-                ID/ICCID:{" "}
-                {selectedAsset.type === "CHIP"
-                  ? (selectedAsset as ChipAsset).iccid
-                  : (selectedAsset as RouterAsset).uniqueId}
-              </p>
-              <Button variant="destructive" size="sm" onClick={() => setSelectedAsset(null)}>
-                Remover Seleção
-              </Button>
-            </div>
-          )}
+          <div className="grid gap-2">
+            <Label htmlFor="client-id">ID do Cliente</Label>
+            <Input
+              type="text"
+              id="client-id"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            />
+            {selectedClient && (
+              <div className="text-sm text-muted-foreground">
+                Cliente selecionado: {selectedClient.name}
+              </div>
+            )}
+          </div>
+          <Button onClick={handleAssociate}>Associar Ativo</Button>
         </CardContent>
       </Card>
 
-      {/* Seleção de Cliente */}
-      <Card className="mb-6">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Selecione um Cliente</CardTitle>
+          <CardTitle>Remover Associação</CardTitle>
+          <CardDescription>
+            Remova a associação de um ativo de um cliente.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="asset-id-remove">ID do Ativo</Label>
             <Input
               type="text"
-              placeholder="Buscar por nome ou documento do Cliente..."
-              value={searchClient}
-              onChange={(e) => setSearchClient(e.target.value)}
-              className="pl-8"
+              id="asset-id-remove"
+              value={assetId}
+              onChange={(e) => setAssetId(e.target.value)}
             />
+            {selectedAsset && (
+              <div className="text-sm text-muted-foreground">
+                Ativo selecionado: {selectedAsset.type === 'CHIP' ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId}
+              </div>
+            )}
           </div>
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>{client.name}</TableCell>
-                    <TableCell>{client.document}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" onClick={() => handleClientSelection(client.id)}>
-                        Selecionar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid gap-2">
+            <Label htmlFor="client-id-remove">ID do Cliente</Label>
+            <Input
+              type="text"
+              id="client-id-remove"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            />
+            {selectedClient && (
+              <div className="text-sm text-muted-foreground">
+                Cliente selecionado: {selectedClient.name}
+              </div>
+            )}
           </div>
-          {selectedClient && (
-            <div className="mt-4 p-4 border rounded-md bg-gray-50">
-              <h3 className="text-lg font-semibold">Cliente Selecionado:</h3>
-              <p>Nome: {selectedClient.name}</p>
-              <p>Documento: {selectedClient.document}</p>
-              <Button variant="destructive" size="sm" onClick={() => setSelectedClient(null)}>
-                Remover Seleção
-              </Button>
-            </div>
-          )}
+          <Button onClick={handleRemoveAssociation}>Remover Associação</Button>
         </CardContent>
       </Card>
-
-      {/* Ações */}
-      <div className="flex gap-4">
-        <Button
-          disabled={!selectedAsset || !selectedClient}
-          onClick={handleAssociate}
-        >
-          Associar Ativo ao Cliente
-        </Button>
-        {selectedAsset && selectedAsset.clientId && (
-          <Button
-            variant="destructive"
-            onClick={() => handleRemoveAsset(selectedAsset.id, selectedAsset.clientId)}
-          >
-            Remover Ativo do Cliente
-          </Button>
-        )}
-        {selectedAsset && (
-          <Button
-            variant="secondary"
-            onClick={handleReturnAssets}
-          >
-            Devolver Ativo ao Estoque
-          </Button>
-        )}
-      </div>
-
-      {/* Lista de Ativos Associados ao Cliente */}
-      {selectedClient && selectedClient.assets && selectedClient.assets.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Ativos Associados ao Cliente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>ID / ICCID</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedClient.assets.map((assetId) => {
-                  const asset = assets.find((asset) => asset.id === assetId);
-                  if (!asset) return null;
-
-                  return (
-                    <TableRow key={asset.id}>
-                      <TableCell>{asset.type === "CHIP" ? "Chip" : "Roteador"}</TableCell>
-                      <TableCell>
-                        {asset.type === "CHIP" ? (asset as ChipAsset).iccid : (asset as RouterAsset).uniqueId}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveAsset(asset.id, selectedClient.id)}
-                        >
-                          Remover
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
