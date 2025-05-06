@@ -70,24 +70,13 @@ const AssetRow = ({
     try {
       const success = await deleteAsset(asset.id);
       if (success) {
-        toast({
-          title: "Ativo excluído",
-          description: `O ativo foi excluído com sucesso.`,
-        });
+        toast.success("O ativo foi excluído com sucesso.");
       } else {
-        toast({
-          title: "Erro",
-          description: "Não foi possível excluir o ativo.",
-          variant: "destructive"
-        });
+        toast.error("Não foi possível excluir o ativo.");
       }
     } catch (error) {
       console.error("Erro ao excluir ativo:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao excluir o ativo.",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao excluir o ativo.");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -116,24 +105,13 @@ const AssetRow = ({
       });
       
       if (updatedAsset) {
-        toast({
-          title: "Status atualizado",
-          description: `O ativo agora está marcado como ${selectedStatus.name}.`,
-        });
+        toast.success(`O ativo agora está marcado como ${selectedStatus.name}.`);
       } else {
-        toast({
-          title: "Erro",
-          description: "Não foi possível atualizar o status do ativo.",
-          variant: "destructive"
-        });
+        toast.error("Não foi possível atualizar o status do ativo.");
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o status do ativo.",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao atualizar o status do ativo.");
     } finally {
       setIsStatusDialogOpen(false);
       setSelectedStatus(null);

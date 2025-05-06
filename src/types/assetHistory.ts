@@ -1,7 +1,7 @@
 
 import { Asset, AssetType, Client } from "./asset";
 
-export type OperationType = "ALUGUEL" | "ASSINATURA";
+export type OperationType = "ALUGUEL" | "ASSINATURA" | "ASSOCIATION" | "DISASSOCIATION";
 
 export interface AssetHistoryEntry {
   id: string;
@@ -15,6 +15,7 @@ export interface AssetHistoryEntry {
     identifier: string; // ICCID for chips, uniqueId for routers
   }[];
   operationType: OperationType;
+  description?: string;
   event?: string;
   comments?: string;
 }
