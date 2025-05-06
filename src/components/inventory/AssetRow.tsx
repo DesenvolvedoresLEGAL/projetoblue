@@ -183,10 +183,7 @@ const AssetRow = ({
         </TableCell>
         
         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu 
-            open={openMenuForId === asset.id}
-            onOpenChange={(open) => setOpenMenuForId(open ? asset.id : null)} 
-            >
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
                 <MoreHorizontal className="h-4 w-4" />
