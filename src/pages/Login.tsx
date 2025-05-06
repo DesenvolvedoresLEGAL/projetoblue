@@ -10,6 +10,7 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun, RefreshCw } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,11 +19,26 @@ const Login = () => {
   const { signIn, isAuthenticated, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsRetrying(false);
-    await signIn(email, password);
+    
+    if (!email.trim() || !password.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha o email e a senha.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+    }
   };
 
   const handleRetry = async () => {
@@ -38,9 +54,14 @@ const Login = () => {
   useEffect(() => {
     if (isAuthenticated) {
       console.log('User is authenticated, redirecting to dashboard');
+      toast({
+        title: "Login bem-sucedido",
+        description: "Bem-vindo ao sistema!",
+        variant: "default"
+      });
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, toast]);
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
@@ -74,6 +95,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -82,7 +104,13 @@ const Login = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
+            </div>
+            <div className="flex justify-end">
+              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
             </div>
             {error && (
               <div className="text-sm text-red-500 mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md">
@@ -113,9 +141,9 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading}
+              disabled={isLoading || isRetrying}
             >
-              {isLoading ? (
+              {isLoading || isRetrying ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                   Aguarde...
