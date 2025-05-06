@@ -1,5 +1,5 @@
 
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/useAssets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

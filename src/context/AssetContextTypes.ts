@@ -1,22 +1,25 @@
 
-import { Asset, AssetStatus, Client, AssetType, SubscriptionInfo } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, Client, StatusRecord } from "@/types/asset";
 import { AssetHistoryEntry } from "@/types/assetHistory";
 
 export interface AssetContextType {
   assets: Asset[];
   clients: Client[];
   history: AssetHistoryEntry[];
-  addAsset: (asset: Omit<Asset, "id" | "status">) => void;
-  updateAsset: (id: string, asset: Partial<Asset>) => void;
-  deleteAsset: (id: string) => void;
+  loading: boolean;
+  statusRecords: StatusRecord[];
+  addAsset: (assetData: Omit<Asset, "id" | "status">) => Promise<Asset | null>;
+  updateAsset: (id: string, assetData: Partial<Asset>) => Promise<Asset | null>;
+  deleteAsset: (id: string) => Promise<boolean>;
   getAssetById: (id: string) => Asset | undefined;
   getAssetsByStatus: (status: AssetStatus) => Asset[];
   getAssetsByType: (type: AssetType) => Asset[];
-  addClient: (client: Omit<Client, "id" | "assets">) => void;
-  updateClient: (id: string, client: Partial<Client>) => void;
+  filterAssets?: (criteria: any) => Asset[];
+  addClient: (client: Omit<Client, "id">) => void;
+  updateClient: (id: string, clientData: Partial<Client>) => void;
   deleteClient: (id: string) => void;
   getClientById: (id: string) => Client | undefined;
-  associateAssetToClient: (assetId: string, clientId: string, subscription?: SubscriptionInfo) => void;
+  associateAssetToClient: (assetId: string, clientId: string) => void;
   removeAssetFromClient: (assetId: string, clientId: string) => void;
   getExpiredSubscriptions: () => Asset[];
   returnAssetsToStock: (assetIds: string[]) => void;

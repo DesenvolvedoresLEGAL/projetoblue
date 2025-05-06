@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { useAssets } from "@/context/AssetContext";
+import React, { useState, useEffect } from "react";
+import { useAssets } from "@/context/useAssets";
 import { Asset, Client, SubscriptionInfo } from "@/types/asset";
 import {
   Card,

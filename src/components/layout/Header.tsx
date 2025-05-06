@@ -1,9 +1,8 @@
 
 import { MobileNavigation } from "./MobileNavigation";
-import { Bell, Moon, Sun, UserPlus, Users } from "lucide-react";
+import { Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuth } from "@/context/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,64 +12,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
-import { UserRole } from "@/types/auth";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
-  const { user, profile, logout } = useAuth();
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
   };
 
-  // Use user information if available, otherwise default values
-  const userEmail = user?.email || "usuario@sistema.com";
-  const userInitial = userEmail ? userEmail[0].toUpperCase() : "U";
-  
-  const userRole = profile?.role || 'analyst';
-  const roleName = userRole === 'admin' ? 'Administrador' : 
-                   userRole === 'manager' ? 'Gerente' : 
-                   userRole === 'employee' ? 'Funcionário' : 'Usuário';
-
-  const handleLogout = async () => {
-    await logout();
-  };
+  // Default user information since authentication is removed
+  const userEmail = "usuario@sistema.com";
+  const userInitial = "U";
+  const roleName = "Usuário";
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center bg-background border-b px-4 lg:px-6">
       <MobileNavigation />
-      
-      {/* Admin links */}
-      {profile?.role === 'admin' && (
-        <div className="ml-6 hidden md:flex space-x-4">
-          <Link to="/cadastro-gerente">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <UserPlus size={16} />
-              Cadastrar Gerente
-            </Button>
-          </Link>
-          <Link to="/cadastro-funcionario">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Users size={16} />
-              Cadastrar Funcionário
-            </Button>
-          </Link>
-        </div>
-      )}
-      
-      {/* Manager links */}
-      {profile?.role === 'manager' && (
-        <div className="ml-6 hidden md:flex space-x-4">
-          <Link to="/cadastro-funcionario">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Users size={16} />
-              Cadastrar Funcionário
-            </Button>
-          </Link>
-        </div>
-      )}
-      
       <div className="ml-auto flex items-center space-x-4">
         <Button 
           variant="ghost" 
@@ -102,34 +59,9 @@ export function Header() {
             <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            {profile?.role === 'admin' && (
-              <>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link to="/cadastro-gerente" className="flex w-full">
-                    Cadastrar Gerente
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link to="/cadastro-funcionario" className="flex w-full">
-                    Cadastrar Funcionário
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            {profile?.role === 'manager' && (
-              <>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Link to="/cadastro-funcionario" className="flex w-full">
-                    Cadastrar Funcionário
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
             <DropdownMenuItem 
               className="cursor-pointer text-destructive"
-              onClick={handleLogout}
+              onClick={() => window.location.href = '/login'}
             >
               Sair
             </DropdownMenuItem>
