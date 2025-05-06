@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/useAssets";
 import { ChipAsset, RouterAsset } from "@/types/asset";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ export default function RegisterAsset() {
   const [assetType, setAssetType] = useState<"CHIP" | "ROTEADOR">("CHIP");
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
   const [allowWeakPassword, setAllowWeakPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state for chip
   const [chipForm, setChipForm] = useState<Omit<ChipAsset, "id" | "status">>({
@@ -69,55 +69,63 @@ export default function RegisterAsset() {
     setRouterForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    if (assetType === "CHIP") {
-      // Validate chip form
-      if (!chipForm.iccid || !chipForm.phoneNumber || !chipForm.carrier) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
-        return;
+    try {
+      if (assetType === "CHIP") {
+        // Validate chip form
+        if (!chipForm.iccid || !chipForm.phoneNumber || !chipForm.carrier) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+
+        // Submit chip
+        await addAsset(chipForm);
+        setChipForm({
+          type: "CHIP",
+          iccid: "",
+          phoneNumber: "",
+          carrier: "VIVO",
+          registrationDate: new Date().toISOString(),
+        });
+      } else {
+        // Validate router form
+        if (!routerForm.uniqueId || !routerForm.brand || !routerForm.model) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+
+        if (passwordStrength === 'weak' && !allowWeakPassword) {
+          toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
+          return;
+        }
+
+        // If weak password is allowed, mark with a flag
+        if (passwordStrength === 'weak' && allowWeakPassword) {
+          routerForm.hasWeakPassword = true;
+        }
+
+        // Submit router
+        await addAsset(routerForm);
+        setRouterForm({
+          type: "ROTEADOR",
+          uniqueId: "",
+          brand: "",
+          model: "",
+          ssid: "",
+          password: "",
+          registrationDate: new Date().toISOString(),
+        });
+        setPasswordStrength(null);
+        setAllowWeakPassword(false);
       }
-
-      // Submit chip
-      addAsset(chipForm);
-      setChipForm({
-        type: "CHIP",
-        iccid: "",
-        phoneNumber: "",
-        carrier: "VIVO",
-        registrationDate: new Date().toISOString(),
-      });
-    } else {
-      // Validate router form
-      if (!routerForm.uniqueId || !routerForm.brand || !routerForm.model || !routerForm.ssid || !routerForm.password) {
-        toast.error("Por favor, preencha todos os campos obrigatórios");
-        return;
-      }
-
-      if (passwordStrength === 'weak' && !allowWeakPassword) {
-        toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
-        return;
-      }
-
-      // If weak password is allowed, mark with a flag
-      if (passwordStrength === 'weak' && allowWeakPassword) {
-        routerForm.hasWeakPassword = true;
-      }
-
-      // Submit router
-      addAsset(routerForm);
-      setRouterForm({
-        type: "ROTEADOR",
-        uniqueId: "",
-        brand: "",
-        model: "",
-        ssid: "",
-        password: "",
-        registrationDate: new Date().toISOString(),
-      });
-      setPasswordStrength(null);
-      setAllowWeakPassword(false);
+    } catch (error) {
+      console.error("Erro ao cadastrar ativo:", error);
+      toast.error("Erro ao cadastrar ativo. Por favor, tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -350,7 +358,9 @@ export default function RegisterAsset() {
             </Tabs>
 
             <div className="flex justify-end">
-              <Button type="submit">Cadastrar</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+              </Button>
             </div>
           </form>
         </CardContent>

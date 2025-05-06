@@ -1,59 +1,39 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
-import { MoonStar, Sun, RefreshCw } from 'lucide-react';
+import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRetrying, setIsRetrying] = useState(false);
-  const { signIn, isAuthenticated, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { toast } = useToast();
+  
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsRetrying(false);
-    await signIn(email, password);
+    
+    // Authentication is removed, simply redirect to dashboard with a success toast
+    toast({
+      title: "Bem-vindo ao sistema!",
+      description: "Acesso concedido automaticamente.",
+      variant: "default"
+    });
+    
+    navigate('/');
   };
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    try {
-      await signIn(email, password);
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  // Effect to redirect authenticated users to dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to dashboard');
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
   };
-
-  // Determine if the error is related to network connectivity
-  const isNetworkError = error && (
-    error.includes('conectar') || 
-    error.includes('conexão') || 
-    error.includes('rede') || 
-    error.includes('internet') ||
-    error.includes('fetch')
-  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -73,7 +53,6 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                required
               />
             </div>
             <div className="space-y-2">
@@ -82,45 +61,19 @@ const Login = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
-            {error && (
-              <div className="text-sm text-red-500 mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md">
-                {error}
-                {isNetworkError && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2 mt-2"
-                    onClick={handleRetry}
-                    disabled={isLoading || isRetrying}
-                  >
-                    {isRetrying ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Tentando novamente...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Tentar novamente
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="flex justify-end">
+              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            </div>
             <Button 
               type="submit" 
-              className="w-full" 
-              disabled={isLoading}
+              className="w-full"
             >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Aguarde...
-                </>
-              ) : 'Entrar'}
+              Entrar
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
