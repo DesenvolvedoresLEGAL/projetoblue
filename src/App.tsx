@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AssetProvider } from "@/context/AssetContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Layout } from "@/components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -21,6 +22,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import { DataUsageProvider } from "@/context/DataUsageContext";
+import { AuthRoute } from "./components/auth/AuthRoute";
 
 const queryClient = new QueryClient();
 
@@ -33,31 +35,33 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                {/* Public routes - no longer need to be protected */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+              <AuthProvider>
+                <Routes>
+                  {/* Rotas públicas */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
                 
-                {/* All routes are now public - removed AuthRoute protection */}
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/register-asset" element={<RegisterAsset />} />
-                  <Route path="/inventory" element={<Inventory />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/association" element={<Association />} />
-                  <Route path="/subscriptions" element={<Subscriptions />} />
-                  <Route path="/monitoring" element={<Monitoring />} />
-                  <Route path="/history" element={<History />} />
-                  <Route path="/data-usage" element={<DataUsage />} />
-                  <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
-                </Route>
-                
-                {/* Redirection still exists but no longer authentication-based */}
-                <Route path="/index" element={<Navigate to="/" replace />} />
-                
-                {/* Fallback route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  {/* Rotas protegidas */}
+                  <Route element={<AuthRoute><Layout /></AuthRoute>}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/register-asset" element={<RegisterAsset />} />
+                    <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/clients" element={<Clients />} />
+                    <Route path="/association" element={<Association />} />
+                    <Route path="/subscriptions" element={<Subscriptions />} />
+                    <Route path="/monitoring" element={<Monitoring />} />
+                    <Route path="/history" element={<History />} />
+                    <Route path="/data-usage" element={<DataUsage />} />
+                    <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
+                  </Route>
+                  
+                  {/* Redirecionamento para login */}
+                  <Route path="/index" element={<Navigate to="/" replace />} />
+                  
+                  {/* Rota de fallback */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AuthProvider>
             </BrowserRouter>
           </TooltipProvider>
         </DataUsageProvider>

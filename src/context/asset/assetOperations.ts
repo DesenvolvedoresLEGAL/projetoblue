@@ -65,7 +65,6 @@ export const returnAssetsToStock = (
       
       const baseUpdates = {
         status: "DISPONÍVEL" as AssetStatus,
-        statusId: 1, // Added to match database status_id (1 = Disponível)
         clientId: undefined,
         subscription: undefined,
       };
@@ -102,22 +101,17 @@ export const associateAssetToClient = (
   
   if (asset && client) {
     let status: AssetStatus;
-    let statusId: number;
     
     if (subscription?.type === "ANUAL" || subscription?.type === "MENSAL") {
       status = "ASSINATURA";
-      statusId = 3; // Assuming 'Assinatura' has id = 3
     } else if (subscription?.type === "ALUGUEL") {
       status = "ALUGADO";
-      statusId = 2; // Assuming 'Alugado' has id = 2
     } else {
       status = "ALUGADO"; // Default fallback
-      statusId = 2;
     }
     
     updateAsset(assetId, { 
       status,
-      statusId,
       clientId,
       subscription: subscription ? {
         ...subscription,

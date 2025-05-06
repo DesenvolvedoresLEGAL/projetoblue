@@ -25,7 +25,6 @@ export interface BaseAsset {
   type: AssetType;
   registrationDate: string;
   status: AssetStatus;
-  statusId?: number; // Added for database status reference
   notes?: string;
   clientId?: string;
   subscription?: SubscriptionInfo;
@@ -84,10 +83,4 @@ export interface Client {
   state: string;
   zipCode: string;
   assets: string[];
-}
-
-// Added StatusRecord interface to represent records from the status table
-export interface StatusRecord {
-  id: number;
-  nome: string;
 }
