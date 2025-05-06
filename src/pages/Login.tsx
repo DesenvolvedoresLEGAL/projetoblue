@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,32 +9,26 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const { login, isAuthenticated, isLoading, error } = useAuth();
+  const { toast } = useToast();
   
-  const from = location.state?.from?.pathname || '/';
-  
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, navigate, from]);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(email, password);
-    } catch (err) {
-      console.error('Login error:', err);
-    }
+    
+    // Authentication is removed, simply redirect to dashboard with a success toast
+    toast({
+      title: "Bem-vindo ao sistema!",
+      description: "Acesso concedido automaticamente.",
+      variant: "default"
+    });
+    
+    navigate('/');
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -51,11 +45,6 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
-                {error}
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input 
@@ -83,9 +72,8 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full"
-              disabled={isLoading}
             >
-              {isLoading ? "Entrando..." : "Entrar"}
+              Entrar
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
