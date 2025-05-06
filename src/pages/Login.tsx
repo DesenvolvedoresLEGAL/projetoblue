@@ -1,59 +1,45 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
-import { MoonStar, Sun, RefreshCw } from 'lucide-react';
+import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRetrying, setIsRetrying] = useState(false);
-  const { signIn, isAuthenticated, isLoading, error } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, setTheme } = useTheme();
-
+  const { login, isAuthenticated, isLoading, error } = useAuth();
+  
+  const from = location.state?.from?.pathname || '/';
+  
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsRetrying(false);
-    await signIn(email, password);
-  };
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
     try {
-      await signIn(email, password);
-    } finally {
-      setIsRetrying(false);
+      await login(email, password);
+    } catch (err) {
+      console.error('Login error:', err);
     }
   };
-
-  // Effect to redirect authenticated users to dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('User is authenticated, redirecting to dashboard');
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
   };
-
-  // Determine if the error is related to network connectivity
-  const isNetworkError = error && (
-    error.includes('conectar') || 
-    error.includes('conexão') || 
-    error.includes('rede') || 
-    error.includes('internet') ||
-    error.includes('fetch')
-  );
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -65,6 +51,11 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input 
@@ -73,7 +64,6 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                required
               />
             </div>
             <div className="space-y-2">
@@ -82,45 +72,20 @@ const Login = () => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
-            {error && (
-              <div className="text-sm text-red-500 mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md">
-                {error}
-                {isNetworkError && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2 mt-2"
-                    onClick={handleRetry}
-                    disabled={isLoading || isRetrying}
-                  >
-                    {isRetrying ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Tentando novamente...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Tentar novamente
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="flex justify-end">
+              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            </div>
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Aguarde...
-                </>
-              ) : 'Entrar'}
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

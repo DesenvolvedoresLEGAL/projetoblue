@@ -5,8 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AssetProvider } from "@/context/AssetContext";
-import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Layout } from "@/components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
@@ -22,7 +22,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import { DataUsageProvider } from "@/context/DataUsageContext";
-import { AuthRoute } from "./components/auth/AuthRoute";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ManagerRegistration from "./pages/ManagerRegistration";
+import EmployeeRegistration from "./pages/EmployeeRegistration";
 
 const queryClient = new QueryClient();
 
@@ -31,18 +33,18 @@ const App = () => (
     <ThemeProvider>
       <AssetProvider>
         <DataUsageProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AuthProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
                 <Routes>
-                  {/* Rotas públicas */}
+                  {/* Public routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
-                
-                  {/* Rotas protegidas */}
-                  <Route element={<AuthRoute><Layout /></AuthRoute>}>
+                  
+                  {/* Protected routes */}
+                  <Route element={<Layout />}>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/register-asset" element={<RegisterAsset />} />
                     <Route path="/inventory" element={<Inventory />} />
@@ -53,17 +55,35 @@ const App = () => (
                     <Route path="/history" element={<History />} />
                     <Route path="/data-usage" element={<DataUsage />} />
                     <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
+                    
+                    {/* Rotas protegidas para cadastro de gerentes e funcionários */}
+                    <Route 
+                      path="/cadastro-gerente" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                          <ManagerRegistration />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/cadastro-funcionario" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin', 'manager']}>
+                          <EmployeeRegistration />
+                        </ProtectedRoute>
+                      } 
+                    />
                   </Route>
                   
-                  {/* Redirecionamento para login */}
+                  {/* Redirection */}
                   <Route path="/index" element={<Navigate to="/" replace />} />
                   
-                  {/* Rota de fallback */}
+                  {/* Fallback route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </AuthProvider>
-            </BrowserRouter>
-          </TooltipProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
         </DataUsageProvider>
       </AssetProvider>
     </ThemeProvider>
