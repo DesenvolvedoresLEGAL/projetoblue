@@ -2,6 +2,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { useAuthState } from '@/hooks/useAuthState';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { useAuthActions } from '@/hooks/useAuthActions';
 
 type UserRole = 'admin' | 'manager' | 'employee' | null;
 
@@ -18,6 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  signUp: (email: string, password: string) => Promise<void>; // Added signUp method to match the type
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -113,6 +117,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Implementing the signUp method to match the interface
+  const signUp = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Erro de cadastro",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (data.user) {
+        toast({
+          title: "Cadastro bem-sucedido",
+          description: "Sua conta foi criada. Você já pode fazer login.",
+          variant: "default"
+        });
+      }
+    } catch (error: any) {
+      setError(error.message);
+      toast({
+        title: "Erro",
+        description: error.message || "Ocorreu um erro durante o cadastro",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -141,6 +185,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         error,
         login,
         logout,
+        signUp, // Added signUp method to the context value
         isAuthenticated: !!user,
       }}
     >
