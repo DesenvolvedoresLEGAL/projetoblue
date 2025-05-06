@@ -56,27 +56,3 @@ export const updateAssetInList = (assets: Asset[], id: string, assetData: Partia
     return asset;
   });
 };
-
-export const validateAssetDeletion = (asset: Asset | undefined): { valid: boolean, message: string } => {
-  if (!asset) {
-    return { valid: false, message: "Ativo não encontrado" };
-  }
-  
-  // Check if the asset is currently in use (alugado or assinatura)
-  if (asset.status === "ALUGADO" || asset.status === "ASSINATURA") {
-    return { 
-      valid: false, 
-      message: "Não é possível excluir um ativo que está atualmente em uso (alugado ou em assinatura)." 
-    };
-  }
-  
-  // Check if the asset is associated with a client
-  if (asset.clientId) {
-    return { 
-      valid: false, 
-      message: "Não é possível excluir um ativo que está associado a um cliente. Remova a associação primeiro." 
-    };
-  }
-
-  return { valid: true, message: "" };
-};
