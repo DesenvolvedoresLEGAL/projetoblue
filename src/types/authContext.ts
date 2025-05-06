@@ -3,11 +3,11 @@ import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from './auth';
 
 export interface AuthContextType {
-  signIn?: (email: string, password: string) => Promise<void>; // Optional for backward compatibility
-  login: (email: string, password: string) => Promise<void>;   // The method we're actually using in our context
+  signIn: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>; // Alias for signIn
   signUp: (email: string, password: string) => Promise<void>;
-  signOut?: () => Promise<void>;                              // Optional for backward compatibility
-  logout: () => Promise<void>;                                // The method we're actually using in our context
+  signOut: () => Promise<void>;
+  logout: () => Promise<void>; // Alias for signOut
   isAuthenticated: boolean;
   user: User | null;
   profile?: UserProfile | null;
