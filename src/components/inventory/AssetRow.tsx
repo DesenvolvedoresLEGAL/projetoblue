@@ -46,7 +46,6 @@ const AssetRow = ({
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [openMenuForId, setOpenMenuForId] = useState<number | null>(null);
   
   const getStatusBadgeStyle = (status: AssetStatus) => {
     switch (status) {
@@ -184,10 +183,7 @@ const AssetRow = ({
         </TableCell>
         
         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu
-           open={openMenuForId === asset.id}
-           onOpenChange={(open) => setOpenMenuForId(open ? asset.id : null)} 
-           >
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
                 <MoreHorizontal className="h-4 w-4" />
@@ -208,19 +204,9 @@ const AssetRow = ({
               <DropdownMenuSeparator />
               
               <DropdownMenuItem
-                onClick={() => handleStatusUpdate("DISPONIVEL", 1)}
+                onClick={() => handleStatusUpdate("DISPONÍVEL", 1)}
               >
                 Marcar como Disponível
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleStatusUpdate("ALUGADO", 2)}
-              >
-                Marcar como Alugado
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleStatusUpdate("ASSINATURA", 3)}
-              >
-                Marcar como Assinatura
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleStatusUpdate("SEM DADOS", 4)}
