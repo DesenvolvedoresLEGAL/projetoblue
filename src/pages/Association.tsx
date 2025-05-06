@@ -81,10 +81,11 @@ const Association = () => {
   const handleAssociate = () => {
     if (selectedClient && selectedAsset) {
       associateAssetToClient(selectedAsset.id, selectedClient.id);
-      // Use apenas 2 argumentos, conforme esperado pela função
       addHistoryEntry({
-        type: "ASSOCIATION",
-        description: `Ativo ${selectedAsset.id} associado ao cliente ${selectedClient.name}`
+        action: "asset_assign",
+        description: `Ativo ${selectedAsset.type === "CHIP" ? "Chip" : "Roteador"} ${selectedAsset.type === "CHIP" ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId} associado ao cliente ${selectedClient.name}`,
+        assetIds: [selectedAsset.id],
+        clientId: selectedClient.id,
       });
       toast.success(`${selectedAsset.type === 'CHIP' ? 'Chip' : 'Roteador'} associado com sucesso ao cliente ${selectedClient.name}`);
       setSelectedAsset(null);
@@ -95,19 +96,19 @@ const Association = () => {
   const handleRemoveAsset = (assetId: string, clientId: string) => {
     removeAssetFromClient(assetId, clientId);
     addHistoryEntry({
-      type: "REMOVAL",
-      description: `Ativo ${assetId} removido do cliente ${clientId}`
+      action: "asset_unassign",
+      description: `Ativo ${asset.type === "CHIP" ? "Chip" : "Roteador"} ${asset.type === "CHIP" ? (asset as ChipAsset).iccid : (asset as RouterAsset).uniqueId} removido do cliente ${client.name}`,
+      assetIds: [asset.id],
+      clientId: client.id,
     });
     toast.success("Ativo removido do cliente");
   };
 
   // Corrigir as variáveis e referências para return dialog
   const handleReturnAssets = () => {
-    // Usar o selectedAsset singular, não o plural que não existe
     if (selectedAsset) {
       returnAssetsToStock([selectedAsset.id]);
       setSelectedAsset(null);
-      // Removendo as chamadas para variáveis inexistentes
       toast.success("Ativo devolvido ao estoque");
     }
   };
