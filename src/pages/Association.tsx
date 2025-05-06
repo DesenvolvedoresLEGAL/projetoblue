@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -33,102 +34,76 @@ const Association = () => {
 
   const handleAssociate = async () => {
     if (!assetId) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um ID de ativo.",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira um ID de ativo.");
       return;
     }
     if (!clientId) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um ID de cliente.",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira um ID de cliente.");
       return;
     }
 
     if (assetId && clientId) {
       try {
         await associateAssetToClient(assetId, clientId);
-        toast({
-          title: "Sucesso",
-          description: "Ativo associado ao cliente com sucesso.",
-        });
+        toast.success("Ativo associado ao cliente com sucesso.");
 
         // Fix the history entry
         addHistoryEntry({
-          type: "ASSOCIATION",
+          operationType: "ALUGUEL",
           description: `Ativo associado ao cliente`,
           assetIds: [assetId],
           clientId: clientId,
-          details: {
-            assetType: selectedAsset?.type,
-            assetIdentifier: selectedAsset?.type === 'CHIP' 
+          clientName: selectedClient?.name || "",
+          assets: [{
+            id: assetId,
+            type: selectedAsset?.type || "CHIP",
+            identifier: selectedAsset?.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
-              : (selectedAsset as RouterAsset).uniqueId,
-            clientName: selectedClient?.name
-          }
+              : (selectedAsset as RouterAsset).uniqueId
+          }],
+          comments: `Ativo associado ao cliente ${selectedClient?.name || ""}`
         });
       } catch (error) {
         console.error("Erro ao associar ativo ao cliente:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao associar ativo ao cliente.",
-          variant: "destructive"
-        });
+        toast.error("Erro ao associar ativo ao cliente.");
       }
     }
   };
 
   const handleRemoveAssociation = async () => {
     if (!assetId) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um ID de ativo.",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira um ID de ativo.");
       return;
     }
     if (!clientId) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira um ID de cliente.",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira um ID de cliente.");
       return;
     }
 
     if (assetId && clientId) {
       try {
         await removeAssetFromClient(assetId, clientId);
-        toast({
-          title: "Sucesso",
-          description: "Ativo removido do cliente com sucesso.",
-        });
+        toast.success("Ativo removido do cliente com sucesso.");
 
         // Fix the history entry
         addHistoryEntry({
-          type: "DISASSOCIATION",
+          operationType: "ALUGUEL",
           description: `Ativo removido do cliente`,
           assetIds: [assetId],
           clientId: clientId,
-          details: {
-            assetType: selectedAsset?.type,
-            assetIdentifier: selectedAsset?.type === 'CHIP' 
+          clientName: selectedClient?.name || "",
+          assets: [{
+            id: assetId,
+            type: selectedAsset?.type || "CHIP",
+            identifier: selectedAsset?.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
-              : (selectedAsset as RouterAsset).uniqueId,
-            clientName: selectedClient?.name
-          }
+              : (selectedAsset as RouterAsset).uniqueId
+          }],
+          comments: `Ativo removido do cliente ${selectedClient?.name || ""}`
         });
       } catch (error) {
         console.error("Erro ao remover associação do ativo:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao remover associação do ativo.",
-          variant: "destructive"
-        });
+        toast.error("Erro ao remover associação do ativo.");
       }
     }
   };
