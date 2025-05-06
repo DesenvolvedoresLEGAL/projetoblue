@@ -34,8 +34,10 @@ const Login = () => {
     }
   };
 
+  // Effect to redirect authenticated users to dashboard
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard');
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
