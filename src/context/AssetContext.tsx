@@ -1,6 +1,5 @@
-
 import React, { createContext, useState, useEffect } from 'react';
-import { Asset, AssetType, ChipAsset, RouterAsset, StatusRecord } from '@/types/asset';
+import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
 import { toast } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,7 +58,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   // Helper function to map status_id to AssetStatus
-  const mapStatusIdToAssetStatus = (statusId: number) => {
+  const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
     const found = statusRecords.find(s => s.id === statusId);
     if (found) {
       switch (found.nome) {
@@ -76,7 +75,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Helper function to map AssetStatus to status_id
-  const mapAssetStatusToId = (status: AssetStatus) => {
+  const mapAssetStatusToId = (status: AssetStatus): number => {
     const statusMap: Record<AssetStatus, string> = {
       'DISPONÍVEL': 'Disponível',
       'ALUGADO': 'Alugado',
@@ -296,16 +295,20 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (existingAsset.type === 'CHIP') {
         const chipData = assetData as Partial<ChipAsset>;
         
+        // Create an update object with only the fields that need to be updated
+        const updateData: any = {
+          updated_at: new Date().toISOString(),
+          status_id: statusId
+        };
+        
+        if (chipData.iccid !== undefined) updateData.iccid = chipData.iccid;
+        if (chipData.phoneNumber !== undefined) updateData.numero = chipData.phoneNumber;
+        if (chipData.carrier !== undefined) updateData.operadora = chipData.carrier;
+        if (chipData.notes !== undefined) updateData.observacoes = chipData.notes;
+        
         const { error } = await supabase
           .from('chips')
-          .update({
-            iccid: chipData.iccid,
-            numero: chipData.phoneNumber,
-            operadora: chipData.carrier,
-            observacoes: chipData.notes,
-            status_id: statusId,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', id);
           
         if (error) {
@@ -316,23 +319,27 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else if (existingAsset.type === 'ROTEADOR') {
         const routerData = assetData as Partial<RouterAsset>;
         
+        // Create an update object with only the fields that need to be updated
+        const updateData: any = {
+          updated_at: new Date().toISOString(),
+          status_id: statusId
+        };
+        
+        if (routerData.uniqueId !== undefined) updateData.id_unico = routerData.uniqueId;
+        if (routerData.brand !== undefined) updateData.marca = routerData.brand;
+        if (routerData.model !== undefined) updateData.modelo = routerData.model;
+        if (routerData.ssid !== undefined) updateData.ssid = routerData.ssid;
+        if (routerData.password !== undefined) updateData.senha_wifi = routerData.password;
+        if (routerData.ipAddress !== undefined) updateData.ip_gerencia = routerData.ipAddress;
+        if (routerData.adminUser !== undefined) updateData.usuario_admin = routerData.adminUser;
+        if (routerData.adminPassword !== undefined) updateData.senha_admin = routerData.adminPassword;
+        if (routerData.imei !== undefined) updateData.imei = routerData.imei;
+        if (routerData.serialNumber !== undefined) updateData.numero_serie = routerData.serialNumber;
+        if (routerData.notes !== undefined) updateData.observacoes = routerData.notes;
+        
         const { error } = await supabase
           .from('roteadores')
-          .update({
-            id_unico: routerData.uniqueId,
-            marca: routerData.brand,
-            modelo: routerData.model,
-            ssid: routerData.ssid,
-            senha_wifi: routerData.password,
-            ip_gerencia: routerData.ipAddress,
-            usuario_admin: routerData.adminUser,
-            senha_admin: routerData.adminPassword,
-            imei: routerData.imei,
-            numero_serie: routerData.serialNumber,
-            observacoes: routerData.notes,
-            status_id: statusId,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', id);
           
         if (error) {

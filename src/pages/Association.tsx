@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAssets } from "@/context/useAssets";
 import { Asset, Client, SubscriptionInfo, SubscriptionType } from "@/types/asset";
@@ -43,7 +42,8 @@ export default function Association() {
     clients, 
     associateAssetToClient, 
     removeAssetFromClient, 
-    getClientById 
+    getClientById, 
+    returnAssetsToStock 
   } = useAssets();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -163,6 +163,14 @@ export default function Association() {
       case "ALUGUEL": return "Aluguel";
       default: return type;
     }
+  };
+
+  // Fix the returnAssetsToStock call by removing the third argument
+  const handleConfirmReturn = () => {
+    returnAssetsToStock(selectedAssets);
+    setSelectedAssets([]);
+    setIsReturnDialogOpen(false);
+    toast.success(`${selectedAssets.length} ativos retornados ao estoque com sucesso.`);
   };
 
   return (
