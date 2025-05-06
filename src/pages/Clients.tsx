@@ -1,8 +1,22 @@
 import { useState } from "react";
-import { useAssets } from "@/context/AssetContext";
-import { Client } from "@/types/asset";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Pencil, Trash2, Package, Flag } from "lucide-react";
+import { useAssets } from "@/context/useAssets";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -11,316 +25,426 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/utils/toast";
-import ClientDetailsDialog from "@/components/clients/ClientDetailsDialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
+import { Download, Filter, MoreHorizontal, Pencil, Search, Smartphone, Wifi, AlertTriangle } from "lucide-react";
+import EditAssetDialog from "@/components/inventory/EditAssetDialog";
+import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
+import AssetStatusDropdown from "@/components/inventory/AssetStatusDropdown";
 
-export default function Clients() {
-  const { clients, addClient, updateClient, deleteClient, getClientById } = useAssets();
-  const [isAddingClient, setIsAddingClient] = useState(false);
-  const [editingClientId, setEditingClientId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+const Inventory = () => {
+  const { assets, updateAsset, deleteAsset, statusRecords } = useAssets();
+  const [search, setSearch] = useState("");
+  const [phoneSearch, setPhoneSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
-  const [formData, setFormData] = useState<Omit<Client, "id" | "assets">>({
-    name: "",
-    document: "",
-    documentType: "CPF",
-    contact: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly;
+  };
+
+  const filteredAssets = assets.filter((asset) => {
+    if (typeFilter !== "all" && asset.type !== typeFilter) {
+      return false;
+    }
+    
+    if (statusFilter !== "all" && asset.status !== statusFilter) {
+      return false;
+    }
+    
+    // Phone number search for chips
+    if (phoneSearch && asset.type === "CHIP") {
+      const chip = asset as ChipAsset;
+      const formattedSearchPhone = formatPhoneNumber(phoneSearch);
+      const formattedAssetPhone = formatPhoneNumber(chip.phoneNumber);
+      
+      // Check if the formatted phone numbers match (ignoring length differences)
+      if (!formattedAssetPhone.endsWith(formattedSearchPhone) && 
+          !formattedSearchPhone.endsWith(formattedAssetPhone)) {
+        return false;
+      }
+    }
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      
+      if (asset.type === "CHIP") {
+        const chip = asset as ChipAsset;
+        return (
+          chip.iccid.toLowerCase().includes(searchLower) ||
+          chip.phoneNumber.toLowerCase().includes(searchLower) ||
+          chip.carrier.toLowerCase().includes(searchLower)
+        );
+      } else {
+        const router = asset as RouterAsset;
+        return (
+          router.uniqueId.toLowerCase().includes(searchLower) ||
+          router.brand.toLowerCase().includes(searchLower) ||
+          router.model.toLowerCase().includes(searchLower) ||
+          router.ssid.toLowerCase().includes(searchLower)
+        );
+      }
+    }
+    
+    return true;
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleAddClient = () => {
-    if (!formData.name || !formData.contact) {
-      toast.error("Por favor, preencha o nome e contato");
-      return;
+  const getStatusBadgeStyle = (status: AssetStatus) => {
+    switch (status) {
+      case "DISPONÍVEL":
+        return "bg-green-500";
+      case "ALUGADO":
+      case "ASSINATURA":
+        return "bg-telecom-500";
+      case "SEM DADOS":
+        return "bg-amber-500";
+      case "BLOQUEADO":
+        return "bg-red-500";
+      case "MANUTENÇÃO":
+        return "bg-blue-500";
+      default:
+        return "bg-gray-500";
     }
-
-    addClient(formData);
-    resetForm();
-    setIsAddingClient(false);
   };
 
-  const handleUpdateClient = () => {
-    if (!editingClientId) return;
+  const exportToCSV = () => {
+    let csvContent = "ID,Tipo,Data de Registro,Status,ICCID/ID Único,Número/Marca,Operadora/Modelo,SSID,Senha\n";
     
-    if (!formData.name || !formData.contact) {
-      toast.error("Por favor, preencha o nome e contato");
-      return;
-    }
-
-    updateClient(editingClientId, formData);
-    resetForm();
-    setEditingClientId(null);
+    filteredAssets.forEach((asset) => {
+      const row = [];
+      row.push(asset.id);
+      row.push(asset.type);
+      row.push(asset.registrationDate.split("T")[0]);
+      row.push(asset.status);
+      
+      if (asset.type === "CHIP") {
+        const chip = asset as ChipAsset;
+        row.push(chip.iccid);
+        row.push(chip.phoneNumber);
+        row.push(chip.carrier);
+        row.push("");
+      } else {
+        const router = asset as RouterAsset;
+        row.push(router.uniqueId);
+        row.push(router.brand);
+        row.push(router.model);
+        row.push(router.ssid);
+        row.push(router.password);
+      }
+      
+      csvContent += row.join(",") + "\n";
+    });
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventario-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleDeleteClient = (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
-      deleteClient(id);
-    }
+  const handleEditAsset = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setIsEditDialogOpen(true);
   };
 
-  const startEditingClient = (id: string) => {
-    const client = getClientById(id);
-    if (client) {
-      setFormData({
-        name: client.name,
-        document: client.document,
-        documentType: client.documentType,
-        contact: client.contact,
-        email: client.email,
-        address: client.address,
-        city: client.city,
-        state: client.state,
-        zipCode: client.zipCode,
-      });
-      setEditingClientId(id);
-      setIsAddingClient(true);
-    }
-  };
-
-  const viewClientDetails = (client: Client) => {
-    setSelectedClient(client);
+  const handleViewAssetDetails = (asset: Asset) => {
+    setSelectedAsset(asset);
     setIsDetailsDialogOpen(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      document: "",
-      documentType: "CPF",
-      contact: "",
-      email: "",
-      address: "",
-      city: "",
-      state: "",
-      zipCode: "",
-    });
-    setEditingClientId(null);
-    setIsAddingClient(false);
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setSelectedAsset(null);
   };
 
-  const filteredClients = clients.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.document.includes(searchTerm)
-  );
-
-  const isMissingCNPJ = (client: Client) => {
-    return client.documentType === "CNPJ" && (!client.document || client.document.trim() === "");
+  const handleCloseDetailsDialog = () => {
+    setIsDetailsDialogOpen(false);
+    setSelectedAsset(null);
   };
+
+  // Helper function to map status names to filter values
+  function mapStatusToFilter(statusName: string): string {
+    switch (statusName) {
+      case 'Disponível': return 'DISPONÍVEL';
+      case 'Alugado': return 'ALUGADO';
+      case 'Assinatura': return 'ASSINATURA';
+      case 'Sem dados': return 'SEM DADOS';
+      case 'Bloqueado': return 'BLOQUEADO';
+      case 'Em manutenção': return 'MANUTENÇÃO';
+      default: return statusName.toUpperCase();
+    }
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Clientes</h1>
-        {!isAddingClient && (
-          <Button onClick={() => setIsAddingClient(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Cliente
-          </Button>
-        )}
-      </div>
-
-      {isAddingClient ? (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">
-            {editingClientId ? "Editar Cliente" : "Adicionar Novo Cliente"}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome *</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="documentType">Tipo de Documento</Label>
-              <select
-                id="documentType"
-                name="documentType"
-                className="w-full rounded-md border border-input bg-background px-3 py-2"
-                value={formData.documentType}
-                onChange={handleInputChange}
-              >
-                <option value="CPF">CPF</option>
-                <option value="CNPJ">CNPJ</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="document">Documento</Label>
-              <Input
-                id="document"
-                name="document"
-                value={formData.document}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact">Contato *</Label>
-              <Input
-                id="contact"
-                name="contact"
-                value={formData.contact}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">Estado</Label>
-              <Input
-                id="state"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zipCode">CEP</Label>
-              <Input
-                id="zipCode"
-                name="zipCode"
-                value={formData.zipCode}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end space-x-2">
-            <Button variant="outline" onClick={resetForm}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={editingClientId ? handleUpdateClient : handleAddClient}
-            >
-              {editingClientId ? "Atualizar" : "Adicionar"}
-            </Button>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Inventário</h1>
+          <p className="text-muted-foreground">
+            Gerencie os ativos cadastrados no sistema
+          </p>
         </div>
-      ) : (
-        <>
-          <div className="mb-4">
-            <Input
-              placeholder="Buscar por nome ou documento..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md"
-            />
+        
+        <Button onClick={exportToCSV} className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          <span>Exportar CSV</span>
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Filtros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Buscar ativo..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <SelectValue placeholder="Tipo de Ativo" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Tipos</SelectItem>
+                <SelectItem value="CHIP">Chip</SelectItem>
+                <SelectItem value="ROTEADOR">Roteador</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <SelectValue placeholder="Status" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                {statusRecords.map((status) => (
+                  <SelectItem key={status.id} value={mapStatusToFilter(status.nome)}>
+                    {status.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Contato</TableHead>
-                  <TableHead>Ativos</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.length === 0 ? (
+          
+          {/* Phone number search for chips */}
+          {(typeFilter === "all" || typeFilter === "CHIP") && (
+            <div className="relative max-w-md">
+              <Smartphone className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Buscar por número do chip (com ou sem DDD)..."
+                value={phoneSearch}
+                onChange={(e) => setPhoneSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="pt-6">
+          {filteredAssets.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                      Nenhum cliente encontrado.
-                    </TableCell>
+                    <TableHead className="w-[100px]">Tipo</TableHead>
+                    <TableHead>ID / ICCID</TableHead>
+                    <TableHead>Detalhes</TableHead>
+                    <TableHead>Registro</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ) : (
-                  filteredClients.map((client) => (
+                </TableHeader>
+                <TableBody>
+                  {filteredAssets.map((asset) => (
                     <TableRow 
-                      key={client.id}
+                      key={asset.id}
                       className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => viewClientDetails(client)}
+                      onClick={() => handleViewAssetDetails(asset)}
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        {asset.type === "CHIP" ? (
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="h-4 w-4" />
+                            <span>Chip</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Wifi className="h-4 w-4" />
+                            <span>Roteador</span>
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {isMissingCNPJ(client) && (
-                            <Flag className="h-4 w-4 text-yellow-500" />
-                          )}
-                          {client.name}
-                        </div>
+                        {asset.type === "CHIP"
+                          ? (asset as ChipAsset).iccid
+                          : (asset as RouterAsset).uniqueId
+                        }
                       </TableCell>
                       <TableCell>
-                        {client.documentType}: {client.document || "Não informado"}
+                        {asset.type === "CHIP" ? (
+                          <div>
+                            <div>{(asset as ChipAsset).phoneNumber}</div>
+                            <div className="text-xs text-gray-500">
+                              {(asset as ChipAsset).carrier}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-center gap-2">
+                              {(asset as RouterAsset).brand} {(asset as RouterAsset).model}
+                              {(asset as RouterAsset).hasWeakPassword && (
+                                <div className="flex items-center text-orange-500 text-xs">
+                                  <AlertTriangle className="h-4 w-4" />
+                                  <span className="ml-1">Senha fraca</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              SSID: {(asset as RouterAsset).ssid}
+                            </div>
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell>{client.contact}</TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <Package className="mr-1 h-4 w-4 text-gray-500" /> 
-                          {client.assets.length}
+                        {new Date(asset.registrationDate).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Badge className={getStatusBadgeStyle(asset.status)}>
+                          {asset.status}
+                        </Badge>
+                        {/* Novo dropdown para atualizar status */}
+                        <div className="mt-1">
+                          <AssetStatusDropdown 
+                            asset={asset} 
+                            statusRecords={statusRecords} 
+                          />
                         </div>
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => startEditingClient(client.id)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleDeleteClient(client.id)}
-                            className="text-red-500 hover:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-white">
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              className="flex items-center gap-2"
+                              onClick={() => handleEditAsset(asset)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Editar ativo
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              onClick={() => 
+                                updateAsset(asset.id, { status: "DISPONÍVEL", statusId: 1 })
+                              }
+                            >
+                              Marcar como Disponível
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => 
+                                updateAsset(asset.id, { status: "SEM DADOS", statusId: 4 })
+                              }
+                            >
+                              Marcar como Sem Dados
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => 
+                                updateAsset(asset.id, { status: "BLOQUEADO", statusId: 5 })
+                              }
+                            >
+                              Marcar como Bloqueado
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => 
+                                updateAsset(asset.id, { status: "MANUTENÇÃO", statusId: 6 })
+                              }
+                            >
+                              Marcar como Em Manutenção
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              onClick={() => deleteAsset(asset.id)}
+                              className="text-red-500 focus:text-red-500"
+                            >
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10">
+              <p className="text-center text-gray-500 mb-4">
+                Nenhum ativo encontrado com os filtros atuais.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch("");
+                  setPhoneSearch("");
+                  setTypeFilter("all");
+                  setStatusFilter("all");
+                }}
+              >
+                Limpar Filtros
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <EditAssetDialog 
+        asset={selectedAsset}
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseEditDialog}
+      />
       
-      <ClientDetailsDialog 
-        client={selectedClient}
+      <AssetDetailsDialog
+        asset={selectedAsset}
         isOpen={isDetailsDialogOpen}
-        onClose={() => setIsDetailsDialogOpen(false)}
+        onClose={handleCloseDetailsDialog}
       />
     </div>
   );
-}
+};
+
+export default Inventory;
