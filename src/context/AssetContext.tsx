@@ -1,32 +1,43 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset } from '@/types/asset';
 import * as assetActions from './assetActions';
 import { toast } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
+import { AssetContextType } from './AssetContextTypes';
+import { Client } from '@/types/asset';
+import { AssetHistoryEntry } from '@/types/assetHistory';
 
-export interface AssetContextType {
-  assets: Asset[];
-  loading: boolean;
-  addAsset: (assetData: Omit<Asset, "id" | "status">) => Promise<Asset | null>;
-  updateAsset: (id: string, assetData: Partial<Asset>) => Promise<Asset | null>;
-  deleteAsset: (id: string) => Promise<boolean>;
-  getAssetById: (id: string) => Asset | undefined;
-  filterAssets: (criteria: any) => Asset[];
-}
-
-export const AssetContext = createContext<AssetContextType>({
+// Definindo o valor padrão para o contexto
+const defaultContextValue: AssetContextType = {
   assets: [],
-  loading: false,
+  clients: [],
+  history: [],
   addAsset: async () => null,
   updateAsset: async () => null,
   deleteAsset: async () => false,
   getAssetById: () => undefined,
-  filterAssets: () => [],
-});
+  getAssetsByStatus: () => [],
+  getAssetsByType: () => [],
+  addClient: () => {},
+  updateClient: () => {},
+  deleteClient: () => {},
+  getClientById: () => undefined,
+  associateAssetToClient: () => {},
+  removeAssetFromClient: () => {},
+  getExpiredSubscriptions: () => [],
+  returnAssetsToStock: () => {},
+  extendSubscription: () => {},
+  addHistoryEntry: () => {},
+  getAssetHistory: () => [],
+  getClientHistory: () => [],
+};
+
+export const AssetContext = createContext<AssetContextType>(defaultContextValue);
 
 export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Carregar os ativos do Supabase durante a inicialização
@@ -58,7 +69,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Converter para o formato de Asset
         const chipsAssets: ChipAsset[] = chips?.map((chip) => ({
           id: chip.id,
-          type: 'CHIP' as AssetType,
+          type: "CHIP" as const,
           registrationDate: chip.created_at,
           status: 'DISPONÍVEL',
           iccid: chip.iccid,
@@ -69,7 +80,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         const roteadoresAssets: RouterAsset[] = roteadores?.map((roteador) => ({
           id: roteador.id,
-          type: 'ROTEADOR' as AssetType,
+          type: "ROTEADOR" as const,
           registrationDate: roteador.created_at,
           status: 'DISPONÍVEL',
           uniqueId: roteador.id_unico,
@@ -337,16 +348,57 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return filteredAssets;
   };
 
+  // Funções relacionadas aos clientes
+  const getClientById = (id: string) => {
+    return clients.find(client => client.id === id);
+  };
+
+  // Funções relacionadas ao histórico
+  const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
+    const newEntry: AssetHistoryEntry = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      ...entry
+    };
+    setHistory(prev => [newEntry, ...prev]);
+  };
+
+  const getAssetHistory = (assetId: string): AssetHistoryEntry[] => {
+    return history.filter(entry => entry.assetIds.includes(assetId))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+  
+  const getClientHistory = (clientId: string): AssetHistoryEntry[] => {
+    return history.filter(entry => entry.clientId === clientId)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+
   return (
     <AssetContext.Provider
       value={{
         assets,
+        clients,
+        history,
         loading,
         addAsset,
         updateAsset,
         deleteAsset,
         getAssetById,
         filterAssets,
+        getAssetsByStatus: (status) => assets.filter(asset => asset.status === status),
+        getAssetsByType: (type) => assets.filter(asset => asset.type === type),
+        addClient: () => {}, // Implementar conforme necessário
+        updateClient: () => {}, // Implementar conforme necessário
+        deleteClient: () => {}, // Implementar conforme necessário
+        getClientById,
+        associateAssetToClient: () => {}, // Implementar conforme necessário
+        removeAssetFromClient: () => {}, // Implementar conforme necessário
+        getExpiredSubscriptions: () => [], // Implementar conforme necessário
+        returnAssetsToStock: () => {}, // Implementar conforme necessário
+        extendSubscription: () => {}, // Implementar conforme necessário
+        addHistoryEntry,
+        getAssetHistory,
+        getClientHistory,
       }}
     >
       {children}

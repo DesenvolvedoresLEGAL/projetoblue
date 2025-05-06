@@ -6,9 +6,9 @@ export interface AssetContextType {
   assets: Asset[];
   clients: Client[];
   history: AssetHistoryEntry[];
-  addAsset: (asset: Omit<Asset, "id" | "status">) => void;
-  updateAsset: (id: string, asset: Partial<Asset>) => void;
-  deleteAsset: (id: string) => void;
+  addAsset: (asset: Omit<Asset, "id" | "status">) => Promise<Asset | null>;
+  updateAsset: (id: string, asset: Partial<Asset>) => Promise<Asset | null>;
+  deleteAsset: (id: string) => Promise<boolean>;
   getAssetById: (id: string) => Asset | undefined;
   getAssetsByStatus: (status: AssetStatus) => Asset[];
   getAssetsByType: (type: AssetType) => Asset[];
