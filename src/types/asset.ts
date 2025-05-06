@@ -9,6 +9,18 @@ export type AssetStatus =
 
 export type AssetType = "CHIP" | "ROTEADOR";
 
+export type SolutionType = 
+  | "SPEEDY 5G"
+  | "4BLACK"
+  | "4LITE"
+  | "4PLUS"
+  | "AP BLUE"
+  | "POWERBANK"
+  | "SWITCH"
+  | "HUB USB"
+  | "ANTENA"
+  | "LOAD BALANCE";
+
 export type SubscriptionType = "MENSAL" | "ANUAL" | "ALUGUEL";
 
 export interface SubscriptionInfo {
@@ -31,6 +43,12 @@ export interface BaseAsset {
   subscription?: SubscriptionInfo;
   lastSeen?: string;
   isOnline?: boolean;
+  solucao?: SolutionType;
+  marca?: string; 
+  modelo?: string;
+  serial_number?: string;
+  dias_alugada?: number;
+  radio?: string;
 }
 
 export interface ChipAsset extends BaseAsset {
@@ -38,6 +56,7 @@ export interface ChipAsset extends BaseAsset {
   iccid: string;
   phoneNumber: string;
   carrier: string;
+  num_linha?: number;
   dataUsage?: {
     download: number;
     upload: number;

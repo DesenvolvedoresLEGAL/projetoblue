@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useAssets } from "@/context/useAssets";
-import { ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/utils/toast";
 import { AlertTriangle } from "lucide-react";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function RegisterAsset() {
   const { addAsset } = useAssets();
@@ -32,6 +34,8 @@ export default function RegisterAsset() {
     phoneNumber: "",
     carrier: "VIVO",
     registrationDate: new Date().toISOString(),
+    num_linha: undefined,
+    solucao: undefined,
   });
 
   // Form state for router
@@ -43,6 +47,11 @@ export default function RegisterAsset() {
     ssid: "",
     password: "",
     registrationDate: new Date().toISOString(),
+    marca: "",
+    modelo: "",
+    serial_number: "",
+    solucao: undefined,
+    radio: undefined,
   });
 
   const handleChipChange = (
@@ -54,6 +63,14 @@ export default function RegisterAsset() {
 
   const handleCarrierChange = (value: string) => {
     setChipForm((prev) => ({ ...prev, carrier: value }));
+  };
+
+  const handleSolutionChange = (value: SolutionType) => {
+    if (assetType === "CHIP") {
+      setChipForm((prev) => ({ ...prev, solucao: value }));
+    } else {
+      setRouterForm((prev) => ({ ...prev, solucao: value }));
+    }
   };
 
   const handleRouterChange = (
@@ -78,37 +95,89 @@ export default function RegisterAsset() {
         // Validate chip form
         if (!chipForm.iccid || !chipForm.phoneNumber || !chipForm.carrier) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
+          setIsSubmitting(false);
           return;
         }
 
-        // Submit chip
-        await addAsset(chipForm);
+        // Validate ICCID format (19-20 digits)
+        const iccidClean = chipForm.iccid.replace(/\D/g, '');
+        if (iccidClean.length < 19 || iccidClean.length > 20) {
+          toast.error("O ICCID deve ter entre 19 e 20 dígitos numéricos");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Submit to Supabase
+        const { data, error } = await supabase
+          .from('assets')
+          .insert({
+            type: 'chip',
+            status: 'Disponível',
+            iccid: chipForm.iccid,
+            num_linha: chipForm.num_linha ? parseInt(chipForm.num_linha.toString()) : null,
+            solucao: chipForm.solucao || null,
+            operadora_id: chipForm.carrier === "VIVO" ? 1 : chipForm.carrier === "CLARO" ? 2 : 3, // Assuming operadora_id mapping
+          })
+          .select();
+
+        if (error) {
+          console.error("Erro ao cadastrar chip:", error);
+          toast.error(`Erro ao cadastrar chip: ${error.message}`);
+          setIsSubmitting(false);
+          return;
+        }
+
+        toast.success("Chip cadastrado com sucesso!");
+
+        // Reset form after successful submission
         setChipForm({
           type: "CHIP",
           iccid: "",
           phoneNumber: "",
           carrier: "VIVO",
           registrationDate: new Date().toISOString(),
+          num_linha: undefined,
+          solucao: undefined,
         });
+
       } else {
         // Validate router form
         if (!routerForm.uniqueId || !routerForm.brand || !routerForm.model) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
+          setIsSubmitting(false);
           return;
         }
 
         if (passwordStrength === 'weak' && !allowWeakPassword) {
           toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
+          setIsSubmitting(false);
           return;
         }
 
-        // If weak password is allowed, mark with a flag
-        if (passwordStrength === 'weak' && allowWeakPassword) {
-          routerForm.hasWeakPassword = true;
+        // Submit to Supabase
+        const { data, error } = await supabase
+          .from('assets')
+          .insert({
+            type: 'roteador',
+            status: 'Disponível',
+            serial_number: routerForm.serial_number || null,
+            marca: routerForm.brand,
+            modelo: routerForm.model,
+            solucao: routerForm.solucao || null,
+            radio: routerForm.radio || null,
+          })
+          .select();
+
+        if (error) {
+          console.error("Erro ao cadastrar roteador:", error);
+          toast.error(`Erro ao cadastrar roteador: ${error.message}`);
+          setIsSubmitting(false);
+          return;
         }
 
-        // Submit router
-        await addAsset(routerForm);
+        toast.success("Roteador cadastrado com sucesso!");
+
+        // Reset form after successful submission
         setRouterForm({
           type: "ROTEADOR",
           uniqueId: "",
@@ -117,6 +186,11 @@ export default function RegisterAsset() {
           ssid: "",
           password: "",
           registrationDate: new Date().toISOString(),
+          marca: "",
+          modelo: "",
+          serial_number: "",
+          solucao: undefined,
+          radio: undefined,
         });
         setPasswordStrength(null);
         setAllowWeakPassword(false);
@@ -156,6 +230,19 @@ export default function RegisterAsset() {
       );
     }
   };
+
+  const solutionOptions: SolutionType[] = [
+    "SPEEDY 5G",
+    "4BLACK",
+    "4LITE",
+    "4PLUS",
+    "AP BLUE",
+    "POWERBANK",
+    "SWITCH",
+    "HUB USB",
+    "ANTENA",
+    "LOAD BALANCE"
+  ];
 
   return (
     <div className="space-y-6">
@@ -223,6 +310,33 @@ export default function RegisterAsset() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="num_linha">Número da Linha</Label>
+                    <Input
+                      id="num_linha"
+                      name="num_linha"
+                      type="number"
+                      value={chipForm.num_linha || ""}
+                      onChange={handleChipChange}
+                      placeholder="Número da linha"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="chipSolution">Solução</Label>
+                    <Select 
+                      value={chipForm.solucao} 
+                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
+                    >
+                      <SelectTrigger id="chipSolution">
+                        <SelectValue placeholder="Selecione a solução" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {solutionOptions.map(solution => (
+                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="chipNotes">Observações</Label>
@@ -270,7 +384,17 @@ export default function RegisterAsset() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ssid">SSID *</Label>
+                    <Label htmlFor="serial_number">Número de Série</Label>
+                    <Input
+                      id="serial_number"
+                      name="serial_number"
+                      value={routerForm.serial_number || ""}
+                      onChange={handleRouterChange}
+                      placeholder="Ex: SN123456789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ssid">SSID</Label>
                     <Input
                       id="ssid"
                       name="ssid"
@@ -280,7 +404,7 @@ export default function RegisterAsset() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha *</Label>
+                    <Label htmlFor="password">Senha</Label>
                     <Input
                       id="password"
                       name="password"
@@ -290,6 +414,32 @@ export default function RegisterAsset() {
                       placeholder="Senha da rede Wi-Fi"
                     />
                     {renderPasswordStrength()}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="radio">Radio</Label>
+                    <Input
+                      id="radio"
+                      name="radio"
+                      value={routerForm.radio || ""}
+                      onChange={handleRouterChange}
+                      placeholder="Configuração de rádio"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="routerSolution">Solução</Label>
+                    <Select 
+                      value={routerForm.solucao} 
+                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
+                    >
+                      <SelectTrigger id="routerSolution">
+                        <SelectValue placeholder="Selecione a solução" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {solutionOptions.map(solution => (
+                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="ipAddress">IP Gerência</Label>
@@ -330,16 +480,6 @@ export default function RegisterAsset() {
                       value={routerForm.imei || ""}
                       onChange={handleRouterChange}
                       placeholder="Ex: 123456789012345"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="serialNumber">Número de Série</Label>
-                    <Input
-                      id="serialNumber"
-                      name="serialNumber"
-                      value={routerForm.serialNumber || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: SN123456789"
                     />
                   </div>
                 </div>
