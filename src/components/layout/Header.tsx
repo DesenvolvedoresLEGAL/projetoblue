@@ -3,7 +3,6 @@ import { MobileNavigation } from "./MobileNavigation";
 import { Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuth } from "@/context/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,18 +15,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
-  const { signOut, profile } = useAuth();
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     setTheme(theme === 'dark' ? 'light' : 'dark', e);
   };
 
-  const userInitial = profile?.email?.charAt(0).toUpperCase() || 'U';
-  const roleName = {
-    'admin': 'Administrador',
-    'tech': 'Técnico',
-    'analyst': 'Analista'
-  }[profile?.role || 'analyst'];
+  // Default user information since authentication is removed
+  const userEmail = "usuario@sistema.com";
+  const userInitial = "U";
+  const roleName = "Usuário";
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center bg-background border-b px-4 lg:px-6">
@@ -52,7 +48,7 @@ export function Header() {
                 <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
               <div className="hidden md:block">
-                <p className="text-sm font-medium">{profile?.email}</p>
+                <p className="text-sm font-medium">{userEmail}</p>
                 <p className="text-xs text-muted-foreground">{roleName}</p>
               </div>
             </div>
@@ -64,8 +60,8 @@ export function Header() {
             <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => signOut()} 
               className="cursor-pointer text-destructive"
+              onClick={() => window.location.href = '/login'}
             >
               Sair
             </DropdownMenuItem>
