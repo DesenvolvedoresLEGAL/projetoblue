@@ -348,28 +348,28 @@ const Inventory = () => {
                             
                             <DropdownMenuItem
                               onClick={() => 
-                                updateAsset(asset.id, { status: "DISPONÍVEL" })
+                                updateAsset(asset.id, { status: "DISPONÍVEL", statusId: 1 })
                               }
                             >
                               Marcar como Disponível
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => 
-                                updateAsset(asset.id, { status: "SEM DADOS" })
+                                updateAsset(asset.id, { status: "SEM DADOS", statusId: 4 })
                               }
                             >
                               Marcar como Sem Dados
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => 
-                                updateAsset(asset.id, { status: "BLOQUEADO" })
+                                updateAsset(asset.id, { status: "BLOQUEADO", statusId: 5 })
                               }
                             >
                               Marcar como Bloqueado
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => 
-                                updateAsset(asset.id, { status: "MANUTENÇÃO" })
+                                updateAsset(asset.id, { status: "MANUTENÇÃO", statusId: 6 })
                               }
                             >
                               Marcar como Em Manutenção

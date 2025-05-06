@@ -1,5 +1,6 @@
+
 import React, { createContext, useState, useEffect } from 'react';
-import { Asset, AssetType, ChipAsset, RouterAsset } from '@/types/asset';
+import { Asset, AssetType, ChipAsset, RouterAsset, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
 import { toast } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ const defaultContextValue: AssetContextType = {
   assets: [],
   clients: [],
   history: [],
+  loading: false, // Fixed missing loading property
   addAsset: async () => null,
   updateAsset: async () => null,
   deleteAsset: async () => false,
@@ -39,6 +41,53 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [clients, setClients] = useState<Client[]>([]);
   const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
+
+  // Load status records from the database
+  useEffect(() => {
+    const fetchStatusRecords = async () => {
+      const { data, error } = await supabase.from('status').select('*');
+      if (error) {
+        console.error('Error loading status records:', error);
+      } else {
+        setStatusRecords(data || []);
+      }
+    };
+    
+    fetchStatusRecords();
+  }, []);
+
+  // Helper function to map status_id to AssetStatus
+  const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
+    const found = statusRecords.find(s => s.id === statusId);
+    if (found) {
+      switch (found.nome) {
+        case 'Disponível': return 'DISPONÍVEL';
+        case 'Alugado': return 'ALUGADO';
+        case 'Assinatura': return 'ASSINATURA';
+        case 'Sem dados': return 'SEM DADOS';
+        case 'Bloqueado': return 'BLOQUEADO';
+        case 'Em manutenção': return 'MANUTENÇÃO';
+        default: return 'DISPONÍVEL';
+      }
+    }
+    return 'DISPONÍVEL'; // Default fallback
+  };
+
+  // Helper function to map AssetStatus to status_id
+  const mapAssetStatusToId = (status: AssetStatus): number => {
+    const statusMap: Record<AssetStatus, string> = {
+      'DISPONÍVEL': 'Disponível',
+      'ALUGADO': 'Alugado',
+      'ASSINATURA': 'Assinatura',
+      'SEM DADOS': 'Sem dados',
+      'BLOQUEADO': 'Bloqueado',
+      'MANUTENÇÃO': 'Em manutenção'
+    };
+    
+    const found = statusRecords.find(s => s.nome === statusMap[status]);
+    return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
+  };
 
   // Carregar os ativos do Supabase durante a inicialização
   useEffect(() => {
@@ -71,7 +120,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: chip.id,
           type: "CHIP" as const,
           registrationDate: chip.created_at,
-          status: 'DISPONÍVEL',
+          status: mapStatusIdToAssetStatus(chip.status_id),
+          statusId: chip.status_id,
           iccid: chip.iccid,
           phoneNumber: chip.numero,
           carrier: chip.operadora,
@@ -82,7 +132,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: roteador.id,
           type: "ROTEADOR" as const,
           registrationDate: roteador.created_at,
-          status: 'DISPONÍVEL',
+          status: mapStatusIdToAssetStatus(roteador.status_id),
+          statusId: roteador.status_id,
           uniqueId: roteador.id_unico,
           brand: roteador.marca,
           model: roteador.modelo,
@@ -108,10 +159,13 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     loadAssets();
-  }, []);
+  }, [statusRecords]); // Dependency on statusRecords ensures assets load after status mapping is available
 
   const addAsset = async (assetData: Omit<Asset, "id" | "status">): Promise<Asset | null> => {
     try {
+      // Default to 'Disponível' status (id = 1) if no status is provided
+      const statusId = assetData.statusId || 1;
+      
       if (assetData.type === "CHIP") {
         const chipData = assetData as Omit<ChipAsset, "id" | "status">;
         
@@ -122,7 +176,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             iccid: chipData.iccid,
             numero: chipData.phoneNumber,
             operadora: chipData.carrier,
-            observacoes: chipData.notes
+            observacoes: chipData.notes,
+            status_id: statusId
           })
           .select()
           .single();
@@ -138,7 +193,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: data.id,
           type: 'CHIP',
           registrationDate: data.created_at,
-          status: 'DISPONÍVEL',
+          status: mapStatusIdToAssetStatus(data.status_id),
+          statusId: data.status_id,
           iccid: data.iccid,
           phoneNumber: data.numero,
           carrier: data.operadora,
@@ -166,7 +222,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             senha_admin: routerData.adminPassword,
             imei: routerData.imei,
             numero_serie: routerData.serialNumber,
-            observacoes: routerData.notes
+            observacoes: routerData.notes,
+            status_id: statusId
           })
           .select()
           .single();
@@ -182,7 +239,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: data.id,
           type: 'ROTEADOR',
           registrationDate: data.created_at,
-          status: 'DISPONÍVEL',
+          status: mapStatusIdToAssetStatus(data.status_id),
+          statusId: data.status_id,
           uniqueId: data.id_unico,
           brand: data.marca,
           model: data.modelo,
@@ -220,6 +278,12 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toast.error('Ativo não encontrado');
         return null;
       }
+
+      // Convert status to status_id if status is being updated
+      let statusId = existingAsset.statusId;
+      if (assetData.status) {
+        statusId = mapAssetStatusToId(assetData.status);
+      }
       
       if (existingAsset.type === 'CHIP') {
         const chipData = assetData as Partial<ChipAsset>;
@@ -231,6 +295,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             numero: chipData.phoneNumber,
             operadora: chipData.carrier,
             observacoes: chipData.notes,
+            status_id: statusId,
             updated_at: new Date().toISOString()
           })
           .eq('id', id);
@@ -257,6 +322,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             imei: routerData.imei,
             numero_serie: routerData.serialNumber,
             observacoes: routerData.notes,
+            status_id: statusId,
             updated_at: new Date().toISOString()
           })
           .eq('id', id);
@@ -266,6 +332,11 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           toast.error(`Erro ao atualizar roteador: ${error.message}`);
           return null;
         }
+      }
+      
+      // Update with status derived from statusId if it was changed
+      if (assetData.status) {
+        assetData.statusId = statusId;
       }
       
       // Atualizar o estado

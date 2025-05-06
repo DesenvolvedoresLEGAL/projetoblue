@@ -17,6 +17,7 @@ export type Database = {
           numero: string
           observacoes: string | null
           operadora: string
+          status_id: number
           updated_at: string
         }
         Insert: {
@@ -26,6 +27,7 @@ export type Database = {
           numero: string
           observacoes?: string | null
           operadora: string
+          status_id?: number
           updated_at?: string
         }
         Update: {
@@ -35,9 +37,18 @@ export type Database = {
           numero?: string
           observacoes?: string | null
           operadora?: string
+          status_id?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chips_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "status"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roles: {
         Row: {
@@ -68,6 +79,7 @@ export type Database = {
           senha_admin: string | null
           senha_wifi: string | null
           ssid: string | null
+          status_id: number
           updated_at: string
           usuario_admin: string | null
         }
@@ -84,6 +96,7 @@ export type Database = {
           senha_admin?: string | null
           senha_wifi?: string | null
           ssid?: string | null
+          status_id?: number
           updated_at?: string
           usuario_admin?: string | null
         }
@@ -100,8 +113,32 @@ export type Database = {
           senha_admin?: string | null
           senha_wifi?: string | null
           ssid?: string | null
+          status_id?: number
           updated_at?: string
           usuario_admin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roteadores_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      status: {
+        Row: {
+          id: number
+          nome: string
+        }
+        Insert: {
+          id?: number
+          nome: string
+        }
+        Update: {
+          id?: number
+          nome?: string
         }
         Relationships: []
       }
