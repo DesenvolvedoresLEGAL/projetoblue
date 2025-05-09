@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -18,7 +18,7 @@ import {
   ChevronRight,
   Home,
   X,
-  Tool
+  Wrench
 } from "lucide-react";
 import { NamedLogo } from "@/components/ui/namedlogo";
 import {
@@ -83,7 +83,9 @@ export function ModularSidebar({ isMobile = false, onClose }: ModularSidebarProp
       isMobile ? "w-full max-w-xs rounded-r-lg" : "w-64"
     )}>
       <div className="flex h-16 items-center border-b px-4 justify-between">
-        <NamedLogo size="sm" />
+        <Link to="/" aria-label="Go to home page">
+          <NamedLogo size="sm" />
+        </Link>
         {isMobile && (
           <Button 
             variant="ghost" 

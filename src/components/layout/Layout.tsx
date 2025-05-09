@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { ModularSidebar } from "./ModularSidebar";
 import { Header } from "./Header";
+import { PageBreadcrumbs } from "./PageBreadcrumbs";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -56,6 +57,7 @@ export function Layout() {
         </Header>
         <main className="flex-1 overflow-y-auto" role="main" aria-label="Main content">
           <div className="container mx-auto py-6 px-4 max-w-7xl">
+            <PageBreadcrumbs />
             <Outlet />
           </div>
         </main>
