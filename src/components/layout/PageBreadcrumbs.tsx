@@ -1,10 +1,9 @@
 
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -22,9 +21,9 @@ export function PageBreadcrumbs() {
     <Breadcrumb className="py-2">
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/" aria-label="Home">
+          <Link to="/" aria-label="Home">
             <Home className="h-4 w-4" />
-          </BreadcrumbLink>
+          </Link>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
 
@@ -34,7 +33,7 @@ export function PageBreadcrumbs() {
               {index === breadcrumbs.length - 1 ? (
                 <BreadcrumbPage aria-current="page">{crumb.label}</BreadcrumbPage>
               ) : (
-                <BreadcrumbLink href={crumb.path}>{crumb.label}</BreadcrumbLink>
+                <Link to={crumb.path}>{crumb.label}</Link>
               )}
             </BreadcrumbItem>
             {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}

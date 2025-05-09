@@ -25,6 +25,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
+import InventorySummary from "./pages/InventorySummary";
+import ToolsSummary from "./pages/ToolsSummary";
+import MonitoringSummary from "./pages/MonitoringSummary";
 
 const queryClient = new QueryClient();
 
@@ -48,18 +51,19 @@ const App = () => (
                   
                   {/* Inventory module routes - New standardized English routes */}
                   <Route path="inventory">
-                    <Route index element={<Navigate to="/inventory/dashboard" replace />} />
+                    <Route index element={<InventorySummary />} />
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="assets" element={<Inventory />} />
                     <Route path="customers" element={<Clients />} />
                     <Route path="suppliers" element={<Suppliers />} />
                     <Route path="subscriptions" element={<Subscriptions />} />
                     <Route path="monitoring">
-                      <Route index element={<Navigate to="/inventory/monitoring/active" replace />} />
+                      <Route index element={<MonitoringSummary />} />
                       <Route path="active" element={<Monitoring />} />
                       <Route path="history" element={<History />} />
                     </Route>
                     <Route path="tools">
+                      <Route index element={<ToolsSummary />} />
                       <Route path="register-asset" element={<RegisterAsset />} />
                       <Route path="associate-assets" element={<Association />} />
                       <Route path="data-usage" element={<DataUsage />} />
