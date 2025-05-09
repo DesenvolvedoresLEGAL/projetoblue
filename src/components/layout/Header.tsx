@@ -1,6 +1,6 @@
 
 import React from "react";
-import { ModeToggle } from "../auth/ThemeToggle";
+import { ThemeToggle } from "../auth/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Bell, User } from "lucide-react";
 
@@ -18,7 +18,7 @@ export function Header({ children }: HeaderProps) {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <ModeToggle />
+        <ThemeToggle />
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">

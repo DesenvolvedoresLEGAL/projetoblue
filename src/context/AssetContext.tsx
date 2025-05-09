@@ -46,11 +46,16 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Load status records from the database
   useEffect(() => {
     const fetchStatusRecords = async () => {
-      const { data, error } = await supabase.from('status').select('*');
+      const { data, error } = await supabase.from('asset_status').select('*');
       if (error) {
         console.error('Error loading status records:', error);
       } else {
-        setStatusRecords(data || []);
+        // Convert the data to match the StatusRecord interface
+        const formattedData: StatusRecord[] = data.map((record: any) => ({
+          id: record.id,
+          nome: record.status
+        }));
+        setStatusRecords(formattedData || []);
       }
     };
     
@@ -61,13 +66,13 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
     const found = statusRecords.find(s => s.id === statusId);
     if (found) {
-      switch (found.nome) {
-        case 'Disponível': return 'DISPONÍVEL';
-        case 'Alugado': return 'ALUGADO';
-        case 'Assinatura': return 'ASSINATURA';
-        case 'Sem dados': return 'SEM DADOS';
-        case 'Bloqueado': return 'BLOQUEADO';
-        case 'Em manutenção': return 'MANUTENÇÃO';
+      switch (found.nome.toLowerCase()) {
+        case 'disponivel': return 'DISPONÍVEL';
+        case 'alugado': return 'ALUGADO';
+        case 'assinatura': return 'ASSINATURA';
+        case 'sem dados': return 'SEM DADOS';
+        case 'bloqueado': return 'BLOQUEADO';
+        case 'em manutenção': return 'MANUTENÇÃO';
         default: return 'DISPONÍVEL';
       }
     }
@@ -77,15 +82,15 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Helper function to map AssetStatus to status_id
   const mapAssetStatusToId = (status: AssetStatus): number => {
     const statusMap: Record<AssetStatus, string> = {
-      'DISPONÍVEL': 'Disponível',
-      'ALUGADO': 'Alugado',
-      'ASSINATURA': 'Assinatura',
-      'SEM DADOS': 'Sem dados',
-      'BLOQUEADO': 'Bloqueado',
-      'MANUTENÇÃO': 'Em manutenção'
+      'DISPONÍVEL': 'disponivel',
+      'ALUGADO': 'alugado',
+      'ASSINATURA': 'assinatura',
+      'SEM DADOS': 'sem dados',
+      'BLOQUEADO': 'bloqueado',
+      'MANUTENÇÃO': 'em manutenção'
     };
     
-    const found = statusRecords.find(s => s.nome === statusMap[status]);
+    const found = statusRecords.find(s => s.nome.toLowerCase() === statusMap[status].toLowerCase());
     return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
   };
 
@@ -95,61 +100,59 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(true);
       
       try {
-        // Buscar chips
-        const { data: chips, error: chipsError } = await supabase
-          .from('chips')
+        // Buscar assets da tabela assets
+        const { data: assetsData, error: assetsError } = await supabase
+          .from('assets')
           .select('*');
         
-        if (chipsError) {
-          console.error('Erro ao carregar chips:', chipsError);
-          throw chipsError;
+        if (assetsError) {
+          console.error('Erro ao carregar assets:', assetsError);
+          throw assetsError;
         }
         
-        // Buscar roteadores
-        const { data: roteadores, error: roteadoresError } = await supabase
-          .from('roteadores')
-          .select('*');
+        // Verificar quais assets são chips e quais são roteadores com base no type_id
+        // Por exemplo, vamos supor que type_id 1 = CHIP e type_id 2 = ROTEADOR
         
-        if (roteadoresError) {
-          console.error('Erro ao carregar roteadores:', roteadoresError);
-          throw roteadoresError;
-        }
-
-        // Converter para o formato de Asset
-        const chipsAssets: ChipAsset[] = chips?.map((chip) => ({
-          id: chip.id,
-          type: "CHIP" as const,
-          registrationDate: chip.created_at,
-          status: mapStatusIdToAssetStatus(chip.status_id),
-          statusId: chip.status_id,
-          iccid: chip.iccid,
-          phoneNumber: chip.numero,
-          carrier: chip.operadora,
-          notes: chip.observacoes || undefined
-        })) || [];
-
-        const roteadoresAssets: RouterAsset[] = roteadores?.map((roteador) => ({
-          id: roteador.id,
-          type: "ROTEADOR" as const,
-          registrationDate: roteador.created_at,
-          status: mapStatusIdToAssetStatus(roteador.status_id),
-          statusId: roteador.status_id,
-          uniqueId: roteador.id_unico,
-          brand: roteador.marca,
-          model: roteador.modelo,
-          ssid: roteador.ssid || '',
-          password: roteador.senha_wifi || '',
-          ipAddress: roteador.ip_gerencia,
-          adminUser: roteador.usuario_admin,
-          adminPassword: roteador.senha_admin,
-          imei: roteador.imei,
-          serialNumber: roteador.numero_serie,
-          notes: roteador.observacoes || undefined
-        })) || [];
+        const convertToAssetObject = (asset: any): Asset => {
+          const baseAsset = {
+            id: asset.uuid,
+            registrationDate: asset.created_at || new Date().toISOString(),
+            status: mapStatusIdToAssetStatus(asset.status_id),
+            statusId: asset.status_id,
+            notes: asset.observacoes || undefined
+          };
+          
+          if (asset.type_id === 1) {
+            // É um chip
+            return {
+              ...baseAsset,
+              type: "CHIP" as const,
+              iccid: asset.iccid || '',
+              phoneNumber: asset.line_number?.toString() || '',
+              carrier: asset.manufacturer_id?.toString() || ''
+            } as ChipAsset;
+          } else {
+            // É um roteador
+            return {
+              ...baseAsset,
+              type: "ROTEADOR" as const,
+              uniqueId: asset.uuid,
+              brand: asset.manufacturer_id?.toString() || '',
+              model: asset.model || '',
+              ssid: '', // Não temos esses dados no schema atual
+              password: asset.password || '',
+              ipAddress: '', // Não temos esses dados no schema atual
+              adminUser: '', // Não temos esses dados no schema atual
+              adminPassword: '', // Não temos esses dados no schema atual
+              imei: '', // Não temos esses dados no schema atual
+              serialNumber: asset.serial_number || ''
+            } as RouterAsset;
+          }
+        };
         
-        // Combinar os arrays em uma lista de ativos
-        const allAssets = [...chipsAssets, ...roteadoresAssets];
-        setAssets(allAssets);
+        // Converter os assets para o formato necessário
+        const formattedAssets = assetsData?.map(convertToAssetObject) || [];
+        setAssets(formattedAssets);
       } catch (error) {
         console.error('Erro ao carregar ativos:', error);
         toast.error('Erro ao carregar ativos');
