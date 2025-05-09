@@ -17,29 +17,29 @@ const Home = () => {
 
   const modules = [
     {
-      id: "inventario",
-      title: "Módulo de Inventário",
-      description: "Gerencie e monitore seus ativos, clientes, fornecedores e assinaturas",
+      id: "inventory",
+      title: "Inventory Module",
+      description: "Manage and monitor your assets, customers, suppliers and subscriptions",
       icon: <Package className="h-12 w-12 text-primary" />,
-      route: "/inventario/dashboard"
+      route: "/inventory/dashboard"
     },
-    // Espaço para adicionar outros módulos no futuro
+    // Space for adding other modules in the future
   ];
 
   return (
     <div className="space-y-8">
       <div className="text-center py-8">
         <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">
-          Telecom Asset Nexus
+          BLUE
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Plataforma completa para gerenciamento de ativos de telecomunicações
+          Complete platform for telecommunications asset management
         </p>
       </div>
 
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold tracking-tight">
-          Comece pelo módulo desejado
+          Start with your desired module
         </h2>
       </div>
 
@@ -56,15 +56,16 @@ const Home = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-              {module.id === "inventario" && (
+              {module.id === "inventory" && (
                 <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                   <li>Dashboard</li>
-                  <li>Ativos</li>
-                  <li>Clientes</li>
-                  <li>Fornecedores</li>
-                  <li>Assinaturas</li>
-                  <li>Histórico</li>
-                  <li>Monitoramento</li>
+                  <li>Assets</li>
+                  <li>Customers</li>
+                  <li>Suppliers</li>
+                  <li>Subscriptions</li>
+                  <li>Monitoring</li>
+                  <li>History</li>
+                  <li>Tools</li>
                 </ul>
               )}
             </CardContent>
@@ -72,9 +73,9 @@ const Home = () => {
               <Button 
                 className="w-full" 
                 onClick={() => navigate(module.route)}
-                aria-label={`Acessar ${module.title}`}
+                aria-label={`Access ${module.title}`}
               >
-                Acessar Módulo
+                Access Module
               </Button>
             </CardFooter>
           </Card>

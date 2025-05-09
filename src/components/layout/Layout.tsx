@@ -14,7 +14,7 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
         <ModularSidebar />
@@ -46,7 +46,7 @@ export function Layout() {
             size="icon"
             className="md:hidden mr-2"
             onClick={toggleMobileSidebar}
-            aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
             aria-controls="mobile-sidebar"
           >
@@ -54,7 +54,7 @@ export function Layout() {
             <span className="sr-only">Toggle menu</span>
           </Button>
         </Header>
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto" role="main" aria-label="Main content">
           <div className="container mx-auto py-6 px-4 max-w-7xl">
             <Outlet />
           </div>

@@ -14,7 +14,7 @@ export function Header({ children }: HeaderProps) {
       {children}
       <div className="flex-1">
         <div className="text-lg font-medium">
-          Telecom Asset Nexus
+          BLUE
         </div>
       </div>
       <div className="flex items-center gap-4">
