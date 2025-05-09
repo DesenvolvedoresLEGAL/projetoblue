@@ -20,6 +20,7 @@ import WifiAnalyzer from "./pages/WifiAnalyzer";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import Suppliers from "./pages/Suppliers";
 import { DataUsageProvider } from "@/context/DataUsageContext";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                   <Route path="/register-asset" element={<RegisterAsset />} />
                   <Route path="/inventory" element={<Inventory />} />
                   <Route path="/clients" element={<Clients />} />
+                  <Route path="/suppliers" element={<Suppliers />} />
                   <Route path="/association" element={<Association />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
                   <Route path="/monitoring" element={<Monitoring />} />

@@ -12,27 +12,27 @@ export type Database = {
       asset_client_assoc: {
         Row: {
           asset_id: string
+          association_id: number
           client_id: string
-          dt_entrada: string
-          dt_saida: string | null
+          entry_date: string
+          exit_date: string | null
           id: number
-          tipo_associacao: string | null
         }
         Insert: {
           asset_id: string
+          association_id: number
           client_id: string
-          dt_entrada: string
-          dt_saida?: string | null
+          entry_date: string
+          exit_date?: string | null
           id?: number
-          tipo_associacao?: string | null
         }
         Update: {
           asset_id?: string
+          association_id?: number
           client_id?: string
-          dt_entrada?: string
-          dt_saida?: string | null
+          entry_date?: string
+          exit_date?: string | null
           id?: number
-          tipo_associacao?: string | null
         }
         Relationships: [
           {
@@ -49,163 +49,415 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["uuid"]
           },
+          {
+            foreignKeyName: "fk_assoc_association_type"
+            columns: ["association_id"]
+            isOneToOne: false
+            referencedRelation: "association_types"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      asset_history: {
+      asset_logs: {
         Row: {
           assoc_id: number | null
-          data: string | null
-          detalhes: Json | null
-          evento: string | null
+          date: string | null
+          details: Json | null
+          event: string | null
           id: number
-          status_after: Database["public"]["Enums"]["asset_status"] | null
-          status_before: Database["public"]["Enums"]["asset_status"] | null
+          status_after_id: number | null
+          status_before_id: number | null
         }
         Insert: {
           assoc_id?: number | null
-          data?: string | null
-          detalhes?: Json | null
-          evento?: string | null
+          date?: string | null
+          details?: Json | null
+          event?: string | null
           id?: number
-          status_after?: Database["public"]["Enums"]["asset_status"] | null
-          status_before?: Database["public"]["Enums"]["asset_status"] | null
+          status_after_id?: number | null
+          status_before_id?: number | null
         }
         Update: {
           assoc_id?: number | null
-          data?: string | null
-          detalhes?: Json | null
-          evento?: string | null
+          date?: string | null
+          details?: Json | null
+          event?: string | null
           id?: number
-          status_after?: Database["public"]["Enums"]["asset_status"] | null
-          status_before?: Database["public"]["Enums"]["asset_status"] | null
+          status_after_id?: number | null
+          status_before_id?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "asset_history_assoc_id_fkey"
+            foreignKeyName: "asset_histories_assoc_id_fkey"
             columns: ["assoc_id"]
             isOneToOne: false
             referencedRelation: "asset_client_assoc"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "asset_histories_assoc_id_fkey1"
+            columns: ["assoc_id"]
+            isOneToOne: false
+            referencedRelation: "asset_client_assoc"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_asset_history_status_after"
+            columns: ["status_after_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_asset_history_status_before"
+            columns: ["status_before_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      asset_solutions: {
+        Row: {
+          id: number
+          solution: string
+        }
+        Insert: {
+          id?: number
+          solution: string
+        }
+        Update: {
+          id?: number
+          solution?: string
+        }
+        Relationships: []
+      }
+      asset_status: {
+        Row: {
+          association: number | null
+          id: number
+          status: string
+        }
+        Insert: {
+          association?: number | null
+          id?: number
+          status: string
+        }
+        Update: {
+          association?: number | null
+          id?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_association_fkey"
+            columns: ["association"]
+            isOneToOne: false
+            referencedRelation: "association_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_types: {
+        Row: {
+          id: number
+          type: string
+        }
+        Insert: {
+          id?: number
+          type: string
+        }
+        Update: {
+          id?: number
+          type?: string
+        }
+        Relationships: []
       }
       assets: {
         Row: {
-          dias_alugada: number | null
           iccid: string | null
-          marca: string | null
-          modelo: string | null
-          num_linha: number | null
-          operadora_id: number | null
-          pacote_id: number | null
+          line_number: number | null
+          manufacturer_id: number | null
+          model: string | null
+          password: string | null
+          plan_id: number | null
           radio: string | null
+          rented_days: number
           serial_number: string | null
-          solucao: Database["public"]["Enums"]["solution"] | null
-          status: Database["public"]["Enums"]["asset_status"] | null
-          type: Database["public"]["Enums"]["asset_type"] | null
+          solution_id: number | null
+          status_id: number | null
+          type_id: number | null
           uuid: string
         }
         Insert: {
-          dias_alugada?: number | null
           iccid?: string | null
-          marca?: string | null
-          modelo?: string | null
-          num_linha?: number | null
-          operadora_id?: number | null
-          pacote_id?: number | null
+          line_number?: number | null
+          manufacturer_id?: number | null
+          model?: string | null
+          password?: string | null
+          plan_id?: number | null
           radio?: string | null
+          rented_days?: number
           serial_number?: string | null
-          solucao?: Database["public"]["Enums"]["solution"] | null
-          status?: Database["public"]["Enums"]["asset_status"] | null
-          type?: Database["public"]["Enums"]["asset_type"] | null
+          solution_id?: number | null
+          status_id?: number | null
+          type_id?: number | null
           uuid?: string
         }
         Update: {
-          dias_alugada?: number | null
           iccid?: string | null
-          marca?: string | null
-          modelo?: string | null
-          num_linha?: number | null
-          operadora_id?: number | null
-          pacote_id?: number | null
+          line_number?: number | null
+          manufacturer_id?: number | null
+          model?: string | null
+          password?: string | null
+          plan_id?: number | null
           radio?: string | null
+          rented_days?: number
           serial_number?: string | null
-          solucao?: Database["public"]["Enums"]["solution"] | null
-          status?: Database["public"]["Enums"]["asset_status"] | null
-          type?: Database["public"]["Enums"]["asset_type"] | null
+          solution_id?: number | null
+          status_id?: number | null
+          type_id?: number | null
           uuid?: string
         }
         Relationships: [
           {
-            foreignKeyName: "assets_operadora_id_fkey"
-            columns: ["operadora_id"]
+            foreignKeyName: "assets_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
             isOneToOne: false
-            referencedRelation: "operadoras"
+            referencedRelation: "manufacturers"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assets_pacote_id_fkey"
-            columns: ["pacote_id"]
+            foreignKeyName: "assets_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "pacotes"
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_solutions"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "asset_solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_status"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_type"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "asset_types"
             referencedColumns: ["id"]
           },
         ]
       }
+      association_types: {
+        Row: {
+          id: number
+          type: string
+        }
+        Insert: {
+          id?: number
+          type: string
+        }
+        Update: {
+          id?: number
+          type?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
-          cnpj: string | null
-          contato: number | null
+          cnpj: string
+          contato: number
           email: string | null
-          nome: string | null
+          nome: string
           uuid: string
         }
         Insert: {
-          cnpj?: string | null
-          contato?: number | null
+          cnpj: string
+          contato: number
           email?: string | null
-          nome?: string | null
+          nome: string
           uuid?: string
         }
         Update: {
-          cnpj?: string | null
-          contato?: number | null
+          cnpj?: string
+          contato?: number
           email?: string | null
-          nome?: string | null
+          nome?: string
           uuid?: string
         }
         Relationships: []
       }
-      operadoras: {
+      location_types: {
         Row: {
           id: number
-          nome: string | null
+          name: string
         }
         Insert: {
           id?: number
-          nome?: string | null
+          name: string
         }
         Update: {
           id?: number
-          nome?: string | null
+          name?: string
         }
         Relationships: []
       }
-      pacotes: {
+      locations: {
+        Row: {
+          client_id: string | null
+          created_at: string | null
+          id: number
+          latitude: number | null
+          longitude: number | null
+          name: string
+          type_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: number
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          type_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string | null
+          id?: number
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          type_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "locations_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "location_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manufacturers: {
+        Row: {
+          country: string | null
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at: string
+          description?: string | null
+          id?: number
+          name: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      plans: {
         Row: {
           id: number
-          nome: string | null
+          nome: string
           tamanho_gb: number | null
         }
         Insert: {
           id?: number
-          nome?: string | null
+          nome: string
           tamanho_gb?: number | null
         }
         Update: {
           id?: number
-          nome?: string | null
+          nome?: string
           tamanho_gb?: number | null
+        }
+        Relationships: []
+      }
+      profile_logs: {
+        Row: {
+          changed_at: string
+          email: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string
+          email?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string
+          email?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          role?: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role_enum"]
         }
         Relationships: []
       }
@@ -214,18 +466,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      asset_status:
+      asset_status_enum:
         | "Disponível"
         | "Alugado"
         | "Assinatura"
         | "Sem Dados"
         | "Bloqueado"
         | "Manutenção"
-      asset_type: "chip" | "roteador"
-      solution:
+      asset_type_enum: "chip" | "roteador"
+      association_type_enum: "aluguel" | "assinatura"
+      solution_type_enum:
         | "SPEEDY 5G"
         | "4BLACK"
         | "4LITE"
@@ -236,6 +492,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
+      user_role_enum: "admin" | "ops" | "suport" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -351,7 +608,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      asset_status: [
+      asset_status_enum: [
         "Disponível",
         "Alugado",
         "Assinatura",
@@ -359,8 +616,9 @@ export const Constants = {
         "Bloqueado",
         "Manutenção",
       ],
-      asset_type: ["chip", "roteador"],
-      solution: [
+      asset_type_enum: ["chip", "roteador"],
+      association_type_enum: ["aluguel", "assinatura"],
+      solution_type_enum: [
         "SPEEDY 5G",
         "4BLACK",
         "4LITE",
@@ -372,6 +630,7 @@ export const Constants = {
         "ANTENA",
         "LOAD BALANCE",
       ],
+      user_role_enum: ["admin", "ops", "suport", "user"],
     },
   },
 } as const
