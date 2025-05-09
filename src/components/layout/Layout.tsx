@@ -1,6 +1,6 @@
 
 import { Outlet } from "react-router-dom";
-import { Sidebar } from "./Sidebar";
+import { ModularSidebar } from "./ModularSidebar";
 import { Header } from "./Header";
 
 export function Layout() {
@@ -8,7 +8,7 @@ export function Layout() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar wrapper */}
       <div className="hidden md:flex">
-        <Sidebar />
+        <ModularSidebar />
       </div>
 
       {/* Main content */}

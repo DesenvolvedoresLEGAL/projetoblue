@@ -7,6 +7,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AssetProvider } from "@/context/AssetContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Layout } from "@/components/layout/Layout";
+import { DataUsageProvider } from "@/context/DataUsageContext";
+
+// Pages
+import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
 import Inventory from "./pages/Inventory";
@@ -21,7 +25,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
-import { DataUsageProvider } from "@/context/DataUsageContext";
 
 const queryClient = new QueryClient();
 
@@ -35,27 +38,38 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                {/* Public routes - no longer need to be protected */}
+                {/* Public authentication routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 
-                {/* All routes are now public - removed AuthRoute protection */}
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Dashboard />} />
+                {/* Home route */}
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  
+                  {/* Inventory module routes */}
+                  <Route path="inventario">
+                    <Route index element={<Navigate to="/inventario/dashboard" replace />} />
+                    <Route path="dashboard" element={<Dashboard />} />
+                    <Route path="ativos" element={<Inventory />} />
+                    <Route path="clientes" element={<Clients />} />
+                    <Route path="fornecedores" element={<Suppliers />} />
+                    <Route path="assinaturas" element={<Subscriptions />} />
+                    <Route path="historico" element={<History />} />
+                    <Route path="monitoramento" element={<Monitoring />} />
+                  </Route>
+                  
+                  {/* Maintain legacy routes for backward compatibility */}
                   <Route path="/register-asset" element={<RegisterAsset />} />
-                  <Route path="/inventory" element={<Inventory />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/suppliers" element={<Suppliers />} />
+                  <Route path="/inventory" element={<Navigate to="/inventario/ativos" replace />} />
+                  <Route path="/clients" element={<Navigate to="/inventario/clientes" replace />} />
+                  <Route path="/suppliers" element={<Navigate to="/inventario/fornecedores" replace />} />
                   <Route path="/association" element={<Association />} />
-                  <Route path="/subscriptions" element={<Subscriptions />} />
-                  <Route path="/monitoring" element={<Monitoring />} />
-                  <Route path="/history" element={<History />} />
+                  <Route path="/subscriptions" element={<Navigate to="/inventario/assinaturas" replace />} />
+                  <Route path="/monitoring" element={<Navigate to="/inventario/monitoramento" replace />} />
+                  <Route path="/history" element={<Navigate to="/inventario/historico" replace />} />
                   <Route path="/data-usage" element={<DataUsage />} />
                   <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
                 </Route>
-                
-                {/* Redirection still exists but no longer authentication-based */}
-                <Route path="/index" element={<Navigate to="/" replace />} />
                 
                 {/* Fallback route */}
                 <Route path="*" element={<NotFound />} />
