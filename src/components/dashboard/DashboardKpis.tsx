@@ -12,7 +12,14 @@ export function DashboardKpis() {
   const availableChips = assets.filter(asset => asset.type === "CHIP" && asset.status === "DISPONÍVEL").length;
   const availableRouters = assets.filter(asset => asset.type === "ROTEADOR" && asset.status === "DISPONÍVEL").length;
   const problemAssets = assets.filter(asset => ["BLOQUEADO", "SEM DADOS", "MANUTENÇÃO"].includes(asset.status)).length;
-  const expiredSubscriptions = assets.filter(asset => asset.status === "ASSINATURA" && asset.subscriptionEndDate && new Date(asset.subscriptionEndDate) < new Date()).length;
+  
+  // Check for subscription in the asset
+  const expiredSubscriptions = assets.filter(asset => {
+    return asset.status === "ASSINATURA" && 
+           asset.subscription && 
+           asset.subscription.endDate && 
+           new Date(asset.subscription.endDate) < new Date();
+  }).length;
 
   const kpis = [
     {

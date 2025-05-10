@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -17,8 +18,8 @@ import {
   ShieldCheck,
   BarChart2,
   Rocket,
-  Tool,
-  Flask,
+  Wrench2, // Replacing Tool
+  FlaskConical, // Replacing Flask
   Settings,
   ChevronDown,
   ChevronRight,
@@ -189,7 +190,7 @@ const modules = [
   {
     id: "tools",
     title: "Tools",
-    icon: Tool,
+    icon: Wrench2, // Updated icon
     isExpandable: true,
     subItems: [
       { title: "Register Asset", path: "/register-asset", icon: Package },
@@ -200,10 +201,10 @@ const modules = [
   {
     id: "sandbox",
     title: "Sandbox",
-    icon: Flask,
+    icon: FlaskConical, // Updated icon
     isExpandable: true,
     subItems: [
-      { title: "Tests & Prototypes", path: "/sandbox", icon: Flask }
+      { title: "Tests & Prototypes", path: "/sandbox", icon: FlaskConical }
     ]
   },
   {
