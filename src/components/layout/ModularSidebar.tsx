@@ -1,68 +1,260 @@
-
 import { useState, useEffect } from "react";
-import { NavLink, useLocation, Link } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  PlusCircle,
-  PackageSearch,
-  Users,
-  Link as LinkIcon,
-  Clock,
-  ActivitySquare,
-  History,
-  Database,
+  Home,
+  Network,
+  Search,
   Wifi,
-  Package,
-  Building,
+  Users,
+  Megaphone,
+  Wrench,
+  Bot,
+  AlertTriangle,
+  CircleDollarSign,
+  BarChart3,
+  Link2,
+  ShieldCheck,
+  BarChart2,
+  Rocket,
+  Tool,
+  Flask,
+  Settings,
   ChevronDown,
   ChevronRight,
-  Home,
   X,
-  Wrench
+  Package
 } from "lucide-react";
-import { NamedLogo } from "@/components/ui/namedlogo";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { ChevronLeft } from "../icons/ChevronLeft";
 import { cn } from "@/lib/utils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+// Define the module structure
+const modules = [
+  {
+    id: "home",
+    title: "Home",
+    icon: Home,
+    path: "/",
+    isExpandable: false
+  },
+  {
+    id: "assets",
+    title: "Asset & Network Management",
+    icon: Network,
+    isExpandable: true,
+    subItems: [
+      { title: "Devices & Topology", path: "/inventory/assets", icon: Package },
+      { title: "Auto Discovery", path: "/inventory/discovery", icon: Search },
+      { title: "SLAs & Status", path: "/inventory/status", icon: AlertTriangle }
+    ]
+  },
+  {
+    id: "wifi-analytics",
+    title: "WiFi Analytics",
+    icon: Wifi,
+    isExpandable: true,
+    subItems: [
+      { title: "Usage KPIs", path: "/wifi/usage", icon: BarChart2 },
+      { title: "Heatmap", path: "/wifi/heatmap", icon: Wifi },
+      { title: "Download Reports", path: "/wifi/reports", icon: BarChart3 }
+    ]
+  },
+  {
+    id: "guest-wifi",
+    title: "Guest WiFi & Captive Portal",
+    icon: Users,
+    isExpandable: true,
+    subItems: [
+      { title: "Splash Page Builder", path: "/guest-wifi/splash", icon: LayoutDashboard },
+      { title: "Leads & Login Settings", path: "/guest-wifi/leads", icon: Users },
+      { title: "Integrations (PipeRun)", path: "/guest-wifi/integrations", icon: Link2 }
+    ]
+  },
+  {
+    id: "wifi-marketing",
+    title: "WiFi Marketing",
+    icon: Megaphone,
+    isExpandable: true,
+    subItems: [
+      { title: "Campaign Manager", path: "/marketing/campaigns", icon: Megaphone },
+      { title: "Audience Segments", path: "/marketing/audience", icon: Users },
+      { title: "ROI Dashboard", path: "/marketing/roi", icon: CircleDollarSign }
+    ]
+  },
+  {
+    id: "remote-access",
+    title: "Remote Access & Support",
+    icon: Wrench,
+    isExpandable: true,
+    subItems: [
+      { title: "Equipment Access", path: "/remote-access/equipment", icon: Wrench },
+      { title: "Playbook Library", path: "/remote-access/playbooks", icon: LayoutDashboard },
+      { title: "Audit Logs", path: "/remote-access/logs", icon: BarChart2 }
+    ]
+  },
+  {
+    id: "ai-assistant",
+    title: "AI Assistant",
+    icon: Bot,
+    isExpandable: true,
+    subItems: [
+      { title: "Chat & Video Bot", path: "/ai/chat", icon: Bot },
+      { title: "RAG Knowledge Base", path: "/ai/knowledge", icon: LayoutDashboard },
+      { title: "Escalation Routing", path: "/ai/escalation", icon: Users }
+    ]
+  },
+  {
+    id: "predictive-alerts",
+    title: "Predictive Alerts",
+    icon: AlertTriangle,
+    isExpandable: true,
+    subItems: [
+      { title: "Threshold Rules", path: "/alerts/rules", icon: AlertTriangle },
+      { title: "Auto-Ticketing", path: "/alerts/tickets", icon: LayoutDashboard },
+      { title: "Corrective Automation", path: "/alerts/automation", icon: Settings }
+    ]
+  },
+  {
+    id: "erp-billing",
+    title: "ERP & Billing Hub",
+    icon: CircleDollarSign,
+    isExpandable: true,
+    subItems: [
+      { title: "Invoices (Superlógica)", path: "/billing/invoices", icon: CircleDollarSign },
+      { title: "Delinquency", path: "/billing/delinquency", icon: AlertTriangle },
+      { title: "Revenue by BU", path: "/billing/revenue", icon: BarChart3 }
+    ]
+  },
+  {
+    id: "crm-sales",
+    title: "CRM & Sales Insights",
+    icon: BarChart3,
+    isExpandable: true,
+    subItems: [
+      { title: "Automated Opportunities", path: "/crm/opportunities", icon: BarChart3 },
+      { title: "360º Customer View", path: "/crm/customers", icon: Users },
+      { title: "Cross-sell and Upsell", path: "/crm/upsell", icon: CircleDollarSign }
+    ]
+  },
+  {
+    id: "integration-hub",
+    title: "Integration Hub",
+    icon: Link2,
+    isExpandable: true,
+    subItems: [
+      { title: "API Portal", path: "/integrations/api", icon: Link2 },
+      { title: "Webhooks", path: "/integrations/webhooks", icon: Link2 },
+      { title: "SDK Downloads", path: "/integrations/sdk", icon: Package }
+    ]
+  },
+  {
+    id: "security",
+    title: "IAM & Security",
+    icon: ShieldCheck,
+    isExpandable: true,
+    subItems: [
+      { title: "Access & Permissions", path: "/security/access", icon: ShieldCheck },
+      { title: "SSO & MFA", path: "/security/sso", icon: ShieldCheck },
+      { title: "Logs and Secrets", path: "/security/logs", icon: BarChart2 }
+    ]
+  },
+  {
+    id: "observability",
+    title: "Observability",
+    icon: BarChart2,
+    isExpandable: true,
+    subItems: [
+      { title: "Logs", path: "/observability/logs", icon: BarChart2 },
+      { title: "Metrics", path: "/observability/metrics", icon: BarChart3 },
+      { title: "Tracing", path: "/observability/tracing", icon: Network }
+    ]
+  },
+  {
+    id: "devops",
+    title: "DevOps & Deploy",
+    icon: Rocket,
+    isExpandable: true,
+    subItems: [
+      { title: "Pipelines & Releases", path: "/devops/pipelines", icon: Rocket },
+      { title: "Feature Flags", path: "/devops/features", icon: Settings },
+      { title: "Post-Deploy Monitoring", path: "/devops/monitoring", icon: AlertTriangle }
+    ]
+  },
+  {
+    id: "tools",
+    title: "Tools",
+    icon: Tool,
+    isExpandable: true,
+    subItems: [
+      { title: "Register Asset", path: "/register-asset", icon: Package },
+      { title: "Link Asset", path: "/association", icon: Link2 },
+      { title: "Export Inventory", path: "/export", icon: Package }
+    ]
+  },
+  {
+    id: "sandbox",
+    title: "Sandbox",
+    icon: Flask,
+    isExpandable: true,
+    subItems: [
+      { title: "Tests & Prototypes", path: "/sandbox", icon: Flask }
+    ]
+  },
+  {
+    id: "admin",
+    title: "Admin",
+    icon: Settings,
+    isExpandable: true,
+    subItems: [
+      { title: "System Settings", path: "/admin/settings", icon: Settings },
+      { title: "Team Management", path: "/admin/team", icon: Users },
+      { title: "Versioning", path: "/admin/versions", icon: Package }
+    ]
+  }
+];
 
 interface ModularSidebarProps {
   isMobile?: boolean;
   onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function ModularSidebar({ isMobile = false, onClose }: ModularSidebarProps) {
+export function ModularSidebar({ 
+  isMobile = false, 
+  onClose,
+  collapsed = false,
+  onToggleCollapse
+}: ModularSidebarProps) {
   const location = useLocation();
-  const [openModules, setOpenModules] = useState<Record<string, boolean>>({
-    inventory: true, // Inventory module starts open by default
-    management: false,
-    monitoring: false,
-    tools: false
-  });
+  const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
+  const [isCollapsed, setIsCollapsed] = useState(collapsed);
 
-  // Determine which module to open based on the current route
   useEffect(() => {
-    if (location.pathname.includes("/inventory")) {
-      setOpenModules(prev => ({ ...prev, inventory: true }));
-      
-      if (location.pathname.includes("/subscriptions")) {
-        setOpenModules(prev => ({ ...prev, management: true }));
-      } else if (location.pathname.includes("/monitoring") || location.pathname.includes("/history")) {
-        setOpenModules(prev => ({ ...prev, monitoring: true }));
-      } else if (
-        location.pathname.includes("/tools") || 
-        location.pathname.includes("/register-asset") || 
-        location.pathname.includes("/associate-assets") ||
-        location.pathname.includes("/data-usage") || 
-        location.pathname.includes("/wifi-analyzer")
-      ) {
-        setOpenModules(prev => ({ ...prev, tools: true }));
+    // Find which module should be open based on current path
+    const currentPath = location.pathname;
+    let activeModuleId = '';
+    
+    modules.forEach(module => {
+      if (module.isExpandable && module.subItems) {
+        const hasActiveSubItem = module.subItems.some(item => 
+          currentPath === item.path || currentPath.startsWith(item.path + '/')
+        );
+        
+        if (hasActiveSubItem) {
+          activeModuleId = module.id;
+        }
       }
+    });
+
+    if (activeModuleId) {
+      setOpenModules(prev => ({ ...prev, [activeModuleId]: true }));
     }
   }, [location.pathname]);
 
@@ -73,300 +265,136 @@ export function ModularSidebar({ isMobile = false, onClose }: ModularSidebarProp
     }));
   };
 
-  const isModuleActive = (paths: string[]) => {
-    return paths.some(path => location.pathname.includes(path));
+  const handleToggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    if (onToggleCollapse) onToggleCollapse();
   };
+
+  const sidebarWidth = isCollapsed ? "w-16" : "w-60";
 
   return (
     <div className={cn(
-      "h-screen flex-shrink-0 bg-sidebar border-r flex flex-col",
-      isMobile ? "w-full max-w-xs rounded-r-lg" : "w-64"
+      "h-screen bg-white dark:bg-[#0C0C1F] border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 ease-in-out",
+      sidebarWidth,
+      isMobile ? "w-full max-w-xs" : ""
     )}>
-      <div className="flex h-16 items-center border-b px-4 justify-between">
-        <Link to="/" aria-label="Go to home page">
-          <NamedLogo size="sm" />
-        </Link>
-        {isMobile && (
+      <div className="flex h-16 items-center px-4 border-b border-gray-200 dark:border-gray-800 justify-between">
+        {!isCollapsed && (
+          <div className="text-xl font-semibold">
+            BLUE
+          </div>
+        )}
+        
+        {isMobile ? (
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onClose}
             className="h-8 w-8"
-            aria-label="Close menu"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close menu</span>
           </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleToggleCollapse}
+            className="h-8 w-8"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+            <span className="sr-only">Toggle sidebar</span>
+          </Button>
         )}
       </div>
       
-      <nav className="flex-1 overflow-auto py-4 px-3" role="navigation" aria-label="Main navigation menu">
-        {/* Home link */}
-        <div className="mb-6">
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                    }`
-                  }
-                  aria-label="Home - Home page"
-                  onClick={isMobile ? onClose : undefined}
+      <div className="overflow-y-auto py-2 flex-1">
+        {modules.map((module) => (
+          <div key={module.id} className="px-3 py-1">
+            {module.isExpandable ? (
+              <Collapsible
+                open={!isCollapsed && openModules[module.id]}
+                onOpenChange={() => !isCollapsed && toggleModule(module.id)}
+                className="w-full"
+              >
+                <CollapsibleTrigger
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
+                    "hover:bg-[#4D2BFB]/5",
+                    isCollapsed ? "justify-center" : ""
+                  )}
                 >
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </NavLink>
-              </TooltipTrigger>
-              <TooltipContent side="right">Home page</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        {/* Módulo 1 - Inventory */}
-        <div className="mb-4">
-          <Collapsible
-            open={openModules.inventory}
-            onOpenChange={() => toggleModule('inventory')}
-            className="w-full"
-          >
-            <CollapsibleTrigger
-              className={cn(
-                "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
-                isModuleActive(['/inventory']) 
-                  ? "bg-sidebar-accent/25 text-sidebar-accent-foreground font-medium" 
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-              )}
-              aria-label={`${openModules.inventory ? 'Collapse' : 'Expand'} inventory module`}
-              aria-expanded={openModules.inventory}
-              aria-controls="inventory-menu"
-            >
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-sidebar-foreground/70" />
-                <span className="font-medium text-sidebar-foreground/90">Inventory</span>
-              </div>
-              {openModules.inventory ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </CollapsibleTrigger>
-            
-            <CollapsibleContent className="pl-3 pt-1" id="inventory-menu">
-              <p className="text-xs text-sidebar-foreground/60 px-3 mb-3">
-                Manage and monitor your assets, customers, suppliers and subscriptions
-              </p>
-              
-              <div className="flex flex-col gap-1">
-                <NavLink
-                  to="/inventory/dashboard"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                    }`
-                  }
-                  aria-label="Dashboard - Inventory overview"
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </NavLink>
-
-                <NavLink
-                  to="/inventory/assets"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                    }`
-                  }
-                  aria-label="Assets - Equipment and chip management"
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <PackageSearch className="h-4 w-4" />
-                  <span>Assets</span>
-                </NavLink>
-
-                <NavLink
-                  to="/inventory/customers"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                    }`
-                  }
-                  aria-label="Customers - Customer data management"
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Customers</span>
-                </NavLink>
-
-                <NavLink
-                  to="/inventory/suppliers"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                      isActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                    }`
-                  }
-                  aria-label="Suppliers - Manufacturer and partner management"
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <Building className="h-4 w-4" />
-                  <span>Suppliers</span>
-                </NavLink>
-
-                {/* Management Section */}
-                <div className="mt-4">
-                  <div className="px-3 py-1">
-                    <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Management</span>
+                  <div className={cn(
+                    "flex items-center gap-2",
+                    isCollapsed ? "justify-center" : ""
+                  )}>
+                    <module.icon className="h-5 w-5 text-gray-500" />
+                    {!isCollapsed && <span>{module.title}</span>}
                   </div>
-                  <NavLink
-                    to="/inventory/subscriptions"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="Subscriptions - Plan and contract control"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <Clock className="h-4 w-4" />
-                    <span>Subscriptions</span>
-                  </NavLink>
-                </div>
-
-                {/* Monitoring Section */}
-                <div className="mt-4">
-                  <div className="px-3 py-1">
-                    <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Monitoring</span>
-                  </div>
-                  <NavLink
-                    to="/inventory/monitoring/history"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="History - Activity and event log"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <History className="h-4 w-4" />
-                    <span>History</span>
-                  </NavLink>
-
-                  <NavLink
-                    to="/inventory/monitoring/active"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="Monitoring - Real-time monitoring"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <ActivitySquare className="h-4 w-4" />
-                    <span>Monitoring</span>
-                  </NavLink>
-                </div>
-
-                {/* Tools Section */}
-                <div className="mt-4">
-                  <div className="px-3 py-1">
-                    <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Tools</span>
-                  </div>
-                  <NavLink
-                    to="/inventory/tools/register-asset"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="Register Asset - Add new equipment or chips"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    <span>Register Asset</span>
-                  </NavLink>
-                  
-                  <NavLink
-                    to="/inventory/tools/associate-assets"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="Associate Assets - Link devices and chips"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    <span>Associate Assets</span>
-                  </NavLink>
-                  
-                  <NavLink
-                    to="/inventory/tools/data-usage"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="Data Usage - Monitor data consumption"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <Database className="h-4 w-4" />
-                    <span>Data Usage</span>
-                  </NavLink>
-                  
-                  <NavLink
-                    to="/inventory/tools/wifi-analyzer"
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                      }`
-                    }
-                    aria-label="WiFi Analyzer - Analyze wireless networks"
-                    onClick={isMobile ? onClose : undefined}
-                  >
-                    <Wifi className="h-4 w-4" />
-                    <span>WiFi Analyzer</span>
-                  </NavLink>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-      </nav>
+                  {!isCollapsed && (
+                    openModules[module.id] ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )
+                  )}
+                </CollapsibleTrigger>
+                
+                {!isCollapsed && (
+                  <CollapsibleContent className="pl-3 pt-1">
+                    <div className="flex flex-col gap-1 text-sm">
+                      {module.subItems?.map((item, index) => (
+                        <NavLink
+                          key={index}
+                          to={item.path}
+                          className={({ isActive }) => cn(
+                            "flex items-center gap-2 rounded-md px-3 py-2 transition-colors",
+                            isActive
+                              ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-[#4D2BFB]/5"
+                          )}
+                          onClick={isMobile ? onClose : undefined}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                )}
+              </Collapsible>
+            ) : (
+              <NavLink
+                to={module.path || "/"}
+                className={({ isActive }) => cn(
+                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                  isActive
+                    ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-[#4D2BFB]/5",
+                  isCollapsed ? "justify-center" : ""
+                )}
+                onClick={isMobile ? onClose : undefined}
+              >
+                <module.icon className="h-5 w-5" />
+                {!isCollapsed && <span>{module.title}</span>}
+              </NavLink>
+            )}
+          </div>
+        ))}
+      </div>
       
-      <div className="border-t p-4 mt-auto">
-        <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} - BLUE
-          <br />
-          Ver. 2.0
-        </div>
+      <div className="border-t border-gray-200 dark:border-gray-800 p-4">
+        {!isCollapsed && (
+          <div className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} - LEGAL
+            <br />
+            BLUE Platform v1.0.2
+          </div>
+        )}
       </div>
     </div>
   );

@@ -8,16 +8,13 @@ import {
   AlertsPanel,
   QuickActions 
 } from "@/components/dashboard";
-import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
-import { Clock } from "lucide-react";
 
 const Index = () => {
   const { assets, loading } = useAssets();
-  const lastSyncTime = new Date().toLocaleTimeString();
   
   return (
-    <div className="space-y-4">
-      <PageBreadcrumbs />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main content area (70%) */}
@@ -47,20 +44,6 @@ const Index = () => {
           <QuickActions />
         </div>
       </div>
-      
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t bg-background px-6 py-3 flex justify-between items-center text-sm text-muted-foreground mt-8">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          <span>Last synced: {lastSyncTime}</span>
-        </div>
-        <div>
-          <span>BLUE Platform v1.0.2</span>
-        </div>
-        <div>
-          <a href="#" className="text-primary hover:underline">Changelog</a>
-        </div>
-      </footer>
     </div>
   );
 };
