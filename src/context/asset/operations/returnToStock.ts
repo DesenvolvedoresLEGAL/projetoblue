@@ -1,78 +1,64 @@
 
-import { Asset, AssetStatus, AssetType } from "@/types/asset";
-import { ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, Client } from "@/types/asset";
 import { AssetHistoryEntry } from "@/types/assetHistory";
 import { toast } from "@/utils/toast";
 
 export const returnAssetsToStock = (
-  assets: Asset[],
   assetIds: string[],
+  assets: Asset[],
+  clients: Client[],
   updateAsset: (id: string, assetData: Partial<Asset>) => Promise<Asset | null>,
-  addHistoryEntry?: (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => void
+  updateClient: (id: string, clientData: Partial<Client>) => void,
+  addHistoryEntry: (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => void
 ) => {
-  // Get the assets that need to be returned to stock
-  const assetsToReturn = assets.filter(asset => assetIds.includes(asset.id));
+  // Group assets by client
+  const assetsByClient: { [clientId: string]: Asset[] } = {};
   
-  const returnLog: {
-    clientId: string;
-    clientName: string;
-    assets: { id: string; type: AssetType; identifier: string }[];
-  }[] = [];
-
   // Process each asset
-  assetsToReturn.forEach(async asset => {
-    if (!asset.clientId) return; // Skip if not assigned to a client
+  assetIds.forEach(assetId => {
+    const asset = assets.find(a => a.id === assetId);
+    if (!asset || !asset.clientId) return;
     
-    const clientId = asset.clientId;
-    
-    // Store asset info for the history entry
-    const assetIdentifier = asset.type === "CHIP" 
-      ? (asset as ChipAsset).iccid 
-      : (asset as RouterAsset).uniqueId;
-
-    // Add to the return log, grouped by client
-    const clientLogIndex = returnLog.findIndex(log => log.clientId === clientId);
-    const assetEntry = { 
-      id: asset.id, 
-      type: asset.type, 
-      identifier: assetIdentifier 
-    };
-    
-    if (clientLogIndex >= 0) {
-      returnLog[clientLogIndex].assets.push(assetEntry);
-    } else {
-      returnLog.push({
-        clientId,
-        clientName: "Cliente", // This will be updated later
-        assets: [assetEntry]
-      });
+    // Add to client group
+    if (!assetsByClient[asset.clientId]) {
+      assetsByClient[asset.clientId] = [];
     }
+    assetsByClient[asset.clientId].push(asset);
     
-    // Update the asset status to available and remove client association
-    await updateAsset(asset.id, {
-      status: "DISPONÍVEL",
-      statusId: 1, // Assuming 1 is the ID for "DISPONÍVEL"
+    // Update asset status
+    updateAsset(assetId, {
       clientId: undefined,
-      subscription: undefined
+      status: "DISPONÍVEL"
     });
   });
   
-  // Create history entries for the returned assets
-  if (addHistoryEntry) {
-    returnLog.forEach(log => {
-      addHistoryEntry({
-        clientId: log.clientId,
-        clientName: log.clientName,
-        assetIds: log.assets.map(a => a.id),
-        assets: log.assets,
-        operationType: "DISASSOCIATION",
-        event: "Retorno ao Estoque",
-        comments: `${log.assets.length} ativo(s) retornado(s) ao estoque`
-      });
+  // Update clients and create history entries
+  Object.entries(assetsByClient).forEach(([clientId, clientAssets]) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    
+    // Update client assets list
+    updateClient(clientId, {
+      assets: (c => {
+        const updatedAssets = (c?.assets ?? []).filter(id => !assetIds.includes(id));
+        return updatedAssets;
+      }) as any
     });
-  }
+    
+    // Create history entry
+    addHistoryEntry({
+      clientId,
+      clientName: client.name,
+      assetIds: clientAssets.map(a => a.id),
+      assets: clientAssets.map(a => ({
+        id: a.id,
+        type: a.type,
+        identifier: a.type === "CHIP" ? (a as any).iccid : (a as any).uniqueId
+      })),
+      operationType: "DISASSOCIATION",
+      description: `${clientAssets.length} asset(s) returned to stock from ${client.name}`
+    });
+  });
   
-  // Show success notification
-  const count = assetsToReturn.length;
-  toast.success(`${count} ativo${count > 1 ? "s" : ""} retornado${count > 1 ? "s" : ""} ao estoque com sucesso!`);
+  toast.success(`${assetIds.length} ativo(s) devolvido(s) ao estoque com sucesso`);
 };

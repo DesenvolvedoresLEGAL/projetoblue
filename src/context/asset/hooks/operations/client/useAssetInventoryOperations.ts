@@ -14,6 +14,8 @@ export const useAssetInventoryOperations = (
   const removeAssetFromClientWrapper = (assetId: string, clientId: string) => {
     if (!clients || !updateClient || !addHistoryEntry) return;
     
+    // We need to ensure we match the expected parameter order for removeAssetFromClient
+    // Looking at the import, let's check what parameters it expects
     removeAssetFromClient(
       assetId,
       clientId,
@@ -28,6 +30,7 @@ export const useAssetInventoryOperations = (
   const returnAssetsToStockWrapper = (assetIds: string[]) => {
     if (!clients || !updateClient || !addHistoryEntry) return;
     
+    // Ensure we match the expected parameter order for returnAssetsToStock
     returnAssetsToStock(
       assetIds,
       assets,
