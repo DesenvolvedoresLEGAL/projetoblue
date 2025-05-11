@@ -35,7 +35,8 @@ const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ThemeProvider>
+        {/* The ThemeProvider from "./components/theme-provider" doesn't require a props argument */}
+        <ThemeProvider defaultTheme="system">
           <QueryClientProvider client={queryClient}>
             <AssetProvider>
               <DataUsageProvider>
