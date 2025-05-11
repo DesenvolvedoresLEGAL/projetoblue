@@ -20,6 +20,11 @@ export const useStatusMapping = (
           id: record.id,
           nome: record.status
         }));
+        
+        // Save to localStorage for reference by other components
+        localStorage.setItem('statusRecords', JSON.stringify(formattedData));
+        
+        // Update state
         setStatusRecords(formattedData || []);
       }
     } catch (error) {
@@ -30,7 +35,7 @@ export const useStatusMapping = (
 
   // Helper function to map status_id to AssetStatus
   const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
-    // Get current status records from the parent component
+    // Get current status records from localStorage
     const statusRecords = JSON.parse(localStorage.getItem('statusRecords') || '[]');
     
     const found = statusRecords.find((s: any) => s.id === statusId);
@@ -50,7 +55,7 @@ export const useStatusMapping = (
 
   // Helper function to map AssetStatus to status_id
   const mapAssetStatusToId = (status: AssetStatus): number => {
-    // Get current status records from the parent component
+    // Get current status records from localStorage
     const statusRecords = JSON.parse(localStorage.getItem('statusRecords') || '[]');
     
     const statusMap: Record<AssetStatus, string> = {
@@ -66,7 +71,7 @@ export const useStatusMapping = (
     return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
   };
 
-  // Save status records to localStorage when they change
+  // Load status records when component mounts
   useEffect(() => {
     loadStatusRecords();
   }, []);
