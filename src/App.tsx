@@ -14,31 +14,28 @@ import Inventory from "./pages/Inventory";
 import RegisterAsset from "./pages/RegisterAsset";
 import NotFound from "./pages/NotFound";
 import { AssetProvider } from "./context/asset/AssetContext";
-import { ThemeProvider } from "./components/theme-provider";
 
 // Create a client for react-query
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light">
-      <QueryClientProvider client={queryClient}>
-        <AssetProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/" element={<AuthRoute><Layout /></AuthRoute>}>
-              <Route index element={<Home />} />
-              <Route path="inventory" element={<Inventory />} />
-              <Route path="clients" element={<Clients />} />
-              <Route path="register-asset" element={<RegisterAsset />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </AssetProvider>
-        <Toaster />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AssetProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<AuthRoute><Layout /></AuthRoute>}>
+            <Route index element={<Home />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="register-asset" element={<RegisterAsset />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AssetProvider>
+      <Toaster />
+    </QueryClientProvider>
   );
 }
 
