@@ -23,6 +23,13 @@ import { SidebarModule } from "./sidebarTypes";
 
 export const sidebarModules: SidebarModule[] = [
   {
+    id: "home",
+    title: "Início",
+    icon: LayoutDashboard,
+    path: "/",
+    isExpandable: false,
+  },
+  {
     id: "dashboard",
     title: "Dashboard",
     icon: LayoutDashboard,

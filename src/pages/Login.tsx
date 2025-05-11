@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +9,7 @@ import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -17,6 +17,12 @@ const Login = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  
+  // If already authenticated, redirect to home page
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +34,7 @@ const Login = () => {
       variant: "default"
     });
     
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
