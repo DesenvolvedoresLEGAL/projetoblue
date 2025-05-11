@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Package,
@@ -25,7 +26,7 @@ export const sidebarModules: SidebarModule[] = [
     id: "dashboard",
     title: "Dashboard",
     icon: LayoutDashboard,
-    path: "/",
+    path: "/dashboard",
     isExpandable: false,
   },
   {

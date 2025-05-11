@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import Clients from "./pages/Clients";
 import Inventory from "./pages/Inventory";
 import RegisterAsset from "./pages/RegisterAsset";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { AssetProvider } from "./context/asset/AssetContext";
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/" element={<AuthRoute><Layout /></AuthRoute>}>
             <Route index element={<Home />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="clients" element={<Clients />} />
             <Route path="register-asset" element={<RegisterAsset />} />
