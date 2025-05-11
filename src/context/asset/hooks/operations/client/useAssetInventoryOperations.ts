@@ -2,6 +2,7 @@
 import { Asset, ChipAsset, RouterAsset } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { toast } from '@/utils/toast';
+import { returnAssetsToStock } from '@/context/asset/operations';
 
 export const useAssetInventoryOperations = (
   assets: Asset[],
@@ -20,7 +21,9 @@ export const useAssetInventoryOperations = (
     return assets.find(asset => asset.id === id);
   };
 
-  const returnAssetsToStock = (assetIds: string[]) => {
+  // Using the imported function from the refactored file
+  const handleReturnAssetsToStock = (assetIds: string[]) => {
+    // We're adapting the call to match the implementation in the original file
     const assetActions = assetIds.map(id => {
       const asset = getAssetById(id);
       if (!asset) return null;
@@ -67,7 +70,7 @@ export const useAssetInventoryOperations = (
   };
 
   return {
-    returnAssetsToStock
+    returnAssetsToStock: handleReturnAssetsToStock
   };
 };
 

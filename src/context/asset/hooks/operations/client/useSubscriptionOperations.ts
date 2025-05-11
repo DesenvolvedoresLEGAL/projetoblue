@@ -1,6 +1,7 @@
 
 import { Asset, ChipAsset, RouterAsset } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
+import { extendSubscription } from '@/context/asset/operations';
 
 export const useSubscriptionOperations = (
   assets: Asset[],
@@ -30,7 +31,7 @@ export const useSubscriptionOperations = (
     });
   };
 
-  const extendSubscription = (assetId: string, newEndDate: string) => {
+  const handleExtendSubscription = (assetId: string, newEndDate: string) => {
     const asset = getAssetById(assetId);
     if (!asset?.subscription || !asset.clientId) return;
     
@@ -66,7 +67,7 @@ export const useSubscriptionOperations = (
 
   return {
     getExpiredSubscriptions,
-    extendSubscription
+    extendSubscription: handleExtendSubscription
   };
 };
 

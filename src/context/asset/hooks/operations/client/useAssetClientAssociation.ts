@@ -2,6 +2,7 @@
 import { Asset, Client, SubscriptionInfo } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { toast } from '@/utils/toast';
+import { associateAssetToClient, removeAssetFromClient } from '@/context/asset/operations';
 
 export const useAssetClientAssociation = (
   assets: Asset[],
@@ -21,7 +22,7 @@ export const useAssetClientAssociation = (
     return assets.find(asset => asset.id === id);
   };
 
-  const associateAssetToClient = (assetId: string, clientId: string, subscription?: SubscriptionInfo) => {
+  const handleAssociateAssetToClient = (assetId: string, clientId: string, subscription?: SubscriptionInfo) => {
     const asset = getAssetById(assetId);
     const client = clients.find(c => c.id === clientId);
     
@@ -69,7 +70,7 @@ export const useAssetClientAssociation = (
     });
   };
   
-  const removeAssetFromClient = (assetId: string, clientId: string) => {
+  const handleRemoveAssetFromClient = (assetId: string, clientId: string) => {
     const asset = getAssetById(assetId);
     const client = clients.find(c => c.id === clientId);
     
@@ -110,8 +111,8 @@ export const useAssetClientAssociation = (
   };
 
   return {
-    associateAssetToClient,
-    removeAssetFromClient
+    associateAssetToClient: handleAssociateAssetToClient,
+    removeAssetFromClient: handleRemoveAssetFromClient
   };
 };
 
