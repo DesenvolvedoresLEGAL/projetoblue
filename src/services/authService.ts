@@ -1,182 +1,173 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 import { toast } from '@/utils/toast';
 
-export interface AuthUser {
-  id: string;
+type SignUpData = {
   email: string;
-  name?: string;
-  avatar_url?: string;
-  role?: string;
-}
+  password: string;
+};
 
-export async function signInWithEmail(email: string, password: string): Promise<AuthUser | null> {
+type ValidationResult = {
+  isValid: boolean;
+  error?: string;
+};
+
+export const validateSignUpData = (data: SignUpData): ValidationResult => {
+  const { email, password } = data;
+
+  if (!email) {
+    return { isValid: false, error: "Email é obrigatório" };
+  }
+
+  if (!validateEmail(email)) {
+    return { isValid: false, error: "Email inválido" };
+  }
+
+  if (!password) {
+    return { isValid: false, error: "Senha é obrigatória" };
+  }
+
+  if (password.length < 8) {
+    return { isValid: false, error: "A senha deve ter pelo menos 8 caracteres" };
+  }
+
+  return { isValid: true };
+};
+
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const signUp = async (email: string, password: string) => {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error: any) {
+    console.error("Erro ao criar usuário:", error);
+    return { data: null, error };
+  }
+};
+
+export const signIn = async (email: string, password: string) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    if (error) {
-      console.error('Error signing in:', error.message);
-      throw new Error(error.message);
-    }
-
-    if (!data.user) {
-      return null;
-    }
-
-    // Get user profile data
-    const profile = await getUserProfile(data.user);
-    return {
-      id: data.user.id,
-      email: data.user.email || '',
-      name: profile?.full_name || '',
-      avatar_url: profile?.avatar_url || '',
-      role: profile?.role || 'user',
-    };
-  } catch (error) {
-    console.error('Authentication error:', error);
-    throw error;
+    
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (error: any) {
+    console.error("Erro ao fazer login:", error);
+    return { data: null, error };
   }
-}
+};
 
-export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error('Error signing out:', error.message);
-    throw new Error(error.message);
-  }
-}
-
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export const signOut = async () => {
   try {
-    const { data } = await supabase.auth.getUser();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     
-    if (!data.user) {
-      return null;
-    }
-
-    // Get user profile data
-    const profile = await getUserProfile(data.user);
-    return {
-      id: data.user.id,
-      email: data.user.email || '',
-      name: profile?.full_name || '',
-      avatar_url: profile?.avatar_url || '',
-      role: profile?.role || 'user',
-    };
-  } catch (error) {
-    console.error('Error getting current user:', error);
-    return null;
+    return { error: null };
+  } catch (error: any) {
+    console.error("Erro ao fazer logout:", error);
+    return { error };
   }
-}
+};
 
-export async function updateUserProfile(userId: string, updates: { 
-  full_name?: string;
-  avatar_url?: string;
-}): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId);
-    
-    if (error) {
-      console.error('Error updating profile:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    return false;
-  }
-}
-
-async function getUserProfile(user: User): Promise<any | null> {
-  try {
-    // Get profile from profiles table
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
-      .select()
-      .eq('id', user.id)
-      .single();
-    
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error fetching profile:', fetchError);
-      return null;
-    }
-    
-    // If profile exists, return it
-    if (existingProfile) {
-      return existingProfile;
-    }
-    
-    // If no profile exists, create one
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: user.id,
-          full_name: '',
-          avatar_url: '',
-          role: 'user',
-        },
-      ])
-      .select()
-      .single();
-    
-    if (insertError) {
-      console.error('Error creating profile:', insertError);
-      return null;
-    }
-    
-    return newProfile;
-  } catch (error) {
-    console.error('Error in getUserProfile:', error);
-    return null;
-  }
-}
-
-export async function resetPassword(email: string): Promise<boolean> {
+export const resetPassword = async (email: string) => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: window.location.origin + "/reset-password",
     });
     
-    if (error) {
-      console.error('Error resetting password:', error);
-      toast.error('Erro ao enviar email de recuperação de senha');
-      return false;
-    }
+    if (error) throw error;
     
-    toast.success('Email de recuperação de senha enviado com sucesso');
-    return true;
-  } catch (error) {
-    console.error('Error in resetPassword:', error);
-    toast.error('Erro ao processar solicitação de recuperação de senha');
-    return false;
+    toast.success("Um email de redefinição de senha foi enviado para você");
+    return { error: null };
+  } catch (error: any) {
+    console.error("Erro ao solicitar redefinição de senha:", error);
+    toast.error("Erro ao solicitar redefinição de senha: " + error.message);
+    return { error };
   }
-}
+};
 
-export async function updatePassword(newPassword: string): Promise<boolean> {
+export const updateUserPassword = async (password: string) => {
   try {
     const { error } = await supabase.auth.updateUser({
-      password: newPassword,
+      password
     });
     
-    if (error) {
-      console.error('Error updating password:', error);
-      toast.error('Erro ao atualizar senha');
-      return false;
+    if (error) throw error;
+    
+    toast.success("Senha atualizada com sucesso");
+    return { error: null };
+  } catch (error: any) {
+    console.error("Erro ao atualizar senha:", error);
+    toast.error("Erro ao atualizar senha: " + error.message);
+    return { error };
+  }
+};
+
+// Fix the profiles table related issue
+export const getCurrentUser = async () => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) throw error;
+    if (!user) return { user: null, error: null };
+    
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+      
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error("Erro ao buscar dados do perfil:", profileError);
     }
     
-    toast.success('Senha atualizada com sucesso');
-    return true;
-  } catch (error) {
-    console.error('Error in updatePassword:', error);
-    toast.error('Erro ao processar atualização de senha');
-    return false;
+    return { 
+      user: {
+        ...user,
+        profile: profileData || null
+      }, 
+      error: null 
+    };
+  } catch (error: any) {
+    console.error("Erro ao obter usuário atual:", error);
+    return { user: null, error };
   }
-}
+};
+
+export const updateUserProfile = async (userId: string, profileData: any) => {
+  try {
+    // Ensure we're updating the correct fields based on the database schema
+    const validProfileData = {
+      email: profileData.email,
+      role: profileData.role,
+    };
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(validProfileData)
+      .eq('id', userId);
+      
+    if (error) throw error;
+    
+    toast.success("Perfil atualizado com sucesso");
+    return { error: null };
+  } catch (error: any) {
+    console.error("Erro ao atualizar perfil:", error);
+    toast.error("Erro ao atualizar perfil: " + error.message);
+    return { error };
+  }
+};
