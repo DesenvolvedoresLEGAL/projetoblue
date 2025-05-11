@@ -4,16 +4,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataUsageProvider } from './context/DataUsageContext';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "./components/theme-provider"
 import Index from './pages/Index';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Profile from './pages/Profile';
 import Inventory from './pages/Inventory';
 import Association from './pages/Association';
 import History from './pages/History';
 import DataUsage from './pages/DataUsage';
-import Settings from './pages/Settings';
 import Clients from './pages/Clients';
 import InventorySummary from './pages/InventorySummary';
 import { Layout } from './components/layout/Layout';
@@ -45,7 +43,6 @@ const App = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
                   <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-                  <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                   
                   {/* Inventory Module */}
                   <Route path="/inventory" element={<PrivateRoute><InventorySummary /></PrivateRoute>} />
@@ -60,7 +57,6 @@ const App = () => {
                   <Route path="/association" element={<PrivateRoute><Association /></PrivateRoute>} />
                   <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
                   <Route path="/data-usage" element={<PrivateRoute><DataUsage /></PrivateRoute>} />
-                  <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
                 </Routes>
                 <Toaster />
               </DataUsageProvider>
