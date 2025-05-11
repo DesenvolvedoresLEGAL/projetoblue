@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/components/theme-provider';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 
@@ -32,7 +32,7 @@ const Login = () => {
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setTheme(theme === 'dark' ? 'light' : 'dark', e);
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (

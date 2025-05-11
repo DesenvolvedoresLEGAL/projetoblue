@@ -2,8 +2,8 @@
 import { Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/sonner";
-import Layout from "./components/layout/Layout";
-import AuthRoute from "./components/auth/AuthRoute";
+import { Layout } from "./components/layout/Layout";
+import { AuthRoute } from "./components/auth/AuthRoute";
 
 // Pages
 import Home from "./pages/Home";
