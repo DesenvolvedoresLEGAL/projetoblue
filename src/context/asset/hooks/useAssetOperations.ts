@@ -139,7 +139,7 @@ export const useAssetOperations = (
           adminPassword: '',
           imei: '',
           serialNumber: data.serial_number || '',
-          notes: "", // Notes/observations not available,
+          notes: "", // Fixed: Added comma here
           hasWeakPassword: (assetData as any).hasWeakPassword,
           needsPasswordChange: (assetData as any).needsPasswordChange
         } as RouterAsset;
