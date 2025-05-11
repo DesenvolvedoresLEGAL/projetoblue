@@ -1,13 +1,8 @@
 
 import React, { createContext, useState, useEffect } from 'react';
-import { Asset, AssetStatus, ChipAsset, RouterAsset } from '@/types/asset';
-import { toast } from '@/utils/toast';
-import { supabase } from '@/integrations/supabase/client';
-import { AssetContextType } from '../AssetContextTypes';
-import { Client } from '@/types/asset';
+import { Asset, AssetStatus, StatusRecord, Client } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
-
-// Import operations
+import { AssetContextType } from '../AssetContextTypes';
 import { 
   useAssetOperations, 
   useClientOperations, 
@@ -15,7 +10,7 @@ import {
   useStatusMapping 
 } from './hooks';
 
-// Definindo o valor padrão para o contexto
+// Define the default context value
 const defaultContextValue: AssetContextType = {
   assets: [],
   clients: [],
@@ -45,30 +40,26 @@ const defaultContextValue: AssetContextType = {
 export const AssetContext = createContext<AssetContextType>(defaultContextValue);
 
 export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State management
   const [assets, setAssets] = useState<Asset[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [statusRecords, setStatusRecords] = useState<any[]>([]);
+  const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
 
-  // Hook for status mapping
+  // Use our custom hooks
   const { 
     loadStatusRecords, 
     mapStatusIdToAssetStatus, 
     mapAssetStatusToId 
   } = useStatusMapping(setStatusRecords);
 
-  // Hook for asset operations
+  // Hook for history operations
   const { 
-    loadAssets, 
-    addAsset, 
-    updateAsset, 
-    deleteAsset, 
-    getAssetById, 
-    filterAssets, 
-    getAssetsByStatus, 
-    getAssetsByType 
-  } = useAssetOperations(assets, setAssets, statusRecords, mapStatusIdToAssetStatus, mapAssetStatusToId);
+    addHistoryEntry, 
+    getAssetHistory, 
+    getClientHistory 
+  } = useHistoryOperations(history, setHistory);
 
   // Hook for client operations
   const { 
@@ -78,27 +69,28 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     deleteClient 
   } = useClientOperations(clients, setClients);
 
-  // Hook for history operations
-  const { 
-    addHistoryEntry, 
-    getAssetHistory, 
-    getClientHistory 
-  } = useHistoryOperations(history, setHistory);
-
-  // Hook for asset-client association
-  const { 
-    associateAssetToClient, 
-    removeAssetFromClient, 
-    getExpiredSubscriptions, 
-    returnAssetsToStock, 
-    extendSubscription 
+  // Hook for asset operations (combining core, mutation, and client operations)
+  const {
+    loadAssets,
+    addAsset,
+    updateAsset,
+    deleteAsset,
+    getAssetById,
+    filterAssets,
+    getAssetsByStatus,
+    getAssetsByType,
+    associateAssetToClient,
+    removeAssetFromClient,
+    returnAssetsToStock,
+    getExpiredSubscriptions,
+    extendSubscription
   } = useAssetOperations(
-    assets, 
-    setAssets, 
-    statusRecords, 
-    mapStatusIdToAssetStatus, 
-    mapAssetStatusToId, 
-    clients, 
+    assets,
+    setAssets,
+    statusRecords,
+    mapStatusIdToAssetStatus,
+    mapAssetStatusToId,
+    clients,
     addHistoryEntry
   );
 
@@ -111,6 +103,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (statusRecords.length > 0) {
       loadAssets();
+      setLoading(false);
     }
   }, [statusRecords]);
 
