@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +11,7 @@ import {
   LineChart,
   BarChart,
   Star,
-  Flask,
+  Beaker,
   Webhook,
   Settings,
   Users,
@@ -162,11 +161,11 @@ export const sidebarModules: SidebarModule[] = [
   {
     id: "lab",
     title: "Lab",
-    icon: Flask,
+    icon: Beaker,
     isExpandable: true,
     subItems: [
-      { title: "Protótipos", path: "/prototypes", icon: Flask },
-      { title: "Testes", path: "/tests", icon: Flask },
+      { title: "Protótipos", path: "/prototypes", icon: Beaker },
+      { title: "Testes", path: "/tests", icon: Beaker },
       { title: "Pipeline", path: "/pipeline", icon: Package },
       { title: "Flags", path: "/flags", icon: Bell },
       { title: "Pós-deploy", path: "/post-deploy", icon: Package },

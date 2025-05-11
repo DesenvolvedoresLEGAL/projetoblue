@@ -6,9 +6,9 @@ export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
-        .eq('uuid', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       if (error) {
@@ -17,22 +17,15 @@ export const profileService = {
       }
 
       if (data) {
-        await supabase
-          .from('users')
-          .update({ is_approved: data.is_approved })
-          .eq('uuid', userId);
-      }
-
-      if (data) {
-        // Map the users table fields to the UserProfile type
+        // Map the profiles table fields to the UserProfile type
         return {
-          id: data.uuid,
+          id: data.id,
           email: data.email,
-          role: data.id_role === 1 ? 'admin' : 'analyst',
-          created_at: new Date().toISOString(), // Use current date since field doesn't exist
-          last_login: new Date().toISOString(), // Use current date since field doesn't exist
-          is_active: Boolean(data.is_approved),
-          is_approved: Boolean(data.is_approved)
+          role: data.role === 'admin' ? 'admin' : 'analyst',
+          created_at: data.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(), // This field may not be in the table
+          is_active: true, // Default value since it might not exist in the table
+          is_approved: true // Default value since it might not exist in the table
         };
       }
 

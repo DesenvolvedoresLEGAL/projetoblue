@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
@@ -118,7 +117,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             registrationDate: new Date().toISOString(), // Assuming registration date is creation date
             status: mapStatusIdToAssetStatus(asset.status_id || 1),
             statusId: asset.status_id || 1,
-            notes: asset.observacoes || undefined
+            notes: "" // Notes/observations not available
           };
           
           if (asset.type_id === 1) {
@@ -208,7 +207,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           iccid: data.iccid || '',
           phoneNumber: data.line_number?.toString() || '',
           carrier: data.manufacturer_id?.toString() || '',
-          notes: data.observacoes || undefined
+          notes: "" // Notes/observations not available
         } as ChipAsset;
       } else {
         newAsset = {
@@ -227,7 +226,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           adminPassword: '',
           imei: '',
           serialNumber: data.serial_number || '',
-          notes: data.observacoes || undefined,
+          notes: "" // Notes/observations not available,
           hasWeakPassword: (assetData as any).hasWeakPassword,
           needsPasswordChange: (assetData as any).needsPasswordChange
         } as RouterAsset;

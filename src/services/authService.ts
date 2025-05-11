@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
 
@@ -80,10 +79,10 @@ export const authService = {
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
       }
       
-      // Create an entry in the users table
+      // Create an entry in the profiles table
       try {
         const { error: userError } = await supabase
-          .from('users')
+          .from('profiles')
           .insert({
             uuid: data.user.id,
             email: email,
@@ -93,7 +92,7 @@ export const authService = {
           });
           
         if (userError) {
-          console.error('Error creating user in users table:', userError);
+          console.error('Error creating user in profiles table:', userError);
           // Don't fail the sign-up if this fails, but log it
         }
       } catch (userInsertError) {

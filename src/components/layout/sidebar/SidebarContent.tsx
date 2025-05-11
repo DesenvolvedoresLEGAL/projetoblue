@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { SidebarMenu } from "./SidebarMenu";
-import { modules } from "./sidebarModules";
+import { sidebarModules } from "./sidebarModules";
 import { SidebarModule } from "./sidebarTypes";
 
 interface SidebarContentProps {
@@ -25,7 +25,7 @@ export function SidebarContent({
     const currentPath = location.pathname;
     let activeModuleId = '';
     
-    modules.forEach(module => {
+    sidebarModules.forEach(module => {
       if (module.isExpandable && module.subItems) {
         const hasActiveSubItem = module.subItems.some(item => 
           currentPath === item.path || currentPath.startsWith(item.path + '/')
@@ -51,7 +51,7 @@ export function SidebarContent({
 
   return (
     <div className="overflow-y-auto py-2 flex-1">
-      {modules.map((module: SidebarModule) => (
+      {sidebarModules.map((module: SidebarModule) => (
         <div key={module.id} className="px-3 py-1">
           <SidebarMenu
             module={module}
