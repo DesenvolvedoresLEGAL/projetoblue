@@ -1,84 +1,43 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { AssetStatus } from '@/types/asset';
-import { toast } from '@/utils/toast';
+import { AssetStatus, StatusRecord } from "@/types/asset";
 
 export const useStatusMapping = (
-  setStatusRecords: React.Dispatch<React.SetStateAction<any[]>>
+  setStatusRecords: React.Dispatch<React.SetStateAction<StatusRecord[]>>
 ) => {
-
-  const loadStatusRecords = async () => {
+  // Load status records from database/API
+  const loadStatusRecords = async (): Promise<void> => {
     try {
-      const { data, error } = await supabase.from('asset_status').select('*');
-      if (error) {
-        console.error('Error loading status records:', error);
-        toast.error('Erro ao carregar status dos ativos');
-      } else {
-        // Convert the data to match the StatusRecord interface
-        const formattedData = data.map((record: any) => ({
-          id: record.id,
-          nome: record.status
-        }));
-        
-        // Save to localStorage for reference by other components
-        localStorage.setItem('statusRecords', JSON.stringify(formattedData));
-        
-        // Update state
-        setStatusRecords(formattedData || []);
-      }
+      // Simulated fetch - in a real app this would be an API call
+      const mockStatusRecords: StatusRecord[] = [
+        { id: 1, nome: "DISPONÍVEL" },
+        { id: 2, nome: "ALUGADO" },
+        { id: 3, nome: "ASSINATURA" },
+        { id: 4, nome: "SEM DADOS" },
+        { id: 5, nome: "BLOQUEADO" },
+        { id: 6, nome: "MANUTENÇÃO" }
+      ];
+      
+      setStatusRecords(mockStatusRecords);
     } catch (error) {
-      console.error('Error in loadStatusRecords:', error);
-      toast.error('Erro ao carregar status dos ativos');
+      console.error("Error loading status records:", error);
     }
   };
 
-  // Helper function to map status_id to AssetStatus
+  // Map status ID to asset status
   const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
-    // Get current status records from localStorage
-    const statusRecords = JSON.parse(localStorage.getItem('statusRecords') || '[]');
-    
-    const found = statusRecords.find((s: any) => s.id === statusId);
-    if (found) {
-      switch (found.nome.toLowerCase()) {
-        case 'disponivel': return 'DISPONÍVEL';
-        case 'alugado': return 'ALUGADO';
-        case 'assinatura': return 'ASSINATURA';
-        case 'sem dados': return 'SEM DADOS';
-        case 'bloqueado': return 'BLOQUEADO';
-        case 'em manutenção': return 'MANUTENÇÃO';
-        default: return 'DISPONÍVEL';
-      }
-    }
-    return 'DISPONÍVEL'; // Default fallback
+    const statusRecord = statusRecords.find(rec => rec.id === statusId);
+    return (statusRecord?.nome as AssetStatus) || "DISPONÍVEL";
   };
 
-  // Helper function to map AssetStatus to status_id
+  // Map asset status to status ID
   const mapAssetStatusToId = (status: AssetStatus): number => {
-    // Get current status records from localStorage
-    const statusRecords = JSON.parse(localStorage.getItem('statusRecords') || '[]');
-    
-    const statusMap: Record<AssetStatus, string> = {
-      'DISPONÍVEL': 'disponivel',
-      'ALUGADO': 'alugado',
-      'ASSINATURA': 'assinatura',
-      'SEM DADOS': 'sem dados',
-      'BLOQUEADO': 'bloqueado',
-      'MANUTENÇÃO': 'em manutenção'
-    };
-    
-    const found = statusRecords.find((s: any) => s.nome.toLowerCase() === statusMap[status].toLowerCase());
-    return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
+    const statusRecord = statusRecords.find(rec => rec.nome === status);
+    return statusRecord?.id || 1; // Default to ID 1 (DISPONÍVEL) if not found
   };
 
-  // Load status records when component mounts
-  useEffect(() => {
-    loadStatusRecords();
-  }, []);
-
-  return { 
-    loadStatusRecords, 
-    mapStatusIdToAssetStatus, 
-    mapAssetStatusToId 
+  return {
+    loadStatusRecords,
+    mapStatusIdToAssetStatus,
+    mapAssetStatusToId
   };
 };
