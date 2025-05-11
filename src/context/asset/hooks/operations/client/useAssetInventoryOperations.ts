@@ -15,10 +15,9 @@ export const useAssetInventoryOperations = (
     if (!clients || !updateClient || !addHistoryEntry) return;
     
     removeAssetFromClient(
-      assets,
-      clients,
       assetId,
       clientId,
+      assets,
       updateAsset,
       updateClient,
       addHistoryEntry
@@ -30,9 +29,9 @@ export const useAssetInventoryOperations = (
     if (!clients || !updateClient || !addHistoryEntry) return;
     
     returnAssetsToStock(
+      assetIds,
       assets,
       clients,
-      assetIds,
       updateAsset,
       updateClient,
       addHistoryEntry
