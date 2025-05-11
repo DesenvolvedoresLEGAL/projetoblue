@@ -13,12 +13,12 @@ export function DashboardKpis() {
   const availableRouters = assets.filter(asset => asset.type === "ROTEADOR" && asset.status === "DISPONÍVEL").length;
   const problemAssets = assets.filter(asset => ["BLOQUEADO", "SEM DADOS", "MANUTENÇÃO"].includes(asset.status)).length;
   
-  // Check for subscription in the asset
+  // Check for expired subscriptions
   const expiredSubscriptions = assets.filter(asset => {
-    return asset.status === "ASSINATURA" && 
-           asset.subscription && 
-           asset.subscription.endDate && 
-           new Date(asset.subscription.endDate) < new Date();
+    if (asset.status === "ASSINATURA" && asset.subscription) {
+      return asset.subscription.endDate && new Date(asset.subscription.endDate) < new Date();
+    }
+    return false;
   }).length;
 
   const kpis = [

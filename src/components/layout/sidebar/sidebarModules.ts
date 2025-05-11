@@ -1,196 +1,186 @@
 
 import {
   LayoutDashboard,
-  Home,
-  Network,
-  Search,
+  Package,
+  MonitorSmartphone,
   Wifi,
-  Users,
+  Globe,
   Megaphone,
-  Wrench,
-  Bot,
-  AlertTriangle,
-  CircleDollarSign,
-  BarChart3,
-  Link2,
-  ShieldCheck,
-  BarChart2,
-  Rocket,
+  BrainCircuit,
+  Bell,
+  DollarSign,
+  LineChart,
+  BarChart,
+  Star,
+  Flask,
+  Webhook,
   Settings,
-  Package
+  Users,
+  HelpCircle,
+  ShieldCheck
 } from "lucide-react";
 import { SidebarModule } from "./sidebarTypes";
 
-// Define the module structure
-export const modules: SidebarModule[] = [
+export const sidebarModules: SidebarModule[] = [
   {
-    id: "home",
-    title: "Home",
-    icon: Home,
+    id: "dashboard",
+    title: "Dashboard",
+    icon: LayoutDashboard,
     path: "/",
-    isExpandable: false
+    isExpandable: false,
   },
   {
-    id: "assets",
-    title: "Asset & Network Management",
-    icon: Network,
+    id: "ativos",
+    title: "Ativos",
+    icon: Package,
     isExpandable: true,
     subItems: [
-      { title: "Devices & Topology", path: "/inventory/assets", icon: Package },
-      { title: "Auto Discovery", path: "/inventory/discovery", icon: Search },
-      { title: "SLAs & Status", path: "/inventory/status", icon: AlertTriangle }
+      { title: "Inventário", path: "/inventory", icon: Package },
+      { title: "Registrar Ativo", path: "/register-asset", icon: Package },
+      { title: "Vincular Ativo", path: "/association", icon: Package },
+      { title: "Topologia", path: "/topology", icon: Package },
+      { title: "Status", path: "/status", icon: Package },
+      { title: "Descoberta", path: "/discovery", icon: Package },
+      { title: "Exportar", path: "/export", icon: Package },
     ]
   },
   {
-    id: "wifi-analytics",
-    title: "WiFi Analytics",
+    id: "suporte",
+    title: "Suporte",
+    icon: HelpCircle,
+    isExpandable: true,
+    subItems: [
+      { title: "Dashboard", path: "/support", icon: LayoutDashboard },
+      { title: "Acesso Remoto", path: "/remote-access", icon: MonitorSmartphone },
+      { title: "Tickets", path: "/tickets", icon: Bell },
+      { title: "Playbooks", path: "/playbooks", icon: Package },
+      { title: "Auditoria", path: "/audit", icon: ShieldCheck },
+    ]
+  },
+  {
+    id: "wifi",
+    title: "WiFi",
     icon: Wifi,
     isExpandable: true,
     subItems: [
-      { title: "Usage KPIs", path: "/wifi/usage", icon: BarChart2 },
-      { title: "Heatmap", path: "/wifi/heatmap", icon: Wifi },
-      { title: "Download Reports", path: "/wifi/reports", icon: BarChart3 }
+      { title: "Métricas", path: "/wifi-metrics", icon: LineChart },
+      { title: "Heatmap", path: "/wifi-heatmap", icon: Wifi },
+      { title: "Relatórios", path: "/wifi-reports", icon: Package },
     ]
   },
   {
-    id: "guest-wifi",
-    title: "Guest WiFi & Captive Portal",
-    icon: Users,
+    id: "portal",
+    title: "Portal",
+    icon: Globe,
     isExpandable: true,
     subItems: [
-      { title: "Splash Page Builder", path: "/guest-wifi/splash", icon: LayoutDashboard },
-      { title: "Leads & Login Settings", path: "/guest-wifi/leads", icon: Users },
-      { title: "Integrations (PipeRun)", path: "/guest-wifi/integrations", icon: Link2 }
+      { title: "Splash Page", path: "/splash-page", icon: Globe },
+      { title: "Leads", path: "/leads", icon: Users },
+      { title: "Integrações", path: "/portal-integrations", icon: Webhook },
     ]
   },
   {
-    id: "wifi-marketing",
-    title: "WiFi Marketing",
+    id: "campanhas",
+    title: "Campanhas",
     icon: Megaphone,
     isExpandable: true,
     subItems: [
-      { title: "Campaign Manager", path: "/marketing/campaigns", icon: Megaphone },
-      { title: "Audience Segments", path: "/marketing/audience", icon: Users },
-      { title: "ROI Dashboard", path: "/marketing/roi", icon: CircleDollarSign }
+      { title: "Disparos", path: "/campaign-sends", icon: Megaphone },
+      { title: "Públicos", path: "/campaign-audiences", icon: Users },
+      { title: "Resultados", path: "/campaign-results", icon: BarChart },
     ]
   },
   {
-    id: "remote-access",
-    title: "Remote Access & Support",
-    icon: Wrench,
+    id: "ia",
+    title: "IA",
+    icon: BrainCircuit,
     isExpandable: true,
     subItems: [
-      { title: "Equipment Access", path: "/remote-access/equipment", icon: Wrench },
-      { title: "Playbook Library", path: "/remote-access/playbooks", icon: LayoutDashboard },
-      { title: "Audit Logs", path: "/remote-access/logs", icon: BarChart2 }
+      { title: "Assistente", path: "/ai-assistant", icon: BrainCircuit },
+      { title: "Base de Conhecimento", path: "/knowledge-base", icon: Package },
+      { title: "Escalonamentos", path: "/ai-escalations", icon: LineChart },
     ]
   },
   {
-    id: "ai-assistant",
-    title: "AI Assistant",
-    icon: Bot,
+    id: "alertas",
+    title: "Alertas",
+    icon: Bell,
     isExpandable: true,
     subItems: [
-      { title: "Chat & Video Bot", path: "/ai/chat", icon: Bot },
-      { title: "RAG Knowledge Base", path: "/ai/knowledge", icon: LayoutDashboard },
-      { title: "Escalation Routing", path: "/ai/escalation", icon: Users }
+      { title: "Regras", path: "/alert-rules", icon: Settings },
+      { title: "Automação", path: "/alert-automation", icon: Webhook },
+      { title: "Tickets", path: "/alert-tickets", icon: Bell },
     ]
   },
   {
-    id: "predictive-alerts",
-    title: "Predictive Alerts",
-    icon: AlertTriangle,
+    id: "financeiro",
+    title: "Financeiro",
+    icon: DollarSign,
     isExpandable: true,
     subItems: [
-      { title: "Threshold Rules", path: "/alerts/rules", icon: AlertTriangle },
-      { title: "Auto-Ticketing", path: "/alerts/tickets", icon: LayoutDashboard },
-      { title: "Corrective Automation", path: "/alerts/automation", icon: Settings }
+      { title: "Dashboard", path: "/financial", icon: LayoutDashboard },
+      { title: "Controller", path: "/controller", icon: DollarSign },
+      { title: "Faturas", path: "/invoices", icon: DollarSign },
+      { title: "Inadimplência", path: "/default", icon: DollarSign },
     ]
   },
   {
-    id: "erp-billing",
-    title: "ERP & Billing Hub",
-    icon: CircleDollarSign,
+    id: "vendas",
+    title: "Vendas",
+    icon: LineChart,
     isExpandable: true,
     subItems: [
-      { title: "Invoices (Superlógica)", path: "/billing/invoices", icon: CircleDollarSign },
-      { title: "Delinquency", path: "/billing/delinquency", icon: AlertTriangle },
-      { title: "Revenue by BU", path: "/billing/revenue", icon: BarChart3 }
+      { title: "Oportunidades", path: "/opportunities", icon: LineChart },
+      { title: "Clientes", path: "/clients", icon: Users },
+      { title: "Insights", path: "/sales-insights", icon: BrainCircuit },
     ]
   },
   {
-    id: "crm-sales",
-    title: "CRM & Sales Insights",
-    icon: BarChart3,
+    id: "bits",
+    title: "BITS",
+    icon: BarChart,
     isExpandable: true,
     subItems: [
-      { title: "Automated Opportunities", path: "/crm/opportunities", icon: BarChart3 },
-      { title: "360º Customer View", path: "/crm/customers", icon: Users },
-      { title: "Cross-sell and Upsell", path: "/crm/upsell", icon: CircleDollarSign }
+      { title: "Dashboard", path: "/bits", icon: LayoutDashboard },
+      { title: "Métricas", path: "/bits-metrics", icon: LineChart },
+      { title: "Configurações", path: "/bits-settings", icon: Settings },
     ]
   },
   {
-    id: "integration-hub",
-    title: "Integration Hub",
-    icon: Link2,
+    id: "nps",
+    title: "NPS",
+    icon: Star,
     isExpandable: true,
     subItems: [
-      { title: "API Portal", path: "/integrations/api", icon: Link2 },
-      { title: "Webhooks", path: "/integrations/webhooks", icon: Link2 },
-      { title: "SDK Downloads", path: "/integrations/sdk", icon: Package }
+      { title: "Dashboard", path: "/nps", icon: LayoutDashboard },
+      { title: "Respostas", path: "/nps-responses", icon: Package },
+      { title: "Insights", path: "/nps-insights", icon: BrainCircuit },
+      { title: "Ações Automatizadas", path: "/nps-actions", icon: Webhook },
+      { title: "Configurações", path: "/nps-settings", icon: Settings },
     ]
   },
   {
-    id: "security",
-    title: "IAM & Security",
-    icon: ShieldCheck,
+    id: "lab",
+    title: "Lab",
+    icon: Flask,
     isExpandable: true,
     subItems: [
-      { title: "Access & Permissions", path: "/security/access", icon: ShieldCheck },
-      { title: "SSO & MFA", path: "/security/sso", icon: ShieldCheck },
-      { title: "Logs and Secrets", path: "/security/logs", icon: BarChart2 }
+      { title: "Protótipos", path: "/prototypes", icon: Flask },
+      { title: "Testes", path: "/tests", icon: Flask },
+      { title: "Pipeline", path: "/pipeline", icon: Package },
+      { title: "Flags", path: "/flags", icon: Bell },
+      { title: "Pós-deploy", path: "/post-deploy", icon: Package },
     ]
   },
   {
-    id: "observability",
-    title: "Observability",
-    icon: BarChart2,
+    id: "integracoes",
+    title: "Integrações",
+    icon: Webhook,
     isExpandable: true,
     subItems: [
-      { title: "Logs", path: "/observability/logs", icon: BarChart2 },
-      { title: "Metrics", path: "/observability/metrics", icon: BarChart3 },
-      { title: "Tracing", path: "/observability/tracing", icon: Network }
-    ]
-  },
-  {
-    id: "devops",
-    title: "DevOps & Deploy",
-    icon: Rocket,
-    isExpandable: true,
-    subItems: [
-      { title: "Pipelines & Releases", path: "/devops/pipelines", icon: Rocket },
-      { title: "Feature Flags", path: "/devops/features", icon: Settings },
-      { title: "Post-Deploy Monitoring", path: "/devops/monitoring", icon: AlertTriangle }
-    ]
-  },
-  {
-    id: "tools",
-    title: "Tools",
-    icon: Wrench,
-    isExpandable: true,
-    subItems: [
-      { title: "Register Asset", path: "/register-asset", icon: Package },
-      { title: "Link Asset", path: "/association", icon: Link2 },
-      { title: "Export Inventory", path: "/export", icon: Package }
-    ]
-  },
-  {
-    id: "sandbox",
-    title: "Sandbox",
-    icon: Wrench,
-    isExpandable: true,
-    subItems: [
-      { title: "Tests & Prototypes", path: "/sandbox", icon: Wrench }
+      { title: "APIs", path: "/apis", icon: Webhook },
+      { title: "Webhooks", path: "/webhooks", icon: Webhook },
+      { title: "SDK", path: "/sdk", icon: Package },
     ]
   },
   {
@@ -199,9 +189,15 @@ export const modules: SidebarModule[] = [
     icon: Settings,
     isExpandable: true,
     subItems: [
-      { title: "System Settings", path: "/admin/settings", icon: Settings },
-      { title: "Team Management", path: "/admin/team", icon: Users },
-      { title: "Versioning", path: "/admin/versions", icon: Package }
+      { title: "Configurações", path: "/settings", icon: Settings },
+      { title: "Equipe", path: "/team", icon: Users },
+      { title: "Versionamento", path: "/versions", icon: Package },
+      { title: "Logs", path: "/logs", icon: Package },
+      { title: "Métricas", path: "/metrics", icon: BarChart },
+      { title: "Traces", path: "/traces", icon: LineChart },
+      { title: "IAM", path: "/iam", icon: ShieldCheck },
+      { title: "Acessos", path: "/access", icon: ShieldCheck },
+      { title: "SSO & MFA", path: "/sso-mfa", icon: ShieldCheck },
     ]
-  }
+  },
 ];

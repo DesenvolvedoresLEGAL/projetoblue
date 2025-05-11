@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
@@ -110,15 +111,13 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           throw assetsError;
         }
         
-        // Verificar quais assets são chips e quais são roteadores com base no type_id
-        // Por exemplo, vamos supor que type_id 1 = CHIP e type_id 2 = ROTEADOR
-        
+        // Converter os assets para o formato necessário
         const convertToAssetObject = (asset: any): Asset => {
           const baseAsset = {
             id: asset.uuid,
-            registrationDate: asset.created_at || new Date().toISOString(),
-            status: mapStatusIdToAssetStatus(asset.status_id),
-            statusId: asset.status_id,
+            registrationDate: new Date().toISOString(), // Assuming registration date is creation date
+            status: mapStatusIdToAssetStatus(asset.status_id || 1),
+            statusId: asset.status_id || 1,
             notes: asset.observacoes || undefined
           };
           
@@ -136,7 +135,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return {
               ...baseAsset,
               type: "ROTEADOR" as const,
-              uniqueId: asset.uuid,
+              uniqueId: asset.uuid || '',
               brand: asset.manufacturer_id?.toString() || '',
               model: asset.model || '',
               ssid: '', // Não temos esses dados no schema atual
@@ -169,103 +168,76 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Default to 'Disponível' status (id = 1) if no status is provided
       const statusId = assetData.statusId || 1;
       
-      if (assetData.type === "CHIP") {
-        const chipData = assetData as Omit<ChipAsset, "id" | "status">;
-        
-        // Inserir no banco de dados
-        const { data, error } = await supabase
-          .from('chips')
-          .insert({
-            iccid: chipData.iccid,
-            numero: chipData.phoneNumber,
-            operadora: chipData.carrier,
-            observacoes: chipData.notes,
-            status_id: statusId
-          })
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('Erro ao inserir chip:', error);
-          toast.error(`Erro ao cadastrar chip: ${error.message}`);
-          return null;
-        }
-        
-        // Criar o objeto de ativo com os dados retornados
-        const newAsset: ChipAsset = {
-          id: data.id,
-          type: 'CHIP',
-          registrationDate: data.created_at,
-          status: mapStatusIdToAssetStatus(data.status_id),
-          statusId: data.status_id,
-          iccid: data.iccid,
-          phoneNumber: data.numero,
-          carrier: data.operadora,
-          notes: data.observacoes || undefined
-        };
-        
-        // Atualizar o estado
-        setAssets(prevAssets => [...prevAssets, newAsset]);
-        toast.success('Chip cadastrado com sucesso');
-        return newAsset;
-      } else if (assetData.type === "ROTEADOR") {
-        const routerData = assetData as Omit<RouterAsset, "id" | "status">;
-        
-        // Inserir no banco de dados
-        const { data, error } = await supabase
-          .from('roteadores')
-          .insert({
-            id_unico: routerData.uniqueId,
-            marca: routerData.brand,
-            modelo: routerData.model,
-            ssid: routerData.ssid,
-            senha_wifi: routerData.password,
-            ip_gerencia: routerData.ipAddress,
-            usuario_admin: routerData.adminUser,
-            senha_admin: routerData.adminPassword,
-            imei: routerData.imei,
-            numero_serie: routerData.serialNumber,
-            observacoes: routerData.notes,
-            status_id: statusId
-          })
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('Erro ao inserir roteador:', error);
-          toast.error(`Erro ao cadastrar roteador: ${error.message}`);
-          return null;
-        }
-        
-        // Criar o objeto de ativo com os dados retornados
-        const newAsset: RouterAsset = {
-          id: data.id,
-          type: 'ROTEADOR',
-          registrationDate: data.created_at,
-          status: mapStatusIdToAssetStatus(data.status_id),
-          statusId: data.status_id,
-          uniqueId: data.id_unico,
-          brand: data.marca,
-          model: data.modelo,
-          ssid: data.ssid || '',
-          password: data.senha_wifi || '',
-          ipAddress: data.ip_gerencia,
-          adminUser: data.usuario_admin,
-          adminPassword: data.senha_admin,
-          imei: data.imei,
-          serialNumber: data.numero_serie,
-          notes: data.observacoes || undefined,
-          hasWeakPassword: routerData.hasWeakPassword,
-          needsPasswordChange: routerData.needsPasswordChange
-        };
-        
-        // Atualizar o estado
-        setAssets(prevAssets => [...prevAssets, newAsset]);
-        toast.success('Roteador cadastrado com sucesso');
-        return newAsset;
+      // Prepare the base data for insertion
+      const baseAssetData = {
+        type_id: assetData.type === "CHIP" ? 1 : 2,
+        status_id: statusId,
+        model: assetData.type === "ROTEADOR" ? (assetData as any).model : undefined,
+        serial_number: assetData.type === "ROTEADOR" ? (assetData as any).serialNumber : undefined,
+        password: assetData.type === "ROTEADOR" ? (assetData as any).password : undefined,
+        iccid: assetData.type === "CHIP" ? (assetData as any).iccid : undefined,
+        line_number: assetData.type === "CHIP" ? (assetData as any).phoneNumber : undefined,
+        manufacturer_id: assetData.type === "CHIP" ? 
+          parseInt((assetData as any).carrier) || null : 
+          parseInt((assetData as any).brand) || null
+      };
+      
+      // Insert into the assets table
+      const { data, error } = await supabase
+        .from('assets')
+        .insert(baseAssetData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Erro ao inserir asset:', error);
+        toast.error(`Erro ao cadastrar asset: ${error.message}`);
+        return null;
       }
       
-      return null;
+      // Create the asset object with the data returned
+      let newAsset: Asset;
+      
+      if (assetData.type === "CHIP") {
+        newAsset = {
+          id: data.uuid,
+          type: 'CHIP',
+          registrationDate: new Date().toISOString(),
+          status: mapStatusIdToAssetStatus(data.status_id),
+          statusId: data.status_id,
+          iccid: data.iccid || '',
+          phoneNumber: data.line_number?.toString() || '',
+          carrier: data.manufacturer_id?.toString() || '',
+          notes: data.observacoes || undefined
+        } as ChipAsset;
+      } else {
+        newAsset = {
+          id: data.uuid,
+          type: 'ROTEADOR',
+          registrationDate: new Date().toISOString(),
+          status: mapStatusIdToAssetStatus(data.status_id),
+          statusId: data.status_id,
+          uniqueId: data.uuid || '',
+          brand: data.manufacturer_id?.toString() || '',
+          model: data.model || '',
+          ssid: '',
+          password: data.password || '',
+          ipAddress: '',
+          adminUser: '',
+          adminPassword: '',
+          imei: '',
+          serialNumber: data.serial_number || '',
+          notes: data.observacoes || undefined,
+          hasWeakPassword: (assetData as any).hasWeakPassword,
+          needsPasswordChange: (assetData as any).needsPasswordChange
+        } as RouterAsset;
+      }
+      
+      // Update the state
+      setAssets(prevAssets => [...prevAssets, newAsset]);
+      toast.success(`${assetData.type === "CHIP" ? "Chip" : "Roteador"} cadastrado com sucesso`);
+      return newAsset;
+      
     } catch (error) {
       console.error('Erro ao adicionar ativo:', error);
       toast.error('Erro ao cadastrar ativo');
@@ -295,61 +267,37 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
       
-      if (existingAsset.type === 'CHIP') {
+      // Create an update object with only the fields that need to be updated
+      const updateData: any = {
+        status_id: statusId
+      };
+      
+      // Add type-specific fields
+      if (existingAsset.type === "CHIP") {
         const chipData = assetData as Partial<ChipAsset>;
-        
-        // Create an update object with only the fields that need to be updated
-        const updateData: any = {
-          updated_at: new Date().toISOString(),
-          status_id: statusId
-        };
-        
         if (chipData.iccid !== undefined) updateData.iccid = chipData.iccid;
-        if (chipData.phoneNumber !== undefined) updateData.numero = chipData.phoneNumber;
-        if (chipData.carrier !== undefined) updateData.operadora = chipData.carrier;
+        if (chipData.phoneNumber !== undefined) updateData.line_number = chipData.phoneNumber;
+        if (chipData.carrier !== undefined) updateData.manufacturer_id = parseInt(chipData.carrier) || null;
         if (chipData.notes !== undefined) updateData.observacoes = chipData.notes;
-        
-        const { error } = await supabase
-          .from('chips')
-          .update(updateData)
-          .eq('id', id);
-          
-        if (error) {
-          console.error('Erro ao atualizar chip:', error);
-          toast.error(`Erro ao atualizar chip: ${error.message}`);
-          return null;
-        }
-      } else if (existingAsset.type === 'ROTEADOR') {
+      } else if (existingAsset.type === "ROTEADOR") {
         const routerData = assetData as Partial<RouterAsset>;
-        
-        // Create an update object with only the fields that need to be updated
-        const updateData: any = {
-          updated_at: new Date().toISOString(),
-          status_id: statusId
-        };
-        
-        if (routerData.uniqueId !== undefined) updateData.id_unico = routerData.uniqueId;
-        if (routerData.brand !== undefined) updateData.marca = routerData.brand;
-        if (routerData.model !== undefined) updateData.modelo = routerData.model;
-        if (routerData.ssid !== undefined) updateData.ssid = routerData.ssid;
-        if (routerData.password !== undefined) updateData.senha_wifi = routerData.password;
-        if (routerData.ipAddress !== undefined) updateData.ip_gerencia = routerData.ipAddress;
-        if (routerData.adminUser !== undefined) updateData.usuario_admin = routerData.adminUser;
-        if (routerData.adminPassword !== undefined) updateData.senha_admin = routerData.adminPassword;
-        if (routerData.imei !== undefined) updateData.imei = routerData.imei;
-        if (routerData.serialNumber !== undefined) updateData.numero_serie = routerData.serialNumber;
+        if (routerData.brand !== undefined) updateData.manufacturer_id = parseInt(routerData.brand) || null;
+        if (routerData.model !== undefined) updateData.model = routerData.model;
+        if (routerData.password !== undefined) updateData.password = routerData.password;
+        if (routerData.serialNumber !== undefined) updateData.serial_number = routerData.serialNumber;
         if (routerData.notes !== undefined) updateData.observacoes = routerData.notes;
+      }
+      
+      // Update the asset in the database
+      const { error } = await supabase
+        .from('assets')
+        .update(updateData)
+        .eq('uuid', id);
         
-        const { error } = await supabase
-          .from('roteadores')
-          .update(updateData)
-          .eq('id', id);
-          
-        if (error) {
-          console.error('Erro ao atualizar roteador:', error);
-          toast.error(`Erro ao atualizar roteador: ${error.message}`);
-          return null;
-        }
+      if (error) {
+        console.error('Erro ao atualizar asset:', error);
+        toast.error(`Erro ao atualizar asset: ${error.message}`);
+        return null;
       }
       
       // Update with status derived from statusId if it was changed
@@ -383,31 +331,19 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
       }
       
-      if (asset.type === 'CHIP') {
-        const { error } = await supabase
-          .from('chips')
-          .delete()
-          .eq('id', id);
-          
-        if (error) {
-          console.error('Erro ao excluir chip:', error);
-          toast.error(`Erro ao excluir chip: ${error.message}`);
-          return false;
-        }
-      } else if (asset.type === 'ROTEADOR') {
-        const { error } = await supabase
-          .from('roteadores')
-          .delete()
-          .eq('id', id);
-          
-        if (error) {
-          console.error('Erro ao excluir roteador:', error);
-          toast.error(`Erro ao excluir roteador: ${error.message}`);
-          return false;
-        }
+      // Delete the asset from the database
+      const { error } = await supabase
+        .from('assets')
+        .delete()
+        .eq('uuid', id);
+        
+      if (error) {
+        console.error('Erro ao excluir asset:', error);
+        toast.error(`Erro ao excluir asset: ${error.message}`);
+        return false;
       }
       
-      // Atualizar o estado
+      // Update the state
       setAssets(assets.filter(a => a.id !== id));
       toast.success('Ativo excluído com sucesso');
       return true;
