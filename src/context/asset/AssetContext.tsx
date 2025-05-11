@@ -69,6 +69,16 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     deleteClient 
   } = useClientOperations(clients, setClients);
 
+  // Function to wrap mapStatusIdToAssetStatus to match the expected signature
+  const mapStatusIdWrapper = (statusId: number): AssetStatus => {
+    return mapStatusIdToAssetStatus(statusId, statusRecords);
+  };
+
+  // Function to wrap mapAssetStatusToId to match the expected signature
+  const mapStatusToIdWrapper = (status: AssetStatus): number => {
+    return mapAssetStatusToId(status, statusRecords);
+  };
+
   // Hook for asset operations (combining core, mutation, and client operations)
   const {
     loadAssets,
@@ -88,8 +98,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     assets,
     setAssets,
     statusRecords,
-    mapStatusIdToAssetStatus,
-    mapAssetStatusToId,
+    mapStatusIdWrapper,
+    mapStatusToIdWrapper,
     clients,
     addHistoryEntry
   );

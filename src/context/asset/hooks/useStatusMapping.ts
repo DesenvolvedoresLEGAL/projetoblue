@@ -8,7 +8,7 @@ export const useStatusMapping = (
   const loadStatusRecords = async () => {
     try {
       const { data, error } = await supabase
-        .from('status')
+        .from('asset_status')
         .select('*');
 
       if (error) {
@@ -17,7 +17,11 @@ export const useStatusMapping = (
       }
 
       if (data) {
-        setStatusRecords(data);
+        const formattedRecords: StatusRecord[] = data.map(record => ({
+          id: record.id,
+          nome: record.status
+        }));
+        setStatusRecords(formattedRecords);
       }
     } catch (error) {
       console.error('Error in loadStatusRecords:', error);
