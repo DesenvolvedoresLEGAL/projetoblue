@@ -17,8 +17,8 @@ export function NamedLogo({ className, size = "md", ...props }: NamedLogoProps) 
 
   // Logo branca para o tema escuro (nova imagem) e a logo original para o tema claro
   const logoSrc = theme === 'dark' 
-    ? "/lovable-uploads/1fb9015a-7ac3-48df-a42e-2bc47e7aad69.png" 
-    : "/lovable-uploads/6e637c63-2cf9-4645-8248-02ba712b8b7c.png";
+    ? "/blue.png" 
+    : "/blue.png";
 
   return (
     <div className={cn("flex items-center justify-center transition-opacity duration-500", className)} {...props}>
