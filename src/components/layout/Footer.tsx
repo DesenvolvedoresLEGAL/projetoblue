@@ -4,6 +4,7 @@ import { Clock, FileText, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function Footer() {
+  const lastSyncDate = new Date().toLocaleDateString();
   const lastSyncTime = new Date().toLocaleTimeString();
   const apiStatus = true; // Replace with actual API status check
   
@@ -13,7 +14,7 @@ export function Footer() {
         <span>BLUE Platform v1.0.2</span>
         <div className="flex items-center gap-1 ml-4">
           <Clock className="w-3 h-3" />
-          <span>Last sync: {lastSyncTime}</span>
+          <span>Last sync: {lastSyncDate} {lastSyncTime}</span>
         </div>
       </div>
       

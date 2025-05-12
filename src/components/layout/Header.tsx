@@ -39,30 +39,6 @@ export function Header({ children }: HeaderProps) {
       </div>
       <div className="flex items-center gap-4">
 
-        {/* New Button with Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="default" className="bg-[#4D2BFB] hover:bg-[#3D1BEB] text-white">
-              <span>+ New</span>
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate('/register-asset')}>
-              <Package className="mr-2 h-4 w-4" />
-              <span>Register New Asset</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/association')}>
-              <Link className="mr-2 h-4 w-4" />
-              <span>Link Asset to Client</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/subscriptions/new')}>
-              <CalendarClock className="mr-2 h-4 w-4" />
-              <span>New Subscription</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
         <ThemeToggle />
         
         {/* Notifications */}
