@@ -38,11 +38,6 @@ export function Header({ children }: HeaderProps) {
         <NamedLogo size="sm" className="cursor-pointer" onClick={() => navigate('/')} />
       </div>
       <div className="flex items-center gap-4">
-        {/* Sync Status Indicator */}
-        <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
-          <RefreshCw className={`h-4 w-4 ${isSyncActive ? "text-green-500 animate-spin" : "text-gray-400"}`} />
-          <span className="hidden lg:inline">Last sync: {syncTime}</span>
-        </div>
 
         {/* New Button with Dropdown */}
         <DropdownMenu>
