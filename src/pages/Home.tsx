@@ -232,7 +232,7 @@ const Home = () => {
       label: "Ver inventário completo",
       icon: <FileText className="h-5 w-5" />,
       path: "/inventory",
-      color: "bg-emerald-600 hover:bg-emerald-700"
+      color: "bg-cyan-600 hover:bg-cyan-700"
     }
   ];
 
@@ -260,20 +260,6 @@ const Home = () => {
           <h1 className="text-3xl font-bold tracking-tight">
             {getGreeting()}, {userName}!
           </h1>
-          <p className="text-muted-foreground">
-            {formatDate(today)} • Bem-vindo ao seu dashboard
-          </p>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/register-asset")}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Novo Ativo
-          </Button>
-          <Button onClick={() => navigate("/dashboard")}>
-            <LayoutDashboard className="h-4 w-4 mr-2" />
-            Métricas Detalhadas
-          </Button>
         </div>
       </div>
       
@@ -295,40 +281,6 @@ const Home = () => {
             <span className="ml-2">{action.label}</span>
           </Button>
         ))}
-      </div>
-      
-      {/* Main Grid Section */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Módulos do Sistema</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {/* Module Cards */}
-          {modules.map((module) => (
-            <Card 
-              key={module.id} 
-              className={`hover:shadow-md transition-all ${module.borderColor} border`}
-            >
-              <CardHeader className={`${module.color} rounded-t-lg`}>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  {module.icon}
-                  {module.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-lg font-medium">{module.metric}</p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-between text-primary" 
-                  onClick={() => navigate(module.path)}
-                >
-                  {module.action}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
       </div>
       
       {/* Sidebar Content - Activities and Events */}
