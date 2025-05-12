@@ -63,7 +63,7 @@ const AssetWizard: React.FC = () => {
       }
       
       // Step 1: Insert asset
-      const { data: assetData, error: assetError } = await supabase
+      const { data: insertedAsset, error: assetError } = await supabase
         .from('assets')
         .insert(assetPayload)
         .select('uuid')
@@ -74,9 +74,9 @@ const AssetWizard: React.FC = () => {
       }
       
       // Step 2: If client association is requested, create the association
-      if (assetData.uuid && assetData.client_id && assetData.entry_date && assetData.association_id) {
+      if (insertedAsset && assetData.client_id && assetData.entry_date && assetData.association_id) {
         const associationPayload = {
-          asset_id: assetData.uuid,
+          asset_id: insertedAsset.uuid,
           client_id: assetData.client_id,
           entry_date: assetData.entry_date,
           association_id: assetData.association_id
