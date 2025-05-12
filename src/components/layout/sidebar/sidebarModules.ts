@@ -23,17 +23,10 @@ import { SidebarModule } from "./sidebarTypes";
 
 export const sidebarModules: SidebarModule[] = [
   {
-    id: "home",
-    title: "Início",
-    icon: LayoutDashboard,
-    path: "/",
-    isExpandable: false,
-  },
-  {
     id: "dashboard",
     title: "Dashboard",
     icon: LayoutDashboard,
-    path: "/dashboard",
+    path: "/",
     isExpandable: false,
   },
   {
@@ -42,6 +35,7 @@ export const sidebarModules: SidebarModule[] = [
     icon: Package,
     isExpandable: true,
     subItems: [
+      { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard},
       { title: "Inventário", path: "/inventory", icon: Package },
       { title: "Registrar Ativo", path: "/register-asset", icon: Package },
       { title: "Vincular Ativo", path: "/association", icon: Package },
