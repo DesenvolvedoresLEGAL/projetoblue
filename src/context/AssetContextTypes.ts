@@ -27,4 +27,5 @@ export interface AssetContextType {
   addHistoryEntry: (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => void;
   getAssetHistory: (assetId: string) => AssetHistoryEntry[];
   getClientHistory: (clientId: string) => AssetHistoryEntry[];
+  loadMoreAssets?: () => Promise<void>; // Nova função para carregar mais ativos sob demanda
 }

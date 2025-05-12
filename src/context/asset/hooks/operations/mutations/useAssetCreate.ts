@@ -9,6 +9,9 @@ export const useAssetCreate = (
   mapStatusIdToAssetStatus: (statusId: number) => AssetStatus
 ) => {
   const addAsset = async (assetData: Omit<Asset, "id" | "status">): Promise<Asset | null> => {
+    console.time('asset-create'); // Início da medição de tempo
+    console.log('🚀 Iniciando criação de ativo:', assetData.type);
+    
     try {
       // Default to 'Disponível' status (id = 1) if no status is provided
       const statusId = assetData.statusId || 1;
@@ -27,6 +30,9 @@ export const useAssetCreate = (
           parseInt((assetData as any).brand) || null
       };
       
+      console.log('📤 Enviando dados para o Supabase:', JSON.stringify(baseAssetData));
+      console.time('supabase-insert'); // Medir o tempo da chamada ao Supabase
+      
       // Insert into the assets table
       const { data, error } = await supabase
         .from('assets')
@@ -34,11 +40,15 @@ export const useAssetCreate = (
         .select()
         .single();
       
+      console.timeEnd('supabase-insert');
+      
       if (error) {
-        console.error('Erro ao inserir asset:', error);
+        console.error('❌ Erro ao inserir asset:', error);
         toast.error(`Erro ao cadastrar asset: ${error.message}`);
         return null;
       }
+      
+      console.log('✅ Dados retornados pelo Supabase:', data);
       
       // Create the asset object with the data returned
       let newAsset: Asset;
@@ -79,12 +89,17 @@ export const useAssetCreate = (
       }
       
       // Update the state
+      console.log('🔄 Atualizando estado local com novo ativo');
       setAssets(prevAssets => [...prevAssets, newAsset]);
       toast.success(`${assetData.type === "CHIP" ? "Chip" : "Roteador"} cadastrado com sucesso`);
+      
+      console.log('✅ Ativo criado com sucesso:', newAsset.id);
+      console.timeEnd('asset-create'); // Fim da medição de tempo total
       return newAsset;
       
     } catch (error) {
-      console.error('Erro ao adicionar ativo:', error);
+      console.error('❌ Erro ao adicionar ativo:', error);
+      console.timeEnd('asset-create');
       toast.error('Erro ao cadastrar ativo');
       return null;
     }

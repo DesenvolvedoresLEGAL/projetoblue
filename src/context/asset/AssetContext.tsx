@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { Asset, AssetStatus, StatusRecord, Client } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { AssetContextType } from '../AssetContextTypes';
@@ -9,6 +9,7 @@ import {
   useHistoryOperations, 
   useStatusMapping 
 } from './hooks';
+import { toast } from '@/utils/toast';
 
 // Define the default context value
 const defaultContextValue: AssetContextType = {
@@ -46,6 +47,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
+  const [pageInfo, setPageInfo] = useState({ currentPage: 1, hasMorePages: true });
 
   // Use our custom hooks
   const { 
@@ -70,18 +72,19 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   } = useClientOperations(clients, setClients);
 
   // Function to wrap mapStatusIdToAssetStatus to match the expected signature
-  const mapStatusIdWrapper = (statusId: number): AssetStatus => {
+  const mapStatusIdWrapper = useCallback((statusId: number): AssetStatus => {
     return mapStatusIdToAssetStatus(statusId, statusRecords);
-  };
+  }, [statusRecords, mapStatusIdToAssetStatus]);
 
   // Function to wrap mapAssetStatusToId to match the expected signature
-  const mapStatusToIdWrapper = (status: AssetStatus): number => {
+  const mapStatusToIdWrapper = useCallback((status: AssetStatus): number => {
     return mapAssetStatusToId(status, statusRecords);
-  };
+  }, [statusRecords, mapAssetStatusToId]);
 
   // Hook for asset operations (combining core, mutation, and client operations)
   const {
     loadAssets,
+    loadMultiplePages,
     addAsset,
     updateAsset,
     deleteAsset,
@@ -106,16 +109,51 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Load status records from the database
   useEffect(() => {
+    console.log('🚀 Carregando registros de status...');
     loadStatusRecords();
   }, []);
 
-  // Load assets after status records are loaded
+  // Load assets after status records are loaded with pagination
   useEffect(() => {
-    if (statusRecords.length > 0) {
-      loadAssets();
-      setLoading(false);
+    const loadInitialBatch = async () => {
+      if (statusRecords.length > 0) {
+        console.log('📦 Carregando lote inicial de ativos...');
+        setLoading(true);
+        try {
+          // Carregar os primeiros 2 lotes de ativos para ter dados suficientes rapidamente
+          const hasMore = await loadMultiplePages(1, 2, 25);
+          setPageInfo(prev => ({ ...prev, hasMorePages: hasMore }));
+        } catch (error) {
+          console.error('Erro ao carregar ativos:', error);
+          toast.error('Erro ao carregar ativos');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadInitialBatch();
+  }, [statusRecords, loadMultiplePages]);
+
+  // Função para carregar mais ativos sob demanda
+  const loadMoreAssets = useCallback(async () => {
+    if (pageInfo.hasMorePages && !loading) {
+      setLoading(true);
+      try {
+        const nextPage = pageInfo.currentPage + 1;
+        const hasMore = await loadAssets(nextPage, 25);
+        
+        setPageInfo({
+          currentPage: nextPage,
+          hasMorePages: hasMore
+        });
+      } catch (error) {
+        console.error('Erro ao carregar mais ativos:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [statusRecords]);
+  }, [pageInfo, loading, loadAssets]);
 
   return (
     <AssetContext.Provider
@@ -144,6 +182,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addHistoryEntry,
         getAssetHistory,
         getClientHistory,
+        loadMoreAssets, // Nova função para carregar mais ativos sob demanda
       }}
     >
       {children}

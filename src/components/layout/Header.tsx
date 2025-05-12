@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { ThemeToggle } from "../auth/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { 
@@ -26,46 +26,71 @@ interface HeaderProps {
   children?: React.ReactNode;
 }
 
-export function Header({ children }: HeaderProps) {
+// Componente interno para o menu do usuário, memoizado para evitar re-renderizações
+const UserMenu = memo(() => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <User className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Logout</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+});
+UserMenu.displayName = "UserMenu";
+
+// Componente interno para notificações, memoizado
+const NotificationBell = memo(() => {
+  return (
+    <Button variant="ghost" size="icon" className="relative">
+      <Bell className="h-5 w-5" />
+      <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+        3
+      </span>
+    </Button>
+  );
+});
+NotificationBell.displayName = "NotificationBell";
+
+// Componente principal do Header, usa React.memo para evitar re-renderizações desnecessárias
+export const Header = memo(({ children }: HeaderProps) => {
+  console.time('Header-render'); // Log de performance para medir tempo de renderização
   const navigate = useNavigate();
-  const syncTime = new Date().toLocaleTimeString();
-  const isSyncActive = true; // Replace with actual sync status check
+  
+  // Função memoizada para navegação
+  const handleLogoClick = React.useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
+  React.useEffect(() => {
+    console.timeEnd('Header-render'); // Medir tempo de renderização
+    return () => {
+      console.log('Header unmounted');
+    };
+  });
 
   return (
     <header className="h-16 border-b bg-background shadow-md z-10 flex items-center px-6 py-3 fixed top-0 left-0 right-0">
       {children}
       <div className="flex-1 flex items-center">
-        <NamedLogo size="md" className="cursor-pointer" onClick={() => navigate('/')} />
+        <NamedLogo size="md" className="cursor-pointer" onClick={handleLogoClick} />
       </div>
       <div className="flex items-center gap-4">
-
         <ThemeToggle />
-        
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
-            3
-          </span>
-        </Button>
-
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationBell />
+        <UserMenu />
       </div>
     </header>
   );
-}
+});
+
+Header.displayName = "Header";
