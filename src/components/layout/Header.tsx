@@ -35,7 +35,7 @@ export function Header({ children }: HeaderProps) {
     <header className="h-16 border-b bg-background shadow-md z-10 flex items-center px-6 py-3 fixed top-0 left-0 right-0">
       {children}
       <div className="flex-1 flex items-center">
-        <NamedLogo size="sm" className="cursor-pointer" onClick={() => navigate('/')} />
+        <NamedLogo size="md" className="cursor-pointer" onClick={() => navigate('/')} />
       </div>
       <div className="flex items-center gap-4">
 

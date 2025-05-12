@@ -11,14 +11,14 @@ export function NamedLogo({ className, size = "md", ...props }: NamedLogoProps) 
   const { theme } = useTheme();
   const sizeClasses = {
     sm: "h-8",
-    md: "h-16",
+    md: "h-18",
     lg: "h-24",
   };
 
   // Logo branca para o tema escuro (nova imagem) e a logo original para o tema claro
   const logoSrc = theme === 'dark' 
-    ? "/blue.png" 
-    : "/blue.png";
+    ? "/BLUE_AI-100-rmbg-b.png" 
+    : "/BLUE_AI-100-rmbg.png";
 
   return (
     <div className={cn("flex items-center justify-center transition-opacity duration-500", className)} {...props}>
