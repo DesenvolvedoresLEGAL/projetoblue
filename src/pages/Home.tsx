@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAssets } from "@/context/useAssets";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,10 +24,14 @@ import {
   PlusCircle,
   ArrowRight,
   Calendar,
+  Link as LinkIcon,
+  FileText,
 } from "lucide-react";
+import { DashboardKpis } from "@/components/dashboard";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { assets, clients, loading } = useAssets();
   const today = new Date();
   const userName = "Usuário"; // In a real app, get this from user context
   
@@ -47,13 +52,25 @@ const Home = () => {
     });
   };
   
+  // Get asset metrics
+  const totalAssets = assets.length;
+  const totalClients = clients.length;
+  const problemAssets = assets.filter(asset => 
+    ["BLOQUEADO", "SEM DADOS", "MANUTENÇÃO"].includes(asset.status)
+  ).length;
+  
+  // Get latest assets (most recent first)
+  const latestAssets = [...assets]
+    .sort((a, b) => new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime())
+    .slice(0, 5);
+
   // Module data with metrics (would come from an API in a real app)
   const modules = [
     {
       id: "ativos",
       name: "Ativos",
       icon: <Package className="h-6 w-6 text-purple-600" />,
-      metric: "12 dispositivos ativos",
+      metric: `${totalAssets} dispositivos cadastrados`,
       path: "/inventory",
       color: "bg-purple-50 dark:bg-purple-900/20",
       borderColor: "border-purple-200 dark:border-purple-800",
@@ -113,7 +130,7 @@ const Home = () => {
       id: "alertas",
       name: "Alertas",
       icon: <Bell className="h-6 w-6 text-amber-600" />,
-      metric: "5 novos alertas",
+      metric: `${problemAssets} alertas ativos`,
       path: "/alert-rules",
       color: "bg-amber-50 dark:bg-amber-900/20",
       borderColor: "border-amber-200 dark:border-amber-800",
@@ -133,7 +150,7 @@ const Home = () => {
       id: "vendas",
       name: "Vendas",
       icon: <Users className="h-6 w-6 text-sky-600" />,
-      metric: "3 novos clientes hoje",
+      metric: `${totalClients} clientes ativos`,
       path: "/clients",
       color: "bg-sky-50 dark:bg-sky-900/20",
       borderColor: "border-sky-200 dark:border-sky-800",
@@ -181,35 +198,41 @@ const Home = () => {
     }
   ];
 
-  // Recent activity data (would come from an API in a real app)
-  const recentActivities = [
+  // Recent activity data
+  const recentActivities = loading 
+    ? [{ id: 0, description: "Carregando atividades...", timestamp: "", icon: <Activity className="h-4 w-4" />, link: "#" }] 
+    : latestAssets.map((asset, index) => ({
+        id: index,
+        description: `Novo ${asset.type === "CHIP" ? "chip" : "roteador"} cadastrado`,
+        timestamp: new Date(asset.registrationDate).toLocaleDateString('pt-BR', { 
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        icon: <Package className="h-4 w-4" />,
+        link: "/inventory"
+      }));
+
+  // Asset quick actions
+  const assetQuickActions = [
     {
-      id: 1,
-      description: "Novo cliente cadastrado",
-      timestamp: "Há 10 minutos",
-      icon: <Users className="h-4 w-4" />,
-      link: "/clients"
+      label: "Cadastrar novo ativo",
+      icon: <PlusCircle className="h-5 w-5" />,
+      path: "/register-asset",
+      color: "bg-purple-600 hover:bg-purple-700"
     },
     {
-      id: 2,
-      description: "Alerta de conexão WiFi",
-      timestamp: "Há 30 minutos",
-      icon: <AlertTriangle className="h-4 w-4" />,
-      link: "/alert-rules"
+      label: "Vincular ativo a cliente",
+      icon: <LinkIcon className="h-5 w-5" />,
+      path: "/clients",
+      color: "bg-blue-600 hover:bg-blue-700"
     },
     {
-      id: 3,
-      description: "Roteador atualizado",
-      timestamp: "Há 1 hora",
-      icon: <Activity className="h-4 w-4" />,
-      link: "/inventory"
-    },
-    {
-      id: 4,
-      description: "Campanha iniciada",
-      timestamp: "Há 3 horas",
-      icon: <Megaphone className="h-4 w-4" />,
-      link: "/campaign-sends"
+      label: "Ver inventário completo",
+      icon: <FileText className="h-5 w-5" />,
+      path: "/inventory",
+      color: "bg-emerald-600 hover:bg-emerald-700"
     }
   ];
 
@@ -254,35 +277,58 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Main Grid Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {/* Module Cards */}
-        {modules.map((module) => (
-          <Card 
-            key={module.id} 
-            className={`hover:shadow-md transition-all ${module.borderColor} border`}
+      {/* Assets KPIs Section */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4">Métricas de Ativos</h2>
+        <DashboardKpis />
+      </div>
+
+      {/* Asset Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {assetQuickActions.map((action, index) => (
+          <Button 
+            key={index}
+            className={`w-full text-white ${action.color}`}
+            onClick={() => navigate(action.path)}
           >
-            <CardHeader className={`${module.color} rounded-t-lg`}>
-              <CardTitle className="flex items-center gap-2">
-                {module.icon}
-                {module.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <p className="text-lg font-medium">{module.metric}</p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-between text-primary" 
-                onClick={() => navigate(module.path)}
-              >
-                {module.action}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardFooter>
-          </Card>
+            {action.icon}
+            <span className="ml-2">{action.label}</span>
+          </Button>
         ))}
+      </div>
+      
+      {/* Main Grid Section */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Módulos do Sistema</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Module Cards */}
+          {modules.map((module) => (
+            <Card 
+              key={module.id} 
+              className={`hover:shadow-md transition-all ${module.borderColor} border`}
+            >
+              <CardHeader className={`${module.color} rounded-t-lg`}>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  {module.icon}
+                  {module.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <p className="text-lg font-medium">{module.metric}</p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-between text-primary" 
+                  onClick={() => navigate(module.path)}
+                >
+                  {module.action}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
       
       {/* Sidebar Content - Activities and Events */}
@@ -297,28 +343,34 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div 
-                  key={activity.id} 
-                  className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(activity.link)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      {activity.icon}
+              {loading ? (
+                <p>Carregando atividades recentes...</p>
+              ) : recentActivities.length > 0 ? (
+                recentActivities.map((activity) => (
+                  <div 
+                    key={activity.id} 
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(activity.link)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        {activity.icon}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{activity.description}</p>
+                        <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
-                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground">Nenhuma atividade recente</p>
+              )}
             </div>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => navigate("/history")}>
               Ver todas as atividades
             </Button>
           </CardFooter>
