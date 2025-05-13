@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/auth';
+import { UserProfile, UserRole } from '@/types/auth';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -21,7 +21,7 @@ export const profileService = {
         return {
           id: data.id,
           email: data.email,
-          role: data.role, // Assuming role is directly stored in profiles table
+          role: data.role as UserRole, // Cast to UserRole to ensure type safety
           created_at: data.created_at,
           last_login: new Date().toISOString(), // Use current date since field doesn't exist
           is_active: true, // Default to true since this field doesn't exist in profiles
