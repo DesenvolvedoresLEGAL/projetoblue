@@ -10,7 +10,7 @@ import { Layout } from "@/components/layout/Layout";
 import { DataUsageProvider } from "@/context/DataUsageContext";
 
 // Pages
-import Home from "./pages/Home";
+import GeneralDashboard from "./pages/GeneralDashboard";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetsDashboard from "./pages/AssetsDashboard";
@@ -48,7 +48,7 @@ const App = () => (
                 
                 {/* Main layout with sidebar and header */}
                 <Route path="/" element={<Layout />}>
-                  <Route index element={<Home />} />
+                  <Route index element={<GeneralDashboard />} />
                   
                   {/* Dashboard routes */}
                   <Route path="dashboard" element={<Dashboard />} />
