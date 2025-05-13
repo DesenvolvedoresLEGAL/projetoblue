@@ -15,52 +15,61 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden md:flex">
-        <ModularSidebar />
-      </div>
-
-      {/* Mobile Sidebar - shown when mobileOpen is true */}
-      <div 
-        className={`fixed inset-0 z-50 md:hidden ${mobileOpen ? "block" : "hidden"}`}
-      >
-        {/* Backdrop */}
-        <div 
-          className="fixed inset-0 bg-black/50" 
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Header - fixed at top */}
+      <Header className="fixed top-0 left-0 right-0 z-50">
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden mr-2"
           onClick={toggleMobileSidebar}
-          aria-hidden="true"
-        />
-        
-        {/* Sidebar */}
-        <div className="fixed inset-y-0 left-0 w-full max-w-xs">
-          <ModularSidebar isMobile={true} onClose={toggleMobileSidebar} />
-        </div>
-      </div>
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-sidebar"
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+      </Header>
 
-      {/* Main content */}
-      <div className="flex flex-col flex-1 w-full">
-        <Header>
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden mr-2"
+      {/* Main layout container */}
+      <div className="pt-16 flex min-h-[calc(100vh-64px)]"> {/* Add padding top for header height */}
+        {/* Desktop Sidebar - fixed below header */}
+        <div className="hidden md:block fixed top-16 left-0 bottom-0 z-40">
+          <ModularSidebar />
+        </div>
+
+        {/* Mobile Sidebar - shown when mobileOpen is true */}
+        <div 
+          className={`fixed inset-0 z-50 md:hidden ${mobileOpen ? "block" : "hidden"}`}
+        >
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50" 
             onClick={toggleMobileSidebar}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-sidebar"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </Header>
-        <main className="flex-1 overflow-y-auto pb-14" role="main" aria-label="Main content">
-          <div className="container mx-auto py-6 px-4 max-w-7xl">
+            aria-hidden="true"
+          />
+          
+          {/* Sidebar */}
+          <div className="fixed inset-y-0 left-0 w-full max-w-xs">
+            <ModularSidebar isMobile={true} onClose={toggleMobileSidebar} />
+          </div>
+        </div>
+
+        {/* Main content with proper offsets */}
+        <main 
+          className="flex-1 md:ml-64 w-full pb-16" 
+          role="main" 
+          aria-label="Main content"
+        >
+          <div className="container mx-auto py-6 px-4 min-h-[calc(100vh-144px)]">
             <Outlet />
           </div>
+          
+          {/* Footer - fixed at bottom of content area */}
+          <Footer className="fixed bottom-0 md:left-64 right-0 z-40" />
         </main>
-        <Footer />
       </div>
     </div>
   );

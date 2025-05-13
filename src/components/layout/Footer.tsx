@@ -21,7 +21,7 @@ export function Footer({ className, ...props }: FooterProps) {
   return (
     <footer 
       className={cn(
-        "h-10 border-t bg-background px-4 flex justify-between items-center text-xs text-muted-foreground fixed bottom-0 left-0 right-0 z-10",
+        "h-10 border-t bg-background px-4 flex justify-between items-center text-xs text-muted-foreground z-10",
         className
       )}
       {...props}

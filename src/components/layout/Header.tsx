@@ -19,14 +19,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-interface HeaderProps {
+interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
-export function Header({ children }: HeaderProps) {
+export function Header({ children, className, ...props }: HeaderProps) {
   return (
-    <header className="h-16 border-b bg-background shadow-md z-10 flex items-center px-6 py-3">
+    <header 
+      className={cn(
+        "h-16 border-b bg-background shadow-md flex items-center px-6 py-3",
+        className
+      )}
+      {...props}
+    >
       {children}
       <div className="flex-1 flex items-center">
         <NamedLogo size="md" />
