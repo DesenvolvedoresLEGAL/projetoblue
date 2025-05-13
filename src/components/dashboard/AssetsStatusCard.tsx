@@ -1,76 +1,102 @@
+import React from "react";
+import { useAssets } from "@/context/useAssets";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CheckCircle,
+  Smartphone,
+  Wifi,
+  AlertCircle,
+  XCircle,
+  Clock,
+} from "lucide-react";
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService, AssetStatusByType } from "@/services/api/asset";
-import { Badge } from "@/components/ui/badge";
+/** Configuração visual de cada status */
+const STATUS_CONFIG: Record<
+  string,
+  { icon: JSX.Element; color: string }
+> = {
+  DISPONÍVEL: {
+    icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+    color: "bg-green-100",
+  },
+  ALUGADO: {
+    icon: <Smartphone className="h-4 w-4 text-telecom-500" />,
+    color: "bg-telecom-100",
+  },
+  ASSINATURA: {
+    icon: <Wifi className="h-4 w-4 text-telecom-500" />,
+    color: "bg-telecom-100",
+  },
+  "SEM DADOS": {
+    icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
+    color: "bg-amber-100",
+  },
+  BLOQUEADO: {
+    icon: <XCircle className="h-4 w-4 text-red-500" />,
+    color: "bg-red-100",
+  },
+  MANUTENÇÃO: {
+    icon: <Clock className="h-4 w-4 text-blue-500" />,
+    color: "bg-blue-100",
+  },
+};
 
-export const AssetsStatusCard: React.FC = () => {
-  const { data: statusData = [], isLoading } = useQuery({
-    queryKey: ['status-by-type'],
-    queryFn: assetService.statusByType
-  });
+const TYPES = [
+  { key: "CHIP", label: "Status – Chips" },
+  { key: "ROTEADOR", label: "Status – Speedy 5G" },
+];
 
-  // Group status data by type
-  const groupedByType = React.useMemo(() => {
-    const grouped: Record<string, AssetStatusByType[]> = {};
-    
-    statusData.forEach((item) => {
-      if (!grouped[item.type]) {
-        grouped[item.type] = [];
-      }
-      grouped[item.type].push(item);
-    });
-    
-    return grouped;
-  }, [statusData]);
-
-  // Get badge color based on status
-  const getStatusColor = (status: string): string => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'disponível') return 'bg-green-500';
-    if (statusLower === 'alugado') return 'bg-blue-500';
-    if (statusLower === 'assinatura') return 'bg-purple-500';
-    if (statusLower === 'sem dados') return 'bg-gray-500';
-    if (statusLower === 'bloqueado') return 'bg-red-500';
-    if (statusLower === 'manutenção') return 'bg-amber-500';
-    return 'bg-gray-400';
-  };
+const AssetsStatusCard: React.FC = () => {
+  const { assets, getAssetsByType } = useAssets();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Status dos ativos</CardTitle>
-        <CardDescription>Distribuição por tipo e status</CardDescription>
-      </CardHeader>
-      <CardContent className="pt-4">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-20">
-            <p className="text-muted-foreground">Carregando...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {Object.entries(groupedByType).map(([type, statuses]) => (
-              <div key={type} className="border rounded-lg p-4">
-                <h3 className="font-medium text-lg capitalize mb-3">{type}</h3>
-                <ul className="space-y-2">
-                  {statuses.map((item, index) => (
-                    <li key={index} className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Badge className={getStatusColor(item.status)} variant="secondary">
-                          {item.status}
-                        </Badge>
+    <div className="flex flex-col md:flex-row gap-4 w-full">
+      {TYPES.map(({ key, label }) => {
+        const list = getAssetsByType(key);
+        return (
+          <Card key={key} className="flex-1 min-w-full">
+            <CardHeader>
+              <CardTitle>{label}</CardTitle>
+              <CardDescription>Distribuição por status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Object.entries(STATUS_CONFIG).map(([status, cfg]) => {
+                  const count = list.filter((a) => a.status === status).length;
+                  const percentage = list.length
+                    ? Math.round((count / list.length) * 100)
+                    : 0;
+
+                  return (
+                    <div key={status} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          {cfg.icon}
+                          <span className="ml-2 text-sm">{status}</span>
+                        </div>
+                        <span className="text-sm font-medium">{count}</span>
                       </div>
-                      <span className="font-semibold">{item.total}</span>
-                    </li>
-                  ))}
-                </ul>
+                      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className={`h-full ${cfg.color}`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 };
 
