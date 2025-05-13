@@ -8,9 +8,11 @@ import EditAssetDialog from "@/components/inventory/EditAssetDialog";
 import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
 import InventoryFilters from "@/components/inventory/InventoryFilters";
 import AssetList from "@/components/inventory/AssetList";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/utils/toast";
 
 const Inventory = () => {
-  const { assets, updateAsset, deleteAsset, statusRecords } = useAssets();
+  const { assets, updateAsset, deleteAsset, statusRecords, loading } = useAssets();
   const [search, setSearch] = useState("");
   const [phoneSearch, setPhoneSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -18,6 +20,7 @@ const Inventory = () => {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const formatPhoneNumber = (phone: string): string => {
     // Remove all non-digit characters
@@ -72,42 +75,53 @@ const Inventory = () => {
   });
 
   const exportToCSV = () => {
-    let csvContent = "ID,Tipo,Data de Registro,Status,ICCID/ID Único,Número/Marca,Operadora/Modelo,SSID,Senha\n";
+    setExportLoading(true);
     
-    filteredAssets.forEach((asset) => {
-      const row = [];
-      row.push(asset.id);
-      row.push(asset.type);
-      row.push(asset.registrationDate.split("T")[0]);
-      row.push(asset.status);
+    try {
+      let csvContent = "ID,Tipo,Data de Registro,Status,ICCID/ID Único,Número/Marca,Operadora/Modelo,SSID,Senha\n";
       
-      if (asset.type === "CHIP") {
-        const chip = asset as any;
-        row.push(chip.iccid);
-        row.push(chip.phoneNumber);
-        row.push(chip.carrier);
-        row.push("");
-      } else {
-        const router = asset as any;
-        row.push(router.uniqueId);
-        row.push(router.brand);
-        row.push(router.model);
-        row.push(router.ssid);
-        row.push(router.password);
-      }
+      filteredAssets.forEach((asset) => {
+        const row = [];
+        row.push(asset.id);
+        row.push(asset.type);
+        row.push(asset.registrationDate.split("T")[0]);
+        row.push(asset.status);
+        
+        if (asset.type === "CHIP") {
+          const chip = asset as any;
+          row.push(chip.iccid);
+          row.push(chip.phoneNumber);
+          row.push(chip.carrier);
+          row.push("");
+        } else {
+          const router = asset as any;
+          row.push(router.uniqueId);
+          row.push(router.brand);
+          row.push(router.model);
+          row.push(router.ssid);
+          row.push(router.password);
+        }
+        
+        csvContent += row.join(",") + "\n";
+      });
       
-      csvContent += row.join(",") + "\n";
-    });
-    
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `inventario-${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `inventario-${new Date().toISOString().split("T")[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Export completed successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const handleEditAsset = (asset: Asset) => {
@@ -147,46 +161,59 @@ const Inventory = () => {
           </p>
         </div>
         
-        <Button onClick={exportToCSV} className="flex items-center gap-2">
+        <Button 
+          onClick={exportToCSV} 
+          className="flex items-center gap-2"
+          disabled={exportLoading || loading || filteredAssets.length === 0}
+        >
           <Download className="h-4 w-4" />
-          <span>Exportar CSV</span>
+          <span>{exportLoading ? "Exportando..." : "Exportar CSV"}</span>
         </Button>
       </div>
       
-      <InventoryFilters 
-        search={search}
-        setSearch={setSearch}
-        phoneSearch={phoneSearch}
-        setPhoneSearch={setPhoneSearch}
-        typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        statusRecords={statusRecords}
-        clearFilters={clearFilters}
-      />
-      
-      <AssetList 
-        assets={filteredAssets}
-        statusRecords={statusRecords}
-        onEdit={handleEditAsset}
-        onViewDetails={handleViewAssetDetails}
-        updateAsset={updateAsset}
-        deleteAsset={deleteAsset}
-        clearFilters={clearFilters}
-      />
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-[500px] w-full rounded-lg" />
+        </div>
+      ) : (
+        <>
+          <InventoryFilters 
+            search={search}
+            setSearch={setSearch}
+            phoneSearch={phoneSearch}
+            setPhoneSearch={setPhoneSearch}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            statusRecords={statusRecords}
+            clearFilters={clearFilters}
+          />
+          
+          <AssetList 
+            assets={filteredAssets}
+            statusRecords={statusRecords}
+            onEdit={handleEditAsset}
+            onViewDetails={handleViewAssetDetails}
+            updateAsset={updateAsset}
+            deleteAsset={deleteAsset}
+            clearFilters={clearFilters}
+          />
 
-      <EditAssetDialog 
-        asset={selectedAsset}
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseEditDialog}
-      />
-      
-      <AssetDetailsDialog
-        asset={selectedAsset}
-        isOpen={isDetailsDialogOpen}
-        onClose={handleCloseDetailsDialog}
-      />
+          <EditAssetDialog 
+            asset={selectedAsset}
+            isOpen={isEditDialogOpen}
+            onClose={handleCloseEditDialog}
+          />
+          
+          <AssetDetailsDialog
+            asset={selectedAsset}
+            isOpen={isDetailsDialogOpen}
+            onClose={handleCloseDetailsDialog}
+          />
+        </>
+      )}
     </div>
   );
 };

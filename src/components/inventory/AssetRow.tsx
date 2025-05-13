@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -46,6 +46,7 @@ const AssetRow = ({
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
   const getStatusBadgeStyle = (status: AssetStatus) => {
     switch (status) {
@@ -86,7 +87,6 @@ const AssetRow = ({
   const handleStatusUpdate = async (status: AssetStatus, statusId: number) => {
     const statusName = statusRecords.find(s => s.id === statusId)?.nome || status;
     
-    // Find the status record that matches this status
     setSelectedStatus({
       id: statusId,
       name: statusName,
@@ -97,6 +97,8 @@ const AssetRow = ({
 
   const handleStatusConfirm = async () => {
     if (!selectedStatus) return;
+    
+    setIsUpdatingStatus(true);
     
     try {
       const updatedAsset = await updateAsset(asset.id, { 
@@ -113,6 +115,7 @@ const AssetRow = ({
       console.error("Erro ao atualizar status:", error);
       toast.error("Ocorreu um erro ao atualizar o status do ativo.");
     } finally {
+      setIsUpdatingStatus(false);
       setIsStatusDialogOpen(false);
       setSelectedStatus(null);
     }
@@ -277,8 +280,13 @@ const AssetRow = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleStatusConfirm}>Confirmar</AlertDialogAction>
+            <AlertDialogCancel disabled={isUpdatingStatus}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleStatusConfirm} 
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? "Atualizando..." : "Confirmar"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
