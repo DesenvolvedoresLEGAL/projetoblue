@@ -27,7 +27,7 @@ export function Footer({ className, ...props }: FooterProps) {
       {...props}
     >
       <div className="flex items-center gap-4">
-        <span>BLUE Platform v1.0.2</span>
+        <span>LEGAL Platform v1.0.2</span>
         <div className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           <span>Last sync: {lastSyncTime}</span>

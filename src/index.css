@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 210 100% 45%;
+    --primary: 259 95% 57%; /* LEGAL primary color */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -23,7 +23,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 249 93% 37%; /* LEGAL accent color */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,7 +37,7 @@
 
     --sidebar-background: 220 33% 98%;
     --sidebar-foreground: 222 47% 11.2%;
-    --sidebar-primary: 210 100% 45%;
+    --sidebar-primary: 259 95% 57%; /* LEGAL primary color */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
@@ -46,42 +46,42 @@
   }
 
   .dark {
-    --background: 215 14% 16%;
+    --background: 240 24% 8%;  /* LEGAL dark background */
     --foreground: 210 40% 98%;
 
-    --card: 217 20% 13%;
+    --card: 240 24% 12%;  /* LEGAL dark card */
     --card-foreground: 210 40% 98%;
 
-    --popover: 217 20% 13%;
+    --popover: 240 24% 12%;  /* LEGAL dark popover */
     --popover-foreground: 210 40% 98%;
 
-    --primary: 202 73% 45%;
+    --primary: 259 95% 57%; /* LEGAL primary color */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 15% 19%;
+    --secondary: 240 24% 14%;  /* LEGAL dark secondary */
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 15% 16%;
+    --muted: 240 24% 16%;  /* LEGAL dark muted */
     --muted-foreground: 210 30% 80%;
 
-    --accent: 217 15% 17%;
+    --accent: 249 93% 37%; /* LEGAL accent color */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 15% 16%;
-    --input: 217 15% 16%;
-    --ring: 202 73% 50%;
+    --border: 240 24% 16%;  /* LEGAL dark border */
+    --input: 240 24% 16%;  /* LEGAL dark input */
+    --ring: 259 95% 57%; /* LEGAL primary color */
 
-    --sidebar-background: 217 20% 12%;
+    --sidebar-background: 240 24% 10%; /* LEGAL dark sidebar */
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 202 73% 45%;
+    --sidebar-primary: 259 95% 57%; /* LEGAL primary color */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 15% 16%;
+    --sidebar-accent: 240 24% 14%;  /* LEGAL dark accent */
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 15% 16%;
-    --sidebar-ring: 202 73% 45%;
+    --sidebar-border: 240 24% 16%;  /* LEGAL dark border */
+    --sidebar-ring: 259 95% 57%; /* LEGAL primary color */
   }
 }
 
@@ -100,12 +100,12 @@
   }
 
   ::selection {
-    background-color: hsl(217 15% 19%);
+    background-color: hsl(259 95% 57% / 0.2); /* LEGAL primary color with opacity */
     color: hsl(210 40% 98%);
   }
 
   .dark ::selection {
-    background-color: hsl(221 14% 28%);
+    background-color: hsl(259 95% 57% / 0.3); /* LEGAL primary color with opacity */
     color: white;
   }
 }
