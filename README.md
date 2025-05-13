@@ -1,73 +1,50 @@
-# Welcome to your Lovable project
 
-## Project info
+# BLUE Platform
 
-**URL**: https://lovable.dev/projects/0f075db5-87d3-4758-bb19-598b681607df
+## Temporary Supabase Direct Access Solution
 
-## How can I edit this code?
+### Background
+Due to the unavailability of the BLUE API (`api.blue.legal`), we've implemented a temporary solution that uses Supabase directly. This solution:
 
-There are several ways of editing your application.
+1. Maintains the same interface for components
+2. Changes the implementation to use Supabase directly
+3. Uses an abstraction layer to map between database and frontend types
 
-**Use Lovable**
+### Implementation Details
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0f075db5-87d3-4758-bb19-598b681607df) and start prompting.
+The implementation involves:
 
-Changes made via Lovable will be committed automatically to this repo.
+- Direct Supabase queries in service files instead of API calls
+- Data mappers to convert between database schema and frontend types
+- Preservation of existing interfaces so components don't need to change
 
-**Use your preferred IDE**
+### Expected API Contract
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+When the external API becomes available again, it should provide the following endpoints:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- `GET /assets` - List assets with filtering options
+- `GET /assets/:id` - Get asset by ID
+- `POST /assets` - Create new asset
+- `PATCH /assets/:id` - Update asset
+- `DELETE /assets/:id` - Delete asset
+- `PATCH /assets/:id/status` - Update asset status
+- `GET /status` - Get all status records
+- `GET /asset_types` - Get all asset types
+- `GET /manufacturers` - Get all manufacturers
+- `GET /asset_solutions` - Get all asset solutions
 
-Follow these steps:
+### Follow-up Tasks
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- [ ] Monitor the availability of `api.blue.legal`
+- [ ] Plan regression tests for when the API returns
+- [ ] Evaluate the cost/benefit of maintaining two backends
+- [ ] Document lessons learned from this incident
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Rollback Procedure
 
-# Step 3: Install the necessary dependencies.
-npm i
+When the API becomes available:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0f075db5-87d3-4758-bb19-598b681607df) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Test API endpoints to ensure they work as expected
+2. Revert the changes in service files to use API calls instead of Supabase
+3. Remove the temporary mapper utilities if no longer needed
+4. Update documentation to reflect the change

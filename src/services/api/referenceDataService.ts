@@ -1,23 +1,27 @@
 
-import apiClient, { ApiResponse, handleApiError } from "./apiClient";
+import { supabase } from "@/integrations/supabase/client";
 import { StatusRecord } from "@/types/asset";
 import { toast } from "@/utils/toast";
 
-// Reference data service
+// Reference data service (using Supabase directly as temporary solution)
 export const referenceDataService = {
   // Get all status records
   async getStatusRecords(): Promise<StatusRecord[]> {
     try {
-      const response = await apiClient.get<StatusRecord[]>("/status");
+      const { data, error } = await supabase.from('asset_status').select('*');
       
-      if (!response.success) {
-        handleApiError(response.error, "Failed to fetch status records");
+      if (error) {
+        console.error("Error fetching status records:", error);
+        toast.error("Failed to fetch status records");
         return [];
       }
       
-      return response.data || [];
+      return data.map(status => ({
+        id: status.id,
+        nome: status.status
+      })) || [];
     } catch (error) {
-      console.error("Error fetching status records:", error);
+      console.error("Error in getStatusRecords:", error);
       toast.error("Failed to fetch status records");
       return [];
     }
@@ -26,16 +30,17 @@ export const referenceDataService = {
   // Get all asset types
   async getAssetTypes(): Promise<{ id: number, type: string }[]> {
     try {
-      const response = await apiClient.get<{ id: number, type: string }[]>("/asset_types");
+      const { data, error } = await supabase.from('asset_types').select('*');
       
-      if (!response.success) {
-        handleApiError(response.error, "Failed to fetch asset types");
+      if (error) {
+        console.error("Error fetching asset types:", error);
+        toast.error("Failed to fetch asset types");
         return [];
       }
       
-      return response.data || [];
+      return data || [];
     } catch (error) {
-      console.error("Error fetching asset types:", error);
+      console.error("Error in getAssetTypes:", error);
       toast.error("Failed to fetch asset types");
       return [];
     }
@@ -44,16 +49,17 @@ export const referenceDataService = {
   // Get all manufacturers
   async getManufacturers(): Promise<{ id: number, name: string }[]> {
     try {
-      const response = await apiClient.get<{ id: number, name: string }[]>("/manufacturers");
+      const { data, error } = await supabase.from('manufacturers').select('id, name');
       
-      if (!response.success) {
-        handleApiError(response.error, "Failed to fetch manufacturers");
+      if (error) {
+        console.error("Error fetching manufacturers:", error);
+        toast.error("Failed to fetch manufacturers");
         return [];
       }
       
-      return response.data || [];
+      return data || [];
     } catch (error) {
-      console.error("Error fetching manufacturers:", error);
+      console.error("Error in getManufacturers:", error);
       toast.error("Failed to fetch manufacturers");
       return [];
     }
@@ -62,16 +68,17 @@ export const referenceDataService = {
   // Get all asset solutions
   async getAssetSolutions(): Promise<{ id: number, solution: string }[]> {
     try {
-      const response = await apiClient.get<{ id: number, solution: string }[]>("/asset_solutions");
+      const { data, error } = await supabase.from('asset_solutions').select('*');
       
-      if (!response.success) {
-        handleApiError(response.error, "Failed to fetch asset solutions");
+      if (error) {
+        console.error("Error fetching asset solutions:", error);
+        toast.error("Failed to fetch asset solutions");
         return [];
       }
       
-      return response.data || [];
+      return data || [];
     } catch (error) {
-      console.error("Error fetching asset solutions:", error);
+      console.error("Error in getAssetSolutions:", error);
       toast.error("Failed to fetch asset solutions");
       return [];
     }

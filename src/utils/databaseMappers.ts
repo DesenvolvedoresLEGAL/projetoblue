@@ -1,0 +1,125 @@
+
+import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
+
+// Map database status ID to frontend AssetStatus
+export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string): AssetStatus => {
+  // If we have the status name, use it to determine the frontend status
+  if (statusName) {
+    switch (statusName.toLowerCase()) {
+      case 'disponivel': return 'DISPONÍVEL';
+      case 'alugado': return 'ALUGADO';
+      case 'assinatura': return 'ASSINATURA';
+      case 'sem dados': return 'SEM DADOS';
+      case 'bloqueado': return 'BLOQUEADO';
+      case 'em manutenção':
+      case 'manutencao': return 'MANUTENÇÃO';
+    }
+  }
+  
+  // Fallback to ID-based mapping
+  switch (statusId) {
+    case 1: return 'DISPONÍVEL';
+    case 2: return 'ALUGADO';
+    case 3: return 'ASSINATURA';
+    case 4: return 'SEM DADOS';
+    case 5: return 'BLOQUEADO';
+    case 6: return 'MANUTENÇÃO';
+    default: return 'DISPONÍVEL';
+  }
+};
+
+// Map database type ID to frontend AssetType
+export const mapTypeIdToAssetType = (typeId: number, typeName?: string): AssetType => {
+  // If we have the type name, use it
+  if (typeName) {
+    return typeName.toLowerCase() === 'chip' ? 'CHIP' : 'ROTEADOR';
+  }
+  
+  // Fallback to ID-based mapping
+  return typeId === 1 ? 'CHIP' : 'ROTEADOR';
+};
+
+// Map database solution to frontend SolutionType
+export const mapSolutionToSolutionType = (solution?: string): SolutionType | undefined => {
+  if (!solution) return undefined;
+  
+  switch (solution.toUpperCase()) {
+    case 'SPEEDY 5G': return 'SPEEDY 5G';
+    case '4BLACK': return '4BLACK';
+    case '4LITE': return '4LITE';
+    case '4PLUS': return '4PLUS';
+    case 'AP BLUE': return 'AP BLUE';
+    case 'POWERBANK': return 'POWERBANK';
+    case 'SWITCH': return 'SWITCH';
+    case 'HUB USB': return 'HUB USB';
+    case 'ANTENA': return 'ANTENA';
+    case 'LOAD BALANCE': return 'LOAD BALANCE';
+    default: return undefined;
+  }
+};
+
+// Map database asset record to frontend Asset type
+export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
+  // Extract nested data if available
+  const statusName = dbAsset?.asset_status?.status;
+  const typeName = dbAsset?.asset_types?.type;
+  const solutionName = dbAsset?.asset_solutions?.solution;
+  
+  const type = mapTypeIdToAssetType(dbAsset.type_id, typeName);
+  const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
+  
+  // Common asset properties
+  const baseAsset = {
+    id: dbAsset.uuid,
+    type,
+    status,
+    statusId: dbAsset.status_id,
+    registrationDate: dbAsset.created_at || new Date().toISOString(),
+    notes: dbAsset.notes,
+    lastSeen: dbAsset.last_seen,
+    isOnline: dbAsset.is_online,
+    solucao: mapSolutionToSolutionType(solutionName),
+    marca: dbAsset.manufacturers?.name || dbAsset.manufacturer_id?.toString(),
+    modelo: dbAsset.model,
+    serial_number: dbAsset.serial_number,
+    dias_alugada: dbAsset.rented_days,
+    radio: dbAsset.radio
+  };
+  
+  if (type === 'CHIP') {
+    return {
+      ...baseAsset,
+      iccid: dbAsset.iccid || '',
+      phoneNumber: dbAsset.line_number?.toString() || '',
+      carrier: dbAsset.carrier || 'Unknown',
+      num_linha: dbAsset.line_number
+    } as ChipAsset;
+  } else {
+    return {
+      ...baseAsset,
+      uniqueId: dbAsset.uuid,
+      brand: dbAsset.manufacturers?.name || '',
+      model: dbAsset.model || '',
+      ssid: dbAsset.ssid || '',
+      password: dbAsset.password || '',
+      serialNumber: dbAsset.serial_number || '',
+      ipAddress: dbAsset.ip_address,
+      adminUser: dbAsset.admin_user,
+      adminPassword: dbAsset.admin_password,
+      imei: dbAsset.imei
+    } as RouterAsset;
+  }
+};
+
+// Map frontend AssetStatus to database status ID
+export const mapAssetStatusToId = (status: AssetStatus): number => {
+  switch (status) {
+    case 'DISPONÍVEL': return 1;
+    case 'ALUGADO': return 2;
+    case 'ASSINATURA': return 3;
+    case 'SEM DADOS': return 4;
+    case 'BLOQUEADO': return 5;
+    case 'MANUTENÇÃO': return 6;
+    default: return 1;
+  }
+};
