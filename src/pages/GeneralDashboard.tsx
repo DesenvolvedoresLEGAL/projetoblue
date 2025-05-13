@@ -72,15 +72,7 @@ const GeneralDashboard: React.FC = () => {
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">BLUE Platform</h1>
-          <p className="text-muted-foreground">
-            Sistema de gestão de ativos e operações
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90" onClick={() => navigate('/assets/register')}>
-            <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Novo Ativo
-          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Plataforma BLUE</h1>
         </div>
       </div>
 
@@ -158,18 +150,18 @@ const GeneralDashboard: React.FC = () => {
           <CardTitle>Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/assets/register')}>
-            <PlusCircle className="h-6 w-6 text-[#4D2BFB]" />
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed text-[#4D2BFB] hover:text-white" onClick={() => navigate('/assets/register')}>
+            <PlusCircle className="h-6 w-6" />
             <div className="text-sm font-medium">Cadastrar Novo Ativo</div>
           </Button>
           
-          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/link-asset')}>
-            <LinkIcon className="h-6 w-6 text-[#4D2BFB]" />
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed text-[#4D2BFB] hover:text-white" onClick={() => navigate('/link-asset')}>
+            <LinkIcon className="h-6 w-6" />
             <div className="text-sm font-medium">Vincular Ativo a Cliente</div>
           </Button>
           
-          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/assets/inventory')}>
-            <PackageSearch className="h-6 w-6 text-[#4D2BFB]" />
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed text-[#4D2BFB] hover:text-white" onClick={() => navigate('/assets/inventory')}>
+            <PackageSearch className="h-6 w-6" />
             <div className="text-sm font-medium">Ver Inventário Completo</div>
           </Button>
         </CardContent>
