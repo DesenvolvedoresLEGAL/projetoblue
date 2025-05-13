@@ -1,55 +1,37 @@
-
 import { useAssets } from "@/context/useAssets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  LayoutDashboard, 
-  Smartphone, 
-  Wifi, 
-  CheckCircle, 
-  AlertCircle, 
-  XCircle,
-  Clock,
-  FileSpreadsheet,
-  Calendar,
-  ArrowRight
-} from "lucide-react";
+import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, Clock, FileSpreadsheet, Calendar, ArrowRight } from "lucide-react";
 import { exportToExcel } from "@/utils/excelExport";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-
 const Dashboard = () => {
-  const { assets, clients, getAssetsByType, getAssetsByStatus, getExpiredSubscriptions } = useAssets();
+  const {
+    assets,
+    clients,
+    getAssetsByType,
+    getAssetsByStatus,
+    getExpiredSubscriptions
+  } = useAssets();
   const navigate = useNavigate();
-  
   const totalChips = getAssetsByType("CHIP").length;
   const totalRouters = getAssetsByType("ROTEADOR").length;
-  
   const availableChips = getAssetsByType("CHIP").filter(chip => chip.status === "DISPONÍVEL").length;
   const availableRouters = getAssetsByType("ROTEADOR").filter(router => router.status === "DISPONÍVEL").length;
-  
-  const problemAssets = assets.filter(asset => 
-    ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"].includes(asset.status)
-  );
-  
+  const problemAssets = assets.filter(asset => ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"].includes(asset.status));
   const expiredSubscriptions = getExpiredSubscriptions();
-
   const handleExportToExcel = () => {
-    exportToExcel({ assets, clients });
+    exportToExcel({
+      assets,
+      clients
+    });
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-2"
-            onClick={handleExportToExcel}
-          >
+          <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={handleExportToExcel}>
             <FileSpreadsheet className="h-4 w-4" />
             Exportar para Excel
           </Button>
@@ -94,9 +76,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {assets.filter(asset => 
-                ["ALUGADO", "ASSINATURA"].includes(asset.status)
-              ).length}
+              {assets.filter(asset => ["ALUGADO", "ASSINATURA"].includes(asset.status)).length}
             </div>
             <p className="text-xs text-muted-foreground">
               Alugados ou em assinatura
@@ -127,59 +107,30 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {problemAssets.length > 0 ? (
-              <div className="space-y-2">
-                {problemAssets.slice(0, 5).map((asset) => (
-                  <div 
-                    key={asset.id} 
-                    className="flex items-center justify-between p-2 border rounded-md"
-                  >
+            {problemAssets.length > 0 ? <div className="space-y-2">
+                {problemAssets.slice(0, 5).map(asset => <div key={asset.id} className="flex items-center justify-between p-2 border rounded-md">
                     <div className="flex items-center space-x-2">
-                      {asset.type === "CHIP" ? (
-                        <Smartphone className="h-4 w-4" />
-                      ) : (
-                        <Wifi className="h-4 w-4" />
-                      )}
+                      {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
                       <div>
                         <p className="text-sm font-medium">
-                          {asset.type === "CHIP" 
-                            ? (asset as any).iccid.slice(-4) 
-                            : (asset as any).uniqueId
-                          }
+                          {asset.type === "CHIP" ? (asset as any).iccid.slice(-4) : (asset as any).uniqueId}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {asset.type === "CHIP" 
-                            ? (asset as any).carrier 
-                            : (asset as any).brand
-                          }
+                          {asset.type === "CHIP" ? (asset as any).carrier : (asset as any).brand}
                         </p>
                       </div>
                     </div>
-                    <Badge 
-                      className={
-                        asset.status === "SEM DADOS" 
-                          ? "bg-amber-500" 
-                          : asset.status === "BLOQUEADO" 
-                            ? "bg-red-500" 
-                            : "bg-blue-500"
-                      }
-                    >
+                    <Badge className={asset.status === "SEM DADOS" ? "bg-amber-500" : asset.status === "BLOQUEADO" ? "bg-red-500" : "bg-blue-500"}>
                       {asset.status}
                     </Badge>
-                  </div>
-                ))}
-                {problemAssets.length > 5 && (
-                  <p className="text-xs text-center text-gray-500 mt-2">
+                  </div>)}
+                {problemAssets.length > 5 && <p className="text-xs text-center text-gray-500 mt-2">
                     + {problemAssets.length - 5} outros ativos com problema
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+                  </p>}
+              </div> : <div className="flex flex-col items-center justify-center h-32 text-gray-500">
                 <CheckCircle className="h-8 w-8 mb-2" />
                 <p className="text-sm">Não há ativos com problema</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
         
@@ -187,41 +138,22 @@ const Dashboard = () => {
           <CardHeader className="flex items-center justify-between">
             <div>
               <CardTitle>Assinaturas Expiradas</CardTitle>
-              <CardDescription>
-                Assinaturas que precisam ser renovadas
-              </CardDescription>
+              
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center"
-              onClick={() => navigate("/subscriptions")}
-            >
+            <Button variant="outline" size="sm" className="flex items-center" onClick={() => navigate("/subscriptions")}>
               Ver todas <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardHeader>
           <CardContent>
-            {expiredSubscriptions.length > 0 ? (
-              <div className="space-y-2">
-                {expiredSubscriptions.slice(0, 5).map((asset) => {
-                  const client = asset.clientId ? clients.find(c => c.id === asset.clientId) : null;
-                  return (
-                    <div 
-                      key={asset.id} 
-                      className="flex items-center justify-between p-2 border rounded-md"
-                    >
+            {expiredSubscriptions.length > 0 ? <div className="space-y-2">
+                {expiredSubscriptions.slice(0, 5).map(asset => {
+              const client = asset.clientId ? clients.find(c => c.id === asset.clientId) : null;
+              return <div key={asset.id} className="flex items-center justify-between p-2 border rounded-md">
                       <div className="flex items-center space-x-2">
-                        {asset.type === "CHIP" ? (
-                          <Smartphone className="h-4 w-4" />
-                        ) : (
-                          <Wifi className="h-4 w-4" />
-                        )}
+                        {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
                         <div>
                           <p className="text-sm font-medium">
-                            {asset.type === "CHIP" 
-                              ? `CHIP: ${(asset as any).phoneNumber}` 
-                              : `ROTEADOR: ${(asset as any).model}`
-                            }
+                            {asset.type === "CHIP" ? `CHIP: ${(asset as any).phoneNumber}` : `ROTEADOR: ${(asset as any).model}`}
                           </p>
                           <p className="text-xs text-gray-500">
                             {client?.name || "Cliente não encontrado"}
@@ -236,21 +168,15 @@ const Dashboard = () => {
                           {asset.subscription ? format(new Date(asset.subscription.endDate), "dd/MM/yyyy") : ""}
                         </p>
                       </div>
-                    </div>
-                  );
-                })}
-                {expiredSubscriptions.length > 5 && (
-                  <p className="text-xs text-center text-gray-500 mt-2">
+                    </div>;
+            })}
+                {expiredSubscriptions.length > 5 && <p className="text-xs text-center text-gray-500 mt-2">
                     + {expiredSubscriptions.length - 5} outras assinaturas expiradas
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+                  </p>}
+              </div> : <div className="flex flex-col items-center justify-center h-32 text-gray-500">
                 <Calendar className="h-8 w-8 mb-2" />
                 <p className="text-sm">Nenhuma assinatura expirada</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
         
@@ -263,21 +189,38 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { status: "DISPONÍVEL", icon: <CheckCircle className="h-4 w-4 text-green-500" />, color: "bg-green-100" },
-                { status: "ALUGADO", icon: <Smartphone className="h-4 w-4 text-telecom-500" />, color: "bg-telecom-100" },
-                { status: "ASSINATURA", icon: <Wifi className="h-4 w-4 text-telecom-500" />, color: "bg-telecom-100" },
-                { status: "SEM DADOS", icon: <AlertCircle className="h-4 w-4 text-amber-500" />, color: "bg-amber-100" },
-                { status: "BLOQUEADO", icon: <XCircle className="h-4 w-4 text-red-500" />, color: "bg-red-100" },
-                { status: "MANUTENÇÃO", icon: <Clock className="h-4 w-4 text-blue-500" />, color: "bg-blue-100" },
-              ].map(({ status, icon, color }) => {
-                const count = getAssetsByStatus(status as any).length;
-                const percentage = assets.length > 0 
-                  ? Math.round((count / assets.length) * 100) 
-                  : 0;
-                
-                return (
-                  <div key={status} className="space-y-1">
+              {[{
+              status: "DISPONÍVEL",
+              icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+              color: "bg-green-100"
+            }, {
+              status: "ALUGADO",
+              icon: <Smartphone className="h-4 w-4 text-telecom-500" />,
+              color: "bg-telecom-100"
+            }, {
+              status: "ASSINATURA",
+              icon: <Wifi className="h-4 w-4 text-telecom-500" />,
+              color: "bg-telecom-100"
+            }, {
+              status: "SEM DADOS",
+              icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
+              color: "bg-amber-100"
+            }, {
+              status: "BLOQUEADO",
+              icon: <XCircle className="h-4 w-4 text-red-500" />,
+              color: "bg-red-100"
+            }, {
+              status: "MANUTENÇÃO",
+              icon: <Clock className="h-4 w-4 text-blue-500" />,
+              color: "bg-blue-100"
+            }].map(({
+              status,
+              icon,
+              color
+            }) => {
+              const count = getAssetsByStatus(status as any).length;
+              const percentage = assets.length > 0 ? Math.round(count / assets.length * 100) : 0;
+              return <div key={status} className="space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         {icon}
@@ -286,20 +229,16 @@ const Dashboard = () => {
                       <span className="text-sm font-medium">{count}</span>
                     </div>
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div 
-                        className={`h-full ${color}`} 
-                        style={{ width: `${percentage}%` }}
-                      ></div>
+                      <div className={`h-full ${color}`} style={{
+                    width: `${percentage}%`
+                  }}></div>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>;
+            })}
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
