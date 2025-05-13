@@ -1,6 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
-import { UserRole } from '@/types/auth';
 
 interface SignUpData {
   email: string;
@@ -49,7 +49,7 @@ export const authService = {
         password,
         options: {
           data: {
-            role: 'user' // Changed from 'analyst' to 'user', a valid role in the DB
+            role: 'analyst'
           }
         }
       });
@@ -80,18 +80,20 @@ export const authService = {
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
       }
       
-      // Create an entry in the profiles table
+      // Create an entry in the users table
       try {
         const { error: userError } = await supabase
-          .from('profiles')
+          .from('users')
           .insert({
-            id: data.user.id,
+            uuid: data.user.id,
             email: email,
-            role: 'user' // Changed from 'analyst' to 'user'
+            password: '[AUTH VIA SUPABASE]', // We don't store the actual password
+            is_approved: true,
+            id_role: 2 // Default role (analyst)
           });
           
         if (userError) {
-          console.error('Error creating user in profiles table:', userError);
+          console.error('Error creating user in users table:', userError);
           // Don't fail the sign-up if this fails, but log it
         }
       } catch (userInsertError) {

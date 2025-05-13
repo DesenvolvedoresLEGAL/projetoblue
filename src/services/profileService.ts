@@ -1,14 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile, UserRole } from '@/types/auth';
+import { UserProfile } from '@/types/auth';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('uuid', userId)
         .maybeSingle();
 
       if (error) {
@@ -17,15 +17,22 @@ export const profileService = {
       }
 
       if (data) {
-        // Map the profiles table fields to the UserProfile type
+        await supabase
+          .from('users')
+          .update({ is_approved: data.is_approved })
+          .eq('uuid', userId);
+      }
+
+      if (data) {
+        // Map the users table fields to the UserProfile type
         return {
-          id: data.id,
+          id: data.uuid,
           email: data.email,
-          role: data.role as UserRole,
-          created_at: data.created_at || new Date().toISOString(),
-          last_login: new Date().toISOString(), // No field for this, use current date
-          is_active: true, // Default to true since this field doesn't exist in DB
-          is_approved: true // Default to true since this field doesn't exist in DB
+          role: data.id_role === 1 ? 'admin' : 'analyst',
+          created_at: new Date().toISOString(), // Use current date since field doesn't exist
+          last_login: new Date().toISOString(), // Use current date since field doesn't exist
+          is_active: Boolean(data.is_approved),
+          is_approved: Boolean(data.is_approved)
         };
       }
 
