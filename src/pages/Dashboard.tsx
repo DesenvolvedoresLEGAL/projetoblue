@@ -6,6 +6,7 @@ import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, C
 import { exportToExcel } from "@/utils/excelExport";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import AssetsStatusCard from "@/components/dashboard/AssetsStatusCard"; // ⬅ novo
 const Dashboard = () => {
   const {
     assets,
@@ -113,10 +114,10 @@ const Dashboard = () => {
                       {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
                       <div>
                         <p className="text-sm font-medium">
-                          {asset.type === "CHIP" ? (asset as any).iccid.slice(-4) : (asset as any).uniqueId}
+                          {asset.type === "CHIP" ? (asset as any).phoneNumber : (asset as any).radio}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {asset.type === "CHIP" ? (asset as any).carrier : (asset as any).brand}
+                          {asset.type === "CHIP" ? (asset as any).iccid : (asset as any).serialNumber}
                         </p>
                       </div>
                     </div>
@@ -180,64 +181,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card className="col-span-1 md:col-span-2">
-          <CardHeader>
-            <CardTitle>Status dos Ativos</CardTitle>
-            <CardDescription>
-              Distribuição por status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[{
-              status: "DISPONÍVEL",
-              icon: <CheckCircle className="h-4 w-4 text-green-500" />,
-              color: "bg-green-100"
-            }, {
-              status: "ALUGADO",
-              icon: <Smartphone className="h-4 w-4 text-telecom-500" />,
-              color: "bg-telecom-100"
-            }, {
-              status: "ASSINATURA",
-              icon: <Wifi className="h-4 w-4 text-telecom-500" />,
-              color: "bg-telecom-100"
-            }, {
-              status: "SEM DADOS",
-              icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
-              color: "bg-amber-100"
-            }, {
-              status: "BLOQUEADO",
-              icon: <XCircle className="h-4 w-4 text-red-500" />,
-              color: "bg-red-100"
-            }, {
-              status: "MANUTENÇÃO",
-              icon: <Clock className="h-4 w-4 text-blue-500" />,
-              color: "bg-blue-100"
-            }].map(({
-              status,
-              icon,
-              color
-            }) => {
-              const count = getAssetsByStatus(status as any).length;
-              const percentage = assets.length > 0 ? Math.round(count / assets.length * 100) : 0;
-              return <div key={status} className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        {icon}
-                        <span className="ml-2 text-sm">{status}</span>
-                      </div>
-                      <span className="text-sm font-medium">{count}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div className={`h-full ${color}`} style={{
-                    width: `${percentage}%`
-                  }}></div>
-                    </div>
-                  </div>;
-            })}
-            </div>
-          </CardContent>
-        </Card>
+        <AssetsStatusCard/>
       </div>
     </div>;
 };
