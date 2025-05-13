@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
@@ -57,6 +58,16 @@ export interface AssetStatusByType {
   type: string;
   status: string;
   total: number;
+}
+
+// Define a specific type for problem assets from the database
+export interface ProblemAsset {
+  uuid: string;
+  iccid: string | null;
+  radio: string | null;
+  asset_types: {
+    type: string;
+  };
 }
 
 // Problem assets status ID (modify this if needed based on your actual status IDs)
@@ -284,7 +295,7 @@ export const assetService = {
   },
   
   // List assets with problem status
-  async listProblemAssets(): Promise<Asset[]> {
+  async listProblemAssets(): Promise<ProblemAsset[]> {
     try {
       const { data, error } = await supabase
         .from('assets')
