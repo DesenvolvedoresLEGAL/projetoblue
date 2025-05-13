@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
+import { UserRole } from '@/types/auth';
 
 interface SignUpData {
   email: string;
@@ -49,7 +49,7 @@ export const authService = {
         password,
         options: {
           data: {
-            role: 'analyst'
+            role: 'user' // Changed from 'analyst' to 'user', a valid role in the DB
           }
         }
       });
@@ -87,8 +87,7 @@ export const authService = {
           .insert({
             id: data.user.id,
             email: email,
-            role: 'analyst', // Default role
-            is_active: true
+            role: 'user' // Changed from 'analyst' to 'user'
           });
           
         if (userError) {

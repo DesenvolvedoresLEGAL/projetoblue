@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfile } from '@/types/auth';
+import { UserProfile, UserRole } from '@/types/auth';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -17,25 +17,15 @@ export const profileService = {
       }
 
       if (data) {
-        // Update profile is_active status if needed
-        if (data.is_active === false) {
-          await supabase
-            .from('profiles')
-            .update({ is_active: true })
-            .eq('id', userId);
-        }
-      }
-
-      if (data) {
         // Map the profiles table fields to the UserProfile type
         return {
           id: data.id,
           email: data.email,
-          role: data.role === 'admin' ? 'admin' : 'analyst',
+          role: data.role as UserRole,
           created_at: data.created_at || new Date().toISOString(),
           last_login: new Date().toISOString(), // No field for this, use current date
-          is_active: Boolean(data.is_active),
-          is_approved: Boolean(data.is_active)
+          is_active: true, // Default to true since this field doesn't exist in DB
+          is_approved: true // Default to true since this field doesn't exist in DB
         };
       }
 
