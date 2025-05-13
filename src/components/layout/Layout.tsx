@@ -3,22 +3,28 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { ModularSidebar } from "./ModularSidebar";
 import { Header } from "./Header";
-import { PageBreadcrumbs } from "./PageBreadcrumbs";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Footer } from "./Footer";
+import { Toaster } from "sonner";
 
 export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleMobileSidebar = () => {
     setMobileOpen((prev) => !prev);
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => !prev);
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <Toaster position="top-right" richColors />
+      
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
-        <ModularSidebar />
+        <ModularSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       </div>
 
       {/* Mobile Sidebar - shown when mobileOpen is true */}
@@ -40,27 +46,13 @@ export function Layout() {
 
       {/* Main content */}
       <div className="flex flex-col flex-1 w-full">
-        <Header>
-          {/* Mobile menu button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden mr-2"
-            onClick={toggleMobileSidebar}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-sidebar"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </Header>
-        <main className="flex-1 overflow-y-auto" role="main" aria-label="Main content">
-          <div className="container mx-auto py-6 px-4 max-w-7xl">
-            <PageBreadcrumbs />
+        <Header onToggleSidebar={toggleMobileSidebar} />
+        <main className="flex-1 overflow-y-auto p-4" role="main" aria-label="Main content">
+          <div className="container mx-auto max-w-7xl">
             <Outlet />
           </div>
         </main>
+        <Footer />
       </div>
     </div>
   );
