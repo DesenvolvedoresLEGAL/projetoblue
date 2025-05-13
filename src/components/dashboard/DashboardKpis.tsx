@@ -2,7 +2,7 @@
 import React from "react";
 import { useAssets } from "@/context/useAssets";
 import { Card, CardContent } from "@/components/ui/card";
-import { packageSearch, Wifi, AlertTriangle, Clock } from "lucide-react";
+import { Wifi, AlertTriangle, Clock } from "lucide-react";
 import { PackageSearch } from "lucide-react";
 
 export function DashboardKpis() {
