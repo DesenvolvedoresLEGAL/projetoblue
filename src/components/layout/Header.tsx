@@ -29,7 +29,7 @@ export function Header({ children }: HeaderProps) {
     <header className="h-16 border-b bg-background shadow-md z-10 flex items-center px-6 py-3">
       {children}
       <div className="flex-1 flex items-center">
-        <NamedLogo size="sm" />
+        <NamedLogo size="md" />
       </div>
       <div className="flex items-center gap-4">
         <ThemeToggle />
