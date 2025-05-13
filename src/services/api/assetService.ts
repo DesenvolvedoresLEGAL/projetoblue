@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
@@ -91,8 +92,9 @@ export const assetService = {
         // If line_number is a numeric column, we need to convert the string to a number
         const phoneNumber = params.phoneSearch.replace(/\D/g, ''); // Remove non-digit characters
         if (phoneNumber) {
-          // Using .eq() instead of direct comparison to handle potential type conversion
-          query = query.eq('line_number', phoneNumber);
+          // Convert the cleaned phone number string to a number before passing to eq()
+          const phoneNumberAsNumber = parseInt(phoneNumber, 10);
+          query = query.eq('line_number', phoneNumberAsNumber);
         }
       }
       
