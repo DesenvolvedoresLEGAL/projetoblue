@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
@@ -52,6 +51,16 @@ export interface AssetUpdateParams {
   password?: string;
   serialNumber?: string;
 }
+
+// Type for status by asset type response
+export interface AssetStatusByType {
+  type: string;
+  status: string;
+  total: number;
+}
+
+// Problem assets status ID (modify this if needed based on your actual status IDs)
+const PROBLEM_STATUS_IDS = [5, 6]; // Typically "BLOQUEADO" and "MANUTENÇÃO"
 
 // Asset API service (using Supabase directly as temporary solution)
 export const assetService = {
@@ -272,6 +281,52 @@ export const assetService = {
   // Get assets by type
   async getAssetsByType(type: AssetType): Promise<Asset[]> {
     return this.getAssets({ type });
+  },
+  
+  // List assets with problem status
+  async listProblemAssets(): Promise<Asset[]> {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          uuid,
+          iccid,
+          radio,
+          asset_types:type_id ( type )
+        `)
+        .in('status_id', PROBLEM_STATUS_IDS);
+      
+      if (error) {
+        console.error("Error fetching problem assets:", error);
+        toast.error("Failed to fetch problem assets");
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in listProblemAssets:", error);
+      toast.error("Failed to fetch problem assets");
+      return [];
+    }
+  },
+  
+  // Get asset status counts by type using the SQL function
+  async statusByType(): Promise<AssetStatusByType[]> {
+    try {
+      const { data, error } = await supabase.rpc('status_by_asset_type');
+      
+      if (error) {
+        console.error("Error fetching status by asset type:", error);
+        toast.error("Failed to fetch asset status statistics");
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error("Error in statusByType:", error);
+      toast.error("Failed to fetch asset status statistics");
+      return [];
+    }
   }
 };
 

@@ -470,6 +470,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      status_by_asset_type: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          type: string
+          status: string
+          total: number
+        }[]
+      }
     }
     Enums: {
       asset_status_enum:

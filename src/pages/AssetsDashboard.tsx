@@ -1,10 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAssets } from "@/context/useAssets";
 import { Asset } from '@/types/asset';
 import { AlertCircle, Clock, Users, Wifi } from 'lucide-react';
+import ProblemAssetsCard from '@/components/dashboard/ProblemAssetsCard';
+import AssetsStatusCard from '@/components/dashboard/AssetsStatusCard';
 
 const AssetsDashboard = () => {
   const { assets, loading } = useAssets();
@@ -93,20 +94,7 @@ const AssetsDashboard = () => {
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-2xl flex items-center">
-                  {stats.faulty}
-                  <Badge className="ml-2 bg-amber-500" variant="secondary">Warning</Badge>
-                </CardTitle>
-                <CardDescription>Assets with issues</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm">
-                  {stats.total > 0 ? Math.round((stats.faulty / stats.total) * 100) : 0}% of total inventory
-                </p>
-              </CardContent>
-            </Card>
+            <ProblemAssetsCard />
             
             <Card>
               <CardHeader className="pb-2">
@@ -125,18 +113,7 @@ const AssetsDashboard = () => {
           </div>
           
           <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Usage Analytics</CardTitle>
-                <CardDescription>Asset utilization over time</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80 flex items-center justify-center border-t pt-4">
-                <div className="text-center">
-                  <BarChart3 className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-muted-foreground">Usage graph will be available soon</p>
-                </div>
-              </CardContent>
-            </Card>
+            <AssetsStatusCard />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
