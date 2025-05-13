@@ -11,12 +11,11 @@ import {
 } from "@/components/dashboard";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { toast } from "@/utils/toast";
+import { toast } from "sonner";
 
 const Home = () => {
   const handleWelcome = () => {
-    toast({
-      title: "Bem-vindo à BLUE Platform",
+    toast("Bem-vindo à BLUE Platform", {
       description: "Plataforma de gerenciamento de inventário de ativos da LEGAL",
     });
   };

@@ -24,7 +24,7 @@ export function Layout() {
       
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
-        <ModularSidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+        <ModularSidebar />
       </div>
 
       {/* Mobile Sidebar - shown when mobileOpen is true */}

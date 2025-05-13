@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/utils/toast";
+import { toast } from "sonner";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -24,16 +24,14 @@ export function Header({ children, onToggleSidebar }: HeaderProps) {
   
   const handleSync = () => {
     setIsSyncing(true);
-    toast({
-      title: "Sincronizando...",
+    toast("Sincronizando...", {
       description: "Atualizando dados com o servidor",
     });
     
     // Simulate sync completion after 2 seconds
     setTimeout(() => {
       setIsSyncing(false);
-      toast({
-        title: "Sincronização concluída",
+      toast("Sincronização concluída", {
         description: "Todos os dados estão atualizados",
       });
     }, 2000);
