@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService, ProblemAsset } from "@/services/api/assetService";
+import { assetService, ProblemAsset } from "@/services/api/asset";
 import { CircleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService, AssetStatusByType } from "@/services/api/assetService";
+import { assetService, AssetStatusByType } from "@/services/api/asset";
 import { Badge } from "@/components/ui/badge";
 
 export const AssetsStatusCard: React.FC = () => {
