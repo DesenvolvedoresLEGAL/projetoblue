@@ -5,85 +5,83 @@
 
 @layer base {
   :root {
-    /* Tema claro */
-    --background: 0 0% 100%; /* #ffffff */
-    --foreground: 246 100% 37%; /* #020cbc */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 246 100% 37%; /* #020cbc */
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 246 100% 37%; /* #020cbc */
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 255 97% 58%; /* #4d2bfb */
-    --primary-foreground: 0 0% 100%; /* #ffffff */
+    --primary: 210 100% 45%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 180 100% 50%; /* #03f9ff */
-    --secondary-foreground: 246 100% 37%; /* #020cbc */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 180 100% 50%; /* #03f9ff */
-    --accent-foreground: 246 100% 37%; /* #020cbc */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 255 97% 58%; /* #4d2bfb */
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 220 33% 98%;
-    --sidebar-foreground: 246 100% 37%; /* #020cbc */
-    --sidebar-primary: 255 97% 58%; /* #4d2bfb */
+    --sidebar-foreground: 222 47% 11.2%;
+    --sidebar-primary: 210 100% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 180 100% 50%; /* #03f9ff */
-    --sidebar-accent-foreground: 246 100% 37%; /* #020cbc */
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 255 97% 58%; /* #4d2bfb */
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Tema escuro */
-    --background: 246 100% 37%; /* #020cbc */
-    --foreground: 0 0% 100%; /* #ffffff */
+    --background: 215 14% 16%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 75% 24%; /* #0e1a6d */
-    --card-foreground: 0 0% 100%; /* #ffffff */
+    --card: 217 20% 13%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 240 75% 24%; /* #0e1a6d */
-    --popover-foreground: 0 0% 100%; /* #ffffff */
+    --popover: 217 20% 13%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 180 100% 50%; /* #03f9ff */
-    --primary-foreground: 246 100% 37%; /* #020cbc */
+    --primary: 202 73% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 255 97% 58%; /* #4d2bfb */
-    --secondary-foreground: 0 0% 100%; /* #ffffff */
+    --secondary: 217 15% 19%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 75% 30%;
+    --muted: 217 15% 16%;
     --muted-foreground: 210 30% 80%;
 
-    --accent: 180 100% 50%; /* #03f9ff */
-    --accent-foreground: 246 100% 37%; /* #020cbc */
+    --accent: 217 15% 17%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 75% 30%;
-    --input: 240 75% 30%;
-    --ring: 180 100% 50%; /* #03f9ff */
+    --border: 217 15% 16%;
+    --input: 217 15% 16%;
+    --ring: 202 73% 50%;
 
-    --sidebar-background: 240 75% 24%; /* #0e1a6d */
-    --sidebar-foreground: 0 0% 100%; /* #ffffff */
-    --sidebar-primary: 180 100% 50%; /* #03f9ff */
-    --sidebar-primary-foreground: 246 100% 37%; /* #020cbc */
-    --sidebar-accent: 255 97% 58%; /* #4d2bfb */
-    --sidebar-accent-foreground: 0 0% 100%; /* #ffffff */
-    --sidebar-border: 240 75% 30%;
-    --sidebar-ring: 180 100% 50%; /* #03f9ff */
+    --sidebar-background: 217 20% 12%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 202 73% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 15% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 15% 16%;
+    --sidebar-ring: 202 73% 45%;
   }
 }
 
@@ -93,7 +91,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground;
     transition: background-color 0.5s ease, color 0.5s ease;
   }
 
@@ -102,44 +100,13 @@
   }
 
   ::selection {
-    @apply bg-brand-primary/20 text-foreground;
+    background-color: hsl(217 15% 19%);
+    color: hsl(210 40% 98%);
   }
 
   .dark ::selection {
-    @apply bg-brand-secondary/20 text-foreground;
-  }
-
-  /* Tipografia - Hierarquia de textos */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-bold;
-  }
-
-  h1 {
-    @apply text-3xl sm:text-4xl leading-tight;
-  }
-
-  h2 {
-    @apply text-2xl sm:text-3xl leading-tight;
-  }
-
-  h3 {
-    @apply text-xl sm:text-2xl leading-snug;
-  }
-
-  h4 {
-    @apply text-lg sm:text-xl leading-snug;
-  }
-
-  p {
-    @apply text-base leading-relaxed;
-  }
-
-  .text-sm {
-    @apply leading-normal;
-  }
-
-  .text-xs {
-    @apply leading-normal;
+    background-color: hsl(221 14% 28%);
+    color: white;
   }
 }
 
@@ -149,15 +116,15 @@
   }
   
   .telecom-card {
-    @apply bg-card text-card-foreground rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300;
+    @apply bg-white dark:bg-card rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300;
   }
   
   .form-input {
-    @apply w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary dark:bg-card dark:text-card-foreground;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-telecom-500 focus:border-telecom-500 dark:bg-gray-800 dark:text-gray-100;
   }
   
   .form-label {
-    @apply block text-sm font-medium text-foreground mb-1;
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1;
   }
   
   .form-error {
@@ -210,5 +177,5 @@
 }
 
 .theme-ripple-dark {
-  background: radial-gradient(circle, rgba(2,12,188,1) 0%, rgba(14,26,109,0.8) 50%, rgba(14,26,109,0) 100%);
+  background: radial-gradient(circle, rgba(31,41,55,1) 0%, rgba(28,36,49,0.8) 50%, rgba(23,32,46,0) 100%);
 }

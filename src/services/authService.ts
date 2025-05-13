@@ -1,173 +1,178 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/utils/toast';
+import { checkPasswordStrength } from '@/utils/passwordStrength';
 
-type SignUpData = {
+interface SignUpData {
   email: string;
   password: string;
-};
+}
 
-type ValidationResult = {
+interface ValidationResult {
   isValid: boolean;
   error?: string;
-};
+}
 
-export const validateSignUpData = (data: SignUpData): ValidationResult => {
-  const { email, password } = data;
-
-  if (!email) {
-    return { isValid: false, error: "Email é obrigatório" };
-  }
-
-  if (!validateEmail(email)) {
-    return { isValid: false, error: "Email inválido" };
-  }
-
-  if (!password) {
-    return { isValid: false, error: "Senha é obrigatória" };
-  }
-
-  if (password.length < 8) {
-    return { isValid: false, error: "A senha deve ter pelo menos 8 caracteres" };
-  }
-
-  return { isValid: true };
-};
-
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-export const signUp = async (email: string, password: string) => {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) throw error;
-    
-    return { data, error: null };
-  } catch (error: any) {
-    console.error("Erro ao criar usuário:", error);
-    return { data: null, error };
-  }
-};
-
-export const signIn = async (email: string, password: string) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) throw error;
-    
-    return { data, error: null };
-  } catch (error: any) {
-    console.error("Erro ao fazer login:", error);
-    return { data: null, error };
-  }
-};
-
-export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    
-    return { error: null };
-  } catch (error: any) {
-    console.error("Erro ao fazer logout:", error);
-    return { error };
-  }
-};
-
-export const resetPassword = async (email: string) => {
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/reset-password",
-    });
-    
-    if (error) throw error;
-    
-    toast.success("Um email de redefinição de senha foi enviado para você");
-    return { error: null };
-  } catch (error: any) {
-    console.error("Erro ao solicitar redefinição de senha:", error);
-    toast.error("Erro ao solicitar redefinição de senha: " + error.message);
-    return { error };
-  }
-};
-
-export const updateUserPassword = async (password: string) => {
-  try {
-    const { error } = await supabase.auth.updateUser({
-      password
-    });
-    
-    if (error) throw error;
-    
-    toast.success("Senha atualizada com sucesso");
-    return { error: null };
-  } catch (error: any) {
-    console.error("Erro ao atualizar senha:", error);
-    toast.error("Erro ao atualizar senha: " + error.message);
-    return { error };
-  }
-};
-
-// Fix the profiles table related issue
-export const getCurrentUser = async () => {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) throw error;
-    if (!user) return { user: null, error: null };
-    
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-      
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error("Erro ao buscar dados do perfil:", profileError);
+export const authService = {
+  validateSignUpData({ email, password }: SignUpData): ValidationResult {
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return {
+        isValid: false,
+        error: 'Email inválido. Por favor, forneça um email válido.'
+      };
     }
     
-    return { 
-      user: {
-        ...user,
-        profile: profileData || null
-      }, 
-      error: null 
-    };
-  } catch (error: any) {
-    console.error("Erro ao obter usuário atual:", error);
-    return { user: null, error };
-  }
-};
+    if (!password || password.length < 6) {
+      return {
+        isValid: false,
+        error: 'Senha muito curta. Deve ter pelo menos 6 caracteres.'
+      };
+    }
+    
+    const passwordStrength = checkPasswordStrength(password);
+    if (passwordStrength === 'weak') {
+      return {
+        isValid: false,
+        error: 'Senha fraca. Use uma combinação de letras, números e caracteres especiais.'
+      };
+    }
+    
+    return { isValid: true };
+  },
 
-export const updateUserProfile = async (userId: string, profileData: any) => {
-  try {
-    // Ensure we're updating the correct fields based on the database schema
-    const validProfileData = {
-      email: profileData.email,
-      role: profileData.role,
-    };
+  async signUp(email: string, password: string) {
+    console.log('Iniciando processo de cadastro:', { email });
     
-    const { error } = await supabase
-      .from('profiles')
-      .update(validProfileData)
-      .eq('id', userId);
+    try {
+      // Register in Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: 'analyst'
+          }
+        }
+      });
       
-    if (error) throw error;
-    
-    toast.success("Perfil atualizado com sucesso");
-    return { error: null };
-  } catch (error: any) {
-    console.error("Erro ao atualizar perfil:", error);
-    toast.error("Erro ao atualizar perfil: " + error.message);
-    return { error };
+      if (error) {
+        console.error('Erro detalhado do Supabase Auth:', {
+          message: error.message,
+          name: error.name,
+          status: error.status,
+          stack: error.stack
+        });
+        
+        // Translate the most common Supabase errors
+        if (error.message?.includes('already registered')) {
+          throw new Error('Este email já está cadastrado.');
+        } else if (error.message?.includes('password')) {
+          throw new Error('Problema com a senha: ' + error.message);
+        } else if (error.message?.includes('email')) {
+          throw new Error('Problema com o email: ' + error.message);
+        }
+        
+        throw error;
+      }
+      
+      // Check if the user was created successfully
+      if (!data.user || !data.user.id) {
+        console.error('Usuário não foi criado corretamente:', data);
+        throw new Error('Falha ao criar usuário: dados incompletos retornados');
+      }
+      
+      // Create an entry in the users table
+      try {
+        const { error: userError } = await supabase
+          .from('users')
+          .insert({
+            uuid: data.user.id,
+            email: email,
+            password: '[AUTH VIA SUPABASE]', // We don't store the actual password
+            is_approved: true,
+            id_role: 2 // Default role (analyst)
+          });
+          
+        if (userError) {
+          console.error('Error creating user in users table:', userError);
+          // Don't fail the sign-up if this fails, but log it
+        }
+      } catch (userInsertError) {
+        console.error('Exception when creating user record:', userInsertError);
+      }
+      
+      console.log('Usuário criado com sucesso:', {
+        id: data.user.id,
+        email: data.user.email,
+        created_at: data.user.created_at
+      });
+      
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Erro detalhado durante o cadastro:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      throw error;
+    }
+  },
+
+  async signIn(email: string, password: string) {
+    console.log('Tentando login para:', email);
+    try {
+      // Add a retry mechanism for auth sign-in
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+
+      while (attempts < maxAttempts) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({ 
+            email, 
+            password 
+          });
+          
+          if (error) {
+            console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
+            lastError = error;
+            // Wait a bit longer between each retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+            attempts++;
+            continue;
+          }
+          
+          // Success! Return the data
+          return { data, error: null };
+        } catch (fetchError: any) {
+          console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
+          lastError = fetchError;
+          // Wait a bit longer between each retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+          attempts++;
+        }
+      }
+
+      // If we got here, all attempts failed
+      console.error('Todas as tentativas de login falharam:', lastError);
+      return { 
+        data: { session: null, user: null }, 
+        error: lastError || new Error('Falha ao conectar com o servidor de autenticação após múltiplas tentativas') 
+      };
+    } catch (error: any) {
+      console.error('Erro não tratado durante login:', error);
+      return { 
+        data: { session: null, user: null }, 
+        error: error 
+      };
+    }
+  },
+
+  async signOut() {
+    try {
+      return await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      throw error;
+    }
   }
 };

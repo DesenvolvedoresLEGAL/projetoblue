@@ -1,10 +1,11 @@
 
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/utils/toast';
-import * as authService from '@/services/authService';
+import { useToast } from '@/hooks/use-toast';
+import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 
 export function useAuthActions(updateState: (state: any) => void) {
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const signUp = async (email: string, password: string) => {
@@ -16,7 +17,11 @@ export function useAuthActions(updateState: (state: any) => void) {
       if (!validation.isValid) {
         console.error('Erro de validação:', validation.error);
         updateState({ error: validation.error, isLoading: false });
-        toast.error(`Erro de validação: ${validation.error}`);
+        toast({
+          title: "Erro de validação",
+          description: validation.error,
+          variant: "destructive"
+        });
         return;
       }
 
@@ -44,13 +49,21 @@ export function useAuthActions(updateState: (state: any) => void) {
         
         console.error('Erro traduzido:', errorMessage);
         updateState({ error: errorMessage, isLoading: false });
-        toast.error(`Erro de cadastro: ${errorMessage}`);
+        toast({
+          title: "Erro de cadastro",
+          description: errorMessage,
+          variant: "destructive"
+        });
         return;
       }
 
       if (data.user) {
         console.log('Usuário criado com sucesso:', data.user.id);
-        toast.success('Usuário criado com sucesso! Você já pode fazer login.');
+        toast({
+          title: "Cadastro realizado",
+          description: "Usuário criado com sucesso! Você já pode fazer login.",
+          variant: "default"
+        });
         navigate('/login');
       } else {
         console.error('Usuário não foi criado, dados incompletos:', data);
@@ -60,7 +73,11 @@ export function useAuthActions(updateState: (state: any) => void) {
       console.error('Erro não tratado no processo de cadastro:', error);
       const errorMessage = error.message || 'Ocorreu um erro inesperado durante o cadastro.';
       updateState({ error: errorMessage, isLoading: false });
-      toast.error(`Erro no processo de cadastro: ${errorMessage}`);
+      toast({
+        title: "Erro no processo de cadastro",
+        description: errorMessage,
+        variant: "destructive"
+      });
       // Não relançamos o erro aqui para evitar quebras na interface
     } finally {
       updateState({ isLoading: false });
@@ -118,7 +135,11 @@ export function useAuthActions(updateState: (state: any) => void) {
     } catch (error: any) {
       console.error('Erro durante o login:', error);
       updateState({ error: error.message || 'Erro ao fazer login' });
-      toast.error(`Erro de autenticação: ${error.message || 'Falha no login. Verifique suas credenciais.'}`);
+      toast({
+        title: "Erro de autenticação",
+        description: error.message || 'Falha no login. Verifique suas credenciais.',
+        variant: "destructive"
+      });
     } finally {
       updateState({ isLoading: false });
     }
@@ -131,7 +152,11 @@ export function useAuthActions(updateState: (state: any) => void) {
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
-      toast.error(`Erro ao sair: ${error.message || 'Ocorreu um erro ao tentar sair.'}`);
+      toast({
+        title: "Erro ao sair",
+        description: error.message || 'Ocorreu um erro ao tentar sair.',
+        variant: "destructive"
+      });
     } finally {
       updateState({ isLoading: false });
     }

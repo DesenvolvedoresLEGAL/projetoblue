@@ -19,9 +19,6 @@ export default {
 			}
 		},
 		extend: {
-			fontFamily: {
-				sans: ['Roboto', 'sans-serif'],
-			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -78,13 +75,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Nova paleta de cores
-				brand: {
-					primary: '#4d2bfb',
-					secondary: '#03f9ff',
-					deep: '#020cbc',
-					dark: '#0e1a6d',
 				}
 			},
 			borderRadius: {

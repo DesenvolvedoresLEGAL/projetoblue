@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import AssetRow from "./asset-row/AssetRow";
+import AssetRow from "./AssetRow";
 import { StatusRecord } from "@/types/asset";
 
 interface AssetListProps {

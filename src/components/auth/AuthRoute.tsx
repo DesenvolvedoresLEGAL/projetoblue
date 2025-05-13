@@ -11,12 +11,7 @@ export const AuthRoute = ({ children }: AuthRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // For development purposes, bypass authentication check
-  // This will allow all pages to be accessed without login
-  // Remove this in production
-  const bypassAuth = true;
-
-  // If still loading, show a loading spinner
+  // Se ainda está carregando, mostra nada ou um loading spinner
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -25,11 +20,11 @@ export const AuthRoute = ({ children }: AuthRouteProps) => {
     );
   }
 
-  // If bypassing auth or authenticated, render the children (protected routes)
-  if (bypassAuth || isAuthenticated) {
-    return <>{children}</>;
+  // Se não está autenticado, redireciona para a página de login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If not authenticated, redirect to login page
-  return <Navigate to="/login" state={{ from: location }} replace />;
+  // Se está autenticado, renderiza as rotas protegidas
+  return <>{children}</>;
 };
