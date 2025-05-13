@@ -1,66 +1,84 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  PackageSearch,
-  Link as LinkIcon,
-  Users,
-  AlertTriangle,
-  Network,
-  Clock,
-  LayoutDashboard,
-  PlusCircle,
-  ArrowRight,
-  Smartphone,
-  Wifi,
-  Server,
-} from "lucide-react";
+import { PackageSearch, Link as LinkIcon, Users, AlertTriangle, Network, Clock, LayoutDashboard, PlusCircle, ArrowRight, Smartphone, Wifi, Server } from "lucide-react";
 
 // Mock data for the dashboard, to be replaced with real data later
 const mockData = {
   assets: {
     chips: 156,
     routers: 89,
-    switches: 32,
+    switches: 32
   },
   activeClients: 47,
   problemAssets: 8,
-  recentAssets: [
-    { id: 1, name: "Router R450", type: "Router", date: "2 horas atrás" },
-    { id: 2, name: "Chip 7798551234", type: "Chip", date: "4 horas atrás" },
-    { id: 3, name: "Switch S120", type: "Switch", date: "1 dia atrás" },
-    { id: 4, name: "Chip 7798559876", type: "Chip", date: "2 dias atrás" },
-    { id: 5, name: "Router R221", type: "Router", date: "3 dias atrás" },
-  ],
-  recentEvents: [
-    { id: 1, event: "Registro de Ativo", description: "Router R450 registrado", time: "2 horas atrás" },
-    { id: 2, event: "Vinculação", description: "Chip associado ao cliente TechCorp", time: "4 horas atrás" },
-    { id: 3, event: "Alteração de Status", description: "Router R221 marcado como defeituoso", time: "1 dia atrás" },
-    { id: 4, event: "Manutenção", description: "Switch S120 enviado para reparo", time: "2 dias atrás" },
-    { id: 5, event: "Desvinculação", description: "Chip 7791234567 desvinculado de DataNet", time: "3 dias atrás" },
-  ],
+  recentAssets: [{
+    id: 1,
+    name: "Router R450",
+    type: "Router",
+    date: "2 horas atrás"
+  }, {
+    id: 2,
+    name: "Chip 7798551234",
+    type: "Chip",
+    date: "4 horas atrás"
+  }, {
+    id: 3,
+    name: "Switch S120",
+    type: "Switch",
+    date: "1 dia atrás"
+  }, {
+    id: 4,
+    name: "Chip 7798559876",
+    type: "Chip",
+    date: "2 dias atrás"
+  }, {
+    id: 5,
+    name: "Router R221",
+    type: "Router",
+    date: "3 dias atrás"
+  }],
+  recentEvents: [{
+    id: 1,
+    event: "Registro de Ativo",
+    description: "Router R450 registrado",
+    time: "2 horas atrás"
+  }, {
+    id: 2,
+    event: "Vinculação",
+    description: "Chip associado ao cliente TechCorp",
+    time: "4 horas atrás"
+  }, {
+    id: 3,
+    event: "Alteração de Status",
+    description: "Router R221 marcado como defeituoso",
+    time: "1 dia atrás"
+  }, {
+    id: 4,
+    event: "Manutenção",
+    description: "Switch S120 enviado para reparo",
+    time: "2 dias atrás"
+  }, {
+    id: 5,
+    event: "Desvinculação",
+    description: "Chip 7791234567 desvinculado de DataNet",
+    time: "3 dias atrás"
+  }]
 };
-
 const GeneralDashboard: React.FC = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="space-y-6 pb-10">
+  return <div className="space-y-6 pb-10">
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">LEGAL Platform</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">BLUE Platform</h1>
           <p className="text-muted-foreground">
             Sistema de gestão de ativos e operações
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
-            className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90"
-            onClick={() => navigate('/assets/register')}
-          >
+          <Button className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90" onClick={() => navigate('/assets/register')}>
             <PlusCircle className="mr-2 h-4 w-4" /> Cadastrar Novo Ativo
           </Button>
         </div>
@@ -140,29 +158,17 @@ const GeneralDashboard: React.FC = () => {
           <CardTitle>Ações Rápidas</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button 
-            variant="outline" 
-            className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed"
-            onClick={() => navigate('/assets/register')}
-          >
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/assets/register')}>
             <PlusCircle className="h-6 w-6 text-[#4D2BFB]" />
             <div className="text-sm font-medium">Cadastrar Novo Ativo</div>
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed"
-            onClick={() => navigate('/link-asset')}
-          >
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/link-asset')}>
             <LinkIcon className="h-6 w-6 text-[#4D2BFB]" />
             <div className="text-sm font-medium">Vincular Ativo a Cliente</div>
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed"
-            onClick={() => navigate('/assets/inventory')}
-          >
+          <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed" onClick={() => navigate('/assets/inventory')}>
             <PackageSearch className="h-6 w-6 text-[#4D2BFB]" />
             <div className="text-sm font-medium">Ver Inventário Completo</div>
           </Button>
@@ -181,8 +187,7 @@ const GeneralDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockData.recentAssets.map((asset) => (
-                <div key={asset.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+              {mockData.recentAssets.map(asset => <div key={asset.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">
                     {asset.type === 'Router' && <Wifi className="h-4 w-4 text-[#4D2BFB]" />}
                     {asset.type === 'Chip' && <Smartphone className="h-4 w-4 text-[#4D2BFB]" />}
@@ -195,8 +200,7 @@ const GeneralDashboard: React.FC = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">{asset.date}</p>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
@@ -211,14 +215,9 @@ const GeneralDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockData.recentEvents.map((event) => (
-                <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
+              {mockData.recentEvents.map(event => <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
                   <div className={`h-2 w-2 mt-2 rounded-full 
-                    ${event.event === 'Registro de Ativo' ? 'bg-green-500' : 
-                      event.event === 'Vinculação' ? 'bg-blue-500' : 
-                      event.event === 'Alteração de Status' ? 'bg-amber-500' : 
-                      event.event === 'Manutenção' ? 'bg-purple-500' : 'bg-red-500'}`} 
-                  />
+                    ${event.event === 'Registro de Ativo' ? 'bg-green-500' : event.event === 'Vinculação' ? 'bg-blue-500' : event.event === 'Alteração de Status' ? 'bg-amber-500' : event.event === 'Manutenção' ? 'bg-purple-500' : 'bg-red-500'}`} />
                   <div className="flex-1">
                     <p className="text-sm font-medium">{event.description}</p>
                     <div className="flex justify-between items-center">
@@ -226,14 +225,11 @@ const GeneralDashboard: React.FC = () => {
                       <span className="text-xs text-muted-foreground">{event.time}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default GeneralDashboard;
