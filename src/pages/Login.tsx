@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,25 +8,19 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/utils/toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { toast } = useToast();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Authentication is removed, simply redirect to dashboard with a success toast
-    toast({
-      title: "Bem-vindo ao sistema!",
-      description: "Acesso concedido automaticamente.",
-      variant: "default"
-    });
-    
+    toast.success("Bem-vindo ao sistema! Acesso concedido automaticamente.");
     navigate('/');
   };
 

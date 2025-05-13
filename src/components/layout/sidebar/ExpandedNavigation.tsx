@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
@@ -40,7 +39,7 @@ import {
   Calculator,
   FileSpreadsheet,
   Ban,
-  ASquare,
+  Square,
   ShoppingBag,
   LightbulbIcon,
   MonitorSmartphone,
@@ -55,7 +54,6 @@ import {
   Code,
   Cog,
   UserCog,
-  Versions,
   ScrollText,
   BarChart3,
   Boxes,
@@ -549,7 +547,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
       >
         <NavigationItem
           to="/sales/opportunities"
-          icon={ASquare}
+          icon={Square}
           label="Oportunidades"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Sales Opportunities"
@@ -772,7 +770,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
 
         <NavigationItem
           to="/admin/versioning"
-          icon={Versions}
+          icon={ScrollText}
           label="Versionamento"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Admin Versioning"
