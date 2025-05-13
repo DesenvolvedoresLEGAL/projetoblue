@@ -28,7 +28,6 @@ import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
 import Topology from "./pages/Topology";
 import Discovery from "./pages/Discovery";
-import Export from "./pages/Export";
 
 const queryClient = new QueryClient();
 
@@ -71,7 +70,6 @@ const App = () => (
                   <Route path="tools">
                     <Route index element={<Navigate to="/tools/discovery" replace />} />
                     <Route path="discovery" element={<Discovery />} />
-                    <Route path="export" element={<Export />} />
                   </Route>
                   
                   {/* Direct shortcuts */}
