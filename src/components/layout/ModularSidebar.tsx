@@ -1,7 +1,6 @@
 
 import { cn } from "@/lib/utils";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
-import { SidebarFooter } from "./sidebar/SidebarFooter";
 import { CollapsedNavigation } from "./sidebar/CollapsedNavigation";
 import { ExpandedNavigation } from "./sidebar/ExpandedNavigation";
 
@@ -32,8 +31,6 @@ export function ModularSidebar({ isMobile = false, onClose, collapsed = false }:
           <ExpandedNavigation isMobile={isMobile} onClose={onClose} />
         )}
       </nav>
-      
-      <SidebarFooter collapsed={collapsed} />
     </div>
   );
 }

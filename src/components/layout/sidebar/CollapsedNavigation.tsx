@@ -13,7 +13,10 @@ import {
   Wifi,
   Building,
   Home,
-  Wrench
+  Package,
+  FileExport,
+  Network,
+  Scan
 } from "lucide-react";
 import {
   Tooltip,
@@ -52,7 +55,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/dashboard"
+              to="/dashboard"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -74,7 +77,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/assets"
+              to="/assets/inventory"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -96,117 +99,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/customers"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center rounded-md p-2 transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <Users className="h-5 w-5" />
-              <span className="sr-only">Customers</span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">Customers</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/inventory/suppliers"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center rounded-md p-2 transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <Building className="h-5 w-5" />
-              <span className="sr-only">Suppliers</span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">Suppliers</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/inventory/subscriptions"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center rounded-md p-2 transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <Clock className="h-5 w-5" />
-              <span className="sr-only">Subscriptions</span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">Subscriptions</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/inventory/monitoring/active"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center rounded-md p-2 transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <ActivitySquare className="h-5 w-5" />
-              <span className="sr-only">Monitoring</span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">Monitoring</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/inventory/monitoring/history"
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center justify-center rounded-md p-2 transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <History className="h-5 w-5" />
-              <span className="sr-only">History</span>
-            </NavLink>
-          </TooltipTrigger>
-          <TooltipContent side="right">History</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <NavLink
-              to="/inventory/tools/register-asset"
+              to="/assets/register"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -217,10 +110,10 @@ export function CollapsedNavigation() {
               }
             >
               <PlusCircle className="h-5 w-5" />
-              <span className="sr-only">Register Asset</span>
+              <span className="sr-only">New Asset</span>
             </NavLink>
           </TooltipTrigger>
-          <TooltipContent side="right">Register Asset</TooltipContent>
+          <TooltipContent side="right">New Asset</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
@@ -228,7 +121,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/tools/associate-assets"
+              to="/topology/view"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -238,11 +131,11 @@ export function CollapsedNavigation() {
                 )
               }
             >
-              <LinkIcon className="h-5 w-5" />
-              <span className="sr-only">Associate Assets</span>
+              <Network className="h-5 w-5" />
+              <span className="sr-only">Topology</span>
             </NavLink>
           </TooltipTrigger>
-          <TooltipContent side="right">Associate Assets</TooltipContent>
+          <TooltipContent side="right">Topology</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
@@ -250,7 +143,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/tools/data-usage"
+              to="/tools/discovery"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -260,11 +153,11 @@ export function CollapsedNavigation() {
                 )
               }
             >
-              <Database className="h-5 w-5" />
-              <span className="sr-only">Data Usage</span>
+              <Scan className="h-5 w-5" />
+              <span className="sr-only">Discovery</span>
             </NavLink>
           </TooltipTrigger>
-          <TooltipContent side="right">Data Usage</TooltipContent>
+          <TooltipContent side="right">Discovery</TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
@@ -272,7 +165,7 @@ export function CollapsedNavigation() {
         <Tooltip>
           <TooltipTrigger asChild>
             <NavLink
-              to="/inventory/tools/wifi-analyzer"
+              to="/tools/export"
               className={({ isActive }) =>
                 cn(
                   "flex items-center justify-center rounded-md p-2 transition-colors",
@@ -282,11 +175,11 @@ export function CollapsedNavigation() {
                 )
               }
             >
-              <Wifi className="h-5 w-5" />
-              <span className="sr-only">WiFi Analyzer</span>
+              <FileExport className="h-5 w-5" />
+              <span className="sr-only">Export</span>
             </NavLink>
           </TooltipTrigger>
-          <TooltipContent side="right">WiFi Analyzer</TooltipContent>
+          <TooltipContent side="right">Export</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

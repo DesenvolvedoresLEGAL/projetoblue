@@ -13,7 +13,8 @@ import { DataUsageProvider } from "@/context/DataUsageContext";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
-import Inventory from "./pages/Inventory";
+import AssetsDashboard from "./pages/AssetsDashboard";
+import AssetsInventory from "./pages/AssetsInventory";
 import Clients from "./pages/Clients";
 import Association from "./pages/Association";
 import Subscriptions from "./pages/Subscriptions";
@@ -25,9 +26,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
-import InventorySummary from "./pages/InventorySummary";
-import ToolsSummary from "./pages/ToolsSummary";
-import MonitoringSummary from "./pages/MonitoringSummary";
+import Topology from "./pages/Topology";
+import Discovery from "./pages/Discovery";
+import Export from "./pages/Export";
 
 const queryClient = new QueryClient();
 
@@ -45,55 +46,48 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 
-                {/* Home route */}
+                {/* Main layout with sidebar and header */}
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Home />} />
                   
-                  {/* Inventory module routes - New standardized English routes */}
-                  <Route path="inventory">
-                    <Route index element={<InventorySummary />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="assets" element={<Inventory />} />
-                    <Route path="customers" element={<Clients />} />
-                    <Route path="suppliers" element={<Suppliers />} />
-                    <Route path="subscriptions" element={<Subscriptions />} />
-                    <Route path="monitoring">
-                      <Route index element={<MonitoringSummary />} />
-                      <Route path="active" element={<Monitoring />} />
-                      <Route path="history" element={<History />} />
-                    </Route>
-                    <Route path="tools">
-                      <Route index element={<ToolsSummary />} />
-                      <Route path="register-asset" element={<RegisterAsset />} />
-                      <Route path="associate-assets" element={<Association />} />
-                      <Route path="data-usage" element={<DataUsage />} />
-                      <Route path="wifi-analyzer" element={<WifiAnalyzer />} />
-                    </Route>
+                  {/* Dashboard routes */}
+                  <Route path="dashboard" element={<Dashboard />} />
+                  
+                  {/* Assets module routes */}
+                  <Route path="assets">
+                    <Route index element={<Navigate to="/assets/dashboard" replace />} />
+                    <Route path="dashboard" element={<AssetsDashboard />} />
+                    <Route path="inventory" element={<AssetsInventory />} />
+                    <Route path="register" element={<RegisterAsset />} />
                   </Route>
                   
-                  {/* Maintain legacy routes for backward compatibility */}
-                  <Route path="/inventario">
-                    <Route index element={<Navigate to="/inventory/dashboard" replace />} />
-                    <Route path="dashboard" element={<Navigate to="/inventory/dashboard" replace />} />
-                    <Route path="ativos" element={<Navigate to="/inventory/assets" replace />} />
-                    <Route path="clientes" element={<Navigate to="/inventory/customers" replace />} />
-                    <Route path="fornecedores" element={<Navigate to="/inventory/suppliers" replace />} />
-                    <Route path="assinaturas" element={<Navigate to="/inventory/subscriptions" replace />} />
-                    <Route path="historico" element={<Navigate to="/inventory/monitoring/history" replace />} />
-                    <Route path="monitoramento" element={<Navigate to="/inventory/monitoring/active" replace />} />
+                  {/* Topology module routes */}
+                  <Route path="topology">
+                    <Route index element={<Navigate to="/topology/view" replace />} />
+                    <Route path="view" element={<Topology />} />
                   </Route>
                   
-                  {/* Additional legacy redirects */}
-                  <Route path="/register-asset" element={<Navigate to="/inventory/tools/register-asset" replace />} />
-                  <Route path="/inventory" element={<Navigate to="/inventory/assets" replace />} />
-                  <Route path="/clients" element={<Navigate to="/inventory/customers" replace />} />
-                  <Route path="/suppliers" element={<Navigate to="/inventory/suppliers" replace />} />
-                  <Route path="/association" element={<Navigate to="/inventory/tools/associate-assets" replace />} />
-                  <Route path="/subscriptions" element={<Navigate to="/inventory/subscriptions" replace />} />
-                  <Route path="/monitoring" element={<Navigate to="/inventory/monitoring/active" replace />} />
-                  <Route path="/history" element={<Navigate to="/inventory/monitoring/history" replace />} />
-                  <Route path="/data-usage" element={<Navigate to="/inventory/tools/data-usage" replace />} />
-                  <Route path="/wifi-analyzer" element={<Navigate to="/inventory/tools/wifi-analyzer" replace />} />
+                  {/* Tools module routes */}
+                  <Route path="tools">
+                    <Route index element={<Navigate to="/tools/discovery" replace />} />
+                    <Route path="discovery" element={<Discovery />} />
+                    <Route path="export" element={<Export />} />
+                  </Route>
+                  
+                  {/* Direct shortcuts */}
+                  <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
+                  <Route path="link-asset" element={<Association />} />
+                  
+                  {/* Legacy routes for backward compatibility */}
+                  <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
+                  <Route path="/clients" element={<Navigate to="/clients" replace />} />
+                  <Route path="/suppliers" element={<Navigate to="/suppliers" replace />} />
+                  <Route path="/association" element={<Navigate to="/link-asset" replace />} />
+                  <Route path="/subscriptions" element={<Navigate to="/subscriptions" replace />} />
+                  <Route path="/monitoring" element={<Navigate to="/monitoring" replace />} />
+                  <Route path="/history" element={<Navigate to="/history" replace />} />
+                  <Route path="/data-usage" element={<Navigate to="/data-usage" replace />} />
+                  <Route path="/wifi-analyzer" element={<Navigate to="/wifi-analyzer" replace />} />
                 </Route>
                 
                 {/* Fallback route */}

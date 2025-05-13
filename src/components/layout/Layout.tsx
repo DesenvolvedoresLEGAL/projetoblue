@@ -4,7 +4,6 @@ import { Outlet } from "react-router-dom";
 import { ModularSidebar } from "./ModularSidebar";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { PageBreadcrumbs } from "./PageBreadcrumbs";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -76,7 +75,6 @@ export function Layout() {
         </Header>
         <main className="flex-1 overflow-y-auto pb-14" role="main" aria-label="Main content">
           <div className="container mx-auto py-6 px-4 max-w-7xl">
-            <PageBreadcrumbs />
             <Outlet />
           </div>
         </main>

@@ -15,7 +15,9 @@ import {
   Building,
   Package,
   Home,
-  Wrench
+  FileExport,
+  Network,
+  Scan
 } from "lucide-react";
 import {
   Tooltip,
@@ -34,30 +36,27 @@ interface ExpandedNavigationProps {
 export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProps) {
   const location = useLocation();
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({
-    inventory: true, // Inventory module starts open by default
-    management: false,
-    monitoring: false,
+    dashboard: true, // Dashboard module starts open by default
+    assets: false,
+    topology: false,
     tools: false
   });
 
   // Determine which module to open based on the current route
   useEffect(() => {
-    if (location.pathname.includes("/inventory")) {
-      setOpenModules(prev => ({ ...prev, inventory: true }));
-      
-      if (location.pathname.includes("/subscriptions")) {
-        setOpenModules(prev => ({ ...prev, management: true }));
-      } else if (location.pathname.includes("/monitoring") || location.pathname.includes("/history")) {
-        setOpenModules(prev => ({ ...prev, monitoring: true }));
-      } else if (
-        location.pathname.includes("/tools") || 
-        location.pathname.includes("/register-asset") || 
-        location.pathname.includes("/associate-assets") ||
-        location.pathname.includes("/data-usage") || 
-        location.pathname.includes("/wifi-analyzer")
-      ) {
-        setOpenModules(prev => ({ ...prev, tools: true }));
-      }
+    if (location.pathname.includes("/dashboard")) {
+      setOpenModules(prev => ({ ...prev, dashboard: true }));
+    } else if (location.pathname.includes("/assets")) {
+      setOpenModules(prev => ({ ...prev, assets: true }));
+    } else if (location.pathname.includes("/topology")) {
+      setOpenModules(prev => ({ ...prev, topology: true }));
+    } else if (
+      location.pathname.includes("/tools") || 
+      location.pathname.includes("/register-asset") || 
+      location.pathname.includes("/discovery") ||
+      location.pathname.includes("/export")
+    ) {
+      setOpenModules(prev => ({ ...prev, tools: true }));
     }
   }, [location.pathname]);
 
@@ -92,121 +91,134 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
         </TooltipProvider>
       </div>
 
-      {/* Inventory Module */}
+      {/* Dashboard Module */}
       <NavigationModule
-        id="inventory"
-        title="Inventory"
-        icon={Package}
-        description="Manage and monitor your assets, customers, suppliers and subscriptions"
-        isActive={isModuleActive(['/inventory'])}
-        isOpen={openModules.inventory}
-        onToggle={() => toggleModule('inventory')}
+        id="dashboard"
+        title="Dashboard"
+        icon={LayoutDashboard}
+        description="Overview of your assets, clients, and activities"
+        isActive={isModuleActive(['/dashboard'])}
+        isOpen={openModules.dashboard}
+        onToggle={() => toggleModule('dashboard')}
       >
         <NavigationItem
-          to="/inventory/dashboard"
+          to="/dashboard"
+          icon={LayoutDashboard}
+          label="Main Dashboard"
+          onClose={isMobile ? onClose : undefined}
+          ariaLabel="Dashboard - Overall system overview"
+        />
+
+        {/* Shortcuts Section */}
+        <div className="mt-4">
+          <div className="px-3 py-1">
+            <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Shortcuts</span>
+          </div>
+          <NavigationItem
+            to="/register-asset"
+            icon={PlusCircle}
+            label="Register New Asset"
+            onClose={isMobile ? onClose : undefined}
+            ariaLabel="Register New Asset - Add a new asset to inventory"
+          />
+
+          <NavigationItem
+            to="/link-asset"
+            icon={LinkIcon}
+            label="Link Asset to Customer"
+            onClose={isMobile ? onClose : undefined}
+            ariaLabel="Link Asset - Connect asset to a customer"
+          />
+
+          <NavigationItem
+            to="/assets"
+            icon={PackageSearch}
+            label="View Full Inventory"
+            onClose={isMobile ? onClose : undefined}
+            ariaLabel="View Inventory - Complete asset list"
+          />
+        </div>
+      </NavigationModule>
+
+      {/* Assets Module */}
+      <NavigationModule
+        id="assets"
+        title="Ativos"
+        icon={Package}
+        description="Manage and monitor all your assets"
+        isActive={isModuleActive(['/assets'])}
+        isOpen={openModules.assets}
+        onToggle={() => toggleModule('assets')}
+      >
+        <NavigationItem
+          to="/assets/dashboard"
           icon={LayoutDashboard}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          ariaLabel="Dashboard - Inventory overview"
+          ariaLabel="Assets Dashboard - Asset status and metrics"
         />
 
         <NavigationItem
-          to="/inventory/assets"
+          to="/assets/inventory"
           icon={PackageSearch}
-          label="Assets"
+          label="Inventory"
           onClose={isMobile ? onClose : undefined}
-          ariaLabel="Assets - Equipment and chip management"
+          ariaLabel="Assets Inventory - Complete asset listing"
         />
 
         <NavigationItem
-          to="/inventory/customers"
-          icon={Users}
-          label="Customers"
+          to="/assets/register"
+          icon={PlusCircle}
+          label="New Asset"
           onClose={isMobile ? onClose : undefined}
-          ariaLabel="Customers - Customer data management"
+          ariaLabel="New Asset - Register a new asset"
         />
+      </NavigationModule>
 
+      {/* Topology Module */}
+      <NavigationModule
+        id="topology"
+        title="Topology"
+        icon={Network}
+        description="Network and relationship visualization"
+        isActive={isModuleActive(['/topology'])}
+        isOpen={openModules.topology}
+        onToggle={() => toggleModule('topology')}
+      >
         <NavigationItem
-          to="/inventory/suppliers"
-          icon={Building}
-          label="Suppliers"
+          to="/topology/view"
+          icon={Network}
+          label="Graph View"
           onClose={isMobile ? onClose : undefined}
-          ariaLabel="Suppliers - Manufacturer and partner management"
+          ariaLabel="Graph View - Visual network topology"
         />
+      </NavigationModule>
 
-        {/* Management Section */}
-        <div className="mt-4">
-          <div className="px-3 py-1">
-            <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Management</span>
-          </div>
-          <NavigationItem
-            to="/inventory/subscriptions"
-            icon={Clock}
-            label="Subscriptions"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="Subscriptions - Plan and contract control"
-          />
-        </div>
-
-        {/* Monitoring Section */}
-        <div className="mt-4">
-          <div className="px-3 py-1">
-            <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Monitoring</span>
-          </div>
-          <NavigationItem
-            to="/inventory/monitoring/history"
-            icon={History}
-            label="History"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="History - Activity and event log"
-          />
-
-          <NavigationItem
-            to="/inventory/monitoring/active"
-            icon={ActivitySquare}
-            label="Monitoring"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="Monitoring - Real-time monitoring"
-          />
-        </div>
-
-        {/* Tools Section */}
-        <div className="mt-4">
-          <div className="px-3 py-1">
-            <span className="text-xs text-sidebar-foreground/70 font-medium uppercase">Tools</span>
-          </div>
-          <NavigationItem
-            to="/inventory/tools/register-asset"
-            icon={PlusCircle}
-            label="Register Asset"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="Register Asset - Add new equipment or chips"
-          />
-          
-          <NavigationItem
-            to="/inventory/tools/associate-assets"
-            icon={LinkIcon}
-            label="Associate Assets"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="Associate Assets - Link devices and chips"
-          />
-          
-          <NavigationItem
-            to="/inventory/tools/data-usage"
-            icon={Database}
-            label="Data Usage"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="Data Usage - Monitor data consumption"
-          />
-          
-          <NavigationItem
-            to="/inventory/tools/wifi-analyzer"
-            icon={Wifi}
-            label="WiFi Analyzer"
-            onClose={isMobile ? onClose : undefined}
-            ariaLabel="WiFi Analyzer - Analyze wireless networks"
-          />
-        </div>
+      {/* Tools Section */}
+      <NavigationModule
+        id="tools"
+        title="Tools"
+        icon={Database}
+        description="Utilities for asset management and discovery"
+        isActive={isModuleActive(['/tools', '/register-asset', '/discovery', '/export'])}
+        isOpen={openModules.tools}
+        onToggle={() => toggleModule('tools')}
+      >
+        <NavigationItem
+          to="/tools/discovery"
+          icon={Scan}
+          label="Discovery"
+          onClose={isMobile ? onClose : undefined}
+          ariaLabel="Discovery - SNMP/Netconf network scan"
+        />
+        
+        <NavigationItem
+          to="/tools/export"
+          icon={FileExport}
+          label="Export"
+          onClose={isMobile ? onClose : undefined}
+          ariaLabel="Export - Export inventory data"
+        />
       </NavigationModule>
     </>
   );
