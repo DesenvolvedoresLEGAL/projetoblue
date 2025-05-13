@@ -75,7 +75,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// LEGAL platform custom colors
+				legal: {
+					primary: '#4D2BFB',
+					accent: '#020CBC',
+					dark: '#0C0C1F',
 				}
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -98,11 +107,22 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'ripple': {
+					'0%': {
+						transform: 'scale(0)',
+						opacity: '0.6'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'ripple': 'ripple 0.8s ease-out forwards'
 			}
 		}
 	},
