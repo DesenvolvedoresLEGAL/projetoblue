@@ -80,25 +80,8 @@ export const authService = {
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
       }
       
-      // Create an entry in the users table
-      try {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            uuid: data.user.id,
-            email: email,
-            password: '[AUTH VIA SUPABASE]', // We don't store the actual password
-            is_approved: true,
-            id_role: 2 // Default role (analyst)
-          });
-          
-        if (userError) {
-          console.error('Error creating user in users table:', userError);
-          // Don't fail the sign-up if this fails, but log it
-        }
-      } catch (userInsertError) {
-        console.error('Exception when creating user record:', userInsertError);
-      }
+      // The user profile entry is created automatically via Supabase trigger
+      // No need to create a separate entry in a users table
       
       console.log('Usuário criado com sucesso:', {
         id: data.user.id,
