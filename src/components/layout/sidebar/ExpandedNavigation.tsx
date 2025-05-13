@@ -15,7 +15,7 @@ import {
   Building,
   Package,
   Home,
-  FileExport,
+  FileText,
   Network,
   Scan
 } from "lucide-react";
@@ -214,7 +214,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
         
         <NavigationItem
           to="/tools/export"
-          icon={FileExport}
+          icon={FileText}
           label="Export"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Export - Export inventory data"

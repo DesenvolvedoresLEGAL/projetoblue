@@ -14,7 +14,7 @@ import {
   Building,
   Home,
   Package,
-  FileExport,
+  FileText,
   Network,
   Scan
 } from "lucide-react";
@@ -175,7 +175,7 @@ export function CollapsedNavigation() {
                 )
               }
             >
-              <FileExport className="h-5 w-5" />
+              <FileText className="h-5 w-5" />
               <span className="sr-only">Export</span>
             </NavLink>
           </TooltipTrigger>
