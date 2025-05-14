@@ -272,6 +272,186 @@ export type Database = {
         }
         Relationships: []
       }
+      bits_points_log: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          points: number
+          related_referral_id: string | null
+          related_reward_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points: number
+          related_referral_id?: string | null
+          related_reward_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points?: number
+          related_referral_id?: string | null
+          related_reward_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_points_log_related_referral_id_fkey"
+            columns: ["related_referral_id"]
+            isOneToOne: false
+            referencedRelation: "bits_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bits_points_log_related_reward_id_fkey"
+            columns: ["related_reward_id"]
+            isOneToOne: false
+            referencedRelation: "bits_rewards_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bits_points_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bits_referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          points_earned: number | null
+          referral_link_used: string | null
+          referred_company: string | null
+          referred_email: string
+          referred_name: string
+          referred_phone: string | null
+          referrer_user_id: string
+          status:
+            | Database["public"]["Enums"]["bits_referral_status_enum"]
+            | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          referral_link_used?: string | null
+          referred_company?: string | null
+          referred_email: string
+          referred_name: string
+          referred_phone?: string | null
+          referrer_user_id: string
+          status?:
+            | Database["public"]["Enums"]["bits_referral_status_enum"]
+            | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          referral_link_used?: string | null
+          referred_company?: string | null
+          referred_email?: string
+          referred_name?: string
+          referred_phone?: string | null
+          referrer_user_id?: string
+          status?:
+            | Database["public"]["Enums"]["bits_referral_status_enum"]
+            | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_referrals_referrer_user_id_fkey"
+            columns: ["referrer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bits_rewards_catalog: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points_required: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points_required: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points_required?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bits_user_rewards: {
+        Row: {
+          id: string
+          points_spent: number
+          redeemed_at: string | null
+          reward_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          points_spent: number
+          redeemed_at?: string | null
+          reward_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          points_spent?: number
+          redeemed_at?: string | null
+          reward_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_user_rewards_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "bits_rewards_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bits_user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           cnpj: string
@@ -442,21 +622,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bits_referral_code: string | null
           created_at: string
           email: string
           id: string
+          is_active: boolean | null
+          is_approved: boolean | null
+          last_login: string | null
           role: Database["public"]["Enums"]["user_role_enum"]
         }
         Insert: {
+          bits_referral_code?: string | null
           created_at?: string
           email: string
           id: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
         }
         Update: {
+          bits_referral_code?: string | null
           created_at?: string
           email?: string
           id?: string
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
         }
         Relationships: []
@@ -467,6 +659,10 @@ export type Database = {
     }
     Functions: {
       is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_afiliado: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
@@ -489,6 +685,11 @@ export type Database = {
         | "Manutenção"
       asset_type_enum: "chip" | "roteador"
       association_type_enum: "aluguel" | "assinatura"
+      bits_referral_status_enum:
+        | "pendente"
+        | "em_negociacao"
+        | "fechado"
+        | "perdido"
       solution_type_enum:
         | "SPEEDY 5G"
         | "4BLACK"
@@ -500,7 +701,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
-      user_role_enum: "admin" | "ops" | "suport" | "user"
+      user_role_enum: "admin" | "ops" | "suport" | "user" | "afiliado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -626,6 +827,12 @@ export const Constants = {
       ],
       asset_type_enum: ["chip", "roteador"],
       association_type_enum: ["aluguel", "assinatura"],
+      bits_referral_status_enum: [
+        "pendente",
+        "em_negociacao",
+        "fechado",
+        "perdido",
+      ],
       solution_type_enum: [
         "SPEEDY 5G",
         "4BLACK",
@@ -638,7 +845,7 @@ export const Constants = {
         "ANTENA",
         "LOAD BALANCE",
       ],
-      user_role_enum: ["admin", "ops", "suport", "user"],
+      user_role_enum: ["admin", "ops", "suport", "user", "afiliado"],
     },
   },
 } as const

@@ -16,11 +16,20 @@ import {
   Boxes,
   KeyRound,
   LogIn,
-  ShieldCheck
+  ShieldCheck,
+  Award, // Added Award icon
+  Users,
+  Gift,
+  Settings2,
+  HelpCircle,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 export function StaticNavigation({ isMobile = false, onClose }: { isMobile?: boolean, onClose?: () => void }) {
+  const { profile } = useAuth(); // Get user profile
+
   return (
     <div className="flex flex-col space-y-6 pt-2">
       {/* Dashboard Section */}
@@ -130,6 +139,106 @@ export function StaticNavigation({ isMobile = false, onClose }: { isMobile?: boo
           <span>Descoberta</span>
         </NavLink>
       </div>
+
+      {/* BITS™ Section - Conditionally rendered */}
+      {profile?.role === 'afiliado' && (
+        <div className="flex flex-col space-y-2">
+          <div className="px-3 mb-1">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS™</h3>
+          </div>
+          <NavLink
+            to="/bits" // Main BITS dashboard
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive || location.pathname.startsWith('/bits/') && location.pathname !== '/bits/indicate' && location.pathname !== '/bits/my-referrals' && location.pathname !== '/bits/rewards' && location.pathname !== '/bits/settings' && location.pathname !== '/bits/help'
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+            end // Ensure only exact match for dashboard
+          >
+            <Award className="h-4 w-4" />
+            <span>Dashboard</span>
+          </NavLink>
+          <NavLink
+            to="/bits/indicate"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+          >
+            <Share2 className="h-4 w-4" />
+            <span>Indicar Agora</span>
+          </NavLink>
+          <NavLink
+            to="/bits/my-referrals"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+          >
+            <Users className="h-4 w-4" />
+            <span>Minhas Indicações</span>
+          </NavLink>
+          <NavLink
+            to="/bits/rewards"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+          >
+            <Gift className="h-4 w-4" />
+            <span>Pontos & Recompensas</span>
+          </NavLink>
+          <NavLink
+            to="/bits/settings"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+          >
+            <Settings2 className="h-4 w-4" />
+            <span>Configurações</span>
+          </NavLink>
+          <NavLink
+            to="/bits/help"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium"
+                  : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground"
+              )
+            }
+            onClick={isMobile ? onClose : undefined}
+          >
+            <HelpCircle className="h-4 w-4" />
+            <span>Ajuda & Suporte</span>
+          </NavLink>
+        </div>
+      )}
 
       {/* Admin Section - Unchanged */}
       <div className="flex flex-col space-y-2">
