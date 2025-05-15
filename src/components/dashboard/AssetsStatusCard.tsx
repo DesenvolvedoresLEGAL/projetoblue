@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAssets } from "@/context/useAssets";
 import {
@@ -15,6 +16,7 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
+import { AssetType } from "@/types/asset"; // Import AssetType
 
 /** Configuração visual de cada status */
 const STATUS_CONFIG: Record<
@@ -47,7 +49,13 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const TYPES = [
+// Define an interface for the type configuration
+interface AssetTypeConfig {
+  key: AssetType;
+  label: string;
+}
+
+const TYPES: AssetTypeConfig[] = [
   { key: "CHIP", label: "Status – Chips" },
   { key: "ROTEADOR", label: "Status – Speedy 5G" },
 ];
@@ -58,7 +66,7 @@ const AssetsStatusCard: React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       {TYPES.map(({ key, label }) => {
-        const list = getAssetsByType(key);
+        const list = getAssetsByType(key); // key is now correctly typed as AssetType
         return (
           <Card key={key} className="flex-1 min-w-full">
             <CardHeader>
