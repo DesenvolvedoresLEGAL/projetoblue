@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,13 +43,13 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AuthProvider>
-        <AssetProvider>
-          <DataUsageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <AssetProvider>
+            <DataUsageProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
                 <Routes>
                   {/* Public authentication routes */}
                   <Route path="/login" element={<Login />} />
@@ -110,11 +111,11 @@ const App = () => (
                   {/* Fallback route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </DataUsageProvider>
-        </AssetProvider>
-      </AuthProvider>
+              </TooltipProvider>
+            </DataUsageProvider>
+          </AssetProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </ThemeProvider>
   </QueryClientProvider>
 );
