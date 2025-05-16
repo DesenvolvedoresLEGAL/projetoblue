@@ -43,6 +43,13 @@ export type Database = {
             referencedColumns: ["uuid"]
           },
           {
+            foreignKeyName: "asset_client_assoc_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "v_problem_assets"
+            referencedColumns: ["uuid"]
+          },
+          {
             foreignKeyName: "asset_client_assoc_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -175,6 +182,7 @@ export type Database = {
       }
       assets: {
         Row: {
+          created_at: string | null
           iccid: string | null
           line_number: number | null
           manufacturer_id: number | null
@@ -190,6 +198,7 @@ export type Database = {
           uuid: string
         }
         Insert: {
+          created_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -205,6 +214,7 @@ export type Database = {
           uuid?: string
         }
         Update: {
+          created_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -655,7 +665,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_active_clients: {
+        Row: {
+          client_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_client_assoc_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
+      v_problem_assets: {
+        Row: {
+          iccid: string | null
+          line_number: number | null
+          manufacturer_id: number | null
+          model: string | null
+          password: string | null
+          plan_id: number | null
+          radio: string | null
+          rented_days: number | null
+          serial_number: string | null
+          solution_id: number | null
+          status_id: number | null
+          type_id: number | null
+          uuid: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_solutions"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "asset_solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_status"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_type"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "asset_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       is_admin: {

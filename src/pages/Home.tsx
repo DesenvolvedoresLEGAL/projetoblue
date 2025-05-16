@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useAssets } from "@/context/useAssets";
 import { 
   Card, 
   CardContent, 
@@ -16,36 +15,18 @@ import {
   ShieldAlert, 
   CircleCheck, 
   CircleX,
-  BarChart3
+  BarChart3,
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDashboardStats, formatRelativeTime } from "@/hooks/useDashboardStats";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Home = () => {
-  const { assets = [], loading } = useAssets();
   const navigate = useNavigate();
-
-  // Mock data for KPIs - replace with real data when available
-  const totalAssets = assets.length || 42;
-  const activeClients = 18;
-  const assetsWithIssues = 3;
-  
-  // Example activity events
-  const recentEvents = [
-    { id: 1, type: "register", description: "Router R450 registered", time: "2 hours ago" },
-    { id: 2, type: "link", description: "Switch S120 linked to ClienTech", time: "4 hours ago" },
-    { id: 3, type: "status", description: "Router R221 marked as faulty", time: "1 day ago" },
-    { id: 4, type: "register", description: "SIM Card SC-442 registered", time: "2 days ago" },
-    { id: 5, type: "link", description: "Router R331 linked to GlobalNet", time: "2 days ago" },
-  ];
-  
-  // Example recently registered assets
-  const recentAssets = [
-    { id: "A001", name: "Router R450", type: "Router", status: "Active" },
-    { id: "A002", name: "Switch S120", type: "Switch", status: "Active" },
-    { id: "A003", name: "SIM Card SC-442", type: "SIM Card", status: "Pending" },
-    { id: "A004", name: "Router R331", type: "Router", status: "Active" },
-    { id: "A005", name: "Switch S122", type: "Switch", status: "Testing" },
-  ];
+  const { data, isLoading, error, refetch } = useDashboardStats();
   
   return (
     <div className="space-y-6">
@@ -57,6 +38,17 @@ const Home = () => {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Refresh button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            title="Refresh dashboard data"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+          
           <Button 
             onClick={() => navigate('/inventory/tools/register-asset')}
             className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90"
@@ -72,6 +64,19 @@ const Home = () => {
         </div>
       </div>
       
+      {/* Error alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Failed to load dashboard data: {error.message}</span>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -80,31 +85,45 @@ const Home = () => {
             <PackageSearch className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAssets}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold">{data?.totalAssets || 0}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               Routers, switches, and network equipment
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeClients}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{data?.activeClients || 0}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               Clients with active equipment
             </p>
           </CardContent>
         </Card>
+        
         <Card className="border-red-200 dark:border-red-900">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assets with Issues</CardTitle>
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{assetsWithIssues}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <div className="text-2xl font-bold text-destructive">{data?.assetsWithIssues || 0}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               Requiring attention or service
             </p>
@@ -135,17 +154,35 @@ const Home = () => {
               <div className="grid grid-cols-3 gap-4 mt-6">
                 <div className="flex flex-col items-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                   <CircleCheck className="h-5 w-5 text-green-600 dark:text-green-400 mb-1" />
-                  <span className="text-xl font-bold">32</span>
+                  {isLoading ? (
+                    <Skeleton className="h-6 w-8 mb-1" />
+                  ) : (
+                    <span className="text-xl font-bold">
+                      {data?.statusSummary?.active || 0}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">Active</span>
                 </div>
                 <div className="flex flex-col items-center p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg">
                   <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 mb-1" />
-                  <span className="text-xl font-bold">7</span>
+                  {isLoading ? (
+                    <Skeleton className="h-6 w-8 mb-1" />
+                  ) : (
+                    <span className="text-xl font-bold">
+                      {data?.statusSummary?.warning || 0}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">Warning</span>
                 </div>
                 <div className="flex flex-col items-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
                   <CircleX className="h-5 w-5 text-red-600 dark:text-red-400 mb-1" />
-                  <span className="text-xl font-bold">3</span>
+                  {isLoading ? (
+                    <Skeleton className="h-6 w-8 mb-1" />
+                  ) : (
+                    <span className="text-xl font-bold">
+                      {data?.statusSummary?.critical || 0}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">Critical</span>
                 </div>
               </div>
@@ -161,20 +198,38 @@ const Home = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentEvents.map(event => (
-                  <div key={event.id} className="flex items-start gap-3 border-b pb-3 last:border-0">
-                    <div className={`w-2 h-2 mt-2 rounded-full ${
-                      event.type === 'register' ? 'bg-green-500' : 
-                      event.type === 'link' ? 'bg-blue-500' : 'bg-amber-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{event.description}</p>
-                      <p className="text-xs text-muted-foreground">{event.time}</p>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="h-2 w-2 rounded-full mt-2" />
+                      <div className="flex-1 space-y-1">
+                        <Skeleton className="h-5 w-[250px]" />
+                        <Skeleton className="h-4 w-[100px]" />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : data?.recentEvents && data.recentEvents.length > 0 ? (
+                <div className="space-y-4">
+                  {data.recentEvents.map(event => (
+                    <div key={event.id} className="flex items-start gap-3 border-b pb-3 last:border-0">
+                      <div className={`w-2 h-2 mt-2 rounded-full ${
+                        event.type === 'register' ? 'bg-green-500' : 
+                        event.type === 'link' ? 'bg-blue-500' : 'bg-amber-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{event.description}</p>
+                        <p className="text-xs text-muted-foreground">{formatRelativeTime(event.time)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-24 text-muted-foreground">
+                  <p>No recent events found</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -190,23 +245,45 @@ const Home = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentAssets.map(asset => (
-                  <div key={asset.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{asset.name}</p>
-                      <p className="text-xs text-muted-foreground">{asset.type}</p>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex items-center justify-between py-2">
+                      <div>
+                        <Skeleton className="h-5 w-[120px] mb-1" />
+                        <Skeleton className="h-4 w-[80px]" />
+                      </div>
+                      <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      asset.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
-                      asset.status === 'Pending' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
-                      'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                    }`}>
-                      {asset.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : data?.recentAssets && data.recentAssets.length > 0 ? (
+                <div className="space-y-3">
+                  {data.recentAssets.map(asset => (
+                    <div key={asset.id} className="flex items-center justify-between border-b pb-2 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{asset.name}</p>
+                        <p className="text-xs text-muted-foreground">{asset.type}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        asset.status.toLowerCase().includes('active') || asset.status.toLowerCase().includes('disponível') ? 
+                          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                        asset.status.toLowerCase().includes('warning') || asset.status.toLowerCase().includes('aviso') ? 
+                          'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
+                        asset.status.toLowerCase().includes('critical') || asset.status.toLowerCase().includes('crítico') ? 
+                          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                      }`}>
+                        {asset.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-24 text-muted-foreground">
+                  <p>No recent assets found</p>
+                </div>
+              )}
             </CardContent>
           </Card>
           
