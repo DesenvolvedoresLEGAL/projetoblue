@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,18 +41,24 @@ const { data: recentEvents, error } = await supabase
   .limit(5)
   .throwOnError();
 
-  const mappedRecentEvents = recentEvents.map(row => {
-    const event = row.event ?? 'Outro';
-      return {
-        id: row.id,
-        event,
-        description: row.details,
-        time: new Date(row.date.toString()),
-      };
-    });
+type EventDetails = {
+  iccid?: string;
+  radio?: string;
+  uuid?: string;
+  [key: string]: any;
+};
 
-    console.log(recentEvents[4].details)
-    console.log(chips.filter(chip => chip.uuid === recentEvents[4].details?.uuid));
+const mappedRecentEvents = recentEvents.map(row => {
+  const event = row.event ?? 'Outro';
+  const details = row.details as EventDetails | null;
+  
+  return {
+    id: row.id,
+    event,
+    description: details || {},
+    time: new Date(row.date?.toString() || ''),
+  };
+});
 
 // Mock data for the dashboard, to be replaced with real data later
 const mockData = {
@@ -65,8 +72,17 @@ const mockData = {
   recentAssets: recentAssets,
   recentEvents: mappedRecentEvents
 };
+
+// Helper function to calculate hours difference between dates
+const getHoursDifference = (date1: Date, date2: Date): number => {
+  const diffMs = Math.abs(date1.getTime() - date2.getTime());
+  return Math.ceil(diffMs / (1000 * 3600));
+};
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const now = new Date();
+  
   return <div className="space-y-6 pb-10">
     {/* Dashboard Header */}
     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
@@ -154,7 +170,7 @@ const Home: React.FC = () => {
           <div className="text-sm font-medium">Cadastrar Novo Ativo</div>
         </Button>
 
-        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed text-[#4D2BFB] hover:text-white" onClick={() => navigate('/link-asset')}>
+        <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center gap-2 border-dashed text-[#4D2BFB] hover:text-white" onClick={() => navigate('/association')}>
           <LinkIcon className="h-6 w-6" />
           <div className="text-sm font-medium">Vincular Ativo a Cliente</div>
         </Button>
@@ -178,25 +194,34 @@ const Home: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockData.recentAssets.map(asset => <div key={asset.uuid} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
-              <div className="flex items-center gap-3">
-                {asset.type_id === 2 && <Wifi className="h-4 w-4 text-[#4D2BFB]" />}
-                {asset.type_id === 1 && <Smartphone className="h-4 w-4 text-[#4D2BFB]" />}
-                {asset.solution_id === 7 && <Server className="h-4 w-4 text-[#4D2BFB]" />}
+            {mockData.recentAssets.map(asset => (
+              <div key={asset.uuid} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  {asset.type_id === 2 && <Wifi className="h-4 w-4 text-[#4D2BFB]" />}
+                  {asset.type_id === 1 && <Smartphone className="h-4 w-4 text-[#4D2BFB]" />}
+                  {asset.solution_id === 7 && <Server className="h-4 w-4 text-[#4D2BFB]" />}
+                  <div>
+                    {asset.type_id === 1 && (
+                      <>
+                        <p className="text-sm font-medium">{asset.line_number}</p>
+                        <p className="text-xs text-muted-foreground">{asset.iccid}</p>
+                      </>
+                    )}
+                    {asset.type_id === 2 && (
+                      <>
+                        <p className="text-sm font-medium">{asset.radio}</p>
+                        <p className="text-xs text-muted-foreground">{asset.serial_number}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
                 <div>
-                  {asset.type_id === 1}
-                  <p className="text-sm font-medium">{asset.line_number}</p>
-                  <p className="text-xs text-muted-foreground">{asset.iccid}</p>
-                  {asset.type_id === 2}
-                  <p className="text-sm font-medium">{asset.radio}</p>
-                  <p className="text-xs text-muted-foreground">{asset.serial_number}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {asset.created_at && getHoursDifference(now, new Date(asset.created_at))} Horas atrás
+                  </p>
                 </div>
               </div>
-              <div>
-
-                <p className="text-xs text-muted-foreground">{Math.ceil(Math.abs(new Date() - new Date(asset.created_at)) / (1000 * 3600))} Horas atrás</p>
-              </div>
-            </div>)}
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -211,21 +236,37 @@ const Home: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockData.recentEvents.map(event => <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
-              <div className={`h-2 w-2 mt-2 rounded-full 
-                    ${event.event === 'INSERT' ? 'bg-green-500' : event.event === 'STATUS ATUALIZADO' ? 'bg-blue-500' : event.event === 'Alteração de Status' ? 'bg-amber-500' : event.event === 'Manutenção' ? 'bg-purple-500' : 'bg-red-500'}`} />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{event.description.iccid ? chips.filter((chip) => chip.iccid === event.description.iccid)[0].line_number : event.description.radio}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{event.event}</span>
-                  <span className="text-xs text-muted-foreground">{Math.ceil(Math.abs(new Date() - new Date(event.time)) / (1000 * 3600))} Horas atrás</span>
+            {mockData.recentEvents.map(event => {
+              // Safely access details properties
+              const details = event.description as EventDetails;
+              const displayText = details?.iccid ? 
+                (chips.find(chip => chip.iccid === details.iccid)?.line_number || 'Unknown') : 
+                (details?.radio || 'Unknown Event');
+                
+              return (
+                <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
+                  <div className={`h-2 w-2 mt-2 rounded-full 
+                    ${event.event === 'INSERT' ? 'bg-green-500' : 
+                      event.event === 'STATUS ATUALIZADO' ? 'bg-blue-500' : 
+                      event.event === 'Alteração de Status' ? 'bg-amber-500' : 
+                      event.event === 'Manutenção' ? 'bg-purple-500' : 'bg-red-500'}`} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{displayText}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">{event.event}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getHoursDifference(now, event.time)} Horas atrás
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>)}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
     </div>
   </div>;
 };
+
 export default Home;
