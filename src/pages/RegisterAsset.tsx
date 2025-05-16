@@ -226,7 +226,7 @@ export default function RegisterAsset() {
     },
   });
 
-  const { watch, reset } = form;
+  const { watch, reset, setFocus } = form;
   const typeId = watch("type_id");
 
   // Efeito para redefinir o formulário quando o tipo de ativo muda
@@ -315,8 +315,8 @@ export default function RegisterAsset() {
       
       // Focar no primeiro campo com erro
       const firstErrorField = Object.keys(form.formState.errors)[0];
-      if (firstErrorField && form.getFieldState(firstErrorField).invalid) {
-        form.setFocus(firstErrorField as never);
+      if (firstErrorField && form.getFieldState(firstErrorField as keyof AssetFormData).invalid) {
+        setFocus(firstErrorField as keyof AssetFormData);
       }
     },
   });
