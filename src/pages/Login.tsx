@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,7 +36,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   
@@ -49,15 +49,19 @@ const Login = () => {
     },
   });
 
+  // Add effect to handle redirection after successful authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      toast.success('Login bem-sucedido!');
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   // Handle form submission
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     try {
-      const error = await signIn(data.email, data.password);
-      
-      // Only navigate if there was no error
-      if (!error) {
-        navigate('/');
-      }
+      await signIn(data.email, data.password);
+      // Navigation happens in useEffect when isAuthenticated changes
     } catch (error: any) {
       // Error is already handled in signIn function
       // This catch is just to prevent the form from crashing in unexpected cases
@@ -91,7 +95,7 @@ const Login = () => {
                         {...field}
                         type="email"
                         placeholder="seu@email.com"
-                        disabled={isLoading}
+                        disabled={isLoading || form.formState.isSubmitting}
                         autoComplete="email"
                       />
                     </FormControl>
@@ -109,7 +113,7 @@ const Login = () => {
                     <FormControl>
                       <PasswordInput
                         {...field}
-                        disabled={isLoading}
+                        disabled={isLoading || form.formState.isSubmitting}
                         autoComplete="current-password"
                       />
                     </FormControl>
@@ -127,9 +131,9 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || form.formState.isSubmitting}
               >
-                {isLoading ? (
+                {(isLoading || form.formState.isSubmitting) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Entrando...

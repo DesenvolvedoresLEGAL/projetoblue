@@ -104,8 +104,7 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       if (data.user) {
         console.log('Login bem-sucedido para:', email);
-        toast.success('Login bem-sucedido!');
-        // Redirect is handled by the component after auth state change
+        // Toast and redirect now handled in the Login component's useEffect
         return null;
       } else {
         console.error('Login falhou, dados incompletos:', data);
