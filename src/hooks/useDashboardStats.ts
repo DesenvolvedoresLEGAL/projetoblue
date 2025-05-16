@@ -26,9 +26,9 @@ export interface DashboardStats {
 }
 
 export function useDashboardStats() {
-  return useQuery<DashboardStats, Error>(
-    ['dashboard', 'stats'],
-    async ({ signal }) => {
+  return useQuery<DashboardStats, Error>({
+    queryKey: ['dashboard', 'stats'],
+    queryFn: async ({ signal }) => {
       try {
         // Parallel queries for better performance
         const [
@@ -42,17 +42,17 @@ export function useDashboardStats() {
           // Total assets count
           supabase
             .from('assets')
-            .select('*', { head: true, count: 'exact', abortSignal: signal }),
+            .select('*', { head: true, count: 'exact' }),
             
           // Active clients count
           supabase
             .from('v_active_clients')
-            .select('*', { head: true, count: 'exact', abortSignal: signal }),
+            .select('*', { head: true, count: 'exact' }),
             
           // Assets with issues count
           supabase
             .from('v_problem_assets')
-            .select('*', { head: true, count: 'exact', abortSignal: signal }),
+            .select('*', { head: true, count: 'exact' }),
             
           // 5 most recently created assets
           supabase
@@ -65,19 +65,17 @@ export function useDashboardStats() {
               asset_status!inner(status)
             `)
             .order('created_at', { ascending: false })
-            .limit(5)
-            .abortSignal(signal),
+            .limit(5),
             
           // 5 most recent events
           supabase
             .from('asset_logs')
             .select('id, event, date, details')
             .order('date', { ascending: false })
-            .limit(5)
-            .abortSignal(signal),
+            .limit(5),
             
           // Status breakdown for summary statistics
-          supabase.rpc('status_by_asset_type', {}, { abortSignal: signal })
+          supabase.rpc('status_by_asset_type')
         ]);
         
         // Process recent assets data
@@ -158,13 +156,11 @@ export function useDashboardStats() {
         throw error;
       }
     },
-    {
-      staleTime: 60000, // 1 minute
-      cacheTime: 300000, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false
-    }
-  );
+    staleTime: 60000, // 1 minute
+    cacheTime: 300000, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
 }
 
 // Helper function to format relative time (to be used in the render)

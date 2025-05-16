@@ -20,7 +20,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDashboardStats, formatRelativeTime } from "@/hooks/useDashboardStats";
+import { useDashboardStats, formatRelativeTime, DashboardStats } from "@/hooks/useDashboardStats";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -88,7 +88,7 @@ const Home = () => {
             {isLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <div className="text-2xl font-bold">{data?.totalAssets || 0}</div>
+              <div className="text-2xl font-bold">{(data as DashboardStats | undefined)?.totalAssets || 0}</div>
             )}
             <p className="text-xs text-muted-foreground">
               Routers, switches, and network equipment
@@ -105,7 +105,7 @@ const Home = () => {
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <div className="text-2xl font-bold">{data?.activeClients || 0}</div>
+              <div className="text-2xl font-bold">{(data as DashboardStats | undefined)?.activeClients || 0}</div>
             )}
             <p className="text-xs text-muted-foreground">
               Clients with active equipment
@@ -122,7 +122,7 @@ const Home = () => {
             {isLoading ? (
               <Skeleton className="h-8 w-12" />
             ) : (
-              <div className="text-2xl font-bold text-destructive">{data?.assetsWithIssues || 0}</div>
+              <div className="text-2xl font-bold text-destructive">{(data as DashboardStats | undefined)?.assetsWithIssues || 0}</div>
             )}
             <p className="text-xs text-muted-foreground">
               Requiring attention or service
@@ -158,7 +158,7 @@ const Home = () => {
                     <Skeleton className="h-6 w-8 mb-1" />
                   ) : (
                     <span className="text-xl font-bold">
-                      {data?.statusSummary?.active || 0}
+                      {(data as DashboardStats | undefined)?.statusSummary?.active || 0}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">Active</span>
@@ -169,7 +169,7 @@ const Home = () => {
                     <Skeleton className="h-6 w-8 mb-1" />
                   ) : (
                     <span className="text-xl font-bold">
-                      {data?.statusSummary?.warning || 0}
+                      {(data as DashboardStats | undefined)?.statusSummary?.warning || 0}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">Warning</span>
@@ -180,7 +180,7 @@ const Home = () => {
                     <Skeleton className="h-6 w-8 mb-1" />
                   ) : (
                     <span className="text-xl font-bold">
-                      {data?.statusSummary?.critical || 0}
+                      {(data as DashboardStats | undefined)?.statusSummary?.critical || 0}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">Critical</span>
@@ -210,9 +210,9 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-              ) : data?.recentEvents && data.recentEvents.length > 0 ? (
+              ) : (data as DashboardStats | undefined)?.recentEvents && (data as DashboardStats | undefined)?.recentEvents.length > 0 ? (
                 <div className="space-y-4">
-                  {data.recentEvents.map(event => (
+                  {(data as DashboardStats | undefined)?.recentEvents.map(event => (
                     <div key={event.id} className="flex items-start gap-3 border-b pb-3 last:border-0">
                       <div className={`w-2 h-2 mt-2 rounded-full ${
                         event.type === 'register' ? 'bg-green-500' : 
@@ -257,9 +257,9 @@ const Home = () => {
                     </div>
                   ))}
                 </div>
-              ) : data?.recentAssets && data.recentAssets.length > 0 ? (
+              ) : (data as DashboardStats | undefined)?.recentAssets && (data as DashboardStats | undefined)?.recentAssets.length > 0 ? (
                 <div className="space-y-3">
-                  {data.recentAssets.map(asset => (
+                  {(data as DashboardStats | undefined)?.recentAssets.map(asset => (
                     <div key={asset.id} className="flex items-center justify-between border-b pb-2 last:border-0">
                       <div>
                         <p className="text-sm font-medium">{asset.name}</p>

@@ -17,16 +17,16 @@ const queryClient = new QueryClient({
 })
 
 // Prefetch dashboard stats data when the app loads
-queryClient.prefetchQuery(
-  ['dashboard', 'stats'],
-  async () => {
+queryClient.prefetchQuery({
+  queryKey: ['dashboard', 'stats'],
+  queryFn: async () => {
     // Basic prefetch 
     const { count } = await supabase
       .from('assets')
       .select('*', { head: true, count: 'exact' });
     return { totalAssets: count || 0 };
   }
-);
+});
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
