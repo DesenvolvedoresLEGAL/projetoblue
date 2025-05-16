@@ -24,7 +24,7 @@ export default function RegisterAsset() {
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      type_id: 1, // This is a number type, not a string
+      type_id: 1, // Using number instead of string
       model: "NANOSIM",
     },
   });
@@ -42,7 +42,7 @@ export default function RegisterAsset() {
     } else {
       reset({
         type_id: 2, // Using number instead of string
-        rented_days: 0 // This is a string that gets transformed by zod schema
+        rented_days: 0 // This is a number, not a string
       });
     }
   }, [assetType, reset]);
@@ -109,7 +109,7 @@ export default function RegisterAsset() {
       } else {
         reset({
           type_id: 2, // Using number instead of string
-          rented_days: 0 // This is a string in the form but transformed by zod
+          rented_days: 0 // Using number instead of string
         });
       }
     },
