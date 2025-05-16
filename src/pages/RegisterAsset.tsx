@@ -1,12 +1,27 @@
 
-import { useState } from "react";
-import { useAssets } from "@/context/useAssets";
-import { Asset, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
+import { useEffect, useState } from "react";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/utils/toast";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -15,234 +30,564 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/utils/toast";
-import { AlertTriangle } from "lucide-react";
-import { checkPasswordStrength } from "@/utils/passwordStrength";
-import { supabase } from "@/integrations/supabase/client";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader } from "lucide-react";
+
+// Schemas de validação
+const chipSchema = z.object({
+  type_id: z.number().default(1),
+  line_number: z.string().optional().transform(val => val ? parseInt(val) : null),
+  iccid: z.string()
+    .min(19, "ICCID deve ter entre 19 e 20 dígitos")
+    .max(20, "ICCID deve ter entre 19 e 20 dígitos")
+    .regex(/^\d{19,20}$/, "ICCID deve conter apenas números"),
+  model: z.string().default("NANOSIM"),
+  plan_id: z.string().transform(val => val ? parseInt(val) : null),
+  manufacturer_id: z.string().transform(val => val ? parseInt(val) : null),
+  status_id: z.string().transform(val => parseInt(val)),
+  notes: z.string().optional(),
+});
+
+const speedySchema = z.object({
+  type_id: z.number().default(2),
+  serial_number: z.string().optional(),
+  model: z.string(),
+  rented_days: z.string()
+    .transform(val => val ? parseInt(val) : 0)
+    .refine(val => val >= 0, "Dias alugados deve ser maior ou igual a 0"),
+  radio: z.string().optional(),
+  password: z.string().optional(),
+  manufacturer_id: z.string().transform(val => val ? parseInt(val) : null),
+  status_id: z.string().transform(val => parseInt(val)),
+  solution_id: z.string().transform(val => val ? parseInt(val) : null),
+  notes: z.string().optional(),
+});
+
+type AssetFormDataChip = z.infer<typeof chipSchema>;
+type AssetFormDataSpeedy = z.infer<typeof speedySchema>;
 
 export default function RegisterAsset() {
-  const { addAsset } = useAssets();
-  const [assetType, setAssetType] = useState<"CHIP" | "ROTEADOR">("CHIP");
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
-  const [allowWeakPassword, setAllowWeakPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [assetType, setAssetType] = useState<"CHIP" | "SPEEDY">("CHIP");
+  const queryClient = useQueryClient();
 
-  // Form state for chip
-  const [chipForm, setChipForm] = useState<Omit<ChipAsset, "id" | "status">>({
-    type: "CHIP",
-    iccid: "",
-    phoneNumber: "",
-    carrier: "VIVO",
-    registrationDate: new Date().toISOString(),
-    num_linha: undefined,
-    solucao: undefined,
+  // Formulários
+  const chipForm = useForm<AssetFormDataChip>({
+    resolver: zodResolver(chipSchema),
+    defaultValues: {
+      type_id: 1,
+      model: "NANOSIM",
+    },
   });
 
-  // Form state for router
-  const [routerForm, setRouterForm] = useState<Omit<RouterAsset, "id" | "status">>({
-    type: "ROTEADOR",
-    uniqueId: "",
-    brand: "",
-    model: "",
-    ssid: "",
-    password: "",
-    registrationDate: new Date().toISOString(),
-    marca: "",
-    modelo: "",
-    serial_number: "",
-    solucao: undefined,
-    radio: undefined,
+  const speedyForm = useForm<AssetFormDataSpeedy>({
+    resolver: zodResolver(speedySchema),
+    defaultValues: {
+      type_id: 2,
+      rented_days: 0,
+    },
   });
 
-  const handleChipChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setChipForm((prev) => ({ ...prev, [name]: value }));
-  };
+  // Fetch dados de referência
+  const { data: manufacturers, isLoading: loadingManufacturers } = useQuery({
+    queryKey: ["manufacturers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("manufacturers").select("id, name");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-  const handleCarrierChange = (value: string) => {
-    setChipForm((prev) => ({ ...prev, carrier: value }));
-  };
+  const { data: plans, isLoading: loadingPlans } = useQuery({
+    queryKey: ["plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("plans").select("id, nome, tamanho_gb");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-  const handleSolutionChange = (value: SolutionType) => {
-    if (assetType === "CHIP") {
-      setChipForm((prev) => ({ ...prev, solucao: value }));
-    } else {
-      setRouterForm((prev) => ({ ...prev, solucao: value }));
-    }
-  };
+  const { data: assetStatus, isLoading: loadingStatus } = useQuery({
+    queryKey: ["asset_status"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("asset_status").select("id, status");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-  const handleRouterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    
-    if (name === "password") {
-      const strength = checkPasswordStrength(value);
-      setPasswordStrength(strength);
-    }
-    
-    setRouterForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const { data: assetSolutions, isLoading: loadingSolutions } = useQuery({
+    queryKey: ["asset_solutions"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("asset_solutions").select("id, solution");
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (assetType === "CHIP") {
-        // Validate chip form
-        if (!chipForm.iccid || !chipForm.phoneNumber || !chipForm.carrier) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
-          setIsSubmitting(false);
-          return;
+  // Mutation para criar ativo
+  const createAssetMutation = useMutation({
+    mutationFn: async (data: AssetFormDataChip | AssetFormDataSpeedy) => {
+      // Verificar unicidade antes de inserir
+      if ("iccid" in data && data.iccid) {
+        const { data: existingIccid } = await supabase
+          .from("assets")
+          .select("uuid")
+          .eq("iccid", data.iccid)
+          .single();
+          
+        if (existingIccid) {
+          throw new Error("ICCID já cadastrado no sistema");
         }
-
-        // Validate ICCID format (19-20 digits)
-        const iccidClean = chipForm.iccid.replace(/\D/g, '');
-        if (iccidClean.length < 19 || iccidClean.length > 20) {
-          toast.error("O ICCID deve ter entre 19 e 20 dígitos numéricos");
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Submit to Supabase
-        const { data, error } = await supabase
-          .from('assets')
-          .insert({
-            type: 'chip',
-            status: 'Disponível',
-            iccid: chipForm.iccid,
-            num_linha: chipForm.num_linha ? parseInt(chipForm.num_linha.toString()) : null,
-            solucao: chipForm.solucao || null,
-            operadora_id: chipForm.carrier === "VIVO" ? 1 : chipForm.carrier === "CLARO" ? 2 : 3, // Assuming operadora_id mapping
-          })
-          .select();
-
-        if (error) {
-          console.error("Erro ao cadastrar chip:", error);
-          toast.error(`Erro ao cadastrar chip: ${error.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success("Chip cadastrado com sucesso!");
-
-        // Reset form after successful submission
-        setChipForm({
-          type: "CHIP",
-          iccid: "",
-          phoneNumber: "",
-          carrier: "VIVO",
-          registrationDate: new Date().toISOString(),
-          num_linha: undefined,
-          solucao: undefined,
-        });
-
-      } else {
-        // Validate router form
-        if (!routerForm.uniqueId || !routerForm.brand || !routerForm.model) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
-          setIsSubmitting(false);
-          return;
-        }
-
-        if (passwordStrength === 'weak' && !allowWeakPassword) {
-          toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Submit to Supabase
-        const { data, error } = await supabase
-          .from('assets')
-          .insert({
-            type: 'roteador',
-            status: 'Disponível',
-            serial_number: routerForm.serial_number || null,
-            marca: routerForm.brand,
-            modelo: routerForm.model,
-            solucao: routerForm.solucao || null,
-            radio: routerForm.radio || null,
-          })
-          .select();
-
-        if (error) {
-          console.error("Erro ao cadastrar roteador:", error);
-          toast.error(`Erro ao cadastrar roteador: ${error.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success("Roteador cadastrado com sucesso!");
-
-        // Reset form after successful submission
-        setRouterForm({
-          type: "ROTEADOR",
-          uniqueId: "",
-          brand: "",
-          model: "",
-          ssid: "",
-          password: "",
-          registrationDate: new Date().toISOString(),
-          marca: "",
-          modelo: "",
-          serial_number: "",
-          solucao: undefined,
-          radio: undefined,
-        });
-        setPasswordStrength(null);
-        setAllowWeakPassword(false);
       }
-    } catch (error) {
-      console.error("Erro ao cadastrar ativo:", error);
-      toast.error("Erro ao cadastrar ativo. Por favor, tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
-  const renderPasswordStrength = () => {
-    if (!passwordStrength) return null;
+      if ("serial_number" in data && data.serial_number) {
+        const { data: existingSerial } = await supabase
+          .from("assets")
+          .select("uuid")
+          .eq("serial_number", data.serial_number)
+          .single();
+          
+        if (existingSerial) {
+          throw new Error("Número de série já cadastrado no sistema");
+        }
+      }
 
-    if (passwordStrength === 'strong') {
-      return <div className="text-green-600 text-sm mt-1">Senha forte</div>;
-    } else if (passwordStrength === 'medium') {
-      return <div className="text-amber-600 text-sm mt-1">Senha média</div>;
-    } else {
-      return (
-        <div className="text-orange-500 text-sm mt-1 flex items-center">
-          <AlertTriangle className="h-4 w-4 mr-1" />
-          <span>Senha fraca</span>
-          <div className="ml-4">
-            <label className="flex items-center text-sm">
-              <input
-                type="checkbox"
-                checked={allowWeakPassword}
-                onChange={(e) => setAllowWeakPassword(e.target.checked)}
-                className="mr-2"
-              />
-              Permitir uso de senha fraca
-            </label>
-          </div>
-        </div>
+      // Inserir novo ativo
+      const { data: newAsset, error } = await supabase
+        .from("assets")
+        .insert(data)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return newAsset;
+    },
+    onSuccess: () => {
+      // Invalidar queries existentes para forçar atualização
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toast.success(
+        assetType === "CHIP"
+          ? "Chip cadastrado com sucesso!"
+          : "Speedy 5G cadastrado com sucesso!"
       );
-    }
+      
+      // Resetar o formulário
+      if (assetType === "CHIP") {
+        chipForm.reset({
+          type_id: 1,
+          model: "NANOSIM",
+        });
+      } else {
+        speedyForm.reset({
+          type_id: 2,
+          rented_days: 0,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao cadastrar: ${error.message}`);
+    },
+  });
+
+  // Verificar se está carregando dados ou enviando formulário
+  const isLoading = 
+    loadingManufacturers || 
+    loadingPlans || 
+    loadingStatus || 
+    loadingSolutions ||
+    createAssetMutation.isPending;
+
+  // Handle submit
+  const onChipSubmit: SubmitHandler<AssetFormDataChip> = (data) => {
+    createAssetMutation.mutate(data);
   };
 
-  const solutionOptions: SolutionType[] = [
-    "SPEEDY 5G",
-    "4BLACK",
-    "4LITE",
-    "4PLUS",
-    "AP BLUE",
-    "POWERBANK",
-    "SWITCH",
-    "HUB USB",
-    "ANTENA",
-    "LOAD BALANCE"
-  ];
+  const onSpeedySubmit: SubmitHandler<AssetFormDataSpeedy> = (data) => {
+    createAssetMutation.mutate(data);
+  };
+
+  // Componente para campos do Chip
+  const ChipFields = () => {
+    return (
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={chipForm.control}
+            name="iccid"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ICCID *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: 89550421180216543847"
+                    autoComplete="off"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Número de 19 ou 20 dígitos do chip
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={chipForm.control}
+            name="line_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número da Linha</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 11999999999"
+                    autoComplete="off"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Número da linha associada ao chip (opcional)</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={chipForm.control}
+            name="model"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modelo</FormLabel>
+                <FormControl>
+                  <Input value="NANOSIM" disabled {...field} />
+                </FormControl>
+                <FormDescription>Modelo fixo para chips</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={chipForm.control}
+            name="manufacturer_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fabricante *</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o fabricante" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {manufacturers?.map((manufacturer) => (
+                      <SelectItem
+                        key={manufacturer.id}
+                        value={manufacturer.id.toString()}
+                      >
+                        {manufacturer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={chipForm.control}
+            name="plan_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Plano</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o plano" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {plans?.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id.toString()}>
+                        {plan.nome} {plan.tamanho_gb && `(${plan.tamanho_gb}GB)`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={chipForm.control}
+            name="status_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status *</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {assetStatus?.map((status) => (
+                      <SelectItem key={status.id} value={status.id.toString()}>
+                        {status.status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={chipForm.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Informações adicionais sobre o chip"
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </>
+    );
+  };
+
+  // Componente para campos do Speedy 5G (Roteador)
+  const SpeedyFields = () => {
+    return (
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={speedyForm.control}
+            name="model"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modelo *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: Archer C6"
+                    autoComplete="off"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Modelo do roteador</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="serial_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Número de Série</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: SN123456789"
+                    autoComplete="off"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Número de série do roteador (opcional)</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="rented_days"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dias Alugados</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="Ex: 0"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>Total de dias alugados (mínimo 0)</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="radio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rádio</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Configuração de rádio"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Senha</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Senha do roteador"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="manufacturer_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fabricante *</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o fabricante" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {manufacturers?.map((manufacturer) => (
+                      <SelectItem
+                        key={manufacturer.id}
+                        value={manufacturer.id.toString()}
+                      >
+                        {manufacturer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="solution_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Solução</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a solução" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {assetSolutions?.map((solution) => (
+                      <SelectItem key={solution.id} value={solution.id.toString()}>
+                        {solution.solution}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={speedyForm.control}
+            name="status_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status *</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value?.toString()}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {assetStatus?.map((status) => (
+                      <SelectItem key={status.id} value={status.id.toString()}>
+                        {status.status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={speedyForm.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Informações adicionais sobre o roteador"
+                  rows={4}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -257,252 +602,76 @@ export default function RegisterAsset() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalhes do Ativo</CardTitle>
+          <CardTitle>Tipo de Ativo</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <Tabs
-              value={assetType}
-              onValueChange={(value) => setAssetType(value as "CHIP" | "ROTEADOR")}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-2 mb-8">
-                <TabsTrigger value="CHIP">Chip</TabsTrigger>
-                <TabsTrigger value="ROTEADOR">Roteador</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="CHIP" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="iccid">ICCID *</Label>
-                    <Input
-                      id="iccid"
-                      name="iccid"
-                      value={chipForm.iccid}
-                      onChange={handleChipChange}
-                      placeholder="Ex: 89550421180216543847"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Número *</Label>
-                    <Input
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      value={chipForm.phoneNumber}
-                      onChange={handleChipChange}
-                      placeholder="Ex: (11) 98765-4321"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="carrier">Operadora *</Label>
-                    <Select 
-                      value={chipForm.carrier} 
-                      onValueChange={handleCarrierChange}
-                      name="carrier"
-                    >
-                      <SelectTrigger id="carrier">
-                        <SelectValue placeholder="Selecione a operadora" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="VIVO">VIVO</SelectItem>
-                        <SelectItem value="CLARO">CLARO</SelectItem>
-                        <SelectItem value="TIM">TIM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="num_linha">Número da Linha</Label>
-                    <Input
-                      id="num_linha"
-                      name="num_linha"
-                      type="number"
-                      value={chipForm.num_linha || ""}
-                      onChange={handleChipChange}
-                      placeholder="Número da linha"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chipSolution">Solução</Label>
-                    <Select 
-                      value={chipForm.solucao} 
-                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
-                    >
-                      <SelectTrigger id="chipSolution">
-                        <SelectValue placeholder="Selecione a solução" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {solutionOptions.map(solution => (
-                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="chipNotes">Observações</Label>
-                  <Textarea
-                    id="chipNotes"
-                    name="notes"
-                    value={chipForm.notes || ""}
-                    onChange={handleChipChange}
-                    placeholder="Informações adicionais sobre o chip"
-                    rows={4}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="ROTEADOR" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="uniqueId">ID Único *</Label>
-                    <Input
-                      id="uniqueId"
-                      name="uniqueId"
-                      value={routerForm.uniqueId}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: RTR001"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="brand">Marca *</Label>
-                    <Input
-                      id="brand"
-                      name="brand"
-                      value={routerForm.brand}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: TP-Link"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="model">Modelo *</Label>
-                    <Input
-                      id="model"
-                      name="model"
-                      value={routerForm.model}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: Archer C6"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="serial_number">Número de Série</Label>
-                    <Input
-                      id="serial_number"
-                      name="serial_number"
-                      value={routerForm.serial_number || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: SN123456789"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ssid">SSID</Label>
-                    <Input
-                      id="ssid"
-                      name="ssid"
-                      value={routerForm.ssid}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: LEGAL_WIFI"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="text"
-                      value={routerForm.password}
-                      onChange={handleRouterChange}
-                      placeholder="Senha da rede Wi-Fi"
-                    />
-                    {renderPasswordStrength()}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="radio">Radio</Label>
-                    <Input
-                      id="radio"
-                      name="radio"
-                      value={routerForm.radio || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Configuração de rádio"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="routerSolution">Solução</Label>
-                    <Select 
-                      value={routerForm.solucao} 
-                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
-                    >
-                      <SelectTrigger id="routerSolution">
-                        <SelectValue placeholder="Selecione a solução" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {solutionOptions.map(solution => (
-                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ipAddress">IP Gerência</Label>
-                    <Input
-                      id="ipAddress"
-                      name="ipAddress"
-                      value={routerForm.ipAddress || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: 192.168.0.1"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="adminUser">Usuário Admin</Label>
-                    <Input
-                      id="adminUser"
-                      name="adminUser"
-                      value={routerForm.adminUser || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: admin"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="adminPassword">Senha Admin</Label>
-                    <Input
-                      id="adminPassword"
-                      name="adminPassword"
-                      type="text"
-                      value={routerForm.adminPassword || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Senha do admin"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="imei">IMEI</Label>
-                    <Input
-                      id="imei"
-                      name="imei"
-                      value={routerForm.imei || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: 123456789012345"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="routerNotes">Observações</Label>
-                  <Textarea
-                    id="routerNotes"
-                    name="notes"
-                    value={routerForm.notes || ""}
-                    onChange={handleRouterChange}
-                    placeholder="Informações adicionais sobre o roteador"
-                    rows={4}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Cadastrando..." : "Cadastrar"}
-              </Button>
+          <RadioGroup
+            className="flex flex-col md:flex-row gap-4 mb-8"
+            value={assetType}
+            onValueChange={(v) => setAssetType(v as "CHIP" | "SPEEDY")}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="CHIP" id="chip" />
+              <Label htmlFor="chip">Chip</Label>
             </div>
-          </form>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="SPEEDY" id="speedy" />
+              <Label htmlFor="speedy">Speedy 5G (Roteador)</Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {assetType === "CHIP" ? "Detalhes do Chip" : "Detalhes do Speedy 5G"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {assetType === "CHIP" ? (
+            <Form {...chipForm}>
+              <form
+                onSubmit={chipForm.handleSubmit(onChipSubmit)}
+                className="space-y-8"
+              >
+                <ChipFields />
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        Cadastrando...
+                      </>
+                    ) : (
+                      "Cadastrar Chip"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : (
+            <Form {...speedyForm}>
+              <form
+                onSubmit={speedyForm.handleSubmit(onSpeedySubmit)}
+                className="space-y-8"
+              >
+                <SpeedyFields />
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        Cadastrando...
+                      </>
+                    ) : (
+                      "Cadastrar Speedy 5G"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          )}
         </CardContent>
       </Card>
     </div>
