@@ -29,7 +29,6 @@ export const chipSchema = z.object({
   status_id: z.string()
     .transform(transformStringToNumber)
     .refine(val => val !== null, "Status é obrigatório"),
-  notes: z.string().optional(),
 });
 
 export const speedySchema = z.object({
@@ -50,7 +49,6 @@ export const speedySchema = z.object({
   solution_id: z.string()
     .optional()
     .transform(transformStringToNumber),
-  notes: z.string().optional(),
 });
 
 // Schema discriminado usando type_id como discriminator

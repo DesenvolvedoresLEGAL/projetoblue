@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SelectField } from "./SelectField";
 import { Control } from "react-hook-form";
@@ -169,24 +168,6 @@ export function SpeedyFields({
           />
         )}
       </div>
-
-      <FormField
-        control={control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Observações</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Informações adicionais sobre o roteador"
-                rows={4}
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </>
   );
 }
