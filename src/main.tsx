@@ -20,11 +20,17 @@ const queryClient = new QueryClient({
 queryClient.prefetchQuery({
   queryKey: ['dashboard', 'stats'],
   queryFn: async () => {
-    // Basic prefetch 
-    const { count } = await supabase
-      .from('assets')
-      .select('*', { head: true, count: 'exact' });
-    return { totalAssets: count || 0 };
+    try {
+      // Basic prefetch 
+      const { count } = await supabase
+        .from('assets')
+        .select('*', { head: true, count: 'exact' })
+        .throwOnError();
+      return { totalAssets: count || 0 };
+    } catch (error) {
+      console.error('Error prefetching dashboard stats:', error);
+      return { totalAssets: 0 };
+    }
   }
 });
 

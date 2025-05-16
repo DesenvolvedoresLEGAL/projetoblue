@@ -42,17 +42,20 @@ export function useDashboardStats() {
           // Total assets count
           supabase
             .from('assets')
-            .select('*', { head: true, count: 'exact' }),
+            .select('*', { head: true, count: 'exact' })
+            .throwOnError(),
             
           // Active clients count
           supabase
             .from('v_active_clients')
-            .select('*', { head: true, count: 'exact' }),
+            .select('*', { head: true, count: 'exact' })
+            .throwOnError(),
             
           // Assets with issues count
           supabase
             .from('v_problem_assets')
-            .select('*', { head: true, count: 'exact' }),
+            .select('*', { head: true, count: 'exact' })
+            .throwOnError(),
             
           // 5 most recently created assets
           supabase
@@ -65,18 +68,30 @@ export function useDashboardStats() {
               asset_status!inner(status)
             `)
             .order('created_at', { ascending: false })
-            .limit(5),
+            .limit(5)
+            .throwOnError(),
             
           // 5 most recent events
           supabase
             .from('asset_logs')
             .select('id, event, date, details')
             .order('date', { ascending: false })
-            .limit(5),
+            .limit(5)
+            .throwOnError(),
             
           // Status breakdown for summary statistics
           supabase.rpc('status_by_asset_type')
+            .throwOnError()
         ]);
+        
+        console.log('Dashboard data fetched:', {
+          totalAssets: totalAssetsResult,
+          activeClients: activeClientsResult,
+          assetsWithIssues: assetsWithIssuesResult,
+          recentAssets: recentAssetsResult,
+          recentEvents: recentEventsResult,
+          statusBreakdown: statusBreakdownResult
+        });
         
         // Process recent assets data
         const recentAssets = (recentAssetsResult.data || []).map(asset => ({
@@ -139,6 +154,7 @@ export function useDashboardStats() {
           });
         }
         
+        // Return data in the exact shape expected by Home.tsx
         return {
           totalAssets: totalAssetsResult.count || 0,
           activeClients: activeClientsResult.count || 0,

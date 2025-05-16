@@ -11,7 +11,7 @@ import { DataUsageProvider } from "@/context/DataUsageContext";
 import { AuthProvider } from "@/context/AuthContext";
 
 // Pages
-import GeneralDashboard from "./pages/GeneralDashboard";
+import GeneralDashboard from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetsDashboard from "./pages/AssetsDashboard";
@@ -37,6 +37,7 @@ import BitsMyReferrals from "./pages/bits/BitsMyReferrals";
 import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
 import BitsSettings from "./pages/bits/BitsSettings";
 import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
+import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +58,7 @@ const App = () => (
                   
                   {/* Main layout with sidebar and header */}
                   <Route path="/" element={<Layout />}>
-                    <Route index element={<GeneralDashboard />} />
+                    <Route index element={<Home />} />
                     
                     {/* Dashboard routes */}
                     <Route path="dashboard" element={<Dashboard />} />
