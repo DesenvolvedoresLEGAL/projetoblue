@@ -36,68 +36,75 @@ const PageLoader = () => (
 
 export const ProtectedRoutes = () => {
   return (
-    <AuthRoute>
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Dashboard routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            
-            {/* Assets module routes */}
-            <Route path="/assets">
-              <Route index element={<Navigate to="/assets/dashboard" replace />} />
-              <Route path="dashboard" element={<AssetsDashboard />} />
-              <Route path="inventory" element={<AssetsInventory />} />
-              <Route path="register" element={<RegisterAsset />} />
-            </Route>
-            
-            {/* Clients module */}
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/suppliers" element={<Suppliers />} />
-            
-            {/* Operations module */}
-            <Route path="/association" element={<Association />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/monitoring" element={<Monitoring />} />
-            
-            {/* Analytics module */}
-            <Route path="/data-usage" element={<DataUsage />} />
-            <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
-            
-            {/* Topology module */}
-            <Route path="/topology">
-              <Route index element={<Navigate to="/topology/view" replace />} />
-              <Route path="view" element={<Topology />} />
-            </Route>
-            
-            {/* Tools module */}
-            <Route path="/tools">
-              <Route index element={<Navigate to="/tools/discovery" replace />} />
-              <Route path="discovery" element={<Discovery />} />
-            </Route>
-            
-            {/* BITS™ module */}
-            <Route path="/bits">
-              <Route index element={<BitsDashboard />} />
-              <Route path="indicate" element={<BitsIndicateNow />} />
-              <Route path="my-referrals" element={<BitsMyReferrals />} />
-              <Route path="rewards" element={<BitsPointsAndRewards />} />
-              <Route path="settings" element={<BitsSettings />} />
-              <Route path="help" element={<BitsHelpAndSupport />} />
-            </Route>
-            
-            {/* Legacy redirects for backward compatibility */}
-            <Route path="/register-asset" element={<Navigate to="/assets/register" replace />} />
-            <Route path="/link-asset" element={<Navigate to="/association" replace />} />
-            <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
-            
-            {/* Catch-all route for protected area */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </Layout>
-    </AuthRoute>
+    <Routes>
+      <Route 
+        path="/*" 
+        element={
+          <AuthRoute>
+            <Layout>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Dashboard routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  
+                  {/* Assets module routes */}
+                  <Route path="/assets">
+                    <Route index element={<Navigate to="/assets/dashboard" replace />} />
+                    <Route path="dashboard" element={<AssetsDashboard />} />
+                    <Route path="inventory" element={<AssetsInventory />} />
+                    <Route path="register" element={<RegisterAsset />} />
+                  </Route>
+                  
+                  {/* Clients module */}
+                  <Route path="/clients" element={<Clients />} />
+                  <Route path="/suppliers" element={<Suppliers />} />
+                  
+                  {/* Operations module */}
+                  <Route path="/association" element={<Association />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/history" element={<History />} />
+                  <Route path="/monitoring" element={<Monitoring />} />
+                  
+                  {/* Analytics module */}
+                  <Route path="/data-usage" element={<DataUsage />} />
+                  <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
+                  
+                  {/* Topology module */}
+                  <Route path="/topology">
+                    <Route index element={<Navigate to="/topology/view" replace />} />
+                    <Route path="view" element={<Topology />} />
+                  </Route>
+                  
+                  {/* Tools module */}
+                  <Route path="/tools">
+                    <Route index element={<Navigate to="/tools/discovery" replace />} />
+                    <Route path="discovery" element={<Discovery />} />
+                  </Route>
+                  
+                  {/* BITS™ module */}
+                  <Route path="/bits">
+                    <Route index element={<BitsDashboard />} />
+                    <Route path="indicate" element={<BitsIndicateNow />} />
+                    <Route path="my-referrals" element={<BitsMyReferrals />} />
+                    <Route path="rewards" element={<BitsPointsAndRewards />} />
+                    <Route path="settings" element={<BitsSettings />} />
+                    <Route path="help" element={<BitsHelpAndSupport />} />
+                  </Route>
+                  
+                  {/* Legacy redirects for backward compatibility */}
+                  <Route path="/register-asset" element={<Navigate to="/assets/register" replace />} />
+                  <Route path="/link-asset" element={<Navigate to="/association" replace />} />
+                  <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
+                  
+                  {/* Catch-all route for protected area */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </Layout>
+          </AuthRoute>
+        } 
+      />
+    </Routes>
   );
 };
