@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -32,108 +32,228 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Schemas de validação
+// Hook para buscar todos os dados de referência de uma vez
+function useReferenceData() {
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: ["manufacturers"],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("manufacturers")
+            .select("id, name")
+            .order("name");
+          if (error) throw error;
+          return data || [];
+        },
+        placeholderData: [],
+      },
+      {
+        queryKey: ["plans"],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("plans")
+            .select("id, nome, tamanho_gb")
+            .order("nome");
+          if (error) throw error;
+          return data || [];
+        },
+        placeholderData: [],
+      },
+      {
+        queryKey: ["asset_status"],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("asset_status")
+            .select("id, status")
+            .order("status");
+          if (error) throw error;
+          return data || [];
+        },
+        placeholderData: [],
+      },
+      {
+        queryKey: ["asset_solutions"],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("asset_solutions")
+            .select("id, solution")
+            .order("solution");
+          if (error) throw error;
+          return data || [];
+        },
+        placeholderData: [],
+      },
+    ],
+  });
+
+  return {
+    manufacturers: results[0].data || [],
+    plans: results[1].data || [],
+    assetStatus: results[2].data || [],
+    assetSolutions: results[3].data || [],
+    isLoading: results.some(result => result.isLoading),
+  };
+}
+
+// Componente reutilizável para campos de select
+interface SelectFieldProps {
+  control: any;
+  name: string;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  options: Array<{ id: number; name: string }>;
+  disabled?: boolean;
+  required?: boolean;
+}
+
+const SelectField = ({
+  control,
+  name,
+  label,
+  placeholder = "Selecione uma opção",
+  description,
+  options,
+  disabled = false,
+  required = false,
+}: SelectFieldProps) => {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}{required && " *"}</FormLabel>
+          <Select
+            onValueChange={field.onChange}
+            value={field.value?.toString() || ""}
+            disabled={disabled}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.id} value={option.id.toString()}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};
+
+// Schema comum para transformação de dados
+const transformStringToNumber = (val: string | null | undefined) => {
+  if (val === null || val === undefined || val === "") return null;
+  const num = parseInt(val);
+  return isNaN(num) ? null : num;
+};
+
+// Schemas de validação refinados
 const chipSchema = z.object({
-  type_id: z.number().default(1),
-  line_number: z.string().optional().transform(val => val ? parseInt(val) : null),
+  type_id: z.literal(1),
+  line_number: z.string()
+    .optional()
+    .transform(val => val ? parseInt(val) : null)
+    .refine(val => val === null || !isNaN(Number(val)), "Número da linha deve ser um número válido"),
   iccid: z.string()
     .min(19, "ICCID deve ter entre 19 e 20 dígitos")
     .max(20, "ICCID deve ter entre 19 e 20 dígitos")
     .regex(/^\d{19,20}$/, "ICCID deve conter apenas números"),
   model: z.string().default("NANOSIM"),
-  plan_id: z.string().transform(val => val ? parseInt(val) : null),
-  manufacturer_id: z.string().transform(val => val ? parseInt(val) : null),
-  status_id: z.string().transform(val => parseInt(val)),
+  plan_id: z.string()
+    .optional()
+    .transform(transformStringToNumber),
+  manufacturer_id: z.string()
+    .transform(transformStringToNumber)
+    .refine(val => val !== null, "Fabricante é obrigatório"),
+  status_id: z.string()
+    .transform(transformStringToNumber)
+    .refine(val => val !== null, "Status é obrigatório"),
   notes: z.string().optional(),
 });
 
 const speedySchema = z.object({
-  type_id: z.number().default(2),
+  type_id: z.literal(2),
   serial_number: z.string().optional(),
-  model: z.string(),
+  model: z.string().min(1, "Modelo é obrigatório"),
   rented_days: z.string()
-    .transform(val => val ? parseInt(val) : 0)
-    .refine(val => val >= 0, "Dias alugados deve ser maior ou igual a 0"),
+    .transform(val => val && val.trim() !== "" ? parseInt(val) : 0)
+    .refine(val => !isNaN(val) && val >= 0, "Dias alugados deve ser maior ou igual a 0"),
   radio: z.string().optional(),
   password: z.string().optional(),
-  manufacturer_id: z.string().transform(val => val ? parseInt(val) : null),
-  status_id: z.string().transform(val => parseInt(val)),
-  solution_id: z.string().transform(val => val ? parseInt(val) : null),
+  manufacturer_id: z.string()
+    .transform(transformStringToNumber)
+    .refine(val => val !== null, "Fabricante é obrigatório"),
+  status_id: z.string()
+    .transform(transformStringToNumber)
+    .refine(val => val !== null, "Status é obrigatório"),
+  solution_id: z.string()
+    .optional()
+    .transform(transformStringToNumber),
   notes: z.string().optional(),
 });
 
-type AssetFormDataChip = z.infer<typeof chipSchema>;
-type AssetFormDataSpeedy = z.infer<typeof speedySchema>;
+// Schema discriminado usando type_id como discriminator
+const assetSchema = z.discriminatedUnion("type_id", [chipSchema, speedySchema]);
+
+type AssetFormData = z.infer<typeof assetSchema>;
 
 export default function RegisterAsset() {
   const [assetType, setAssetType] = useState<"CHIP" | "SPEEDY">("CHIP");
   const queryClient = useQueryClient();
+  
+  // Carregar dados de referência com o hook personalizado
+  const { manufacturers, plans, assetStatus, assetSolutions, isLoading: loadingReferenceData } = useReferenceData();
 
-  // Formulários
-  const chipForm = useForm<AssetFormDataChip>({
-    resolver: zodResolver(chipSchema),
+  // Formulário unificado com discriminated union schema
+  const form = useForm<AssetFormData>({
+    resolver: zodResolver(assetSchema),
     defaultValues: {
       type_id: 1,
       model: "NANOSIM",
     },
   });
 
-  const speedyForm = useForm<AssetFormDataSpeedy>({
-    resolver: zodResolver(speedySchema),
-    defaultValues: {
-      type_id: 2,
-      rented_days: 0,
-    },
-  });
+  const { watch, reset } = form;
+  const typeId = watch("type_id");
 
-  // Fetch dados de referência
-  const { data: manufacturers, isLoading: loadingManufacturers } = useQuery({
-    queryKey: ["manufacturers"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("manufacturers").select("id, name");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: plans, isLoading: loadingPlans } = useQuery({
-    queryKey: ["plans"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("plans").select("id, nome, tamanho_gb");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: assetStatus, isLoading: loadingStatus } = useQuery({
-    queryKey: ["asset_status"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("asset_status").select("id, status");
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: assetSolutions, isLoading: loadingSolutions } = useQuery({
-    queryKey: ["asset_solutions"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("asset_solutions").select("id, solution");
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Efeito para redefinir o formulário quando o tipo de ativo muda
+  useEffect(() => {
+    if (assetType === "CHIP") {
+      reset({
+        type_id: 1,
+        model: "NANOSIM",
+      });
+    } else {
+      reset({
+        type_id: 2,
+        rented_days: "0",
+      });
+    }
+  }, [assetType, reset]);
 
   // Mutation para criar ativo
   const createAssetMutation = useMutation({
-    mutationFn: async (data: AssetFormDataChip | AssetFormDataSpeedy) => {
+    mutationFn: async (data: AssetFormData) => {
       // Verificar unicidade antes de inserir
       if ("iccid" in data && data.iccid) {
-        const { data: existingIccid } = await supabase
+        const { data: existingIccid, error } = await supabase
           .from("assets")
           .select("uuid")
           .eq("iccid", data.iccid)
-          .single();
+          .maybeSingle();
           
         if (existingIccid) {
           throw new Error("ICCID já cadastrado no sistema");
@@ -141,11 +261,11 @@ export default function RegisterAsset() {
       }
 
       if ("serial_number" in data && data.serial_number) {
-        const { data: existingSerial } = await supabase
+        const { data: existingSerial, error } = await supabase
           .from("assets")
           .select("uuid")
           .eq("serial_number", data.serial_number)
-          .single();
+          .maybeSingle();
           
         if (existingSerial) {
           throw new Error("Número de série já cadastrado no sistema");
@@ -162,9 +282,15 @@ export default function RegisterAsset() {
       if (error) throw error;
       return newAsset;
     },
-    onSuccess: () => {
+    onSuccess: (newAsset) => {
+      // Atualizar cache para evitar refetch
+      queryClient.setQueryData(["assets"], (oldData: any[] = []) => {
+        return [...oldData, newAsset];
+      });
+      
       // Invalidar queries existentes para forçar atualização
-      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["assets"], exact: false });
+      
       toast.success(
         assetType === "CHIP"
           ? "Chip cadastrado com sucesso!"
@@ -173,36 +299,33 @@ export default function RegisterAsset() {
       
       // Resetar o formulário
       if (assetType === "CHIP") {
-        chipForm.reset({
+        reset({
           type_id: 1,
           model: "NANOSIM",
         });
       } else {
-        speedyForm.reset({
+        reset({
           type_id: 2,
-          rented_days: 0,
+          rented_days: "0",
         });
       }
     },
     onError: (error: Error) => {
       toast.error(`Erro ao cadastrar: ${error.message}`);
+      
+      // Focar no primeiro campo com erro
+      const firstErrorField = Object.keys(form.formState.errors)[0];
+      if (firstErrorField && form.getFieldState(firstErrorField).invalid) {
+        form.setFocus(firstErrorField as never);
+      }
     },
   });
 
   // Verificar se está carregando dados ou enviando formulário
-  const isLoading = 
-    loadingManufacturers || 
-    loadingPlans || 
-    loadingStatus || 
-    loadingSolutions ||
-    createAssetMutation.isPending;
+  const isLoading = loadingReferenceData || createAssetMutation.isPending;
 
-  // Handle submit
-  const onChipSubmit: SubmitHandler<AssetFormDataChip> = (data) => {
-    createAssetMutation.mutate(data);
-  };
-
-  const onSpeedySubmit: SubmitHandler<AssetFormDataSpeedy> = (data) => {
+  // Handle submit para qualquer tipo de ativo usando o schema discriminado
+  const onSubmit: SubmitHandler<AssetFormData> = (data) => {
     createAssetMutation.mutate(data);
   };
 
@@ -212,7 +335,7 @@ export default function RegisterAsset() {
       <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
-            control={chipForm.control}
+            control={form.control}
             name="iccid"
             render={({ field }) => (
               <FormItem>
@@ -233,7 +356,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={chipForm.control}
+            control={form.control}
             name="line_number"
             render={({ field }) => (
               <FormItem>
@@ -253,7 +376,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={chipForm.control}
+            control={form.control}
             name="model"
             render={({ field }) => (
               <FormItem>
@@ -267,99 +390,59 @@ export default function RegisterAsset() {
             )}
           />
 
-          <FormField
-            control={chipForm.control}
-            name="manufacturer_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fabricante *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o fabricante" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {manufacturers?.map((manufacturer) => (
-                      <SelectItem
-                        key={manufacturer.id}
-                        value={manufacturer.id.toString()}
-                      >
-                        {manufacturer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="manufacturer_id"
+              label="Fabricante"
+              placeholder="Selecione o fabricante"
+              options={manufacturers.map(m => ({ id: m.id, name: m.name }))}
+              disabled={createAssetMutation.isPending}
+              required
+            />
+          )}
 
-          <FormField
-            control={chipForm.control}
-            name="plan_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Plano</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o plano" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {plans?.map((plan) => (
-                      <SelectItem key={plan.id} value={plan.id.toString()}>
-                        {plan.nome} {plan.tamanho_gb && `(${plan.tamanho_gb}GB)`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="plan_id"
+              label="Plano"
+              placeholder="Selecione o plano"
+              options={plans.map(p => ({ id: p.id, name: `${p.nome} ${p.tamanho_gb ? `(${p.tamanho_gb}GB)` : ''}` }))}
+              disabled={createAssetMutation.isPending}
+            />
+          )}
 
-          <FormField
-            control={chipForm.control}
-            name="status_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {assetStatus?.map((status) => (
-                      <SelectItem key={status.id} value={status.id.toString()}>
-                        {status.status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="status_id"
+              label="Status"
+              placeholder="Selecione o status"
+              options={assetStatus.map(s => ({ id: s.id, name: s.status }))}
+              disabled={createAssetMutation.isPending}
+              required
+            />
+          )}
         </div>
 
         <FormField
-          control={chipForm.control}
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
@@ -385,7 +468,7 @@ export default function RegisterAsset() {
       <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
-            control={speedyForm.control}
+            control={form.control}
             name="model"
             render={({ field }) => (
               <FormItem>
@@ -404,7 +487,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={speedyForm.control}
+            control={form.control}
             name="serial_number"
             render={({ field }) => (
               <FormItem>
@@ -423,7 +506,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={speedyForm.control}
+            control={form.control}
             name="rented_days"
             render={({ field }) => (
               <FormItem>
@@ -443,7 +526,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={speedyForm.control}
+            control={form.control}
             name="radio"
             render={({ field }) => (
               <FormItem>
@@ -460,7 +543,7 @@ export default function RegisterAsset() {
           />
 
           <FormField
-            control={speedyForm.control}
+            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
@@ -477,99 +560,59 @@ export default function RegisterAsset() {
             )}
           />
 
-          <FormField
-            control={speedyForm.control}
-            name="manufacturer_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fabricante *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o fabricante" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {manufacturers?.map((manufacturer) => (
-                      <SelectItem
-                        key={manufacturer.id}
-                        value={manufacturer.id.toString()}
-                      >
-                        {manufacturer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="manufacturer_id"
+              label="Fabricante"
+              placeholder="Selecione o fabricante"
+              options={manufacturers.map(m => ({ id: m.id, name: m.name }))}
+              disabled={createAssetMutation.isPending}
+              required
+            />
+          )}
 
-          <FormField
-            control={speedyForm.control}
-            name="solution_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Solução</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a solução" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {assetSolutions?.map((solution) => (
-                      <SelectItem key={solution.id} value={solution.id.toString()}>
-                        {solution.solution}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="solution_id"
+              label="Solução"
+              placeholder="Selecione a solução"
+              options={assetSolutions.map(s => ({ id: s.id, name: s.solution }))}
+              disabled={createAssetMutation.isPending}
+            />
+          )}
 
-          <FormField
-            control={speedyForm.control}
-            name="status_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status *</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value?.toString()}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {assetStatus?.map((status) => (
-                      <SelectItem key={status.id} value={status.id.toString()}>
-                        {status.status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {loadingReferenceData ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <SelectField
+              control={form.control}
+              name="status_id"
+              label="Status"
+              placeholder="Selecione o status"
+              options={assetStatus.map(s => ({ id: s.id, name: s.status }))}
+              disabled={createAssetMutation.isPending}
+              required
+            />
+          )}
         </div>
 
         <FormField
-          control={speedyForm.control}
+          control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
@@ -629,49 +672,26 @@ export default function RegisterAsset() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {assetType === "CHIP" ? (
-            <Form {...chipForm}>
-              <form
-                onSubmit={chipForm.handleSubmit(onChipSubmit)}
-                className="space-y-8"
-              >
-                <ChipFields />
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Cadastrando...
-                      </>
-                    ) : (
-                      "Cadastrar Chip"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : (
-            <Form {...speedyForm}>
-              <form
-                onSubmit={speedyForm.handleSubmit(onSpeedySubmit)}
-                className="space-y-8"
-              >
-                <SpeedyFields />
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                        Cadastrando...
-                      </>
-                    ) : (
-                      "Cadastrar Speedy 5G"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          )}
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
+              {typeId === 1 ? <ChipFields /> : <SpeedyFields />}
+              <div className="flex justify-end">
+                <Button type="submit" disabled={createAssetMutation.isPending}>
+                  {createAssetMutation.isPending ? (
+                    <>
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Cadastrando...
+                    </>
+                  ) : (
+                    `Cadastrar ${assetType === "CHIP" ? "Chip" : "Speedy 5G"}`
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
