@@ -42,7 +42,7 @@ export default function RegisterAsset() {
     } else {
       reset({
         type_id: 2, // Using number instead of string
-        rented_days: "0", // This is a string that gets transformed by zod schema
+        rented_days: 0 // This is a string that gets transformed by zod schema
       });
     }
   }, [assetType, reset]);
@@ -109,7 +109,7 @@ export default function RegisterAsset() {
       } else {
         reset({
           type_id: 2, // Using number instead of string
-          rented_days: "0", // This is a string in the form but transformed by zod
+          rented_days: 0 // This is a string in the form but transformed by zod
         });
       }
     },
