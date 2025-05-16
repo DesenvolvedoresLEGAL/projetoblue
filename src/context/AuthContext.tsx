@@ -1,9 +1,10 @@
 
-import React, { createContext, useContext } from 'react';
-import { AuthContextType } from '@/types/authContext';
+import React, { createContext, useContext, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAuthActions } from '@/hooks/useAuthActions';
+import { AuthContextType } from '@/types/authContext';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -11,6 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { state, updateState } = useAuthState();
   const { signIn, signUp, signOut } = useAuthActions(updateState);
   
+  // Initialize auth session on first render
   useAuthSession(updateState);
 
   return (

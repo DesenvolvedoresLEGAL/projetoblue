@@ -1,27 +1,64 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
-import { MoonStar, Sun } from 'lucide-react';
+import { MoonStar, Sun, Loader2 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { toast } from '@/utils/toast';
+import { useAuth } from '@/context/AuthContext';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+
+// Login form schema
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: 'Email é obrigatório' })
+    .email({ message: 'Email inválido' }),
+  password: z
+    .string()
+    .min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { signIn, isLoading } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Authentication is removed, simply redirect to dashboard with a success toast
-    toast.success("Bem-vindo ao sistema! Acesso concedido automaticamente.");
-    navigate('/');
+  // Initialize form
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // Handle form submission
+  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+    try {
+      await signIn(data.email, data.password);
+      // No need to navigate here as the AuthContext will redirect on successful login
+    } catch (error: any) {
+      // Error is already handled in signIn function
+      // This catch is just to prevent the form from crashing in unexpected cases
+      console.error('Unexpected error during login:', error);
+    }
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -37,38 +74,67 @@ const Login = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="seu@email.com"
+                        disabled={isLoading}
+                        autoComplete="email"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Senha</FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        {...field}
+                        disabled={isLoading}
+                        autoComplete="current-password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex justify-end">
-              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
-                Esqueci minha senha
-              </Link>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full"
-            >
-              Entrar
-            </Button>
-          </form>
+              
+              <div className="flex justify-end">
+                <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : 'Entrar'}
+              </Button>
+            </form>
+          </Form>
+          
           <div className="mt-4 text-center text-sm">
             <p className="text-muted-foreground">
               Não possui uma conta?{' '}
@@ -83,7 +149,7 @@ const Login = () => {
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme}
-            title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
           >
             {theme === 'dark' ? <Sun size={20} /> : <MoonStar size={20} />}
           </Button>
@@ -94,6 +160,6 @@ const Login = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default Login;
