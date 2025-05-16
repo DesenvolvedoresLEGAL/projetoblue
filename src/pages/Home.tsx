@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,18 +41,26 @@ const { data: recentEvents, error } = await supabase
   .limit(5)
   .throwOnError();
 
-  const mappedRecentEvents = recentEvents.map(row => {
-    const event = row.event ?? 'Outro';
-      return {
-        id: row.id,
-        event,
-        description: row.details,
-        time: new Date(row.date.toString()),
-      };
-    });
+// Fix for TS2339: We need to type the "details" correctly and safely access properties
+const mappedRecentEvents = recentEvents.map(row => {
+  const event = row.event ?? 'Outro';
+  // Define the details with proper typing
+  const details = typeof row.details === 'object' ? row.details : {};
+  
+  return {
+    id: row.id,
+    event,
+    description: details,
+    time: new Date(row.date.toString()),
+  };
+});
 
-    console.log(recentEvents[4].details)
-    console.log(chips.filter(chip => chip.uuid === recentEvents[4].details?.uuid));
+// Fix for accessing details.uuid property
+console.log(recentEvents[4].details);
+// Safely access the UUID with type checking
+const eventDetails = recentEvents[4].details;
+const eventUuid = typeof eventDetails === 'object' && eventDetails !== null ? (eventDetails as any).uuid : undefined;
+console.log(chips.filter(chip => chip.uuid === eventUuid));
 
 // Mock data for the dashboard, to be replaced with real data later
 const mockData = {
@@ -193,8 +202,10 @@ const Home: React.FC = () => {
                 </div>
               </div>
               <div>
-
-                <p className="text-xs text-muted-foreground">{Math.ceil(Math.abs(new Date() - new Date(asset.created_at)) / (1000 * 3600))} Horas atrás</p>
+                {/* Fix for TS2362 & TS2363: Convert date strings to numbers for calculation */}
+                <p className="text-xs text-muted-foreground">
+                  {Math.ceil(Math.abs(new Date().getTime() - new Date(asset.created_at).getTime()) / (1000 * 3600))} Horas atrás
+                </p>
               </div>
             </div>)}
           </div>
@@ -211,17 +222,31 @@ const Home: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockData.recentEvents.map(event => <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
-              <div className={`h-2 w-2 mt-2 rounded-full 
+            {mockData.recentEvents.map(event => {
+              // Safe casting of description which is now a properly typed object
+              const desc = event.description as any;
+              
+              return (
+                <div key={event.id} className="flex gap-3 border-b pb-2 last:border-0 last:pb-0">
+                  <div className={`h-2 w-2 mt-2 rounded-full 
                     ${event.event === 'INSERT' ? 'bg-green-500' : event.event === 'STATUS ATUALIZADO' ? 'bg-blue-500' : event.event === 'Alteração de Status' ? 'bg-amber-500' : event.event === 'Manutenção' ? 'bg-purple-500' : 'bg-red-500'}`} />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{event.description.iccid ? chips.filter((chip) => chip.iccid === event.description.iccid)[0].line_number : event.description.radio}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground">{event.event}</span>
-                  <span className="text-xs text-muted-foreground">{Math.ceil(Math.abs(new Date() - new Date(event.time)) / (1000 * 3600))} Horas atrás</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {desc && desc.iccid ? 
+                        chips.filter((chip) => chip.iccid === desc.iccid)[0]?.line_number : 
+                        desc?.radio}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">{event.event}</span>
+                      {/* Fix for TS2362 & TS2363: Convert date objects to numbers for calculation */}
+                      <span className="text-xs text-muted-foreground">
+                        {Math.ceil(Math.abs(new Date().getTime() - event.time.getTime()) / (1000 * 3600))} Horas atrás
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>)}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
