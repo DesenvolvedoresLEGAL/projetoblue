@@ -5,14 +5,7 @@ import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 
 export function useAuthActions(updateState: (state: any) => void) {
-  // Use navigate only when inside a router context
-  let navigate;
-  try {
-    navigate = useNavigate();
-  } catch (error) {
-    // Handle case when not in router context
-    console.warn("Navigation functions are unavailable outside router context");
-  }
+  const navigate = useNavigate();
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -58,7 +51,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       if (data.user) {
         console.log('Usuário criado com sucesso:', data.user.id);
         toast.success("Usuário criado com sucesso! Você já pode fazer login.");
-        if (navigate) navigate('/login');
+        navigate('/login');
       } else {
         console.error('Usuário não foi criado, dados incompletos:', data);
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
@@ -121,7 +114,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         throw new Error('Falha no login: dados incompletos retornados');
       }
       
-      if (navigate) navigate('/');
+      navigate('/');
     } catch (error: any) {
       console.error('Erro durante o login:', error);
       updateState({ error: error.message || 'Erro ao fazer login' });
@@ -135,7 +128,7 @@ export function useAuthActions(updateState: (state: any) => void) {
     try {
       updateState({ isLoading: true });
       await authService.signOut();
-      if (navigate) navigate('/login');
+      navigate('/login');
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       toast.error(error.message || 'Ocorreu um erro ao tentar sair.');
