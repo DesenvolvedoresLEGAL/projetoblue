@@ -1,9 +1,8 @@
 
-export { DashboardKpis } from './DashboardKpis';
-export { AssetsChart } from './AssetsChart';
-export { EventsTimeline } from './EventsTimeline';
-export { AlertsPanel } from './AlertsPanel';
-export { QuickActions } from './QuickActions';
-export { ProblemAssetsCard } from './ProblemAssetsCard';
-import AssetsStatusCard from './AssetsStatusCard';
-export { AssetsStatusCard };
+export { DashboardHeader } from './DashboardHeader';
+export { KpiCards } from './KpiCards';
+export { QuickActionButtons } from './QuickActionButtons';
+export { RecentAssetsList } from './RecentAssetsList';
+export { RecentEventsList } from './RecentEventsList';
+export { LoadingState } from './LoadingState';
+export { ErrorState } from './ErrorState';
