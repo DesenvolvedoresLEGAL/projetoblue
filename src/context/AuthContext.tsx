@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import { User } from '@supabase/supabase-js';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -22,7 +22,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn,
         signUp,
         signOut,
-        isAuthenticated: !!state.user && !!state.profile,
+        // isAuthenticated should depend only on user, not on profile
+        isAuthenticated: !!state.user,
+        // Optional: maintain compatibility with existing code that might check for profile
+        hasProfile: !!state.profile
       }}
     >
       {children}

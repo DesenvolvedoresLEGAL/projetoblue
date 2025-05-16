@@ -52,8 +52,12 @@ const Login = () => {
   // Handle form submission
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     try {
-      await signIn(data.email, data.password);
-      // No need to navigate here as the AuthContext will redirect on successful login
+      const error = await signIn(data.email, data.password);
+      
+      // Only navigate if there was no error
+      if (!error) {
+        navigate('/');
+      }
     } catch (error: any) {
       // Error is already handled in signIn function
       // This catch is just to prevent the form from crashing in unexpected cases
