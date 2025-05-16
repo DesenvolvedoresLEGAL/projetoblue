@@ -7,19 +7,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Form } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader } from "lucide-react";
-
 // Import custom hooks and components
 import { useReferenceData } from "@/hooks/useReferenceData";
-import { ChipFields } from "@/components/assets/ChipFields";
-import { SpeedyFields } from "@/components/assets/SpeedyFields";
 import { AssetFormData, assetSchema } from "@/components/assets/AssetSchemas";
+import { AssetTypeSelector } from "@/components/assets/AssetTypeSelector";
+import { AssetFormCard } from "@/components/assets/AssetFormCard";
 
 export default function RegisterAsset() {
   const [assetType, setAssetType] = useState<"CHIP" | "SPEEDY">("CHIP");
@@ -126,14 +118,11 @@ export default function RegisterAsset() {
       
       // Focar no primeiro campo com erro
       const firstErrorField = Object.keys(form.formState.errors)[0];
-      if (firstErrorField && form.getFieldState(firstErrorField as keyof AssetFormData).invalid) {
-        setFocus(firstErrorField as keyof AssetFormData);
+      if (firstErrorField && form.getFieldState(firstErrorField as any).invalid) {
+        setFocus(firstErrorField as any);
       }
     },
   });
-
-  // Verificar se está carregando dados ou enviando formulário
-  const isLoading = loadingReferenceData || createAssetMutation.isPending;
 
   // Handle submit para qualquer tipo de ativo usando o schema discriminado
   const onSubmit: SubmitHandler<AssetFormData> = (data) => {
@@ -151,75 +140,23 @@ export default function RegisterAsset() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tipo de Ativo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RadioGroup
-            className="flex flex-col md:flex-row gap-4 mb-8"
-            value={assetType}
-            onValueChange={(v) => setAssetType(v as "CHIP" | "SPEEDY")}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="CHIP" id="chip" />
-              <Label htmlFor="chip">Chip</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="SPEEDY" id="speedy" />
-              <Label htmlFor="speedy">Speedy 5G (Roteador)</Label>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
+      <AssetTypeSelector 
+        value={assetType} 
+        onChange={setAssetType} 
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {assetType === "CHIP" ? "Detalhes do Chip" : "Detalhes do Speedy 5G"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8"
-            >
-              {typeId === 1 ? (
-                <ChipFields 
-                  control={form.control}
-                  loadingReferenceData={loadingReferenceData}
-                  manufacturers={manufacturers}
-                  plans={plans}
-                  assetStatus={assetStatus}
-                  isPending={createAssetMutation.isPending}
-                />
-              ) : (
-                <SpeedyFields 
-                  control={form.control}
-                  loadingReferenceData={loadingReferenceData}
-                  manufacturers={manufacturers}
-                  assetSolutions={assetSolutions}
-                  assetStatus={assetStatus}
-                  isPending={createAssetMutation.isPending}
-                />
-              )}
-              <div className="flex justify-end">
-                <Button type="submit" disabled={createAssetMutation.isPending}>
-                  {createAssetMutation.isPending ? (
-                    <>
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Cadastrando...
-                    </>
-                  ) : (
-                    `Cadastrar ${assetType === "CHIP" ? "Chip" : "Speedy 5G"}`
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <AssetFormCard
+        assetType={assetType}
+        form={form}
+        onSubmit={onSubmit}
+        isPending={createAssetMutation.isPending}
+        typeId={typeId}
+        manufacturers={manufacturers}
+        plans={plans}
+        assetStatus={assetStatus}
+        assetSolutions={assetSolutions}
+        loadingReferenceData={loadingReferenceData}
+      />
     </div>
   );
 }
