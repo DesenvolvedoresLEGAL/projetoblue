@@ -28,7 +28,7 @@ export interface DashboardStats {
 export function useDashboardStats() {
   return useQuery<DashboardStats, Error>({
     queryKey: ['dashboard', 'stats'],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
         // Parallel queries for better performance
         const [
@@ -157,7 +157,7 @@ export function useDashboardStats() {
       }
     },
     staleTime: 60000, // 1 minute
-    cacheTime: 300000, // 5 minutes
+    gcTime: 300000,   // 5 minutes (renamed from cacheTime)
     retry: 1,
     refetchOnWindowFocus: false
   });
