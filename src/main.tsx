@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
         return failureCount < 2; // Only retry once for other errors
       },
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (renamed from cacheTime)
     },
     mutations: {
       retry: 1,
