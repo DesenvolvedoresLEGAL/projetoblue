@@ -12,6 +12,7 @@ interface PasswordInputProps {
   required?: boolean;
   className?: string;
   autoComplete?: string;
+  disabled?: boolean;  // Add the disabled prop to the interface
 }
 
 export const PasswordInput = ({ 
@@ -21,7 +22,8 @@ export const PasswordInput = ({
   placeholder = "••••••••", 
   required = true,
   className = "",
-  autoComplete
+  autoComplete,
+  disabled = false  // Add default value for the disabled prop
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,6 +42,7 @@ export const PasswordInput = ({
         required={required}
         className={`pr-10 ${className}`}
         autoComplete={autoComplete}
+        disabled={disabled}  // Pass the disabled prop to the Input component
       />
       <Button
         type="button"
@@ -48,6 +51,7 @@ export const PasswordInput = ({
         className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
         onClick={togglePasswordVisibility}
         tabIndex={-1}
+        disabled={disabled}  // Also disable the toggle button when the input is disabled
         aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
       >
         {showPassword ? (
