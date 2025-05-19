@@ -21,6 +21,7 @@ const mockUser: User = {
 const mockSession: Session = {
   access_token: 'test-access-token',
   refresh_token: 'test-refresh-token',
+  token_type: 'bearer',
   user: mockUser,
   expires_at: 123456789,
   expires_in: 3600,

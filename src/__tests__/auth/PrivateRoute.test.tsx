@@ -6,6 +6,7 @@ import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { User } from '@supabase/supabase-js';
+import { UserRole } from '@/types/auth';
 
 // Create a proper mock of the Supabase User type
 const mockUser: User = {
@@ -24,7 +25,7 @@ const mockAuthContext = {
   isLoading: false,
   isAuthenticated: true,
   user: mockUser,
-  profile: { id: 'test-user-id', email: 'test@example.com', role: 'analyst', is_active: true, is_approved: true, created_at: '', last_login: '', bits_referral_code: '' },
+  profile: { id: 'test-user-id', email: 'test@example.com', role: 'analyst' as UserRole, is_active: true, is_approved: true, created_at: '', last_login: '', bits_referral_code: '' },
   error: null,
   session: null,
   signIn: vi.fn(),
@@ -117,7 +118,7 @@ describe('PrivateRoute', () => {
   it('redirects to unauthorized when role check fails', () => {
     vi.mocked(useAuth).mockReturnValueOnce({
       ...mockAuthContext,
-      profile: { ...mockAuthContext.profile, role: 'analyst' }
+      profile: { ...mockAuthContext.profile, role: 'analyst' as UserRole }
     });
     
     render(
