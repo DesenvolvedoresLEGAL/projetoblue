@@ -10,7 +10,7 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun, Loader2 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import {
   Form,
   FormControl,
