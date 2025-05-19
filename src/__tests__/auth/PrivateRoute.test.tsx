@@ -5,27 +5,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { User } from '@supabase/supabase-js';
-import { UserRole } from '@/types/auth';
-
-// Create a proper mock of the Supabase User type
-const mockUser: User = {
-  id: 'test-user-id',
-  email: 'test@example.com',
-  app_metadata: {},
-  user_metadata: {},
-  aud: 'authenticated',
-  created_at: '2023-01-01T00:00:00Z',
-  role: '',
-  updated_at: '2023-01-01T00:00:00Z',
-};
 
 // Mock the useAuth hook values
 const mockAuthContext = {
   isLoading: false,
   isAuthenticated: true,
-  user: mockUser,
-  profile: { id: 'test-user-id', email: 'test@example.com', role: 'analyst' as UserRole, is_active: true, is_approved: true, created_at: '', last_login: '', bits_referral_code: '' },
+  user: { id: 'test-user-id', email: 'test@example.com' },
+  profile: { id: 'test-user-id', email: 'test@example.com', role: 'analyst', is_active: true, is_approved: true, created_at: '', last_login: '', bits_referral_code: '' },
   error: null,
   session: null,
   signIn: vi.fn(),
@@ -118,7 +104,7 @@ describe('PrivateRoute', () => {
   it('redirects to unauthorized when role check fails', () => {
     vi.mocked(useAuth).mockReturnValueOnce({
       ...mockAuthContext,
-      profile: { ...mockAuthContext.profile, role: 'analyst' as UserRole }
+      profile: { ...mockAuthContext.profile, role: 'analyst' }
     });
     
     render(
