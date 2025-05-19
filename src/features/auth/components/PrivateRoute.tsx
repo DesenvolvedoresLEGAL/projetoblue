@@ -1,38 +1,36 @@
 
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import { useAuth } from '@/features/auth/context/AuthContext';
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface PrivateRouteProps {
   requiredRole?: string;
 }
 
-export const PrivateRoute = ({ requiredRole }: PrivateRouteProps) => {
+export const PrivateRoute: React.FC<PrivateRouteProps> = ({ requiredRole }) => {
   const { isLoading, isAuthenticated, profile } = useAuth();
-  const location = useLocation();
-
-  // Show loading spinner while checking authentication
+  
+  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
       </div>
     );
   }
-
-  // Check authentication
+  
+  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated, preserving the intended destination
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
-
-  // Check for required role if specified
+  
+  // Check for role if required
   if (requiredRole && profile?.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
-
-  // If authenticated and role check passes, render child routes
+  
+  // Render children routes
   return <Outlet />;
 };
-
-export default PrivateRoute;

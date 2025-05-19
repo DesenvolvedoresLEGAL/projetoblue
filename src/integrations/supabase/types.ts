@@ -15,6 +15,7 @@ export type Database = {
           association_id: number
           client_id: string
           created_at: string
+          deleted_at: string | null
           entry_date: string
           exit_date: string | null
           id: number
@@ -25,6 +26,7 @@ export type Database = {
           association_id: number
           client_id: string
           created_at?: string
+          deleted_at?: string | null
           entry_date: string
           exit_date?: string | null
           id?: number
@@ -35,6 +37,7 @@ export type Database = {
           association_id?: number
           client_id?: string
           created_at?: string
+          deleted_at?: string | null
           entry_date?: string
           exit_date?: string | null
           id?: number
@@ -76,6 +79,7 @@ export type Database = {
           assoc_id: number | null
           created_at: string
           date: string | null
+          deleted_at: string | null
           details: Json | null
           event: string | null
           id: number
@@ -87,6 +91,7 @@ export type Database = {
           assoc_id?: number | null
           created_at?: string
           date?: string | null
+          deleted_at?: string | null
           details?: Json | null
           event?: string | null
           id?: number
@@ -98,6 +103,7 @@ export type Database = {
           assoc_id?: number | null
           created_at?: string
           date?: string | null
+          deleted_at?: string | null
           details?: Json | null
           event?: string | null
           id?: number
@@ -139,18 +145,21 @@ export type Database = {
       asset_solutions: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: number
           solution: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           solution: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           solution?: string
           updated_at?: string
@@ -161,6 +170,7 @@ export type Database = {
         Row: {
           association: number | null
           created_at: string
+          deleted_at: string | null
           id: number
           status: string
           updated_at: string
@@ -168,6 +178,7 @@ export type Database = {
         Insert: {
           association?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: number
           status: string
           updated_at?: string
@@ -175,6 +186,7 @@ export type Database = {
         Update: {
           association?: number | null
           created_at?: string
+          deleted_at?: string | null
           id?: number
           status?: string
           updated_at?: string
@@ -192,18 +204,21 @@ export type Database = {
       asset_types: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: number
           type: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           type: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           type?: string
           updated_at?: string
@@ -213,6 +228,7 @@ export type Database = {
       assets: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           iccid: string | null
           line_number: number | null
           manufacturer_id: number | null
@@ -230,6 +246,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -247,6 +264,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -303,18 +321,21 @@ export type Database = {
       association_types: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: number
           type: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           type: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           type?: string
           updated_at?: string
@@ -325,6 +346,7 @@ export type Database = {
         Row: {
           action_type: string
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           points: number
@@ -336,6 +358,7 @@ export type Database = {
         Insert: {
           action_type: string
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           points: number
@@ -347,6 +370,7 @@ export type Database = {
         Update: {
           action_type?: string
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           points?: number
@@ -382,6 +406,7 @@ export type Database = {
       bits_referrals: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           id: string
           points_earned: number | null
           referral_link_used: string | null
@@ -397,6 +422,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           points_earned?: number | null
           referral_link_used?: string | null
@@ -412,6 +438,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           points_earned?: number | null
           referral_link_used?: string | null
@@ -438,6 +465,7 @@ export type Database = {
       bits_rewards_catalog: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -447,6 +475,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -456,6 +485,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -468,6 +498,7 @@ export type Database = {
       bits_user_rewards: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
           points_spent: number
           redeemed_at: string | null
@@ -477,6 +508,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           points_spent: number
           redeemed_at?: string | null
@@ -486,6 +518,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
           points_spent?: number
           redeemed_at?: string | null
@@ -515,6 +548,7 @@ export type Database = {
           cnpj: string
           contato: number
           created_at: string
+          deleted_at: string | null
           email: string | null
           nome: string
           updated_at: string
@@ -524,6 +558,7 @@ export type Database = {
           cnpj: string
           contato: number
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           nome: string
           updated_at?: string
@@ -533,6 +568,7 @@ export type Database = {
           cnpj?: string
           contato?: number
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           nome?: string
           updated_at?: string
@@ -543,18 +579,21 @@ export type Database = {
       location_types: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: number
           name: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           name: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           name?: string
           updated_at?: string
@@ -565,6 +604,7 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string | null
+          deleted_at: string | null
           id: number
           latitude: number | null
           longitude: number | null
@@ -575,6 +615,7 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: number
           latitude?: number | null
           longitude?: number | null
@@ -585,6 +626,7 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: number
           latitude?: number | null
           longitude?: number | null
@@ -613,6 +655,7 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: number
           name: string
@@ -622,6 +665,7 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at: string
+          deleted_at?: string | null
           description?: string | null
           id?: number
           name: string
@@ -631,6 +675,7 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: number
           name?: string
@@ -642,6 +687,7 @@ export type Database = {
       plans: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: number
           nome: string
           tamanho_gb: number | null
@@ -649,6 +695,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           nome: string
           tamanho_gb?: number | null
@@ -656,6 +703,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: number
           nome?: string
           tamanho_gb?: number | null
@@ -667,6 +715,7 @@ export type Database = {
         Row: {
           changed_at: string
           created_at: string
+          deleted_at: string | null
           email: string | null
           id: string
           new_data: Json | null
@@ -679,6 +728,7 @@ export type Database = {
         Insert: {
           changed_at?: string
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           new_data?: Json | null
@@ -691,6 +741,7 @@ export type Database = {
         Update: {
           changed_at?: string
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           new_data?: Json | null
@@ -706,6 +757,7 @@ export type Database = {
         Row: {
           bits_referral_code: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           id: string
           is_active: boolean | null
@@ -717,6 +769,7 @@ export type Database = {
         Insert: {
           bits_referral_code?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           id: string
           is_active?: boolean | null
@@ -728,6 +781,7 @@ export type Database = {
         Update: {
           bits_referral_code?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           id?: string
           is_active?: boolean | null
