@@ -1,15 +1,18 @@
 
-import { Asset } from "@/types/asset";
+import { Asset, AssetStatus, AssetType } from "@/types/asset";
 
+// Types for asset API requests
 export interface AssetListParams {
-  type?: string;
-  status?: string;
+  type?: AssetType;
+  status?: AssetStatus;
   search?: string;
   phoneSearch?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface AssetCreateParams {
-  type: string; // "CHIP" or "ROTEADOR"
+  type: AssetType;
   // Common fields
   statusId?: number;
   notes?: string;
@@ -30,7 +33,7 @@ export interface AssetCreateParams {
 
 export interface AssetUpdateParams {
   // Fields that can be updated
-  status?: string;
+  status?: AssetStatus;
   statusId?: number;
   notes?: string;
   
@@ -47,18 +50,19 @@ export interface AssetUpdateParams {
   serialNumber?: string;
 }
 
-export interface ProblemAsset {
-  uuid: string;
-  iccid: string;
-  radio: string;
-  asset_types: {
-    type: string;
-  };
-}
-
+// Type for status by asset type response
 export interface AssetStatusByType {
   type: string;
   status: string;
-  count: number;
   total: number;
+}
+
+// Define a specific type for problem assets from the database
+export interface ProblemAsset {
+  uuid: string;
+  iccid: string | null;
+  radio: string | null;
+  asset_types: {
+    type: string;
+  };
 }

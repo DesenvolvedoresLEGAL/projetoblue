@@ -342,155 +342,6 @@ export type Database = {
         }
         Relationships: []
       }
-      bits_badges_catalog: {
-        Row: {
-          created_at: string
-          criteria: Json | null
-          description: string | null
-          icon_url: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_campaigns: {
-        Row: {
-          applicable_to: Json | null
-          bonus_points: number | null
-          created_at: string
-          description: string | null
-          end_date: string
-          id: string
-          is_active: boolean
-          name: string
-          point_multiplier: number | null
-          start_date: string
-          updated_at: string
-        }
-        Insert: {
-          applicable_to?: Json | null
-          bonus_points?: number | null
-          created_at?: string
-          description?: string | null
-          end_date: string
-          id?: string
-          is_active?: boolean
-          name: string
-          point_multiplier?: number | null
-          start_date: string
-          updated_at?: string
-        }
-        Update: {
-          applicable_to?: Json | null
-          bonus_points?: number | null
-          created_at?: string
-          description?: string | null
-          end_date?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          point_multiplier?: number | null
-          start_date?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_levels_catalog: {
-        Row: {
-          benefits: Json | null
-          created_at: string
-          level_number: number
-          name: string
-          points_required: number
-          updated_at: string
-        }
-        Insert: {
-          benefits?: Json | null
-          created_at?: string
-          level_number: number
-          name: string
-          points_required: number
-          updated_at?: string
-        }
-        Update: {
-          benefits?: Json | null
-          created_at?: string
-          level_number?: number
-          name?: string
-          points_required?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_missions_catalog: {
-        Row: {
-          badge_reward_id: string | null
-          created_at: string
-          criteria: Json | null
-          description: string | null
-          end_date: string | null
-          id: string
-          is_active: boolean
-          name: string
-          points_reward: number | null
-          start_date: string | null
-          updated_at: string
-        }
-        Insert: {
-          badge_reward_id?: string | null
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          points_reward?: number | null
-          start_date?: string | null
-          updated_at?: string
-        }
-        Update: {
-          badge_reward_id?: string | null
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          points_reward?: number | null
-          start_date?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_missions_catalog_badge_reward_id_fkey"
-            columns: ["badge_reward_id"]
-            isOneToOne: false
-            referencedRelation: "bits_badges_catalog"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       bits_points_log: {
         Row: {
           action_type: string
@@ -554,12 +405,9 @@ export type Database = {
       }
       bits_referrals: {
         Row: {
-          conversion_data: Json | null
           created_at: string | null
           deleted_at: string | null
           id: string
-          piperun_deal_status: string | null
-          piperun_lead_id: string | null
           points_earned: number | null
           referral_link_used: string | null
           referred_company: string | null
@@ -573,12 +421,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          conversion_data?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          piperun_deal_status?: string | null
-          piperun_lead_id?: string | null
           points_earned?: number | null
           referral_link_used?: string | null
           referred_company?: string | null
@@ -592,12 +437,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          conversion_data?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           id?: string
-          piperun_deal_status?: string | null
-          piperun_lead_id?: string | null
           points_earned?: number | null
           referral_link_used?: string | null
           referred_company?: string | null
@@ -652,141 +494,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      bits_user_badges: {
-        Row: {
-          badge_id: string
-          created_at: string
-          earned_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          badge_id: string
-          created_at?: string
-          earned_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          badge_id?: string
-          created_at?: string
-          earned_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_badges_badge_id_fkey"
-            columns: ["badge_id"]
-            isOneToOne: false
-            referencedRelation: "bits_badges_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_user_badges_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_user_missions: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          id: string
-          mission_id: string
-          progress: Json | null
-          status: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          mission_id: string
-          progress?: Json | null
-          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          mission_id?: string
-          progress?: Json | null
-          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_missions_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "bits_missions_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_user_missions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_user_profile_stats: {
-        Row: {
-          created_at: string
-          current_level_number: number
-          current_points_balance: number
-          last_points_activity_at: string | null
-          total_points_earned: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_level_number?: number
-          current_points_balance?: number
-          last_points_activity_at?: string | null
-          total_points_earned?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_level_number?: number
-          current_points_balance?: number
-          last_points_activity_at?: string | null
-          total_points_earned?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_profile_stats_current_level_number_fkey"
-            columns: ["current_level_number"]
-            isOneToOne: false
-            referencedRelation: "bits_levels_catalog"
-            referencedColumns: ["level_number"]
-          },
-          {
-            foreignKeyName: "bits_user_profile_stats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       bits_user_rewards: {
         Row: {
@@ -1184,7 +891,6 @@ export type Database = {
         | "Manutenção"
       asset_type_enum: "chip" | "roteador"
       association_type_enum: "aluguel" | "assinatura"
-      bits_mission_status_enum: "in_progress" | "completed" | "expired"
       bits_referral_status_enum:
         | "pendente"
         | "em_negociacao"
@@ -1327,7 +1033,6 @@ export const Constants = {
       ],
       asset_type_enum: ["chip", "roteador"],
       association_type_enum: ["aluguel", "assinatura"],
-      bits_mission_status_enum: ["in_progress", "completed", "expired"],
       bits_referral_status_enum: [
         "pendente",
         "em_negociacao",
