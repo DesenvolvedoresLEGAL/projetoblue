@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { AuthContextType } from '@/types/authContext';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -13,6 +13,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Set up auth session check and subscription
   useAuthSession(updateState);
+  
+  // Log auth state changes to help with debugging
+  useEffect(() => {
+    console.log('Auth state updated:', { 
+      isAuthenticated: !!state.user && !!state.profile,
+      hasUser: !!state.user,
+      hasProfile: !!state.profile,
+      isLoading: state.isLoading,
+      hasError: !!state.error
+    });
+  }, [state.user, state.profile, state.isLoading, state.error]);
 
   return (
     <AuthContext.Provider

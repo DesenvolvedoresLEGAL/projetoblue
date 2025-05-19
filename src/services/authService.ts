@@ -12,7 +12,11 @@ interface ValidationResult {
   error?: string;
 }
 
+// Helper function to add delay for retrying operations
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const authService = {
+  // Validation logic
   validateSignUpData({ email, password }: SignUpData): ValidationResult {
     if (!email || !email.includes('@') || !email.includes('.')) {
       return {
@@ -39,6 +43,7 @@ export const authService = {
     return { isValid: true };
   },
 
+  // Sign up with retry
   async signUp(email: string, password: string) {
     console.log('Iniciando processo de cadastro:', { email });
     
@@ -100,6 +105,7 @@ export const authService = {
     }
   },
 
+  // Sign in with improved retry logic
   async signIn(email: string, password: string) {
     console.log('Tentando login para:', email);
     try {
@@ -118,10 +124,21 @@ export const authService = {
           if (error) {
             console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
             lastError = error;
-            // Wait a bit longer between each retry
-            await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+            // Wait a bit longer between each retry with exponential backoff
+            await delay(Math.pow(2, attempts) * 1000);
             attempts++;
             continue;
+          }
+          
+          console.log('Login successful:', data.user?.email);
+          
+          // Store auth info in localStorage for persistence
+          if (data.session) {
+            try {
+              localStorage.setItem('supabase.auth.token', data.session.access_token);
+            } catch (e) {
+              console.warn('Could not save token to localStorage:', e);
+            }
           }
           
           // Success! Return the data
@@ -129,8 +146,8 @@ export const authService = {
         } catch (fetchError: any) {
           console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
           lastError = fetchError;
-          // Wait a bit longer between each retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempts + 1)));
+          // Wait with exponential backoff
+          await delay(Math.pow(2, attempts) * 1000);
           attempts++;
         }
       }
@@ -150,12 +167,29 @@ export const authService = {
     }
   },
 
+  // Sign out with improved handling
   async signOut() {
     try {
+      // Clear saved token from localStorage
+      try {
+        localStorage.removeItem('supabase.auth.token');
+      } catch (e) {
+        console.warn('Could not clear token from localStorage:', e);
+      }
+      
       return await supabase.auth.signOut();
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       throw error;
+    }
+  },
+  
+  // Check if user is authenticated based on local storage
+  isAuthenticated(): boolean {
+    try {
+      return !!localStorage.getItem('supabase.auth.token');
+    } catch (e) {
+      return false;
     }
   }
 };

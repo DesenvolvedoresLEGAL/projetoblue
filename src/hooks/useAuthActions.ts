@@ -3,12 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
+import { useState, useCallback } from 'react';
 
 export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
+  const [isAuthProcessing, setIsAuthProcessing] = useState(false);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string) => {
+    // Prevent duplicate operations
+    if (isAuthProcessing) {
+      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      return;
+    }
+    
     try {
+      setIsAuthProcessing(true);
       console.log('AuthContext: Iniciando processo de cadastro');
       updateState({ isLoading: true, error: null });
       
@@ -61,14 +70,21 @@ export function useAuthActions(updateState: (state: any) => void) {
       const errorMessage = error.message || 'Ocorreu um erro inesperado durante o cadastro.';
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
-      // Não relançamos o erro aqui para evitar quebras na interface
     } finally {
       updateState({ isLoading: false });
+      setIsAuthProcessing(false);
     }
-  };
+  }, [isAuthProcessing, navigate, updateState]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
+    // Prevent duplicate operations
+    if (isAuthProcessing) {
+      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      return;
+    }
+    
     try {
+      setIsAuthProcessing(true);
       updateState({ isLoading: true, error: null });
       
       if (!email || !password) {
@@ -109,11 +125,18 @@ export function useAuthActions(updateState: (state: any) => void) {
           updateState({ 
             profile,
             user: data.user,
-            error: null
+            error: null,
+            isLoading: false
           });
           
+          // Atualizar o last_login do usuário (operação não crítica)
+          profileService.updateLastLogin(data.user.id).catch(console.error);
+          
           toast.success(`Bem-vindo(a)!`);
-          navigate('/');
+          
+          // Use state from location if available
+          const from = window.history.state?.usr?.from?.pathname || '/';
+          navigate(from, { replace: true });
           
         } catch (profileError) {
           console.error('Erro ao verificar perfil após login:', profileError);
@@ -130,12 +153,21 @@ export function useAuthActions(updateState: (state: any) => void) {
       updateState({ error: error.message || 'Erro ao fazer login', isLoading: false });
       toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
     } finally {
-      updateState({ isLoading: false });
+      if (isAuthProcessing) {
+        setIsAuthProcessing(false);
+      }
     }
-  };
+  }, [isAuthProcessing, navigate, updateState]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
+    // Prevent duplicate operations
+    if (isAuthProcessing) {
+      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      return;
+    }
+    
     try {
+      setIsAuthProcessing(true);
       updateState({ isLoading: true });
       await authService.signOut();
       
@@ -143,7 +175,8 @@ export function useAuthActions(updateState: (state: any) => void) {
       updateState({
         user: null,
         profile: null,
-        error: null
+        error: null,
+        isLoading: false
       });
       
       toast.success('Você saiu do sistema com sucesso');
@@ -151,10 +184,11 @@ export function useAuthActions(updateState: (state: any) => void) {
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       toast.error(error.message || 'Ocorreu um erro ao tentar sair.');
-    } finally {
       updateState({ isLoading: false });
+    } finally {
+      setIsAuthProcessing(false);
     }
-  };
+  }, [isAuthProcessing, navigate, updateState]);
 
   return { signIn, signUp, signOut };
 }

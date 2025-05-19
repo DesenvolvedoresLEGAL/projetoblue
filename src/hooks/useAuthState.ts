@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { UserProfile, AuthState } from '@/types/auth';
 
@@ -11,12 +11,12 @@ export const useAuthState = () => {
     error: null,
   });
 
-  const updateState = (newState: Partial<AuthState>) => {
+  const updateState = useCallback((newState: Partial<AuthState>) => {
     setState(prevState => ({
       ...prevState,
       ...newState,
     }));
-  };
+  }, []);
 
   return {
     state,

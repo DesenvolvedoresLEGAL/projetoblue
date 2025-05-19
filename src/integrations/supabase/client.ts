@@ -15,4 +15,36 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    storage: localStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+  global: {
+    fetch: (...args) => {
+      // Add custom fetch logic for better request error handling
+      return fetch(...args).catch(err => {
+        console.error('Network error during Supabase request:', err);
+        throw err;
+      });
+    },
+  },
+});
+
+// Add a convenience method to check if we have a valid session
+export const hasValidSession = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    return !error && !!data.session;
+  } catch (err) {
+    console.error('Error checking session:', err);
+    return false;
+  }
+};
