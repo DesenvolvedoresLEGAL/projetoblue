@@ -283,28 +283,28 @@ export default function RegisterAsset() {
       }
       
       // Prepare data for insertion based on asset type
-      const insertData = {
+      const insertData: any = {
         type_id: data.type_id,
         status_id: data.status_id,
         solution_id: data.solution_id,
         notes: data.notes,
-        
-        // Common fields for both types
-        ...(data.type_id === 1 ? {
-          // Chip specific fields
-          iccid: data.iccid,
-          line_number: data.line_number,
-          manufacturer_id: data.manufacturer_id, // This is the carrier/operator
-          plan_id: data.plan_id,
-        } : {
-          // Router specific fields
-          serial_number: data.serial_number,
-          manufacturer_id: data.manufacturer_id,
-          model: data.model,
-          password: data.password,
-          radio: data.radio,
-        }),
       };
+      
+      // Add type-specific fields based on asset type
+      if (data.type_id === 1) {
+        // Chip specific fields
+        insertData.iccid = data.iccid;
+        insertData.line_number = data.line_number;
+        insertData.manufacturer_id = data.manufacturer_id; // This is the carrier/operator
+        insertData.plan_id = data.plan_id;
+      } else {
+        // Router specific fields
+        insertData.serial_number = data.serial_number;
+        insertData.manufacturer_id = data.manufacturer_id;
+        insertData.model = data.model;
+        insertData.password = data.password;
+        insertData.radio = data.radio;
+      }
       
       // Insert the asset
       const { data: newAsset, error } = await supabase
