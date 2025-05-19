@@ -877,7 +877,7 @@ export type Database = {
         Returns: {
           type: string
           status: string
-          count: number
+          total: number
         }[]
       }
     }

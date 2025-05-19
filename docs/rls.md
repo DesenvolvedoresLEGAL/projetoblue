@@ -1,205 +1,161 @@
 
-# Row-Level Security (RLS) Policies Documentation
+# Row Level Security (RLS) Policies Documentation
 
-This document outlines the Row-Level Security policies implemented in the BLUE application database. These policies control data access to ensure that users can only view and modify resources they have permission to access.
+This document describes the Row Level Security (RLS) policies implemented in the BLUE system database to ensure data access is properly controlled and secured.
 
-## Overview
+## Current RLS Policies
 
-Row-Level Security is enabled on the following tables:
-- `profiles`
-- `assets`
-- `clients`
-- `asset_client_assoc`
-- `asset_logs`
+### Table: profiles
 
-## Profiles Table Policies
+Profiles table stores user profile information linked to Supabase auth.users.
 
-The `profiles` table contains user profile information that is accessible only to:
-1. The user themselves
-2. Admin users who can view all profiles
+#### Policies:
 
-### Policies:
+1. **Users can only view their own profile**
+   - Applies to: SELECT operations
+   - Condition: `auth.uid() = id`
+   - Description: Users can only view their own profile information.
 
-1. **Users can view their own profile**
-   ```sql
-   CREATE POLICY "Users can view their own profile"
-     ON profiles
-     FOR SELECT
-     USING (auth.uid() = id);
-   ```
+### Table: assets
 
-2. **Users can update their own profile**
-   ```sql
-   CREATE POLICY "Users can update their own profile"
-     ON profiles
-     FOR UPDATE
-     USING (auth.uid() = id);
-   ```
+Assets table stores information about company assets like chips, routers, etc.
 
-## Assets Table Policies
-
-The `assets` table contains information about various assets in the system. Access to this table is controlled based on user role and asset ownership.
-
-### Policies:
+#### Policies:
 
 1. **Authenticated users can view assets**
-   ```sql
-   CREATE POLICY "Authenticated users can view assets"
-     ON assets
-     FOR SELECT
-     TO authenticated
-     USING (true);
-   ```
+   - Applies to: SELECT operations
+   - Condition: `auth.role() = 'authenticated'`
+   - Description: Any authenticated user can view asset information.
 
-2. **Only admin and ops can create assets**
-   ```sql
-   CREATE POLICY "Only admin and ops can create assets"
-     ON assets
-     FOR INSERT
-     TO authenticated
-     WITH CHECK (
-       public.has_role(auth.uid(), 'admin') OR 
-       public.has_role(auth.uid(), 'ops')
-     );
-   ```
+2. **Only admins and analysts can create assets**
+   - Applies to: INSERT operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'analyst')`
+   - Description: Only users with admin or analyst roles can create new assets.
 
-3. **Only admin and ops can update assets**
-   ```sql
-   CREATE POLICY "Only admin and ops can update assets"
-     ON assets
-     FOR UPDATE
-     TO authenticated
-     USING (
-       public.has_role(auth.uid(), 'admin') OR 
-       public.has_role(auth.uid(), 'ops')
-     );
-   ```
+3. **Only admins and ops can update assets**
+   - Applies to: UPDATE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'ops')`
+   - Description: Only users with admin or ops roles can update asset information.
 
-## Clients Table Policies
+4. **Only admins can delete assets**
+   - Applies to: DELETE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'`
+   - Description: Only users with admin role can delete assets.
 
-The `clients` table stores information about client organizations.
+### Table: clients
 
-### Policies:
+Clients table stores information about company clients.
+
+#### Policies:
 
 1. **Authenticated users can view clients**
-   ```sql
-   CREATE POLICY "Authenticated users can access clients"
-     ON clients
-     FOR SELECT
-     TO authenticated
-     USING (true);
-   ```
+   - Applies to: SELECT operations
+   - Condition: `auth.role() = 'authenticated'`
+   - Description: Any authenticated user can view client information.
 
-2. **Only admin and ops can modify clients**
-   ```sql
-   CREATE POLICY "Only admin and ops can modify clients"
-     ON clients
-     FOR ALL
-     TO authenticated
-     USING (
-       public.has_role(auth.uid(), 'admin') OR 
-       public.has_role(auth.uid(), 'ops')
-     );
-   ```
+2. **Only admins and analysts can create clients**
+   - Applies to: INSERT operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'analyst')`
+   - Description: Only users with admin or analyst roles can create new clients.
 
-## Asset-Client Association Policies
+3. **Only admins and ops can update clients**
+   - Applies to: UPDATE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'ops')`
+   - Description: Only users with admin or ops roles can update client information.
 
-The `asset_client_assoc` table manages the relationship between assets and clients.
+4. **Only admins can delete clients**
+   - Applies to: DELETE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'`
+   - Description: Only users with admin role can delete clients.
 
-### Policies:
+### Table: asset_client_assoc
+
+Asset-client associations table links assets to clients.
+
+#### Policies:
 
 1. **Authenticated users can view associations**
-   ```sql
-   CREATE POLICY "Authenticated users can access asset_client_assoc"
-     ON asset_client_assoc
-     FOR SELECT
-     TO authenticated
-     USING (true);
-   ```
+   - Applies to: SELECT operations
+   - Condition: `auth.role() = 'authenticated'`
+   - Description: Any authenticated user can view asset-client associations.
 
-2. **Only admin and ops can modify associations**
-   ```sql
-   CREATE POLICY "Only admin and ops can modify associations"
-     ON asset_client_assoc
-     FOR ALL
-     TO authenticated
-     USING (
-       public.has_role(auth.uid(), 'admin') OR 
-       public.has_role(auth.uid(), 'ops')
-     );
-   ```
+2. **Only admins, analysts and ops can create associations**
+   - Applies to: INSERT operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'analyst', 'ops')`
+   - Description: Only users with admin, analyst, or ops roles can create new associations.
+
+3. **Only admins and ops can update associations**
+   - Applies to: UPDATE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('admin', 'ops')`
+   - Description: Only users with admin or ops roles can update associations.
+
+4. **Only admins can delete associations**
+   - Applies to: DELETE operations
+   - Condition: `(SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'`
+   - Description: Only users with admin role can delete associations.
 
 ## Testing RLS Policies
 
-To verify that RLS policies are working correctly, you can perform the following tests:
+To test that the RLS policies are working correctly, follow these steps:
 
-### 1. Testing as Anonymous User
+1. **Setup test users with different roles**:
+   - Create a test user with 'admin' role
+   - Create a test user with 'analyst' role
+   - Create a test user with 'ops' role
+   - Create a test user with 'user' role
 
-```sql
--- Reset role to anonymous
-RESET ROLE;
+2. **Test access patterns**:
+   
+   a. **As an unauthenticated user**:
+   ```sql
+   -- This should fail for all tables with RLS
+   SELECT * FROM assets LIMIT 10;
+   ```
+   
+   b. **As a regular user**:
+   ```sql
+   -- Should be able to view assets but not modify
+   SELECT * FROM assets LIMIT 10;
+   INSERT INTO assets (type_id, model) VALUES (1, 'Test Model'); -- Should fail
+   ```
+   
+   c. **As an analyst**:
+   ```sql
+   -- Should be able to view and create assets but not update/delete
+   SELECT * FROM assets LIMIT 10;
+   INSERT INTO assets (type_id, model) VALUES (1, 'Test Model'); -- Should succeed
+   UPDATE assets SET model = 'Modified' WHERE model = 'Test Model'; -- Should fail
+   ```
+   
+   d. **As an ops user**:
+   ```sql
+   -- Should be able to view and update assets but not create/delete
+   SELECT * FROM assets LIMIT 10;
+   UPDATE assets SET model = 'Modified' WHERE model = 'Test Model'; -- Should succeed
+   DELETE FROM assets WHERE model = 'Modified'; -- Should fail
+   ```
+   
+   e. **As an admin**:
+   ```sql
+   -- Should have full access
+   SELECT * FROM assets LIMIT 10;
+   INSERT INTO assets (type_id, model) VALUES (1, 'Admin Test');
+   UPDATE assets SET model = 'Admin Modified' WHERE model = 'Admin Test';
+   DELETE FROM assets WHERE model = 'Admin Modified';
+   ```
 
--- Attempt to select from profiles (should fail)
-SELECT * FROM profiles LIMIT 1;
--- Should return error: permission denied for table profiles
+## Known Issues and Recommendations
 
--- Attempt to insert into assets (should fail)
-INSERT INTO assets (type_id, model) VALUES (1, 'TEST');
--- Should return error: new row violates row-level security policy
-```
+1. **Potential recursive RLS issue**: Some RLS policies query the profiles table, which itself has RLS. This could potentially lead to recursive policy evaluation. Consider using security definer functions to avoid this.
 
-### 2. Testing as Regular User
+2. **Missing RLS on some tables**: Some tables like `asset_logs` don't have RLS policies. Consider adding them.
 
-```sql
--- Assume role of a regular user (replace USER_ID with actual UUID)
-SET LOCAL ROLE authenticated;
-SET LOCAL request.jwt.claim.sub = 'USER_ID';
+3. **Role check optimization**: Role checks are done using subqueries, which might impact performance. Consider caching role information or using a security definer function.
 
--- Select from profiles (should only show user's own profile)
-SELECT * FROM profiles;
--- Should return only the row where id = USER_ID
+## Future Improvements
 
--- Attempt to insert into assets (should fail for non-admin/ops)
-INSERT INTO assets (type_id, model) VALUES (1, 'TEST');
--- Should return error if user doesn't have admin/ops role
-```
+1. **Use security definer functions**: Replace direct subqueries with security definer functions to improve performance and avoid recursive policy issues.
 
-### 3. Testing as Admin User
+2. **Implement time-based restrictions**: For certain operations, consider adding time-based restrictions (e.g., can only modify records created in the last 24 hours).
 
-```sql
--- Assume role of an admin user (replace ADMIN_ID with actual UUID)
-SET LOCAL ROLE authenticated;
-SET LOCAL request.jwt.claim.sub = 'ADMIN_ID';
-
--- Select from profiles (should show all profiles)
-SELECT * FROM profiles;
--- Should return all rows if admin role works correctly
-
--- Insert into assets (should succeed)
-INSERT INTO assets (type_id, model) VALUES (1, 'TEST');
--- Should succeed if admin role works correctly
-```
-
-### 4. Testing Security Definer Functions
-
-Verify that the `has_role` function works correctly:
-
-```sql
--- Test has_role function with a user ID and role
-SELECT public.has_role('USER_ID', 'admin');
--- Should return true or false based on whether the user has that role
-```
-
-## Common RLS Issues and Solutions
-
-1. **Issue**: User cannot see any data even though they should have access.
-   **Solution**: Check if the user's role is correctly set in the profiles table.
-
-2. **Issue**: RLS policies seem to have no effect; any user can access all data.
-   **Solution**: Verify that RLS is enabled on the table (`ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;`).
-
-3. **Issue**: Infinite recursion error when using RLS.
-   **Solution**: Ensure that RLS policies don't query the same table they're protecting.
-
-4. **Issue**: RLS policies work in the SQL Editor but not from the application.
-   **Solution**: Check that the application is sending the correct JWT token and that the user is properly authenticated.
+3. **Add detailed audit logging**: Implement triggers to log all data modifications with user information for better audit trails.

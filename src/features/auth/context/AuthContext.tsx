@@ -1,11 +1,10 @@
-
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/types/auth';
 import { toast } from '@/utils/toast';
-import { errorMapper } from '@/services/errorMapper';
+import { useNavigate } from 'react-router-dom';
+import { mapError, withRetry } from '@/services/errorMapper';
 
 // Define a comprehensive interface for our authentication context
 interface AuthContextType {
@@ -15,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  hasProfile: boolean;
   signIn: (email: string, password: string) => Promise<Error | null>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -22,7 +22,7 @@ interface AuthContextType {
 }
 
 // Create the context with undefined initial value
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initialize fetchProfile outside the component to avoid recreation on each render
 async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -54,6 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isMounted = useRef(true);
   const navigate = useNavigate();
 
+  // Helper to map Supabase auth errors to user-friendly messages
+  const mapAuthError = (error: Error | null): string => {
+    if (!error) return 'An unexpected error occurred';
+    
+    return mapError(error);
+  };
+
   // Initialize auth session on component mount
   useEffect(() => {
     // Set flag to true on mount
@@ -61,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession?.user?.email);
         
         if (!isMounted.current) return;
@@ -79,22 +86,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Fetch profile only after sign in and when component is still mounted
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && currentSession?.user && isMounted.current) {
-          // Use setTimeout to avoid potential deadlocks with Supabase client
-          setTimeout(async () => {
-            try {
-              const userProfile = await fetchUserProfile(currentSession.user.id);
-              
-              if (isMounted.current && userProfile) {
-                setProfile(userProfile);
-              }
-            } catch (error) {
-              console.error('Error fetching profile after auth event:', error);
-            } finally {
-              if (isMounted.current) {
-                setIsLoading(false);
-              }
+          try {
+            const userProfile = await fetchUserProfile(currentSession.user.id);
+            
+            if (isMounted.current && userProfile) {
+              setProfile(userProfile);
             }
-          }, 0);
+          } catch (error) {
+            console.error('Error fetching profile after auth event:', error);
+          } finally {
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
+          }
         }
       }
     );
@@ -146,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Sign in function with retry mechanism
+  // Sign in function
   const signIn = async (email: string, password: string): Promise<Error | null> => {
     setError(null);
     setIsLoading(true);
@@ -162,55 +166,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, 10000); // 10-second timeout
       });
       
-      // Implement retry logic
-      let attempts = 0;
-      const maxAttempts = 3;
-      let lastError = null;
-
-      while (attempts < maxAttempts) {
-        try {
-          // Race between the actual sign-in request and the timeout
-          const { data, error } = await Promise.race([
-            supabase.auth.signInWithPassword({ email, password }),
-            timeoutPromise
-          ]) as any;
-          
-          if (error) {
-            lastError = error;
-            console.log(`Login attempt ${attempts + 1} failed:`, error.message);
-            attempts++;
-            // Wait a bit longer between each retry
-            if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
-              continue;
-            }
-            break;
-          }
-
-          // Success case
-          toast.success('Login successful');
-          return null;
-        } catch (error: any) {
-          lastError = error;
-          console.log(`Login attempt ${attempts + 1} failed with exception:`, error);
-          attempts++;
-          // Wait a bit longer between each retry
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
-          } else {
-            break;
-          }
-        }
+      // Race between the actual sign-in request and the timeout
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        timeoutPromise
+      ]) as any;
+      
+      if (error) {
+        const errorMessage = mapAuthError(error);
+        setError(errorMessage);
+        toast.error(errorMessage);
+        return error;
       }
 
-      // If we reached here, all attempts failed
-      const errorMessage = errorMapper.authError(lastError);
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return lastError;
+      // Success case
+      toast.success('Login successful');
+      return null;
     } catch (error: any) {
       console.error('Error during sign in:', error);
-      const errorMessage = errorMapper.authError(error);
+      const errorMessage = mapAuthError(error);
       setError(errorMessage);
       toast.error(errorMessage);
       return error;
@@ -219,24 +193,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sign up function
+  // Sign up function - with retry for network issues
   const signUp = async (email: string, password: string): Promise<void> => {
     setError(null);
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role: 'user' // Default role for new users
+      const { data, error } = await withRetry(() => 
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              role: 'analyst' // Default role for new users
+            }
           }
+        }), 
+        { 
+          maxAttempts: 3,
+          shouldRetry: (err) => err.message?.includes('Failed to fetch') || err.message?.includes('network')
         }
-      });
+      );
 
       if (error) {
-        const errorMessage = errorMapper.authError(error);
+        const errorMessage = mapAuthError(error);
         setError(errorMessage);
         toast.error(errorMessage);
         return;
@@ -248,7 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error('Error during sign up:', error);
-      const errorMessage = errorMapper.authError(error);
+      const errorMessage = mapAuthError(error);
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -283,7 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        const errorMessage = errorMapper.authError(error);
+        const errorMessage = mapAuthError(error);
         setError(errorMessage);
         toast.error(errorMessage);
         return;
@@ -292,13 +272,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Password reset instructions have been sent to your email');
     } catch (error: any) {
       console.error('Error during password reset:', error);
-      const errorMessage = errorMapper.authError(error);
+      const errorMessage = mapAuthError(error);
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const hasProfile = !!profile;
 
   return (
     <AuthContext.Provider
@@ -309,6 +291,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         error,
         isAuthenticated: !!user,
+        hasProfile,
         signIn,
         signUp,
         signOut,
@@ -331,7 +314,7 @@ export const useAuth = () => {
 
 // Auth guard hook for protected routes
 export const useAuthGuard = (requiredRole?: string) => {
-  const { isAuthenticated, isLoading, profile } = useAuth();
+  const { isAuthenticated, isLoading, user, profile } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -344,7 +327,7 @@ export const useAuthGuard = (requiredRole?: string) => {
         navigate('/', { replace: true });
       }
     }
-  }, [isLoading, isAuthenticated, navigate, requiredRole, profile]);
+  }, [isLoading, isAuthenticated, navigate, requiredRole, profile, user]);
   
   return { isAuthenticated, isLoading, hasRequiredRole: !requiredRole || profile?.role === requiredRole };
 };
