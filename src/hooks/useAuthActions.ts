@@ -3,27 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthError } from '@supabase/supabase-js';
 
 export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
-
-  // Helper to map Supabase auth errors to user-friendly messages
-  const mapAuthError = (error: AuthError | Error | null): string => {
-    if (!error) return 'Ocorreu um erro inesperado';
-    
-    // Use generic messages for security (prevent enumeration attacks)
-    const message = error.message || '';
-    
-    // Only do specific messaging for very common cases
-    if (message.includes('Email not confirmed')) {
-      return 'Por favor, confirme seu email antes de fazer login';
-    }
-    
-    // For most errors, use a generic message
-    return 'Credenciais inválidas. Verifique seu email e senha.';
-  };
 
   const signUp = async (email: string, password: string) => {
     try {
@@ -50,9 +32,14 @@ export function useAuthActions(updateState: (state: any) => void) {
         if (error.message?.includes('already registered')) {
           errorMessage = 'Este email já está cadastrado.';
         } else if (error.message?.includes('password')) {
-          errorMessage = 'Senha inválida: deve ter pelo menos 6 caracteres';
+          errorMessage = 'Senha inválida: ' + error.message;
         } else if (error.message?.includes('email')) {
-          errorMessage = 'Email inválido';
+          errorMessage = 'Email inválido: ' + error.message;
+        } else if (error.message?.includes('database')) {
+          errorMessage = 'Erro de banco de dados: Falha ao criar perfil do usuário.';
+        } else if (error.message?.includes('captcha')) {
+          console.error('Erro de CAPTCHA:', error);
+          errorMessage = 'Erro de configuração do sistema. Entre em contato com o administrador.';
         }
         
         console.error('Erro traduzido:', errorMessage);
@@ -74,6 +61,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       const errorMessage = error.message || 'Ocorreu um erro inesperado durante o cadastro.';
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
+      // Não relançamos o erro aqui para evitar quebras na interface
     } finally {
       updateState({ isLoading: false });
     }
@@ -88,36 +76,49 @@ export function useAuthActions(updateState: (state: any) => void) {
       }
       
       console.log('AuthContext: Iniciando login para:', email);
-      
-      // Use Supabase directly rather than through service for cleaner error handling
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
+      const { data, error } = await authService.signIn(email, password);
       
       if (error) {
-        const errorMessage = mapAuthError(error);
-        updateState({ error: errorMessage, isLoading: false });
-        toast.error(errorMessage);
-        return error;
+        let errorMessage = 'Erro ao fazer login';
+        
+        if (error.message?.includes('credentials')) {
+          errorMessage = 'Email ou senha incorretos.';
+        } else if (error.message?.includes('disabled')) {
+          errorMessage = 'Esta conta está desativada. Entre em contato com o administrador.';
+        } else if (error.message?.includes('fetch') || error.message?.includes('conectar')) {
+          errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       if (data.user) {
         console.log('Login bem-sucedido para:', email);
-        // Toast and redirect now handled in the Login component's useEffect
-        return null;
+        try {
+          const profile = await profileService.fetchUserProfile(data.user.id);
+          console.log('Perfil obtido após login:', profile);
+          
+          // Verificando apenas se o perfil está ativo
+          if (!profile || !profile.is_active) {
+            console.log('Perfil inativo, fazendo logout:', profile);
+            await authService.signOut();
+            throw new Error('Sua conta está desativada. Entre em contato com o administrador.');
+          }
+        } catch (profileError) {
+          console.error('Erro ao verificar perfil após login:', profileError);
+          await authService.signOut();
+          throw profileError;
+        }
       } else {
         console.error('Login falhou, dados incompletos:', data);
-        const error = new Error('Falha no login: dados incompletos retornados');
-        updateState({ error: error.message, isLoading: false });
-        toast.error('Erro ao fazer login');
-        return error;
+        throw new Error('Falha no login: dados incompletos retornados');
       }
+      
+      navigate('/');
     } catch (error: any) {
       console.error('Erro durante o login:', error);
-      updateState({ error: error.message || 'Erro ao fazer login', isLoading: false });
-      toast.error('Erro ao fazer login');
-      return error;
+      updateState({ error: error.message || 'Erro ao fazer login' });
+      toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
     } finally {
       updateState({ isLoading: false });
     }
@@ -126,9 +127,8 @@ export function useAuthActions(updateState: (state: any) => void) {
   const signOut = async () => {
     try {
       updateState({ isLoading: true });
-      await supabase.auth.signOut();
+      await authService.signOut();
       navigate('/login');
-      toast.success('Você saiu do sistema');
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       toast.error(error.message || 'Ocorreu um erro ao tentar sair.');

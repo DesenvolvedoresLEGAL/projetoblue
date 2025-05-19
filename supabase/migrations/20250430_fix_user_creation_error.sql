@@ -1,13 +1,11 @@
 
 -- Este arquivo contém uma migração para corrigir a função que lida com a criação de novos usuários
--- ATENÇÃO: Esta versão está OBSOLETA e foi substituída por 20250516_fix_user_role_enum.sql
--- O problema era que a função estava usando 'user_role' em vez de 'user_role_enum'
+-- O problema atual é que a função está tentando acessar um campo 'status' que não existe
 
 -- Verificar se o trigger e a função existem antes de recriá-los
 DROP FUNCTION IF EXISTS public.handle_new_user CASCADE;
 
--- OBSOLETA: Esta função usava o tipo incorreto 'user_role' em vez de 'user_role_enum'
--- Foi corrigida na migração 20250516_fix_user_role_enum.sql
+-- Recriar a função corretamente sem tentar acessar o campo 'status'
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql

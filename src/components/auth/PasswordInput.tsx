@@ -5,14 +5,13 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PasswordInputProps {
-  id?: string;
+  id: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   required?: boolean;
   className?: string;
   autoComplete?: string;
-  disabled?: boolean; // Added the disabled prop
 }
 
 export const PasswordInput = ({ 
@@ -22,8 +21,7 @@ export const PasswordInput = ({
   placeholder = "••••••••", 
   required = true,
   className = "",
-  autoComplete,
-  disabled = false // Added with default value of false
+  autoComplete
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -42,7 +40,6 @@ export const PasswordInput = ({
         required={required}
         className={`pr-10 ${className}`}
         autoComplete={autoComplete}
-        disabled={disabled}
       />
       <Button
         type="button"
@@ -52,7 +49,6 @@ export const PasswordInput = ({
         onClick={togglePasswordVisibility}
         tabIndex={-1}
         aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-        disabled={disabled}
       >
         {showPassword ? (
           <Eye size={16} aria-hidden="true" />

@@ -1,144 +1,50 @@
 
-# BLUE System
+# BLUE Platform
 
-A comprehensive asset and client management system.
+## Temporary Supabase Direct Access Solution
 
-## Features
+### Background
+Due to the unavailability of the BLUE API (`api.blue.legal`), we've implemented a temporary solution that uses Supabase directly. This solution:
 
-- User authentication and authorization
-- Asset management (chips, routers, etc.)
-- Client management and asset association
-- Dashboard with key metrics
-- Comprehensive logging and audit trails
+1. Maintains the same interface for components
+2. Changes the implementation to use Supabase directly
+3. Uses an abstraction layer to map between database and frontend types
 
-## Development Setup
+### Implementation Details
 
-1. **Clone the repository**
-   ```
-   git clone https://github.com/your-org/blue-system.git
-   cd blue-system
-   ```
+The implementation involves:
 
-2. **Install dependencies**
-   ```
-   npm install
-   ```
+- Direct Supabase queries in service files instead of API calls
+- Data mappers to convert between database schema and frontend types
+- Preservation of existing interfaces so components don't need to change
 
-3. **Set up environment variables**
-   Create a `.env` file in the root directory with the following variables:
-   ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+### Expected API Contract
 
-4. **Run development server**
-   ```
-   npm run dev
-   ```
+When the external API becomes available again, it should provide the following endpoints:
 
-5. **Build for production**
-   ```
-   npm run build
-   ```
+- `GET /assets` - List assets with filtering options
+- `GET /assets/:id` - Get asset by ID
+- `POST /assets` - Create new asset
+- `PATCH /assets/:id` - Update asset
+- `DELETE /assets/:id` - Delete asset
+- `PATCH /assets/:id/status` - Update asset status
+- `GET /status` - Get all status records
+- `GET /asset_types` - Get all asset types
+- `GET /manufacturers` - Get all manufacturers
+- `GET /asset_solutions` - Get all asset solutions
 
-## Testing
+### Follow-up Tasks
 
-### Unit Tests
+- [ ] Monitor the availability of `api.blue.legal`
+- [ ] Plan regression tests for when the API returns
+- [ ] Evaluate the cost/benefit of maintaining two backends
+- [ ] Document lessons learned from this incident
 
-Run the unit tests using:
-```
-npm test
-```
+### Rollback Procedure
 
-### End-to-End Tests
+When the API becomes available:
 
-1. Make sure the development server is running:
-   ```
-   npm run dev
-   ```
-
-2. In another terminal, run the E2E tests:
-   ```
-   npm run test:e2e
-   ```
-
-### Testing RLS Policies
-
-To test the Row Level Security policies:
-
-1. Go to the Supabase SQL Editor
-2. Create test users with different roles:
-   ```sql
-   -- Create users with different roles for testing
-   INSERT INTO auth.users (id, email) VALUES 
-     ('user1-uuid', 'admin@test.com'),
-     ('user2-uuid', 'analyst@test.com'),
-     ('user3-uuid', 'ops@test.com'),
-     ('user4-uuid', 'user@test.com');
-
-   INSERT INTO public.profiles (id, email, role, is_active, is_approved) VALUES
-     ('user1-uuid', 'admin@test.com', 'admin', true, true),
-     ('user2-uuid', 'analyst@test.com', 'analyst', true, true),
-     ('user3-uuid', 'ops@test.com', 'ops', true, true),
-     ('user4-uuid', 'user@test.com', 'user', true, true);
-   ```
-
-3. Test access patterns by signing in as different users and attempting operations like:
-   - Viewing assets (all roles)
-   - Creating assets (admin, analyst)
-   - Updating assets (admin, ops)
-   - Deleting assets (admin only)
-
-4. For detailed testing instructions, see `docs/rls.md`.
-
-## Project Structure
-
-```
-blue-system/
-├── docs/               # Documentation
-│   └── rls.md          # RLS policies documentation
-├── public/             # Static assets
-├── src/
-│   ├── __tests__/      # Unit and integration tests
-│   ├── components/     # Reusable UI components
-│   ├── features/       # Feature-organized modules
-│   │   ├── auth/       # Authentication feature
-│   │   ├── assets/     # Asset management feature
-│   │   ├── clients/    # Client management feature
-│   │   └── dashboard/  # Dashboard feature
-│   ├── integrations/   # External service integrations
-│   ├── pages/          # Page components
-│   ├── services/       # Services and API calls
-│   ├── types/          # TypeScript type definitions
-│   ├── utils/          # Utility functions
-│   ├── App.tsx         # Main app component
-│   └── main.tsx        # Entry point
-├── supabase/
-│   └── migrations/     # Database migrations
-└── package.json
-```
-
-## Best Practices
-
-### Authentication
-
-- Always check user authentication status with `useAuth()` hook
-- Use `useAuthGuard(optionalRole)` to protect routes that require authentication
-- For API calls, ensure the user is authenticated before making the request
-
-### Database Operations
-
-- Use retry mechanisms for critical operations
-- Always handle errors with appropriate user feedback
-- Validate input data before sending to the database
-- Follow the RLS policies documented in `docs/rls.md`
-
-### UI Development
-
-- Use Tailwind CSS for styling
-- Use ShadCN components where possible
-- Ensure all UI is responsive and works on mobile devices
-
-## License
-
-This project is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
+1. Test API endpoints to ensure they work as expected
+2. Revert the changes in service files to use API calls instead of Supabase
+3. Remove the temporary mapper utilities if no longer needed
+4. Update documentation to reflect the change

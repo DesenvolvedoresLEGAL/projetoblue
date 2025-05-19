@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useAssets } from "@/context/useAssets";
 import { 
   DashboardKpis, 
   AssetsChart, 
@@ -10,11 +9,23 @@ import {
 } from "@/components/dashboard";
 import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
 import { Clock } from "lucide-react";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { LoadingState, ErrorState } from "@/components/dashboard";
 
 const Index = () => {
-  const { assets, loading } = useAssets();
+  const { data, isLoading, isError } = useDashboardStats();
   const lastSyncTime = new Date().toLocaleTimeString();
   
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  // Handle error state
+  if (isError || !data) {
+    return <ErrorState message="Failed to load dashboard data. Please try again later." />;
+  }
+
   return (
     <div className="space-y-4">
       <PageBreadcrumbs />
@@ -23,7 +34,11 @@ const Index = () => {
         {/* Main content area (70%) */}
         <div className="lg:col-span-8 space-y-6">
           {/* KPIs */}
-          <DashboardKpis />
+          <DashboardKpis 
+            totalAssets={data.totalAssets}
+            activeClients={data.activeClients}
+            assetsWithIssues={data.assetsWithIssues}
+          />
           
           {/* Chart */}
           <div className="rounded-2xl border bg-card shadow-md p-6">

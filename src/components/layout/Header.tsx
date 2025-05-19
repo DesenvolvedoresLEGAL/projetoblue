@@ -20,30 +20,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
 export function Header({ children, className, ...props }: HeaderProps) {
-  const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleProfileClick = () => {
-    navigate('/profile');
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-  };
-
-  const getInitials = () => {
-    if (!user?.email) return 'U';
-    return user.email.substring(0, 2).toUpperCase();
-  };
-
   return (
     <header 
       className={cn(
@@ -72,23 +54,16 @@ export function Header({ children, className, ...props }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg" alt={user?.email || 'User'} />
-                <AvatarFallback>{getInitials()}</AvatarFallback>
+                <AvatarImage src="/placeholder.svg" alt="User" />
+                <AvatarFallback>LE</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
-            {profile && (
-              <div className="px-2 py-1.5">
-                <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-                  {profile.role}
-                </span>
-              </div>
-            )}
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={handleProfileClick}>
+              <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
@@ -98,7 +73,7 @@ export function Header({ children, className, ...props }: HeaderProps) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
             </DropdownMenuItem>

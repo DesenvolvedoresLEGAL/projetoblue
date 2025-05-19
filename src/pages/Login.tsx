@@ -1,71 +1,27 @@
-
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
-import { MoonStar, Sun, Loader2 } from 'lucide-react';
+import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { useAuth } from '@/context/AuthContext';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-
-// Login form schema with improved validation
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: 'Email is required' })
-    .email({ message: 'Invalid email format' }),
-  password: z
-    .string()
-    .min(6, { message: 'Password must be at least 6 characters' }),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { toast } from '@/utils/toast';
 
 const Login = () => {
-  const { signIn, isLoading, isAuthenticated, error } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   
-  // Initialize form
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  // Effect to handle redirection after successful authentication
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Handle form submission
-  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
-    if (form.formState.isSubmitting || isLoading) return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    try {
-      await signIn(data.email, data.password);
-      // Navigation happens in useEffect when isAuthenticated changes
-    } catch (error) {
-      // Error is already handled in signIn function
-      console.error('Unexpected error during login:', error);
-    }
+    // Authentication is removed, simply redirect to dashboard with a success toast
+    toast.success("Bem-vindo ao sistema! Acesso concedido automaticamente.");
+    navigate('/');
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -79,81 +35,45 @@ const Login = () => {
           <div className="w-full flex justify-center py-4">
             <NamedLogo size="lg" />
           </div>
-          <h2 className="text-2xl font-bold text-center">Login</h2>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="your@email.com"
-                        disabled={isLoading || form.formState.isSubmitting}
-                        autoComplete="email"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
               />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        {...field}
-                        disabled={isLoading || form.formState.isSubmitting}
-                        autoComplete="current-password"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
-              
-              <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              
-              {error && (
-                <div className="bg-destructive/10 p-3 rounded-md border border-destructive/30">
-                  <p className="text-sm text-destructive">{error}</p>
-                </div>
-              )}
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading || form.formState.isSubmitting}
-              >
-                {(isLoading || form.formState.isSubmitting) ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : 'Sign in'}
-              </Button>
-            </form>
-          </Form>
-          
+            </div>
+            <div className="flex justify-end">
+              <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full"
+            >
+              Entrar
+            </Button>
+          </form>
           <div className="mt-4 text-center text-sm">
             <p className="text-muted-foreground">
-              Don't have an account?{' '}
+              Não possui uma conta?{' '}
               <Link to="/signup" className="text-primary hover:underline">
-                Sign up
+                Cadastre-se
               </Link>
             </p>
           </div>
@@ -163,17 +83,17 @@ const Login = () => {
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
           >
             {theme === 'dark' ? <Sun size={20} /> : <MoonStar size={20} />}
           </Button>
           <div className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} - BLUE System
+            © {new Date().getFullYear()} - Sistema BLUE
           </div>
         </CardFooter>
       </Card>
     </div>
   );
-};
+}
 
 export default Login;
