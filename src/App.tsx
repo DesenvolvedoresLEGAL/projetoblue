@@ -8,7 +8,7 @@ import { AssetProvider } from "@/context/AssetContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { Layout } from "@/components/layout/Layout";
 import { DataUsageProvider } from "@/context/DataUsageContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { PrivateRoute } from "./routes/PrivateRoute";
 
 // Auth Pages
@@ -45,7 +45,18 @@ import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
 import BitsSettings from "./pages/bits/BitsSettings";
 import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: 0, // No retry for mutations by default
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
