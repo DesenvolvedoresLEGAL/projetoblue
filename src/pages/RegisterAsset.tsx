@@ -147,14 +147,18 @@ const baseSchema = z.object({
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable().default(1) // Default to first status (usually "Disponível")
   ),
+  notes: z.string().optional(),
+});
+
+// Base schema for routers which includes solution_id
+const routerBaseSchema = baseSchema.extend({
   solution_id: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable()
   ),
-  notes: z.string().optional(),
 });
 
-// Chip type schema
+// Chip type schema (does not include solution_id)
 const chipSchema = baseSchema.extend({
   type_id: z.literal(1), // Chip type
   iccid: z.string()
@@ -176,8 +180,8 @@ const chipSchema = baseSchema.extend({
   ),
 });
 
-// Router type schema
-const routerSchema = baseSchema.extend({
+// Router type schema (includes solution_id)
+const routerSchema = routerBaseSchema.extend({
   type_id: z.literal(2), // Router type
   serial_number: z.string().min(1, "Número de série é obrigatório"),
   manufacturer_id: z.preprocess(
@@ -225,7 +229,6 @@ export default function RegisterAsset() {
       line_number: null,
       manufacturer_id: null,
       plan_id: null,
-      solution_id: null,
       notes: "",
     } as AssetFormValues
   });
@@ -281,13 +284,12 @@ export default function RegisterAsset() {
       let insertData: Record<string, any> = {
         type_id: data.type_id,
         status_id: data.status_id,
-        solution_id: data.solution_id,
         notes: data.notes,
       };
       
       // Add type-specific fields based on asset type
       if (data.type_id === 1) {
-        // Chip specific fields
+        // Chip specific fields (no solution_id)
         insertData = {
           ...insertData,
           iccid: data.iccid,
@@ -296,7 +298,7 @@ export default function RegisterAsset() {
           plan_id: data.plan_id,
         };
       } else if (data.type_id === 2 && "serial_number" in data) {
-        // Router specific fields
+        // Router specific fields (including solution_id)
         insertData = {
           ...insertData,
           serial_number: data.serial_number,
@@ -304,6 +306,7 @@ export default function RegisterAsset() {
           model: data.model,
           password: data.password,
           radio: data.radio,
+          solution_id: data.solution_id,
         };
       }
       
@@ -453,6 +456,8 @@ export default function RegisterAsset() {
                     form.setValue("model", "" as any);
                     form.setValue("password", "" as any);
                     form.setValue("radio", "" as any);
+                    // Also reset solution_id when switching to CHIP since we don't want it there
+                    form.setValue("solution_id", null as any);
                   } else {
                     form.setValue("iccid", "");
                     form.setValue("line_number", null);
@@ -537,15 +542,7 @@ export default function RegisterAsset() {
                       disabled={createAssetMutation.isPending}
                     />
 
-                    <SelectField
-                      control={form.control}
-                      name="solution_id"
-                      label="Solução"
-                      placeholder="Selecione a solução"
-                      options={solutionOptions}
-                      isLoading={isReferenceDataLoading}
-                      disabled={createAssetMutation.isPending}
-                    />
+                    {/* Removed Solution field from Chip form */}
 
                     <SelectField
                       control={form.control}
