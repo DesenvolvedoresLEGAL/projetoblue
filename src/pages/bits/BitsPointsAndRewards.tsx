@@ -8,7 +8,7 @@ import { LevelProgress } from '@/features/bits/components/LevelProgress';
 import { UserBadgesList } from '@/features/bits/components/UserBadgesList';
 import { usePoints, useRewards, useBadges, useLevels } from '@/features/bits/hooks/useBits';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -28,11 +28,11 @@ const BitsPointsAndRewards: React.FC = () => {
           <CardTitle>Acesso restrito</CardTitle>
           <CardContent>Faça login para acessar a plataforma BITS LEGAL™</CardContent>
         </CardHeader>
-        <CardContent>
+        <CardFooter>
           <Link to="/login">
             <Button>Fazer Login</Button>
           </Link>
-        </CardContent>
+        </CardFooter>
       </Card>
     );
   }

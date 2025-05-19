@@ -1,17 +1,11 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '../types';
+import { UserBadge } from '../types';
 import { format } from 'date-fns';
 
 interface UserBadgesListProps {
-  badges: {
-    id: string;
-    user_id: string;
-    badge_id: string;
-    earned_at: string;
-    bits_badges_catalog: Badge;
-  }[];
+  badges: UserBadge[];
   isLoading: boolean;
   className?: string;
 }

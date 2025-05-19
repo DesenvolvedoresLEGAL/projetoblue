@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PointsDisplay } from '@/features/bits/components/PointsDisplay';
 import { LevelProgress } from '@/features/bits/components/LevelProgress';
@@ -26,11 +26,11 @@ const BitsDashboard: React.FC = () => {
           <CardTitle>Acesso restrito</CardTitle>
           <CardDescription>Faça login para acessar a plataforma BITS LEGAL™</CardDescription>
         </CardHeader>
-        <CardFooter>
+        <CardContent>
           <Link to="/login">
             <Button>Fazer Login</Button>
           </Link>
-        </CardFooter>
+        </CardContent>
       </Card>
     );
   }

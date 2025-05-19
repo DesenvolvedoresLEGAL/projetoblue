@@ -2,10 +2,10 @@
 import { UserProfile } from '@/types/auth';
 
 // Referral status enum matching the database enum type
-export type ReferralStatus = 'pendente' | 'aprovada' | 'rejeitada' | 'convertida';
+export type ReferralStatus = 'pendente' | 'aprovada' | 'rejeitada' | 'convertida' | 'em_negociacao' | 'fechado' | 'perdido';
 
 // Mission status enum matching the database enum type
-export type MissionStatus = 'in_progress' | 'completed' | 'failed';
+export type MissionStatus = 'in_progress' | 'completed' | 'failed' | 'expired';
 
 // Referral interface based on bits_referrals table
 export interface Referral {
@@ -72,6 +72,7 @@ export interface UserBadge {
   user_id: string;
   badge_id: string;
   earned_at: string;
+  bits_badges_catalog: Badge; // Added this property to match what's coming from the database
 }
 
 // Campaign interface based on bits_campaigns table
@@ -117,6 +118,7 @@ export interface UserMission {
   status: MissionStatus;
   progress?: any;
   completed_at?: string;
+  bits_missions_catalog: Mission;
 }
 
 // Level interface based on bits_levels_catalog table
