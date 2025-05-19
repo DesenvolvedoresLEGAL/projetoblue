@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,10 +11,13 @@ import { DataUsageProvider } from "@/context/DataUsageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { PrivateRoute } from "./routes/PrivateRoute";
 
-// Pages
+// Auth Pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
+
+// Main Pages
 import Home from "./pages/Home";
 
 // Imports of all other pages
@@ -57,6 +61,7 @@ const App = () => (
                   {/* Public authentication routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
                   
                   {/* Protected routes */}
                   <Route element={<PrivateRoute />}>

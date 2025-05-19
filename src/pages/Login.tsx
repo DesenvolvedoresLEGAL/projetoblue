@@ -5,13 +5,11 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun, Loader2 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { toast } from '@/utils/toast';
 import { useAuth } from '@/context/AuthContext';
 import {
   Form,
@@ -21,22 +19,23 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 
-// Login form schema
+// Login form schema with improved validation
 const loginSchema = z.object({
   email: z
     .string()
-    .min(1, { message: 'Email é obrigatório' })
-    .email({ message: 'Email inválido' }),
+    .min(1, { message: 'Email is required' })
+    .email({ message: 'Invalid email format' }),
   password: z
     .string()
-    .min(6, { message: 'Senha deve ter pelo menos 6 caracteres' }),
+    .min(6, { message: 'Password must be at least 6 characters' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { signIn, isLoading, isAuthenticated } = useAuth();
+  const { signIn, isLoading, isAuthenticated, error } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   
@@ -49,22 +48,22 @@ const Login = () => {
     },
   });
 
-  // Add effect to handle redirection after successful authentication
+  // Effect to handle redirection after successful authentication
   useEffect(() => {
     if (isAuthenticated) {
-      toast.success('Login bem-sucedido!');
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
   // Handle form submission
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+    if (form.formState.isSubmitting || isLoading) return;
+    
     try {
       await signIn(data.email, data.password);
       // Navigation happens in useEffect when isAuthenticated changes
-    } catch (error: any) {
+    } catch (error) {
       // Error is already handled in signIn function
-      // This catch is just to prevent the form from crashing in unexpected cases
       console.error('Unexpected error during login:', error);
     }
   };
@@ -80,6 +79,7 @@ const Login = () => {
           <div className="w-full flex justify-center py-4">
             <NamedLogo size="lg" />
           </div>
+          <h2 className="text-2xl font-bold text-center">Login</h2>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -94,7 +94,7 @@ const Login = () => {
                       <Input
                         {...field}
                         type="email"
-                        placeholder="seu@email.com"
+                        placeholder="your@email.com"
                         disabled={isLoading || form.formState.isSubmitting}
                         autoComplete="email"
                       />
@@ -109,7 +109,7 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <PasswordInput
                         {...field}
@@ -123,10 +123,16 @@ const Login = () => {
               />
               
               <div className="flex justify-end">
-                <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
-                  Esqueci minha senha
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                  Forgot password?
                 </Link>
               </div>
+              
+              {error && (
+                <div className="bg-destructive/10 p-3 rounded-md border border-destructive/30">
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
               
               <Button 
                 type="submit" 
@@ -136,18 +142,18 @@ const Login = () => {
                 {(isLoading || form.formState.isSubmitting) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
+                    Signing in...
                   </>
-                ) : 'Entrar'}
+                ) : 'Sign in'}
               </Button>
             </form>
           </Form>
           
           <div className="mt-4 text-center text-sm">
             <p className="text-muted-foreground">
-              Não possui uma conta?{' '}
+              Don't have an account?{' '}
               <Link to="/signup" className="text-primary hover:underline">
-                Cadastre-se
+                Sign up
               </Link>
             </p>
           </div>
@@ -157,12 +163,12 @@ const Login = () => {
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
             {theme === 'dark' ? <Sun size={20} /> : <MoonStar size={20} />}
           </Button>
           <div className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} - Sistema BLUE
+            © {new Date().getFullYear()} - BLUE System
           </div>
         </CardFooter>
       </Card>

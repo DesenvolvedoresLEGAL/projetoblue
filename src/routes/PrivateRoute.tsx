@@ -1,10 +1,11 @@
 
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export const PrivateRoute = () => {
   const { isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -20,8 +21,8 @@ export const PrivateRoute = () => {
     return <Outlet />;
   }
 
-  // Redirect to login if not authenticated
-  return <Navigate to="/login" replace />;
+  // Redirect to login if not authenticated, preserving the intended destination
+  return <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 export default PrivateRoute;
