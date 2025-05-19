@@ -136,6 +136,7 @@ const baseAssetSchema = z.object({
 });
 
 const chipSchema = baseAssetSchema.extend({
+  // Fix: Use a literal type for type_id
   type_id: z.literal(1), // Chip type
   iccid: z.string().min(1, "ICCID é obrigatório"),
   line_number: z.preprocess(
@@ -149,6 +150,7 @@ const chipSchema = baseAssetSchema.extend({
 });
 
 const speedySchema = baseAssetSchema.extend({
+  // Fix: Use a literal type for type_id
   type_id: z.literal(2), // Router type
   serial_number: z.string().min(1, "Número de série é obrigatório"),
   manufacturer_id: z.preprocess(
@@ -188,7 +190,7 @@ export default function RegisterAsset() {
   const form = useForm({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      type_id: 1, // Default to Chip
+      type_id: 1 as const, // Fix: Use as const to specify the literal type
       status_id: 1, // Default to Available
       iccid: "",
       line_number: null,
@@ -321,14 +323,20 @@ export default function RegisterAsset() {
   });
   
   // Handle form submission
-  const onSubmit = (data: z.infer<typeof assetSchema>) => {
+  const onSubmit = (data: any) => {
+    // Fix: Transform the data to ensure proper type_id literal
+    const formData = {
+      ...data,
+      type_id: data.type_id === 1 ? 1 : 2 as const
+    };
+
     // Validate password strength if it's a router and password is provided
-    if (data.type_id === 2 && data.password && passwordStrength === 'weak' && !allowWeakPassword) {
+    if (formData.type_id === 2 && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
       toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
       return;
     }
     
-    createAssetMutation.mutate(data);
+    createAssetMutation.mutate(formData);
   };
 
   // Map options for select fields
@@ -403,7 +411,7 @@ export default function RegisterAsset() {
               <Tabs
                 value={assetType === 1 ? "CHIP" : "ROTEADOR"}
                 onValueChange={(value) => {
-                  form.setValue("type_id", value === "CHIP" ? 1 : 2);
+                  form.setValue("type_id", value === "CHIP" ? 1 : 2 as const); // Fix: Use 'as const' to ensure literal type
                   // Reset form values that are specific to the other type
                   if (value === "CHIP") {
                     form.setValue("serial_number", "");
