@@ -557,26 +557,6 @@ export default function RegisterAsset() {
                       disabled={createAssetMutation.isPending}
                     />
                   </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="notes"
-                            placeholder="Informações adicionais sobre o chip"
-                            rows={4}
-                            disabled={createAssetMutation.isPending}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </TabsContent>
 
                 {/* ROUTER FORM */}
@@ -692,26 +672,6 @@ export default function RegisterAsset() {
                       disabled={createAssetMutation.isPending}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            id="notes"
-                            placeholder="Informações adicionais sobre o roteador"
-                            rows={4}
-                            disabled={createAssetMutation.isPending}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </TabsContent>
               </Tabs>
 
