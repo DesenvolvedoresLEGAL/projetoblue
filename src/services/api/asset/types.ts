@@ -51,10 +51,11 @@ export interface AssetUpdateParams {
 }
 
 // Type for status by asset type response
+// Updated to match the actual data structure returned by the SQL function
 export interface AssetStatusByType {
   type: string;
   status: string;
-  total: number;
+  count: number;  // Changed from 'total' to 'count' to match the SQL function's return value
 }
 
 // Define a specific type for problem assets from the database

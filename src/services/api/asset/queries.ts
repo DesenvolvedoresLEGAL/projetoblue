@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
