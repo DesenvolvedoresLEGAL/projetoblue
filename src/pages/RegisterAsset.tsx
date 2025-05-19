@@ -146,8 +146,7 @@ const baseSchema = z.object({
   status_id: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable().default(1) // Default to first status (usually "Disponível")
-  ),
-  notes: z.string().optional(),
+  )
 });
 
 // Base schema for routers which includes solution_id
@@ -229,7 +228,6 @@ export default function RegisterAsset() {
       line_number: null,
       manufacturer_id: null,
       plan_id: null,
-      notes: "",
     } as AssetFormValues
   });
   
@@ -283,8 +281,7 @@ export default function RegisterAsset() {
       // Prepare data for insertion
       let insertData: Record<string, any> = {
         type_id: data.type_id,
-        status_id: data.status_id,
-        notes: data.notes,
+        status_id: data.status_id
       };
       
       // Add type-specific fields based on asset type

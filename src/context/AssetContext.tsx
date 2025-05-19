@@ -122,8 +122,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Prepare create params
       const createParams = {
         type: assetData.type,
-        statusId: assetData.statusId || 1, // Default to 'Disponível'
-        notes: assetData.notes
+        statusId: assetData.statusId || 1// Default to 'Disponível'
       } as any;
 
       if (assetData.type === "CHIP") {
