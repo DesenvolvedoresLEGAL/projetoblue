@@ -5,12 +5,25 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { User } from '@supabase/supabase-js';
+
+// Create a proper mock of the Supabase User type
+const mockUser: User = {
+  id: 'test-user-id',
+  email: 'test@example.com',
+  app_metadata: {},
+  user_metadata: {},
+  aud: 'authenticated',
+  created_at: '2023-01-01T00:00:00Z',
+  role: '',
+  updated_at: '2023-01-01T00:00:00Z',
+};
 
 // Mock the useAuth hook values
 const mockAuthContext = {
   isLoading: false,
   isAuthenticated: true,
-  user: { id: 'test-user-id', email: 'test@example.com' },
+  user: mockUser,
   profile: { id: 'test-user-id', email: 'test@example.com', role: 'analyst', is_active: true, is_approved: true, created_at: '', last_login: '', bits_referral_code: '' },
   error: null,
   session: null,

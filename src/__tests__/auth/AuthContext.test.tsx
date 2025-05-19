@@ -4,16 +4,36 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { AuthProvider, useAuth } from '@/features/auth/context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
+import { User, Session } from '@supabase/supabase-js';
+
+// Mock Supabase User and Session
+const mockUser: User = {
+  id: 'test-user-id',
+  email: 'test@example.com',
+  app_metadata: {},
+  user_metadata: {},
+  aud: 'authenticated',
+  created_at: '2023-01-01T00:00:00Z',
+  role: '',
+  updated_at: '2023-01-01T00:00:00Z',
+};
+
+const mockSession: Session = {
+  access_token: 'test-access-token',
+  refresh_token: 'test-refresh-token',
+  user: mockUser,
+  expires_at: 123456789,
+  expires_in: 3600,
+};
 
 // Mock Supabase client
 const mockSupabase = {
   auth: {
-    getSession: vi.fn().mockResolvedValue({ data: { session: {
-      user: {
-        id: 'test-user-id',
-        email: 'test@example.com',
-      },
-    } } }),
+    getSession: vi.fn().mockResolvedValue({ 
+      data: { 
+        session: mockSession 
+      } 
+    }),
     onAuthStateChange: vi.fn().mockReturnValue({
       data: {
         subscription: {
@@ -22,12 +42,12 @@ const mockSupabase = {
       },
     }),
     signInWithPassword: vi.fn().mockResolvedValue({
-      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+      data: { user: mockUser, session: mockSession },
       error: null,
     }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
     signUp: vi.fn().mockResolvedValue({
-      data: { user: { id: 'new-user-id', email: 'new@example.com' } },
+      data: { user: mockUser, session: mockSession },
       error: null,
     }),
     resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
