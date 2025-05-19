@@ -1,134 +1,89 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AssetProvider } from "@/context/AssetContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { Layout } from "@/components/layout/Layout";
-import { DataUsageProvider } from "@/context/DataUsageContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { PrivateRoute } from "./routes/PrivateRoute";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/context/ThemeContext';
+
+// Layout
+import { Layout } from '@/components/layout/Layout';
 
 // Auth Pages
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import NotFound from "./pages/NotFound";
+import Login from '@/features/auth/pages/Login';
+import Signup from '@/features/auth/pages/Signup';
+import ForgotPassword from '@/features/auth/pages/ForgotPassword';
+import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
+import { AuthProvider } from '@/features/auth/context/AuthContext';
 
 // Main Pages
-import Home from "./pages/Home";
+import Dashboard from '@/pages/Dashboard';
+import Home from '@/pages/Home';
+import NotFound from '@/pages/NotFound';
 
-// Imports of all other pages
-import GeneralDashboard from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import RegisterAsset from "./pages/RegisterAsset";
-import AssetsDashboard from "./pages/AssetsDashboard";
-import AssetsInventory from "./pages/AssetsInventory";
-import Clients from "./pages/Clients";
-import Association from "./pages/Association";
-import Subscriptions from "./pages/Subscriptions";
-import Monitoring from "./pages/Monitoring";
-import History from "./pages/History";
-import DataUsage from "./pages/DataUsage";
-import WifiAnalyzer from "./pages/WifiAnalyzer";
-import Suppliers from "./pages/Suppliers";
-import Topology from "./pages/Topology";
-import Discovery from "./pages/Discovery";
+// Inventory Pages
+import Inventory from '@/pages/Inventory';
+import InventorySummary from '@/pages/InventorySummary';
+import RegisterAsset from '@/pages/RegisterAsset';
 
-// BITS™ Pages
-import BitsDashboard from "./pages/bits/BitsDashboard";
-import BitsIndicateNow from "./pages/bits/BitsIndicateNow";
-import BitsMyReferrals from "./pages/bits/BitsMyReferrals";
-import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
-import BitsSettings from "./pages/bits/BitsSettings";
-import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
+// Client Pages
+import Clients from '@/pages/Clients';
 
+// Import your CSS
+import './App.css';
+
+// Create a client for React Query
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <AssetProvider>
-            <DataUsageProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  {/* Public authentication routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <Router>
+          <AuthProvider>
+            <Routes>
+              {/* Auth Routes (Public) */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              
+              {/* Protected Routes */}
+              <Route element={<PrivateRoute />}>
+                <Route element={<Layout />}>
+                  {/* Dashboard */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   
-                  {/* Protected routes */}
-                  <Route element={<PrivateRoute />}>
-                    {/* Main layout with sidebar and header */}
-                    <Route path="/" element={<Layout />}>
-                      <Route index element={<Home />} />
-                      
-                      {/* Dashboard routes */}
-                      <Route path="dashboard" element={<Dashboard />} />
-                      
-                      {/* Assets module routes */}
-                      <Route path="assets">
-                        <Route index element={<Navigate to="/assets/dashboard" replace />} />
-                        <Route path="dashboard" element={<AssetsDashboard />} />
-                        <Route path="inventory" element={<AssetsInventory />} />
-                        <Route path="register" element={<RegisterAsset />} />
-                      </Route>
-                      
-                      {/* Topology module routes */}
-                      <Route path="topology">
-                        <Route index element={<Navigate to="/topology/view" replace />} />
-                        <Route path="view" element={<Topology />} />
-                      </Route>
-                      
-                      {/* Tools module routes */}
-                      <Route path="tools">
-                        <Route index element={<Navigate to="/tools/discovery" replace />} />
-                        <Route path="discovery" element={<Discovery />} />
-                      </Route>
-                      
-                      {/* BITS™ module routes */}
-                      <Route path="bits">
-                        <Route index element={<BitsDashboard />} />
-                        <Route path="indicate" element={<BitsIndicateNow />} />
-                        <Route path="my-referrals" element={<BitsMyReferrals />} />
-                        <Route path="rewards" element={<BitsPointsAndRewards />} />
-                        <Route path="settings" element={<BitsSettings />} />
-                        <Route path="help" element={<BitsHelpAndSupport />} />
-                      </Route>
-                      
-                      {/* Direct shortcuts */}
-                      <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
-                      <Route path="link-asset" element={<Association />} />
-                      
-                      {/* Legacy routes for backward compatibility */}
-                      <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
-                      <Route path="/clients" element={<Clients />} />
-                      <Route path="/suppliers" element={<Suppliers />} />
-                      <Route path="/association" element={<Association />} />
-                      <Route path="/subscriptions" element={<Subscriptions />} />
-                      <Route path="/monitoring" element={<Monitoring />} />
-                      <Route path="/history" element={<History />} />
-                      <Route path="/data-usage" element={<DataUsage />} />
-                      <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
-                    </Route>
-                  </Route>
+                  {/* Inventory */}
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/inventory/summary" element={<InventorySummary />} />
+                  <Route path="/register-asset" element={<RegisterAsset />} />
                   
-                  {/* Fallback route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </DataUsageProvider>
-          </AssetProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                  {/* Clients */}
+                  <Route path="/clients" element={<Clients />} />
+                </Route>
+              </Route>
+              
+              {/* Specialized Routes */}
+              <Route path="/unauthorized" element={<div>Unauthorized Access</div>} />
+              
+              {/* Admin Routes */}
+              <Route element={<PrivateRoute requiredRole="admin" />}>
+                <Route element={<Layout />}>
+                  <Route path="/admin" element={<div>Admin Dashboard</div>} />
+                </Route>
+              </Route>
+              
+              {/* Not Found */}
+              <Route path="/not-found" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/not-found" replace />} />
+            </Routes>
+            
+            <Toaster />
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
