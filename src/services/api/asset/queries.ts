@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
@@ -133,7 +132,17 @@ export const assetQueries = {
         return [];
       }
       
-      return data || [];
+      // Map the response to include the total property if not present
+      if (data) {
+        return data.map((item: any) => ({
+          type: item.type,
+          status: item.status,
+          count: item.count,
+          total: item.total || item.count // Ensure total is present
+        }));
+      }
+      
+      return [];
     } catch (error) {
       handleAssetError(error, "Error in statusByType");
       return [];
