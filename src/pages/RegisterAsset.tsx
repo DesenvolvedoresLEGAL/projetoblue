@@ -1,208 +1,359 @@
 
 import { useState } from "react";
-import { useAssets } from "@/context/useAssets";
-import { Asset, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
+import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertTriangle } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PasswordInput } from "@/components/auth/PasswordInput";
 import { toast } from "@/utils/toast";
-import { AlertTriangle } from "lucide-react";
-import { checkPasswordStrength } from "@/utils/passwordStrength";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordStrength } from "@/utils/passwordStrength";
+import referenceDataService from "@/services/api/referenceDataService";
+import { SolutionType } from "@/types/asset";
 
+// Custom hook for fetching reference data
+const useReferenceData = () => {
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ['manufacturers'],
+        queryFn: referenceDataService.getManufacturers,
+        placeholderData: [],
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      },
+      {
+        queryKey: ['assetSolutions'],
+        queryFn: referenceDataService.getAssetSolutions,
+        placeholderData: [],
+        staleTime: 5 * 60 * 1000,
+      },
+      {
+        queryKey: ['assetStatus'],
+        queryFn: referenceDataService.getStatusRecords,
+        placeholderData: [],
+        staleTime: 5 * 60 * 1000,
+      },
+      {
+        queryKey: ['assetTypes'],
+        queryFn: referenceDataService.getAssetTypes,
+        placeholderData: [],
+        staleTime: 5 * 60 * 1000,
+      }
+    ]
+  });
+
+  const [manufacturersQuery, solutionsQuery, statusQuery, typesQuery] = queries;
+
+  // Sort data alphabetically where applicable
+  const manufacturers = manufacturersQuery.data?.sort((a, b) => a.name.localeCompare(b.name)) || [];
+  const solutions = solutionsQuery.data?.sort((a, b) => a.solution.localeCompare(b.solution)) || [];
+  const statuses = statusQuery.data?.sort((a, b) => a.nome.localeCompare(b.nome)) || [];
+  const types = typesQuery.data || [];
+
+  const isLoading = queries.some(query => query.isLoading);
+  const isError = queries.some(query => query.isError);
+  
+  return {
+    manufacturers,
+    solutions,
+    statuses,
+    types,
+    isLoading,
+    isError
+  };
+};
+
+// Reusable SelectField component
+const SelectField = ({ 
+  control, 
+  name, 
+  label, 
+  placeholder, 
+  options,
+  isLoading = false,
+  isRequired = false,
+  disabled = false
+}) => {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-2">
+          <FormLabel>{label}{isRequired && ' *'}</FormLabel>
+          {isLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <Select
+              value={field.value?.toString() || ""}
+              onValueChange={field.onChange}
+              disabled={disabled}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value.toString()}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};
+
+// Define Zod schemas
+const baseAssetSchema = z.object({
+  notes: z.string().optional(),
+  status_id: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().nullable().default(1) // Default to first status (usually "Disponível")
+  ),
+  solution_id: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().nullable()
+  ),
+});
+
+const chipSchema = baseAssetSchema.extend({
+  type_id: z.literal(1), // Chip type
+  iccid: z.string().min(1, "ICCID é obrigatório"),
+  line_number: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().nullable()
+  ),
+  carrier_id: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().nullable().default(1) // Default to first carrier (usually "VIVO")
+  ),
+});
+
+const speedySchema = baseAssetSchema.extend({
+  type_id: z.literal(2), // Router type
+  serial_number: z.string().min(1, "Número de série é obrigatório"),
+  manufacturer_id: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().min(1, "Marca é obrigatória")
+  ),
+  model: z.string().min(1, "Modelo é obrigatório"),
+  ssid: z.string().optional(),
+  password: z.string().optional(),
+  radio: z.string().optional(),
+  ip_address: z.string().optional(),
+  admin_user: z.string().optional(),
+  admin_password: z.string().optional(),
+  imei: z.string().optional(),
+});
+
+// Combined discriminated union schema
+const assetSchema = z.discriminatedUnion("type_id", [chipSchema, speedySchema]);
+
+// Main component
 export default function RegisterAsset() {
-  const { addAsset } = useAssets();
-  const [assetType, setAssetType] = useState<"CHIP" | "ROTEADOR">("CHIP");
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
   const [allowWeakPassword, setAllowWeakPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Use the custom hook to fetch reference data
+  const { 
+    manufacturers, 
+    solutions, 
+    statuses, 
+    types,
+    isLoading: isReferenceDataLoading
+  } = useReferenceData();
+  
+  const queryClient = useQueryClient();
 
-  // Form state for chip
-  const [chipForm, setChipForm] = useState<Omit<ChipAsset, "id" | "status">>({
-    type: "CHIP",
-    iccid: "",
-    phoneNumber: "",
-    carrier: "VIVO",
-    registrationDate: new Date().toISOString(),
-    num_linha: undefined,
-    solucao: undefined,
-  });
-
-  // Form state for router
-  const [routerForm, setRouterForm] = useState<Omit<RouterAsset, "id" | "status">>({
-    type: "ROTEADOR",
-    uniqueId: "",
-    brand: "",
-    model: "",
-    ssid: "",
-    password: "",
-    registrationDate: new Date().toISOString(),
-    marca: "",
-    modelo: "",
-    serial_number: "",
-    solucao: undefined,
-    radio: undefined,
-  });
-
-  const handleChipChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setChipForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCarrierChange = (value: string) => {
-    setChipForm((prev) => ({ ...prev, carrier: value }));
-  };
-
-  const handleSolutionChange = (value: SolutionType) => {
-    if (assetType === "CHIP") {
-      setChipForm((prev) => ({ ...prev, solucao: value }));
-    } else {
-      setRouterForm((prev) => ({ ...prev, solucao: value }));
+  // Set up the form with zod resolver
+  const form = useForm({
+    resolver: zodResolver(assetSchema),
+    defaultValues: {
+      type_id: 1, // Default to Chip
+      status_id: 1, // Default to Available
+      iccid: "",
+      line_number: null,
+      carrier_id: 1, // Default to VIVO
+      serial_number: "",
+      manufacturer_id: null,
+      model: "",
+      ssid: "",
+      password: "",
+      radio: "",
+      solution_id: null,
+      notes: "",
+      ip_address: "",
+      admin_user: "",
+      admin_password: "",
+      imei: ""
     }
+  });
+  
+  const assetType = form.watch("type_id");
+  const password = form.watch("password");
+  
+  // Handle password strength checking
+  const handlePasswordChange = (value: string) => {
+    const strength = checkPasswordStrength(value);
+    setPasswordStrength(strength);
+    form.setValue("password", value);
   };
-
-  const handleRouterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    
-    if (name === "password") {
-      const strength = checkPasswordStrength(value);
-      setPasswordStrength(strength);
-    }
-    
-    setRouterForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (assetType === "CHIP") {
-        // Validate chip form
-        if (!chipForm.iccid || !chipForm.phoneNumber || !chipForm.carrier) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Validate ICCID format (19-20 digits)
-        const iccidClean = chipForm.iccid.replace(/\D/g, '');
-        if (iccidClean.length < 19 || iccidClean.length > 20) {
-          toast.error("O ICCID deve ter entre 19 e 20 dígitos numéricos");
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Submit to Supabase
-        const { data, error } = await supabase
+  
+  // Mutation for creating an asset
+  const createAssetMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof assetSchema>) => {
+      // Check if ICCID already exists for chip
+      if (data.type_id === 1 && data.iccid) {
+        const { data: existingChip, error: chipError } = await supabase
           .from('assets')
-          .insert({
-            type: 'chip',
-            status: 'Disponível',
-            iccid: chipForm.iccid,
-            num_linha: chipForm.num_linha ? parseInt(chipForm.num_linha.toString()) : null,
-            solucao: chipForm.solucao || null,
-            operadora_id: chipForm.carrier === "VIVO" ? 1 : chipForm.carrier === "CLARO" ? 2 : 3, // Assuming operadora_id mapping
-          })
-          .select();
-
-        if (error) {
-          console.error("Erro ao cadastrar chip:", error);
-          toast.error(`Erro ao cadastrar chip: ${error.message}`);
-          setIsSubmitting(false);
-          return;
+          .select('uuid')
+          .eq('iccid', data.iccid)
+          .maybeSingle();
+          
+        if (chipError && chipError.code !== 'PGRST116') {
+          throw new Error(`Erro ao verificar ICCID: ${chipError.message}`);
         }
-
-        toast.success("Chip cadastrado com sucesso!");
-
-        // Reset form after successful submission
-        setChipForm({
-          type: "CHIP",
-          iccid: "",
-          phoneNumber: "",
-          carrier: "VIVO",
-          registrationDate: new Date().toISOString(),
-          num_linha: undefined,
-          solucao: undefined,
-        });
-
-      } else {
-        // Validate router form
-        if (!routerForm.uniqueId || !routerForm.brand || !routerForm.model) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
-          setIsSubmitting(false);
-          return;
+        
+        if (existingChip) {
+          throw new Error(`ICCID ${data.iccid} já está cadastrado no sistema.`);
         }
-
-        if (passwordStrength === 'weak' && !allowWeakPassword) {
-          toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Submit to Supabase
-        const { data, error } = await supabase
-          .from('assets')
-          .insert({
-            type: 'roteador',
-            status: 'Disponível',
-            serial_number: routerForm.serial_number || null,
-            marca: routerForm.brand,
-            modelo: routerForm.model,
-            solucao: routerForm.solucao || null,
-            radio: routerForm.radio || null,
-          })
-          .select();
-
-        if (error) {
-          console.error("Erro ao cadastrar roteador:", error);
-          toast.error(`Erro ao cadastrar roteador: ${error.message}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success("Roteador cadastrado com sucesso!");
-
-        // Reset form after successful submission
-        setRouterForm({
-          type: "ROTEADOR",
-          uniqueId: "",
-          brand: "",
-          model: "",
-          ssid: "",
-          password: "",
-          registrationDate: new Date().toISOString(),
-          marca: "",
-          modelo: "",
-          serial_number: "",
-          solucao: undefined,
-          radio: undefined,
-        });
-        setPasswordStrength(null);
-        setAllowWeakPassword(false);
       }
-    } catch (error) {
-      console.error("Erro ao cadastrar ativo:", error);
-      toast.error("Erro ao cadastrar ativo. Por favor, tente novamente.");
-    } finally {
-      setIsSubmitting(false);
+      
+      // Check if serial_number already exists for router
+      if (data.type_id === 2 && data.serial_number) {
+        const { data: existingRouter, error: routerError } = await supabase
+          .from('assets')
+          .select('uuid')
+          .eq('serial_number', data.serial_number)
+          .maybeSingle();
+          
+        if (routerError && routerError.code !== 'PGRST116') {
+          throw new Error(`Erro ao verificar número de série: ${routerError.message}`);
+        }
+        
+        if (existingRouter) {
+          throw new Error(`Número de série ${data.serial_number} já está cadastrado no sistema.`);
+        }
+      }
+      
+      // Prepare data for insertion
+      const insertData = {
+        type_id: data.type_id,
+        status_id: data.status_id,
+        solution_id: data.solution_id,
+        
+        // Chip specific fields
+        ...(data.type_id === 1 && {
+          iccid: data.iccid,
+          line_number: data.line_number,
+          // Map carrier_id to operadora_id as per the original code
+          operadora_id: data.carrier_id
+        }),
+        
+        // Router specific fields
+        ...(data.type_id === 2 && {
+          serial_number: data.serial_number,
+          manufacturer_id: data.manufacturer_id,
+          model: data.model,
+          password: data.password,
+          radio: data.radio
+        })
+      };
+      
+      // Insert the asset
+      const { data: newAsset, error } = await supabase
+        .from('assets')
+        .insert(insertData)
+        .select();
+        
+      if (error) {
+        throw new Error(`Erro ao cadastrar ativo: ${error.message}`);
+      }
+      
+      return newAsset[0];
+    },
+    onSuccess: (newAsset) => {
+      // Update the cache with the new asset
+      queryClient.setQueryData(["assets"], (oldData: any[] | undefined) => [
+        ...(oldData || []),
+        newAsset
+      ]);
+      
+      // Invalidate relevant queries for refetching
+      queryClient.invalidateQueries({ queryKey: ["assets"], exact: false });
+      
+      // Reset the form and show success message
+      form.reset();
+      setPasswordStrength(null);
+      setAllowWeakPassword(false);
+      
+      toast.success("Ativo cadastrado com sucesso!");
+    },
+    onError: (error: Error) => {
+      // Show error message
+      toast.error(error.message);
+      
+      // Focus the first invalid field
+      const fields = form.getFieldState(assetType === 1 ? "iccid" : "serial_number");
+      if (fields.invalid) {
+        document.getElementById(assetType === 1 ? "iccid" : "serial_number")?.focus();
+      }
     }
+  });
+  
+  // Handle form submission
+  const onSubmit = (data: z.infer<typeof assetSchema>) => {
+    // Validate password strength if it's a router and password is provided
+    if (data.type_id === 2 && data.password && passwordStrength === 'weak' && !allowWeakPassword) {
+      toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
+      return;
+    }
+    
+    createAssetMutation.mutate(data);
   };
 
+  // Map options for select fields
+  const solutionOptions = solutions.map(item => ({
+    value: item.id,
+    label: item.solution
+  }));
+  
+  const manufacturerOptions = manufacturers.map(item => ({
+    value: item.id,
+    label: item.name
+  }));
+  
+  const statusOptions = statuses.map(item => ({
+    value: item.id,
+    label: item.nome
+  }));
+  
+  const carrierOptions = [
+    { value: 1, label: "VIVO" },
+    { value: 2, label: "CLARO" },
+    { value: 3, label: "TIM" }
+  ];
+
+  // Render the password strength indicator
   const renderPasswordStrength = () => {
     if (!passwordStrength) return null;
 
@@ -231,19 +382,6 @@ export default function RegisterAsset() {
     }
   };
 
-  const solutionOptions: SolutionType[] = [
-    "SPEEDY 5G",
-    "4BLACK",
-    "4LITE",
-    "4PLUS",
-    "AP BLUE",
-    "POWERBANK",
-    "SWITCH",
-    "HUB USB",
-    "ANTENA",
-    "LOAD BALANCE"
-  ];
-
   return (
     <div className="space-y-6">
       <div>
@@ -260,249 +398,374 @@ export default function RegisterAsset() {
           <CardTitle>Detalhes do Ativo</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <Tabs
-              value={assetType}
-              onValueChange={(value) => setAssetType(value as "CHIP" | "ROTEADOR")}
-              className="w-full"
-            >
-              <TabsList className="grid grid-cols-2 mb-8">
-                <TabsTrigger value="CHIP">Chip</TabsTrigger>
-                <TabsTrigger value="ROTEADOR">Roteador</TabsTrigger>
-              </TabsList>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <Tabs
+                value={assetType === 1 ? "CHIP" : "ROTEADOR"}
+                onValueChange={(value) => {
+                  form.setValue("type_id", value === "CHIP" ? 1 : 2);
+                  // Reset form values that are specific to the other type
+                  if (value === "CHIP") {
+                    form.setValue("serial_number", "");
+                    form.setValue("manufacturer_id", null);
+                    form.setValue("model", "");
+                    form.setValue("password", "");
+                  } else {
+                    form.setValue("iccid", "");
+                    form.setValue("line_number", null);
+                    form.setValue("carrier_id", null);
+                  }
+                }}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-2 mb-8">
+                  <TabsTrigger value="CHIP">Chip</TabsTrigger>
+                  <TabsTrigger value="ROTEADOR">Roteador</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="CHIP" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="iccid">ICCID *</Label>
-                    <Input
-                      id="iccid"
+                {/* CHIP FORM */}
+                <TabsContent value="CHIP" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
                       name="iccid"
-                      value={chipForm.iccid}
-                      onChange={handleChipChange}
-                      placeholder="Ex: 89550421180216543847"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ICCID *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="iccid"
+                              placeholder="Ex: 89550421180216543847"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Número *</Label>
-                    <Input
-                      id="phoneNumber"
-                      name="phoneNumber"
-                      value={chipForm.phoneNumber}
-                      onChange={handleChipChange}
-                      placeholder="Ex: (11) 98765-4321"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="carrier">Operadora *</Label>
-                    <Select 
-                      value={chipForm.carrier} 
-                      onValueChange={handleCarrierChange}
-                      name="carrier"
-                    >
-                      <SelectTrigger id="carrier">
-                        <SelectValue placeholder="Selecione a operadora" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="VIVO">VIVO</SelectItem>
-                        <SelectItem value="CLARO">CLARO</SelectItem>
-                        <SelectItem value="TIM">TIM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="num_linha">Número da Linha</Label>
-                    <Input
-                      id="num_linha"
-                      name="num_linha"
-                      type="number"
-                      value={chipForm.num_linha || ""}
-                      onChange={handleChipChange}
-                      placeholder="Número da linha"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="chipSolution">Solução</Label>
-                    <Select 
-                      value={chipForm.solucao} 
-                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
-                    >
-                      <SelectTrigger id="chipSolution">
-                        <SelectValue placeholder="Selecione a solução" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {solutionOptions.map(solution => (
-                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="chipNotes">Observações</Label>
-                  <Textarea
-                    id="chipNotes"
-                    name="notes"
-                    value={chipForm.notes || ""}
-                    onChange={handleChipChange}
-                    placeholder="Informações adicionais sobre o chip"
-                    rows={4}
-                  />
-                </div>
-              </TabsContent>
 
-              <TabsContent value="ROTEADOR" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="uniqueId">ID Único *</Label>
-                    <Input
-                      id="uniqueId"
-                      name="uniqueId"
-                      value={routerForm.uniqueId}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: RTR001"
+                    <FormField
+                      control={form.control}
+                      name="line_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número da Linha</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="line_number"
+                              type="number"
+                              placeholder="Número da linha"
+                              disabled={createAssetMutation.isPending}
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === "" ? null : parseInt(value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="carrier_id"
+                      label="Operadora"
+                      placeholder="Selecione a operadora"
+                      options={carrierOptions}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="solution_id"
+                      label="Solução"
+                      placeholder="Selecione a solução"
+                      options={solutionOptions}
+                      isLoading={isReferenceDataLoading}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="status_id"
+                      label="Status"
+                      placeholder="Selecione o status"
+                      options={statusOptions}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
+                      disabled={createAssetMutation.isPending}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="brand">Marca *</Label>
-                    <Input
-                      id="brand"
-                      name="brand"
-                      value={routerForm.brand}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: TP-Link"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="model">Modelo *</Label>
-                    <Input
-                      id="model"
-                      name="model"
-                      value={routerForm.model}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: Archer C6"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="serial_number">Número de Série</Label>
-                    <Input
-                      id="serial_number"
+                  
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            id="notes"
+                            placeholder="Informações adicionais sobre o chip"
+                            rows={4}
+                            disabled={createAssetMutation.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* ROUTER FORM */}
+                <TabsContent value="ROTEADOR" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
                       name="serial_number"
-                      value={routerForm.serial_number || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: SN123456789"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número de Série *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="serial_number"
+                              placeholder="Ex: SN123456789"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ssid">SSID</Label>
-                    <Input
-                      id="ssid"
-                      name="ssid"
-                      value={routerForm.ssid}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: LEGAL_WIFI"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="text"
-                      value={routerForm.password}
-                      onChange={handleRouterChange}
-                      placeholder="Senha da rede Wi-Fi"
-                    />
-                    {renderPasswordStrength()}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="radio">Radio</Label>
-                    <Input
-                      id="radio"
-                      name="radio"
-                      value={routerForm.radio || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Configuração de rádio"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="routerSolution">Solução</Label>
-                    <Select 
-                      value={routerForm.solucao} 
-                      onValueChange={(value) => handleSolutionChange(value as SolutionType)}
-                    >
-                      <SelectTrigger id="routerSolution">
-                        <SelectValue placeholder="Selecione a solução" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {solutionOptions.map(solution => (
-                          <SelectItem key={solution} value={solution}>{solution}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ipAddress">IP Gerência</Label>
-                    <Input
-                      id="ipAddress"
-                      name="ipAddress"
-                      value={routerForm.ipAddress || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: 192.168.0.1"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="adminUser">Usuário Admin</Label>
-                    <Input
-                      id="adminUser"
-                      name="adminUser"
-                      value={routerForm.adminUser || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: admin"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="adminPassword">Senha Admin</Label>
-                    <Input
-                      id="adminPassword"
-                      name="adminPassword"
-                      type="text"
-                      value={routerForm.adminPassword || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Senha do admin"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="imei">IMEI</Label>
-                    <Input
-                      id="imei"
-                      name="imei"
-                      value={routerForm.imei || ""}
-                      onChange={handleRouterChange}
-                      placeholder="Ex: 123456789012345"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="routerNotes">Observações</Label>
-                  <Textarea
-                    id="routerNotes"
-                    name="notes"
-                    value={routerForm.notes || ""}
-                    onChange={handleRouterChange}
-                    placeholder="Informações adicionais sobre o roteador"
-                    rows={4}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Cadastrando..." : "Cadastrar"}
-              </Button>
-            </div>
-          </form>
+                    <SelectField
+                      control={form.control}
+                      name="manufacturer_id"
+                      label="Marca"
+                      placeholder="Selecione a marca"
+                      options={manufacturerOptions}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modelo *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="model"
+                              placeholder="Ex: Archer C6"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="ssid"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SSID</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="ssid"
+                              placeholder="Ex: LEGAL_WIFI"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              id="password"
+                              value={field.value || ""}
+                              onChange={(e) => handlePasswordChange(e.target.value)}
+                              placeholder="Senha da rede Wi-Fi"
+                              disabled={createAssetMutation.isPending}
+                            />
+                          </FormControl>
+                          {renderPasswordStrength()}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="radio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Radio</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="radio"
+                              placeholder="Configuração de rádio"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="solution_id"
+                      label="Solução"
+                      placeholder="Selecione a solução"
+                      options={solutionOptions}
+                      isLoading={isReferenceDataLoading}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="status_id"
+                      label="Status"
+                      placeholder="Selecione o status"
+                      options={statusOptions}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="ip_address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>IP Gerência</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="ip_address"
+                              placeholder="Ex: 192.168.0.1"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="admin_user"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Usuário Admin</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="admin_user"
+                              placeholder="Ex: admin"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="admin_password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha Admin</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              id="admin_password"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              placeholder="Senha do admin"
+                              disabled={createAssetMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="imei"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>IMEI</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="imei"
+                              placeholder="Ex: 123456789012345"
+                              disabled={createAssetMutation.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            id="notes"
+                            placeholder="Informações adicionais sobre o roteador"
+                            rows={4}
+                            disabled={createAssetMutation.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={createAssetMutation.isPending}
+                  className="w-full md:w-auto"
+                >
+                  {createAssetMutation.isPending ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
