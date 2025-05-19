@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation, useQueries } from "@tanstack/react-query";
 import { z } from "zod";
@@ -226,13 +225,9 @@ export default function RegisterAsset() {
       line_number: null,
       manufacturer_id: null,
       plan_id: null,
-      serial_number: "",
-      model: "",
-      password: "",
-      radio: "",
       solution_id: null,
       notes: "",
-    }
+    } as AssetFormValues
   });
   
   const assetType = form.watch("type_id");
@@ -266,7 +261,7 @@ export default function RegisterAsset() {
       }
       
       // Check if serial_number already exists for router
-      if (data.type_id === 2 && data.serial_number) {
+      if (data.type_id === 2 && "serial_number" in data) {
         const { data: existingRouter, error: routerError } = await supabase
           .from('assets')
           .select('uuid')
@@ -282,8 +277,8 @@ export default function RegisterAsset() {
         }
       }
       
-      // Prepare data for insertion based on asset type
-      const insertData: any = {
+      // Prepare data for insertion
+      let insertData: Record<string, any> = {
         type_id: data.type_id,
         status_id: data.status_id,
         solution_id: data.solution_id,
@@ -293,17 +288,23 @@ export default function RegisterAsset() {
       // Add type-specific fields based on asset type
       if (data.type_id === 1) {
         // Chip specific fields
-        insertData.iccid = data.iccid;
-        insertData.line_number = data.line_number;
-        insertData.manufacturer_id = data.manufacturer_id; // This is the carrier/operator
-        insertData.plan_id = data.plan_id;
-      } else {
+        insertData = {
+          ...insertData,
+          iccid: data.iccid,
+          line_number: data.line_number,
+          manufacturer_id: data.manufacturer_id, // This is the carrier/operator
+          plan_id: data.plan_id,
+        };
+      } else if (data.type_id === 2 && "serial_number" in data) {
         // Router specific fields
-        insertData.serial_number = data.serial_number;
-        insertData.manufacturer_id = data.manufacturer_id;
-        insertData.model = data.model;
-        insertData.password = data.password;
-        insertData.radio = data.radio;
+        insertData = {
+          ...insertData,
+          serial_number: data.serial_number,
+          manufacturer_id: data.manufacturer_id,
+          model: data.model,
+          password: data.password,
+          radio: data.radio,
+        };
       }
       
       // Insert the asset
@@ -356,7 +357,7 @@ export default function RegisterAsset() {
     }
 
     // Validate password strength if it's a router and password is provided
-    if (formData.type_id === 2 && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
+    if (formData.type_id === 2 && "password" in formData && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
       toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
       return;
     }
@@ -448,10 +449,10 @@ export default function RegisterAsset() {
                   
                   // Reset form values that are specific to the other type
                   if (value === "CHIP") {
-                    form.setValue("serial_number", "");
-                    form.setValue("model", "");
-                    form.setValue("password", "");
-                    form.setValue("radio", "");
+                    form.setValue("serial_number", "" as any);
+                    form.setValue("model", "" as any);
+                    form.setValue("password", "" as any);
+                    form.setValue("radio", "" as any);
                   } else {
                     form.setValue("iccid", "");
                     form.setValue("line_number", null);
