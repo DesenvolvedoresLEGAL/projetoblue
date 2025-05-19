@@ -4,12 +4,13 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ErrorStateProps {
-  error: unknown;
+  error?: unknown;
+  message?: string;
   onRetry?: () => void;
 }
 
-export function ErrorState({ error, onRetry }: ErrorStateProps) {
-  const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao carregar os dados do dashboard.";
+export function ErrorState({ error, message, onRetry }: ErrorStateProps) {
+  const errorMessage = message || (error instanceof Error ? error.message : "Ocorreu um erro ao carregar os dados do dashboard.");
   
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">

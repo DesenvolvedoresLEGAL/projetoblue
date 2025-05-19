@@ -14,25 +14,34 @@ export type Database = {
           asset_id: string
           association_id: number
           client_id: string
+          created_at: string
+          deleted_at: string | null
           entry_date: string
           exit_date: string | null
           id: number
+          updated_at: string
         }
         Insert: {
           asset_id: string
           association_id: number
           client_id: string
+          created_at?: string
+          deleted_at?: string | null
           entry_date: string
           exit_date?: string | null
           id?: number
+          updated_at?: string
         }
         Update: {
           asset_id?: string
           association_id?: number
           client_id?: string
+          created_at?: string
+          deleted_at?: string | null
           entry_date?: string
           exit_date?: string | null
           id?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -68,30 +77,39 @@ export type Database = {
       asset_logs: {
         Row: {
           assoc_id: number | null
+          created_at: string
           date: string | null
+          deleted_at: string | null
           details: Json | null
           event: string | null
           id: number
           status_after_id: number | null
           status_before_id: number | null
+          updated_at: string
         }
         Insert: {
           assoc_id?: number | null
+          created_at?: string
           date?: string | null
+          deleted_at?: string | null
           details?: Json | null
           event?: string | null
           id?: number
           status_after_id?: number | null
           status_before_id?: number | null
+          updated_at?: string
         }
         Update: {
           assoc_id?: number | null
+          created_at?: string
           date?: string | null
+          deleted_at?: string | null
           details?: Json | null
           event?: string | null
           id?: number
           status_after_id?: number | null
           status_before_id?: number | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -126,34 +144,52 @@ export type Database = {
       }
       asset_solutions: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: number
           solution: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           solution: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           solution?: string
+          updated_at?: string
         }
         Relationships: []
       }
       asset_status: {
         Row: {
           association: number | null
+          created_at: string
+          deleted_at: string | null
           id: number
           status: string
+          updated_at: string
         }
         Insert: {
           association?: number | null
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           status: string
+          updated_at?: string
         }
         Update: {
           association?: number | null
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -167,22 +203,32 @@ export type Database = {
       }
       asset_types: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: number
           type: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           type: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           type?: string
+          updated_at?: string
         }
         Relationships: []
       }
       assets: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           iccid: string | null
           line_number: number | null
           manufacturer_id: number | null
@@ -195,10 +241,12 @@ export type Database = {
           solution_id: number | null
           status_id: number | null
           type_id: number | null
+          updated_at: string
           uuid: string
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -211,10 +259,12 @@ export type Database = {
           solution_id?: number | null
           status_id?: number | null
           type_id?: number | null
+          updated_at?: string
           uuid?: string
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
@@ -227,6 +277,7 @@ export type Database = {
           solution_id?: number | null
           status_id?: number | null
           type_id?: number | null
+          updated_at?: string
           uuid?: string
         }
         Relationships: [
@@ -269,48 +320,212 @@ export type Database = {
       }
       association_types: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: number
           type: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           type: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           type?: string
+          updated_at?: string
         }
         Relationships: []
+      }
+      bits_badges_catalog: {
+        Row: {
+          created_at: string
+          criteria: Json | null
+          description: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bits_campaigns: {
+        Row: {
+          applicable_to: Json | null
+          bonus_points: number | null
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          name: string
+          point_multiplier: number | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          applicable_to?: Json | null
+          bonus_points?: number | null
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          name: string
+          point_multiplier?: number | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          applicable_to?: Json | null
+          bonus_points?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          point_multiplier?: number | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bits_levels_catalog: {
+        Row: {
+          benefits: Json | null
+          created_at: string
+          level_number: number
+          name: string
+          points_required: number
+          updated_at: string
+        }
+        Insert: {
+          benefits?: Json | null
+          created_at?: string
+          level_number: number
+          name: string
+          points_required: number
+          updated_at?: string
+        }
+        Update: {
+          benefits?: Json | null
+          created_at?: string
+          level_number?: number
+          name?: string
+          points_required?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bits_missions_catalog: {
+        Row: {
+          badge_reward_id: string | null
+          created_at: string
+          criteria: Json | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          points_reward: number | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          badge_reward_id?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          points_reward?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          badge_reward_id?: string | null
+          created_at?: string
+          criteria?: Json | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_reward?: number | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_missions_catalog_badge_reward_id_fkey"
+            columns: ["badge_reward_id"]
+            isOneToOne: false
+            referencedRelation: "bits_badges_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bits_points_log: {
         Row: {
           action_type: string
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           points: number
           related_referral_id: string | null
           related_reward_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
           action_type: string
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           points: number
           related_referral_id?: string | null
           related_reward_id?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
           action_type?: string
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           points?: number
           related_referral_id?: string | null
           related_reward_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -339,8 +554,12 @@ export type Database = {
       }
       bits_referrals: {
         Row: {
+          conversion_data: Json | null
           created_at: string | null
+          deleted_at: string | null
           id: string
+          piperun_deal_status: string | null
+          piperun_lead_id: string | null
           points_earned: number | null
           referral_link_used: string | null
           referred_company: string | null
@@ -354,8 +573,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          conversion_data?: Json | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
+          piperun_deal_status?: string | null
+          piperun_lead_id?: string | null
           points_earned?: number | null
           referral_link_used?: string | null
           referred_company?: string | null
@@ -369,8 +592,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          conversion_data?: Json | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
+          piperun_deal_status?: string | null
+          piperun_lead_id?: string | null
           points_earned?: number | null
           referral_link_used?: string | null
           referred_company?: string | null
@@ -396,6 +623,7 @@ export type Database = {
       bits_rewards_catalog: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -405,6 +633,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -414,6 +643,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -423,26 +653,170 @@ export type Database = {
         }
         Relationships: []
       }
+      bits_user_badges: {
+        Row: {
+          badge_id: string
+          created_at: string
+          earned_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "bits_badges_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bits_user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bits_user_missions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          mission_id: string
+          progress: Json | null
+          status: Database["public"]["Enums"]["bits_mission_status_enum"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          mission_id: string
+          progress?: Json | null
+          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          mission_id?: string
+          progress?: Json | null
+          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_user_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "bits_missions_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bits_user_missions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bits_user_profile_stats: {
+        Row: {
+          created_at: string
+          current_level_number: number
+          current_points_balance: number
+          last_points_activity_at: string | null
+          total_points_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_level_number?: number
+          current_points_balance?: number
+          last_points_activity_at?: string | null
+          total_points_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_level_number?: number
+          current_points_balance?: number
+          last_points_activity_at?: string | null
+          total_points_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bits_user_profile_stats_current_level_number_fkey"
+            columns: ["current_level_number"]
+            isOneToOne: false
+            referencedRelation: "bits_levels_catalog"
+            referencedColumns: ["level_number"]
+          },
+          {
+            foreignKeyName: "bits_user_profile_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bits_user_rewards: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: string
           points_spent: number
           redeemed_at: string | null
           reward_id: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: string
           points_spent: number
           redeemed_at?: string | null
           reward_id: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: string
           points_spent?: number
           redeemed_at?: string | null
           reward_id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -466,38 +840,56 @@ export type Database = {
         Row: {
           cnpj: string
           contato: number
+          created_at: string
+          deleted_at: string | null
           email: string | null
           nome: string
+          updated_at: string
           uuid: string
         }
         Insert: {
           cnpj: string
           contato: number
+          created_at?: string
+          deleted_at?: string | null
           email?: string | null
           nome: string
+          updated_at?: string
           uuid?: string
         }
         Update: {
           cnpj?: string
           contato?: number
+          created_at?: string
+          deleted_at?: string | null
           email?: string | null
           nome?: string
+          updated_at?: string
           uuid?: string
         }
         Relationships: []
       }
       location_types: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: number
           name: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           name: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -505,6 +897,7 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string | null
+          deleted_at: string | null
           id: number
           latitude: number | null
           longitude: number | null
@@ -515,6 +908,7 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: number
           latitude?: number | null
           longitude?: number | null
@@ -525,6 +919,7 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           id?: number
           latitude?: number | null
           longitude?: number | null
@@ -553,6 +948,7 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: number
           name: string
@@ -562,6 +958,7 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at: string
+          deleted_at?: string | null
           description?: string | null
           id?: number
           name: string
@@ -571,6 +968,7 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: number
           name?: string
@@ -581,51 +979,69 @@ export type Database = {
       }
       plans: {
         Row: {
+          created_at: string
+          deleted_at: string | null
           id: number
           nome: string
           tamanho_gb: number | null
+          updated_at: string
         }
         Insert: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           nome: string
           tamanho_gb?: number | null
+          updated_at?: string
         }
         Update: {
+          created_at?: string
+          deleted_at?: string | null
           id?: number
           nome?: string
           tamanho_gb?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
       profile_logs: {
         Row: {
           changed_at: string
+          created_at: string
+          deleted_at: string | null
           email: string | null
           id: string
           new_data: Json | null
           old_data: Json | null
           operation: string
           table_name: string
+          updated_at: string
           user_id: string | null
         }
         Insert: {
           changed_at?: string
+          created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           new_data?: Json | null
           old_data?: Json | null
           operation: string
           table_name: string
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
           changed_at?: string
+          created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           new_data?: Json | null
           old_data?: Json | null
           operation?: string
           table_name?: string
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: []
@@ -634,32 +1050,38 @@ export type Database = {
         Row: {
           bits_referral_code: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           id: string
           is_active: boolean | null
           is_approved: boolean | null
           last_login: string | null
           role: Database["public"]["Enums"]["user_role_enum"]
+          updated_at: string
         }
         Insert: {
           bits_referral_code?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           id: string
           is_active?: boolean | null
           is_approved?: boolean | null
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
+          updated_at?: string
         }
         Update: {
           bits_referral_code?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           id?: string
           is_active?: boolean | null
           is_approved?: boolean | null
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -748,7 +1170,7 @@ export type Database = {
         Returns: {
           type: string
           status: string
-          total: number
+          count: number
         }[]
       }
     }
@@ -762,6 +1184,7 @@ export type Database = {
         | "Manutenção"
       asset_type_enum: "chip" | "roteador"
       association_type_enum: "aluguel" | "assinatura"
+      bits_mission_status_enum: "in_progress" | "completed" | "expired"
       bits_referral_status_enum:
         | "pendente"
         | "em_negociacao"
@@ -904,6 +1327,7 @@ export const Constants = {
       ],
       asset_type_enum: ["chip", "roteador"],
       association_type_enum: ["aluguel", "assinatura"],
+      bits_mission_status_enum: ["in_progress", "completed", "expired"],
       bits_referral_status_enum: [
         "pendente",
         "em_negociacao",
