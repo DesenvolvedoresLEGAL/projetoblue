@@ -47,26 +47,45 @@ const useReferenceData = () => {
         queryFn: referenceDataService.getAssetTypes,
         placeholderData: [],
         staleTime: 5 * 60 * 1000,
+      },
+      {
+        queryKey: ['plans'],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from('plans')
+            .select('id, nome')
+            .order('nome', { ascending: true });
+            
+          if (error) throw error;
+          return data || [];
+        },
+        placeholderData: [],
+        staleTime: 5 * 60 * 1000,
       }
     ]
   });
 
-  const [manufacturersQuery, solutionsQuery, statusQuery, typesQuery] = queries;
+  const [manufacturersQuery, solutionsQuery, statusQuery, typesQuery, plansQuery] = queries;
 
   // Sort data alphabetically where applicable
   const manufacturers = manufacturersQuery.data?.sort((a, b) => a.name.localeCompare(b.name)) || [];
+  // Filter operators (carriers) from manufacturers - IDs 13, 14, 15
+  const operators = manufacturers.filter(m => [13, 14, 15].includes(m.id)) || [];
   const solutions = solutionsQuery.data?.sort((a, b) => a.solution.localeCompare(b.solution)) || [];
   const statuses = statusQuery.data?.sort((a, b) => a.nome.localeCompare(b.nome)) || [];
   const types = typesQuery.data || [];
+  const plans = plansQuery.data || [];
 
   const isLoading = queries.some(query => query.isLoading);
   const isError = queries.some(query => query.isError);
   
   return {
     manufacturers,
+    operators,
     solutions,
     statuses,
     types,
+    plans,
     isLoading,
     isError
   };
@@ -122,9 +141,9 @@ const SelectField = ({
   );
 };
 
-// Define Zod schemas
-const baseAssetSchema = z.object({
-  notes: z.string().optional(),
+// Define Zod schemas with proper discriminated union
+// Base schema with common fields
+const baseSchema = z.object({
   status_id: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable().default(1) // Default to first status (usually "Disponível")
@@ -133,24 +152,33 @@ const baseAssetSchema = z.object({
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable()
   ),
+  notes: z.string().optional(),
 });
 
-const chipSchema = baseAssetSchema.extend({
-  // Fix: Use a literal type for type_id
+// Chip type schema
+const chipSchema = baseSchema.extend({
   type_id: z.literal(1), // Chip type
-  iccid: z.string().min(1, "ICCID é obrigatório"),
+  iccid: z.string()
+    .min(1, "ICCID é obrigatório")
+    .regex(/^\d{19,20}$/, { message: "ICCID deve ter 19-20 dígitos" })
+    .optional()
+    .or(z.string().min(1, "ICCID é obrigatório")),
   line_number: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
     z.number().nullable()
   ),
-  carrier_id: z.preprocess(
+  manufacturer_id: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
-    z.number().nullable().default(1) // Default to first carrier (usually "VIVO")
+    z.number().min(1, "Operadora é obrigatória")
+  ),
+  plan_id: z.preprocess(
+    val => val === "" || isNaN(Number(val)) ? null : Number(val),
+    z.number().min(1, "Plano é obrigatório")
   ),
 });
 
-const speedySchema = baseAssetSchema.extend({
-  // Fix: Use a literal type for type_id
+// Router type schema
+const routerSchema = baseSchema.extend({
   type_id: z.literal(2), // Router type
   serial_number: z.string().min(1, "Número de série é obrigatório"),
   manufacturer_id: z.preprocess(
@@ -158,17 +186,17 @@ const speedySchema = baseAssetSchema.extend({
     z.number().min(1, "Marca é obrigatória")
   ),
   model: z.string().min(1, "Modelo é obrigatório"),
-  ssid: z.string().optional(),
   password: z.string().optional(),
   radio: z.string().optional(),
-  ip_address: z.string().optional(),
-  admin_user: z.string().optional(),
-  admin_password: z.string().optional(),
-  imei: z.string().optional(),
 });
 
 // Combined discriminated union schema
-const assetSchema = z.discriminatedUnion("type_id", [chipSchema, speedySchema]);
+const assetSchema = z.discriminatedUnion("type_id", [chipSchema, routerSchema]);
+
+// Define TypeScript types from schemas
+type ChipFormValues = z.infer<typeof chipSchema>;
+type RouterFormValues = z.infer<typeof routerSchema>;
+type AssetFormValues = z.infer<typeof assetSchema>;
 
 // Main component
 export default function RegisterAsset() {
@@ -178,35 +206,32 @@ export default function RegisterAsset() {
   // Use the custom hook to fetch reference data
   const { 
     manufacturers, 
+    operators,
     solutions, 
     statuses, 
     types,
+    plans,
     isLoading: isReferenceDataLoading
   } = useReferenceData();
   
   const queryClient = useQueryClient();
 
   // Set up the form with zod resolver
-  const form = useForm({
+  const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      type_id: 1 as const, // Fix: Use as const to specify the literal type
+      type_id: 1 as const, // Use literal type
       status_id: 1, // Default to Available
       iccid: "",
       line_number: null,
-      carrier_id: 1, // Default to VIVO
-      serial_number: "",
       manufacturer_id: null,
+      plan_id: null,
+      serial_number: "",
       model: "",
-      ssid: "",
       password: "",
       radio: "",
       solution_id: null,
       notes: "",
-      ip_address: "",
-      admin_user: "",
-      admin_password: "",
-      imei: ""
     }
   });
   
@@ -222,7 +247,7 @@ export default function RegisterAsset() {
   
   // Mutation for creating an asset
   const createAssetMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof assetSchema>) => {
+    mutationFn: async (data: AssetFormValues) => {
       // Check if ICCID already exists for chip
       if (data.type_id === 1 && data.iccid) {
         const { data: existingChip, error: chipError } = await supabase
@@ -257,28 +282,28 @@ export default function RegisterAsset() {
         }
       }
       
-      // Prepare data for insertion
+      // Prepare data for insertion based on asset type
       const insertData = {
         type_id: data.type_id,
         status_id: data.status_id,
         solution_id: data.solution_id,
+        notes: data.notes,
         
-        // Chip specific fields
-        ...(data.type_id === 1 && {
+        // Common fields for both types
+        ...(data.type_id === 1 ? {
+          // Chip specific fields
           iccid: data.iccid,
           line_number: data.line_number,
-          // Map carrier_id to operadora_id as per the original code
-          operadora_id: data.carrier_id
-        }),
-        
-        // Router specific fields
-        ...(data.type_id === 2 && {
+          manufacturer_id: data.manufacturer_id, // This is the carrier/operator
+          plan_id: data.plan_id,
+        } : {
+          // Router specific fields
           serial_number: data.serial_number,
           manufacturer_id: data.manufacturer_id,
           model: data.model,
           password: data.password,
-          radio: data.radio
-        })
+          radio: data.radio,
+        }),
       };
       
       // Insert the asset
@@ -301,7 +326,7 @@ export default function RegisterAsset() {
       ]);
       
       // Invalidate relevant queries for refetching
-      queryClient.invalidateQueries({ queryKey: ["assets"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
       
       // Reset the form and show success message
       form.reset();
@@ -323,12 +348,12 @@ export default function RegisterAsset() {
   });
   
   // Handle form submission
-  const onSubmit = (data: any) => {
-    // Fix: Transform the data to ensure proper type_id literal
-    const formData = {
-      ...data,
-      type_id: data.type_id === 1 ? 1 : 2 as const
-    };
+  const onSubmit = (formData: AssetFormValues) => {
+    // Ensure the type_id is the correct literal type
+    if (formData.type_id !== 1 && formData.type_id !== 2) {
+      toast.error("Tipo de ativo inválido");
+      return;
+    }
 
     // Validate password strength if it's a router and password is provided
     if (formData.type_id === 2 && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
@@ -350,16 +375,20 @@ export default function RegisterAsset() {
     label: item.name
   }));
   
+  const operatorOptions = operators.map(item => ({
+    value: item.id,
+    label: item.name
+  }));
+  
   const statusOptions = statuses.map(item => ({
     value: item.id,
     label: item.nome
   }));
   
-  const carrierOptions = [
-    { value: 1, label: "VIVO" },
-    { value: 2, label: "CLARO" },
-    { value: 3, label: "TIM" }
-  ];
+  const planOptions = plans.map(item => ({
+    value: item.id,
+    label: item.nome
+  }));
 
   // Render the password strength indicator
   const renderPasswordStrength = () => {
@@ -411,18 +440,26 @@ export default function RegisterAsset() {
               <Tabs
                 value={assetType === 1 ? "CHIP" : "ROTEADOR"}
                 onValueChange={(value) => {
-                  form.setValue("type_id", value === "CHIP" ? 1 : 2 as const); // Fix: Use 'as const' to ensure literal type
+                  // When changing tab, reset the form for the new type
+                  const newTypeId = value === "CHIP" ? 1 : 2;
+                  
+                  // Need to type cast as const to match the literal type
+                  form.setValue("type_id", newTypeId as 1 | 2);
+                  
                   // Reset form values that are specific to the other type
                   if (value === "CHIP") {
                     form.setValue("serial_number", "");
-                    form.setValue("manufacturer_id", null);
                     form.setValue("model", "");
                     form.setValue("password", "");
+                    form.setValue("radio", "");
                   } else {
                     form.setValue("iccid", "");
                     form.setValue("line_number", null);
-                    form.setValue("carrier_id", null);
+                    form.setValue("plan_id", null);
                   }
+                  
+                  // Reset manufacturer_id in both cases
+                  form.setValue("manufacturer_id", null);
                 }}
                 className="w-full"
               >
@@ -479,10 +516,21 @@ export default function RegisterAsset() {
 
                     <SelectField
                       control={form.control}
-                      name="carrier_id"
+                      name="manufacturer_id"
                       label="Operadora"
                       placeholder="Selecione a operadora"
-                      options={carrierOptions}
+                      options={operatorOptions}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
+                      disabled={createAssetMutation.isPending}
+                    />
+
+                    <SelectField
+                      control={form.control}
+                      name="plan_id"
+                      label="Plano"
+                      placeholder="Selecione o plano"
+                      options={planOptions}
                       isLoading={isReferenceDataLoading}
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
@@ -585,25 +633,6 @@ export default function RegisterAsset() {
 
                     <FormField
                       control={form.control}
-                      name="ssid"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>SSID</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="ssid"
-                              placeholder="Ex: LEGAL_WIFI"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
@@ -661,83 +690,6 @@ export default function RegisterAsset() {
                       isLoading={isReferenceDataLoading}
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="ip_address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>IP Gerência</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="ip_address"
-                              placeholder="Ex: 192.168.0.1"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="admin_user"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Usuário Admin</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="admin_user"
-                              placeholder="Ex: admin"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="admin_password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Senha Admin</FormLabel>
-                          <FormControl>
-                            <PasswordInput
-                              id="admin_password"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value)}
-                              placeholder="Senha do admin"
-                              disabled={createAssetMutation.isPending}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="imei"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>IMEI</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="imei"
-                              placeholder="Ex: 123456789012345"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
                     />
                   </div>
 
