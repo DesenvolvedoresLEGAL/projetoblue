@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,19 +10,37 @@ import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { toast } from '@/utils/toast';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { signIn, isAuthenticated, isLoading, error } = useAuth();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Authentication is removed, simply redirect to dashboard with a success toast
-    toast.success("Bem-vindo ao sistema! Acesso concedido automaticamente.");
-    navigate('/');
+    if (!email || !password) {
+      toast.error("Email e senha são obrigatórios");
+      return;
+    }
+
+    try {
+      await signIn(email, password);
+      // No need to redirect here as the AuthContext will handle it
+    } catch (err) {
+      console.error("Erro ao fazer login:", err);
+      // Error will be handled by the AuthContext
+    }
   };
 
   const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -46,6 +65,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -55,6 +75,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                disabled={isLoading}
               />
             </div>
             <div className="flex justify-end">
@@ -65,9 +86,21 @@ const Login = () => {
             <Button 
               type="submit" 
               className="w-full"
+              disabled={isLoading}
             >
-              Entrar
+              {isLoading ? (
+                <>
+                  <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                  Entrando...
+                </>
+              ) : "Entrar"}
             </Button>
+            
+            {error && (
+              <div className="p-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded">
+                {error}
+              </div>
+            )}
           </form>
           <div className="mt-4 text-center text-sm">
             <p className="text-muted-foreground">

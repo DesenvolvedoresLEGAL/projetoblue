@@ -11,6 +11,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { state, updateState } = useAuthState();
   const { signIn, signUp, signOut } = useAuthActions(updateState);
   
+  // Set up auth session check and subscription
   useAuthSession(updateState);
 
   return (

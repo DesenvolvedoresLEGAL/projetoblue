@@ -11,7 +11,7 @@ export const AuthRoute = ({ children }: AuthRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // Se ainda está carregando, mostra nada ou um loading spinner
+  // Se ainda está carregando, mostra um spinner de loading
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -20,7 +20,7 @@ export const AuthRoute = ({ children }: AuthRouteProps) => {
     );
   }
 
-  // Se não está autenticado, redireciona para a página de login
+  // Se não está autenticado, redireciona para a página de login com o state da localização
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

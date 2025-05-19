@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { Layout } from "@/components/layout/Layout";
 import { DataUsageProvider } from "@/context/DataUsageContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { AuthRoute } from "@/components/auth/AuthRoute";
 
 // Pages
 import GeneralDashboard from "./pages/Home";
@@ -56,8 +57,12 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   
-                  {/* Main layout with sidebar and header */}
-                  <Route path="/" element={<Layout />}>
+                  {/* Main layout with sidebar and header - Protected routes */}
+                  <Route path="/" element={
+                    <AuthRoute>
+                      <Layout />
+                    </AuthRoute>
+                  }>
                     <Route index element={<Home />} />
                     
                     {/* Dashboard routes */}

@@ -145,7 +145,7 @@ export const authService = {
       console.error('Erro não tratado durante login:', error);
       return { 
         data: { session: null, user: null }, 
-        error: error 
+        error 
       };
     }
   },

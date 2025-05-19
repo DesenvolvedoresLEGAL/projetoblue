@@ -104,6 +104,17 @@ export function useAuthActions(updateState: (state: any) => void) {
             await authService.signOut();
             throw new Error('Sua conta está desativada. Entre em contato com o administrador.');
           }
+          
+          // Atualiza o estado com os dados do perfil
+          updateState({ 
+            profile,
+            user: data.user,
+            error: null
+          });
+          
+          toast.success(`Bem-vindo(a)!`);
+          navigate('/');
+          
         } catch (profileError) {
           console.error('Erro ao verificar perfil após login:', profileError);
           await authService.signOut();
@@ -114,10 +125,9 @@ export function useAuthActions(updateState: (state: any) => void) {
         throw new Error('Falha no login: dados incompletos retornados');
       }
       
-      navigate('/');
     } catch (error: any) {
       console.error('Erro durante o login:', error);
-      updateState({ error: error.message || 'Erro ao fazer login' });
+      updateState({ error: error.message || 'Erro ao fazer login', isLoading: false });
       toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
     } finally {
       updateState({ isLoading: false });
@@ -128,6 +138,15 @@ export function useAuthActions(updateState: (state: any) => void) {
     try {
       updateState({ isLoading: true });
       await authService.signOut();
+      
+      // Limpa o estado de autenticação
+      updateState({
+        user: null,
+        profile: null,
+        error: null
+      });
+      
+      toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
