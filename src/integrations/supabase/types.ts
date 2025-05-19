@@ -14,25 +14,31 @@ export type Database = {
           asset_id: string
           association_id: number
           client_id: string
+          created_at: string
           entry_date: string
           exit_date: string | null
           id: number
+          updated_at: string
         }
         Insert: {
           asset_id: string
           association_id: number
           client_id: string
+          created_at?: string
           entry_date: string
           exit_date?: string | null
           id?: number
+          updated_at?: string
         }
         Update: {
           asset_id?: string
           association_id?: number
           client_id?: string
+          created_at?: string
           entry_date?: string
           exit_date?: string | null
           id?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -68,30 +74,36 @@ export type Database = {
       asset_logs: {
         Row: {
           assoc_id: number | null
+          created_at: string
           date: string | null
           details: Json | null
           event: string | null
           id: number
           status_after_id: number | null
           status_before_id: number | null
+          updated_at: string
         }
         Insert: {
           assoc_id?: number | null
+          created_at?: string
           date?: string | null
           details?: Json | null
           event?: string | null
           id?: number
           status_after_id?: number | null
           status_before_id?: number | null
+          updated_at?: string
         }
         Update: {
           assoc_id?: number | null
+          created_at?: string
           date?: string | null
           details?: Json | null
           event?: string | null
           id?: number
           status_after_id?: number | null
           status_before_id?: number | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -126,34 +138,46 @@ export type Database = {
       }
       asset_solutions: {
         Row: {
+          created_at: string
           id: number
           solution: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: number
           solution: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: number
           solution?: string
+          updated_at?: string
         }
         Relationships: []
       }
       asset_status: {
         Row: {
           association: number | null
+          created_at: string
           id: number
           status: string
+          updated_at: string
         }
         Insert: {
           association?: number | null
+          created_at?: string
           id?: number
           status: string
+          updated_at?: string
         }
         Update: {
           association?: number | null
+          created_at?: string
           id?: number
           status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -167,16 +191,22 @@ export type Database = {
       }
       asset_types: {
         Row: {
+          created_at: string
           id: number
           type: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: number
           type: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: number
           type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -195,6 +225,7 @@ export type Database = {
           solution_id: number | null
           status_id: number | null
           type_id: number | null
+          updated_at: string
           uuid: string
         }
         Insert: {
@@ -211,6 +242,7 @@ export type Database = {
           solution_id?: number | null
           status_id?: number | null
           type_id?: number | null
+          updated_at?: string
           uuid?: string
         }
         Update: {
@@ -227,6 +259,7 @@ export type Database = {
           solution_id?: number | null
           status_id?: number | null
           type_id?: number | null
+          updated_at?: string
           uuid?: string
         }
         Relationships: [
@@ -269,16 +302,22 @@ export type Database = {
       }
       association_types: {
         Row: {
+          created_at: string
           id: number
           type: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: number
           type: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: number
           type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -291,6 +330,7 @@ export type Database = {
           points: number
           related_referral_id: string | null
           related_reward_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -301,6 +341,7 @@ export type Database = {
           points: number
           related_referral_id?: string | null
           related_reward_id?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -311,6 +352,7 @@ export type Database = {
           points?: number
           related_referral_id?: string | null
           related_reward_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -425,24 +467,30 @@ export type Database = {
       }
       bits_user_rewards: {
         Row: {
+          created_at: string
           id: string
           points_spent: number
           redeemed_at: string | null
           reward_id: string
+          updated_at: string
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
           points_spent: number
           redeemed_at?: string | null
           reward_id: string
+          updated_at?: string
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           points_spent?: number
           redeemed_at?: string | null
           reward_id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -466,38 +514,50 @@ export type Database = {
         Row: {
           cnpj: string
           contato: number
+          created_at: string
           email: string | null
           nome: string
+          updated_at: string
           uuid: string
         }
         Insert: {
           cnpj: string
           contato: number
+          created_at?: string
           email?: string | null
           nome: string
+          updated_at?: string
           uuid?: string
         }
         Update: {
           cnpj?: string
           contato?: number
+          created_at?: string
           email?: string | null
           nome?: string
+          updated_at?: string
           uuid?: string
         }
         Relationships: []
       }
       location_types: {
         Row: {
+          created_at: string
           id: number
           name: string
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: number
           name: string
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: number
           name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -581,51 +641,63 @@ export type Database = {
       }
       plans: {
         Row: {
+          created_at: string
           id: number
           nome: string
           tamanho_gb: number | null
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: number
           nome: string
           tamanho_gb?: number | null
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: number
           nome?: string
           tamanho_gb?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
       profile_logs: {
         Row: {
           changed_at: string
+          created_at: string
           email: string | null
           id: string
           new_data: Json | null
           old_data: Json | null
           operation: string
           table_name: string
+          updated_at: string
           user_id: string | null
         }
         Insert: {
           changed_at?: string
+          created_at?: string
           email?: string | null
           id?: string
           new_data?: Json | null
           old_data?: Json | null
           operation: string
           table_name: string
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
           changed_at?: string
+          created_at?: string
           email?: string | null
           id?: string
           new_data?: Json | null
           old_data?: Json | null
           operation?: string
           table_name?: string
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: []
@@ -640,6 +712,7 @@ export type Database = {
           is_approved: boolean | null
           last_login: string | null
           role: Database["public"]["Enums"]["user_role_enum"]
+          updated_at: string
         }
         Insert: {
           bits_referral_code?: string | null
@@ -650,6 +723,7 @@ export type Database = {
           is_approved?: boolean | null
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
+          updated_at?: string
         }
         Update: {
           bits_referral_code?: string | null
@@ -660,6 +734,7 @@ export type Database = {
           is_approved?: boolean | null
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
+          updated_at?: string
         }
         Relationships: []
       }

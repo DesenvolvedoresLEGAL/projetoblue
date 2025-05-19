@@ -22,7 +22,7 @@ interface AuthContextType {
 }
 
 // Create the context with undefined initial value
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initialize fetchProfile outside the component to avoid recreation on each render
 async function fetchUserProfile(userId: string): Promise<UserProfile | null> {

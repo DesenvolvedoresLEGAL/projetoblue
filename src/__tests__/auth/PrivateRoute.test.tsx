@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PrivateRoute } from '@/features/auth/components/PrivateRoute';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { AuthContext } from '@/features/auth/context/AuthContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 // Mock the useAuth hook values
 const mockAuthContext = {
@@ -20,6 +20,11 @@ const mockAuthContext = {
   resetPassword: vi.fn(),
   hasProfile: true,
 };
+
+// Mock useAuth hook
+vi.mock('@/features/auth/context/AuthContext', () => ({
+  useAuth: vi.fn(() => mockAuthContext)
+}));
 
 // Mock navigate
 const mockNavigate = vi.fn();
@@ -40,15 +45,18 @@ describe('PrivateRoute', () => {
   });
 
   it('shows loading spinner when auth is loading', () => {
+    vi.mocked(useAuth).mockReturnValueOnce({
+      ...mockAuthContext,
+      isLoading: true
+    });
+    
     render(
       <MemoryRouter initialEntries={['/protected']}>
-        <AuthContext.Provider value={{ ...mockAuthContext, isLoading: true } as any}>
-          <Routes>
-            <Route path="/protected" element={<PrivateRoute />}>
-              <Route index element={<ProtectedComponent />} />
-            </Route>
-          </Routes>
-        </AuthContext.Provider>
+        <Routes>
+          <Route path="/protected" element={<PrivateRoute />}>
+            <Route index element={<ProtectedComponent />} />
+          </Route>
+        </Routes>
       </MemoryRouter>
     );
 
@@ -57,16 +65,19 @@ describe('PrivateRoute', () => {
   });
 
   it('redirects to login when not authenticated', () => {
+    vi.mocked(useAuth).mockReturnValueOnce({
+      ...mockAuthContext,
+      isAuthenticated: false
+    });
+    
     render(
       <MemoryRouter initialEntries={['/protected']}>
-        <AuthContext.Provider value={{ ...mockAuthContext, isAuthenticated: false } as any}>
-          <Routes>
-            <Route path="/protected" element={<PrivateRoute />}>
-              <Route index element={<ProtectedComponent />} />
-            </Route>
-            <Route path="/login" element={<div>Login Page</div>} />
-          </Routes>
-        </AuthContext.Provider>
+        <Routes>
+          <Route path="/protected" element={<PrivateRoute />}>
+            <Route index element={<ProtectedComponent />} />
+          </Route>
+          <Route path="/login" element={<div>Login Page</div>} />
+        </Routes>
       </MemoryRouter>
     );
 
@@ -78,13 +89,11 @@ describe('PrivateRoute', () => {
   it('allows access when authenticated', () => {
     render(
       <MemoryRouter initialEntries={['/protected']}>
-        <AuthContext.Provider value={mockAuthContext as any}>
-          <Routes>
-            <Route path="/protected" element={<PrivateRoute />}>
-              <Route index element={<ProtectedComponent />} />
-            </Route>
-          </Routes>
-        </AuthContext.Provider>
+        <Routes>
+          <Route path="/protected" element={<PrivateRoute />}>
+            <Route index element={<ProtectedComponent />} />
+          </Route>
+        </Routes>
       </MemoryRouter>
     );
 
@@ -93,16 +102,19 @@ describe('PrivateRoute', () => {
   });
 
   it('redirects to unauthorized when role check fails', () => {
+    vi.mocked(useAuth).mockReturnValueOnce({
+      ...mockAuthContext,
+      profile: { ...mockAuthContext.profile, role: 'analyst' }
+    });
+    
     render(
       <MemoryRouter initialEntries={['/admin']}>
-        <AuthContext.Provider value={mockAuthContext as any}>
-          <Routes>
-            <Route path="/admin" element={<PrivateRoute requiredRole="admin" />}>
-              <Route index element={<div>Admin Content</div>} />
-            </Route>
-            <Route path="/unauthorized" element={<div>Unauthorized Page</div>} />
-          </Routes>
-        </AuthContext.Provider>
+        <Routes>
+          <Route path="/admin" element={<PrivateRoute requiredRole="admin" />}>
+            <Route index element={<div>Admin Content</div>} />
+          </Route>
+          <Route path="/unauthorized" element={<div>Unauthorized Page</div>} />
+        </Routes>
       </MemoryRouter>
     );
 

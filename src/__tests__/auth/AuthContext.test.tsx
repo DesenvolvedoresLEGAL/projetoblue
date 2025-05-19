@@ -6,55 +6,53 @@ import { AuthProvider, useAuth } from '@/features/auth/context/AuthContext';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock Supabase client
-vi.mock('@/integrations/supabase/client', () => {
-  const mockSession = {
-    user: {
-      id: 'test-user-id',
-      email: 'test@example.com',
-    },
-  };
-
-  return {
-    supabase: {
-      auth: {
-        getSession: vi.fn().mockResolvedValue({ data: { session: mockSession } }),
-        onAuthStateChange: vi.fn().mockReturnValue({
-          data: {
-            subscription: {
-              unsubscribe: vi.fn(),
-            },
-          },
-        }),
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: { user: { id: 'test-user-id', email: 'test@example.com' } },
-          error: null,
-        }),
-        signOut: vi.fn().mockResolvedValue({ error: null }),
-        signUp: vi.fn().mockResolvedValue({
-          data: { user: { id: 'new-user-id', email: 'new@example.com' } },
-          error: null,
-        }),
-        resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
+const mockSupabase = {
+  auth: {
+    getSession: vi.fn().mockResolvedValue({ data: { session: {
+      user: {
+        id: 'test-user-id',
+        email: 'test@example.com',
       },
-      from: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                id: 'test-user-id',
-                email: 'test@example.com',
-                role: 'analyst',
-                is_active: true,
-                is_approved: true,
-              },
-              error: null,
-            }),
-          }),
+    } } }),
+    onAuthStateChange: vi.fn().mockReturnValue({
+      data: {
+        subscription: {
+          unsubscribe: vi.fn(),
+        },
+      },
+    }),
+    signInWithPassword: vi.fn().mockResolvedValue({
+      data: { user: { id: 'test-user-id', email: 'test@example.com' } },
+      error: null,
+    }),
+    signOut: vi.fn().mockResolvedValue({ error: null }),
+    signUp: vi.fn().mockResolvedValue({
+      data: { user: { id: 'new-user-id', email: 'new@example.com' } },
+      error: null,
+    }),
+    resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
+  },
+  from: vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: 'test-user-id',
+            email: 'test@example.com',
+            role: 'analyst',
+            is_active: true,
+            is_approved: true,
+          },
+          error: null,
         }),
       }),
-    },
-  };
-});
+    }),
+  }),
+};
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: mockSupabase
+}));
 
 // Mock toast for notifications
 vi.mock('@/utils/toast', () => ({
@@ -122,7 +120,7 @@ describe('AuthContext', () => {
 
     // Should call signIn
     await waitFor(() => {
-      expect(vi.mocked(supabase.auth.signInWithPassword)).toHaveBeenCalledWith({
+      expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password',
       });
@@ -137,7 +135,7 @@ describe('AuthContext', () => {
 
     // Should call signOut and navigate to login
     await waitFor(() => {
-      expect(vi.mocked(supabase.auth.signOut)).toHaveBeenCalled();
+      expect(mockSupabase.auth.signOut).toHaveBeenCalled();
       expect(mockedNavigate).toHaveBeenCalledWith('/login');
     });
   });

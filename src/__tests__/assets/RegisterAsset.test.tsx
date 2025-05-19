@@ -4,27 +4,28 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RegisterAsset from '@/pages/RegisterAsset';
-import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ 
-            data: { uuid: 'new-asset-123', type_id: 1 }, 
-            error: null 
-          })
-        })
-      }),
+const mockSupabase = {
+  from: vi.fn().mockReturnValue({
+    insert: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+        single: vi.fn().mockResolvedValue({ 
+          data: { uuid: 'new-asset-123', type_id: 1 }, 
+          error: null 
         })
       })
+    }),
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+      })
     })
-  }
+  })
+};
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: mockSupabase
 }));
 
 // Mock toast notifications
@@ -97,8 +98,8 @@ describe('RegisterAsset', () => {
     
     // Check if Supabase was called
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('assets');
-      expect(supabase.from('assets').insert).toHaveBeenCalled();
+      expect(mockSupabase.from).toHaveBeenCalledWith('assets');
+      expect(mockSupabase.from('assets').insert).toHaveBeenCalled();
     });
   });
 
@@ -116,9 +117,17 @@ describe('RegisterAsset', () => {
 
   it('disables submit button during submission', async () => {
     // Mock a delayed response
-    vi.mocked(supabase.from('assets').insert().select().single).mockImplementationOnce(() => 
+    const singleMock = vi.fn().mockImplementation(() => 
       new Promise(resolve => setTimeout(() => resolve({ data: { uuid: 'new-asset-123' }, error: null }), 100))
     );
+    
+    mockSupabase.from.mockReturnValueOnce({
+      insert: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: singleMock
+        })
+      })
+    });
     
     render(<RegisterAsset />, { wrapper: createWrapper() });
     
