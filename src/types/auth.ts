@@ -12,6 +12,7 @@ export interface UserProfile {
   is_active: boolean;
   is_approved: boolean;
   bits_referral_code?: string;
+  updated_at?: string;
 }
 
 export interface AuthState {

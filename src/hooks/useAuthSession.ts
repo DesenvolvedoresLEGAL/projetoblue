@@ -33,10 +33,21 @@ export function useAuthSession(updateState: (state: any) => void) {
         
         if (profile) {
           console.log('Profile fetched successfully:', profile.email);
+          // Verificar se o role está entre os valores esperados
+          if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(profile.role)) {
+            console.warn(`Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
+            profile.role = 'cliente';
+          }
+          
           updateState({ 
             profile,
             isLoading: false 
           });
+          
+          // Atualizar último login
+          profileService.updateLastLogin(userId).catch(err => 
+            console.warn('Non-critical: Failed to update last_login:', err)
+          );
         } else {
           // Retry logic with exponential backoff
           if (profileRetries < maxRetries) {
@@ -50,6 +61,7 @@ export function useAuthSession(updateState: (state: any) => void) {
               isLoading: false,
               error: 'Failed to load user profile' 
             });
+            toast.error("Erro ao carregar seu perfil. Por favor, tente novamente ou contate o suporte.");
           }
         }
       } catch (error) {
@@ -64,6 +76,7 @@ export function useAuthSession(updateState: (state: any) => void) {
             isLoading: false,
             error: 'Failed to load user profile' 
           });
+          toast.error("Não foi possível carregar os dados do seu perfil. Entre em contato com o suporte.");
         }
       }
     };

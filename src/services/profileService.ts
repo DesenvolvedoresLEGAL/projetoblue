@@ -22,6 +22,13 @@ export const profileService = {
       if (data) {
         console.log('Profile found:', data.email);
         
+        // Validar o role para garantir que é um dos valores válidos
+        const role = data.role as UserRole;
+        if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
+          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
+          data.role = 'cliente';
+        }
+        
         // Map the profiles table fields to the UserProfile type
         return {
           id: data.id,
@@ -31,7 +38,8 @@ export const profileService = {
           last_login: data.last_login || new Date().toISOString(),
           is_active: data.is_active !== false, // Default to true if undefined
           is_approved: data.is_approved !== false, // Default to true if undefined
-          bits_referral_code: data.bits_referral_code
+          bits_referral_code: data.bits_referral_code,
+          updated_at: data.updated_at
         };
       }
       
@@ -45,16 +53,50 @@ export const profileService = {
         return null;
       }
       
-      // Create a minimal profile from user data
-      return {
-        id: userData.user.id,
-        email: userData.user.email || '',
-        role: 'user', // Default role
-        created_at: userData.user.created_at || new Date().toISOString(),
-        last_login: new Date().toISOString(),
-        is_active: true,
-        is_approved: true
-      };
+      // Tentar criar o perfil automaticamente
+      try {
+        const defaultRole: UserRole = 'cliente';
+        const profileData = {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: defaultRole,
+          is_active: true,
+          is_approved: true
+        };
+        
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(profileData);
+          
+        if (insertError) {
+          console.error('Failed to create missing profile:', insertError);
+        } else {
+          console.log(`Created missing profile for user ${userData.user.id}`);
+        }
+        
+        // Create a minimal profile from user data
+        return {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: defaultRole,
+          created_at: userData.user.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          is_active: true,
+          is_approved: true
+        };
+      } catch (createError) {
+        console.error('Error creating missing profile:', createError);
+        // Ainda retornar um perfil mínimo para não interromper o fluxo
+        return {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: 'cliente', 
+          created_at: userData.user.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          is_active: true,
+          is_approved: true
+        };
+      }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       // Don't throw, just return null to let calling code handle it
@@ -67,7 +109,10 @@ export const profileService = {
       const now = new Date().toISOString();
       await supabase
         .from('profiles')
-        .update({ last_login: now })
+        .update({ 
+          last_login: now,
+          updated_at: now
+        })
         .eq('id', userId);
       
       console.log(`Updated last_login for user ${userId}`);
