@@ -44,7 +44,8 @@ const Signup = () => {
       }
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
-      await signUp(email, password);
+      // By default, register new users as 'cliente' role
+      await signUp(email, password, 'cliente');
     } catch (error: any) {
       console.error("Erro capturado no componente Signup:", error);
       

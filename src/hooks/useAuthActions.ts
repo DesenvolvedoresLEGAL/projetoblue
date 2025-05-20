@@ -4,12 +4,13 @@ import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 import { useState, useCallback } from 'react';
+import { UserRole } from '@/types/auth';
 
 export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, role: UserRole = 'cliente') => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
@@ -31,7 +32,7 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       console.log('AuthContext: Dados validados, enviando para o serviço de autenticação');
       
-      const { data, error } = await authService.signUp(email, password);
+      const { data, error } = await authService.signUp(email, password, role);
 
       if (error) {
         console.error('Erro no Supabase auth.signUp:', error);

@@ -1,10 +1,12 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
+import { UserRole } from '@/types/auth';
 
 interface SignUpData {
   email: string;
   password: string;
+  role?: UserRole;
 }
 
 interface ValidationResult {
@@ -44,8 +46,8 @@ export const authService = {
   },
 
   // Sign up with retry
-  async signUp(email: string, password: string) {
-    console.log('Iniciando processo de cadastro:', { email });
+  async signUp(email: string, password: string, role: UserRole = 'cliente') {
+    console.log('Iniciando processo de cadastro:', { email, role });
     
     try {
       // Register in Supabase Auth
@@ -54,7 +56,7 @@ export const authService = {
         password,
         options: {
           data: {
-            role: 'analyst'
+            role
           }
         }
       });
@@ -91,6 +93,7 @@ export const authService = {
       console.log('Usuário criado com sucesso:', {
         id: data.user.id,
         email: data.user.email,
+        role: role,
         created_at: data.user.created_at
       });
       

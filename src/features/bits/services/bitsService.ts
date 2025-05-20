@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Referral, 
@@ -14,6 +13,7 @@ import {
   Level
 } from "../types";
 import { toast } from "@/utils/toast";
+import { UserRole } from "@/types/auth";
 
 // Utility function to handle errors
 const handleError = (error: Error, message: string) => {
@@ -451,12 +451,18 @@ export const bitsProfileService = {
       // Check if user already has a code
       const { data: profile } = await supabase
         .from('profiles')
-        .select('bits_referral_code')
+        .select('bits_referral_code, role')
         .eq('id', userAuth.user.id)
         .single();
       
       if (profile?.bits_referral_code) {
         return profile.bits_referral_code;
+      }
+      
+      // Only generate codes for cliente or higher roles
+      const role = profile?.role as UserRole;
+      if (role !== 'cliente' && role !== 'gestor' && role !== 'admin' && role !== 'consultor') {
+        throw new Error("Only 'cliente' or higher roles can generate referral codes");
       }
       
       // Generate a new code (username + random 6 chars)

@@ -1157,6 +1157,14 @@ export type Database = {
       }
     }
     Functions: {
+      has_minimum_role: {
+        Args: { required_role: Database["public"]["Enums"]["user_role_enum"] }
+        Returns: boolean
+      }
+      has_role: {
+        Args: { role_name: Database["public"]["Enums"]["user_role_enum"] }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1172,6 +1180,13 @@ export type Database = {
           status: string
           count: number
         }[]
+      }
+      update_user_role: {
+        Args: {
+          user_email: string
+          new_role: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Returns: boolean
       }
     }
     Enums: {
@@ -1201,7 +1216,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
-      user_role_enum: "admin" | "ops" | "suport" | "user" | "afiliado"
+      user_role_enum: "admin" | "gestor" | "consultor" | "cliente" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1346,7 +1361,7 @@ export const Constants = {
         "ANTENA",
         "LOAD BALANCE",
       ],
-      user_role_enum: ["admin", "ops", "suport", "user", "afiliado"],
+      user_role_enum: ["admin", "gestor", "consultor", "cliente", "user"],
     },
   },
 } as const
