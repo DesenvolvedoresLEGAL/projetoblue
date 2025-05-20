@@ -70,8 +70,12 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       if (data?.user) {
         console.log('Usuário criado com sucesso:', data.user.id);
-        toast.success("Usuário criado com sucesso! Você já pode fazer login.");
-        navigate('/login');
+        toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+        
+        // Short delay before redirect to ensure the user sees the success message
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
       } else {
         console.error('Usuário não foi criado, dados incompletos:', data);
         throw new Error('Falha ao criar usuário: dados incompletos retornados');

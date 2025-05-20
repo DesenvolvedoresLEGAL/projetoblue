@@ -45,24 +45,20 @@ const Signup = () => {
       }
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
+      
       // By default, register new users as 'cliente' role
       await signUp(email, password, 'cliente');
       
-      // Show success message
-      toast.success("Cadastro realizado com sucesso! Você será redirecionado para o login.");
-      
-      // Redirect to login after a short delay (allowing the user to see the success message)
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Note: toast and navigation are now handled in the signUp function in useAuthActions.ts
+      // to avoid duplicate messages and ensure they only happen after successful registration
       
     } catch (error: any) {
       console.error("Erro capturado no componente Signup:", error);
       
-      // Armazenar erro técnico para debug
+      // Store technical error for debugging
       setTechnicalError(`Erro técnico: ${error.message || 'Erro desconhecido'}`);
       
-      // Mostrar mensagem amigável para o usuário
+      // Show user-friendly message
       if (error.message?.includes('captcha') || error.message?.includes('configuração')) {
         setSignupError('Erro temporário no sistema. Nossa equipe técnica foi notificada. Por favor, tente novamente mais tarde.');
       } else {
