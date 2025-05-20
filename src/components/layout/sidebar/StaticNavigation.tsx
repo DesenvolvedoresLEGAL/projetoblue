@@ -71,8 +71,8 @@ export function StaticNavigation({
         </NavLink>
       </div>
 
-      {/* BITS™ Section - Conditionally rendered */}
-      {profile?.role === 'afiliado' && <div className="flex flex-col space-y-2">
+      {/* BITS™ Section - Conditionally rendered for 'cliente' role (previously 'afiliado') */}
+      {profile?.role === 'cliente' && <div className="flex flex-col space-y-2">
           <div className="px-3 mb-1">
             <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS™</h3>
           </div>
