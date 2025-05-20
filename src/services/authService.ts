@@ -56,7 +56,7 @@ export const authService = {
     }
     
     try {
-      // Register in Supabase Auth
+      // Register in Supabase Auth - Using signUp instead of signUpWithPassword for compatibility
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
