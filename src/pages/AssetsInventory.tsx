@@ -245,7 +245,7 @@ const AssetsInventory = () => {
                     {/* Show line_number for chips and solution for routers */}
                     {asset.type === 'CHIP' ? 
                       `Número: ${(asset as any).phoneNumber || (asset as any).num_linha || 'N/A'}` : 
-                      `Solução: ${asset.solucao || 'N/A'}`
+                      `Etiqueta: ${asset.radio || 'N/A'}`
                     }
                   </TableCell>
                   <TableCell>{getStatusBadge(asset.status)}</TableCell>

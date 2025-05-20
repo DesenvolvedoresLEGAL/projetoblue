@@ -61,9 +61,9 @@ export function useDashboardStats() {
           supabase
             .from('assets')
             .select(`
-              uuid,
-              model,
               serial_number,
+              line_number,
+              radio,
               asset_types!inner(type),
               asset_status!inner(status)
             `)
@@ -96,7 +96,7 @@ export function useDashboardStats() {
         // Process recent assets data
         const recentAssets = (recentAssetsResult.data || []).map(asset => ({
           id: asset.uuid,
-          name: asset.model || asset.serial_number || `Asset ${asset.uuid.substring(0, 8)}`,
+          name: asset.radio || asset.line_number,
           type: asset.asset_types?.type || 'Unknown',
           status: asset.asset_status?.status || 'Unknown'
         }));
