@@ -1157,6 +1157,14 @@ export type Database = {
       }
     }
     Functions: {
+      fix_missing_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          email: string
+          fixed: boolean
+        }[]
+      }
       has_minimum_role: {
         Args: { required_role: Database["public"]["Enums"]["user_role_enum"] }
         Returns: boolean
