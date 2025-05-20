@@ -9,7 +9,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { state, updateState } = useAuthState();
-  const { signIn, signUp, signOut } = useAuthActions(updateState);
+  const { signIn, signUp, signOut, technicalError } = useAuthActions(updateState);
   
   // Set up auth session check and subscription
   useAuthSession(updateState);
@@ -33,6 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         isAuthenticated: !!state.user && !!state.profile,
+        technicalError
       }}
     >
       {children}

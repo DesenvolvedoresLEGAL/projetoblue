@@ -13,7 +13,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [signupError, setSignupError] = useState<string | null>(error);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [technicalError, setTechnicalError] = useState<string | null>(null);
+  const [technicalErrorInfo, setTechnicalErrorInfo] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -29,7 +29,7 @@ const Signup = () => {
     e.preventDefault();
     console.log("Signup form submitted");
     setIsSubmitting(true);
-    setTechnicalError(null);
+    setTechnicalErrorInfo(null);
     setSignupError(null);
     
     try {
@@ -47,7 +47,12 @@ const Signup = () => {
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
       
       // By default, register new users as 'cliente' role
-      await signUp(email, password, 'cliente');
+      const result = await signUp(email, password, 'cliente');
+      
+      // Se houver informações técnicas de erro, armazená-las para exibição
+      if (result?.technicalError) {
+        setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
+      }
       
       // Note: toast and navigation are now handled in the signUp function in useAuthActions.ts
       // to avoid duplicate messages and ensure they only happen after successful registration
@@ -56,7 +61,12 @@ const Signup = () => {
       console.error("Erro capturado no componente Signup:", error);
       
       // Store technical error for debugging
-      setTechnicalError(`Erro técnico: ${error.message || 'Erro desconhecido'}`);
+      if (error.message || error.stack) {
+        setTechnicalErrorInfo(`Erro técnico: ${error.message || 'Erro desconhecido'}
+Stack: ${error.stack || 'N/A'}
+Categoria: ${error.category || 'Desconhecida'}
+Timestamp: ${new Date().toISOString()}`);
+      }
       
       // Show user-friendly message
       if (error.message?.includes('captcha') || error.message?.includes('configuração')) {
@@ -85,10 +95,10 @@ const Signup = () => {
             isLoading={isLoading || isSubmitting}
           />
           
-          {technicalError && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-300 font-mono">
+          {technicalErrorInfo && (
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-300 font-mono overflow-auto max-h-48">
               <p className="font-semibold mb-1">Informação técnica (para suporte):</p>
-              <code>{technicalError}</code>
+              <code className="whitespace-pre-wrap break-all">{technicalErrorInfo}</code>
             </div>
           )}
           

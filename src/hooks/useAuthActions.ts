@@ -1,16 +1,25 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 import { useState, useCallback } from 'react';
 import { UserRole } from '@/types/auth';
+import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/constants/auth';
+
+// Tipo para armazenar informações técnicas de erro para diagnóstico
+interface TechnicalErrorInfo {
+  message: string;
+  category?: AuthErrorCategory;
+  timestamp: string;
+  context?: Record<string, any>;
+}
 
 export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
+  const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
 
-  const signUp = useCallback(async (email: string, password: string, role: UserRole = 'cliente') => {
+  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
@@ -22,9 +31,21 @@ export function useAuthActions(updateState: (state: any) => void) {
       console.log('AuthContext: Iniciando processo de cadastro');
       updateState({ isLoading: true, error: null });
       
+      // Limpar erro técnico anterior
+      setTechnicalError(null);
+      
       const validation = authService.validateSignUpData({ email, password });
       if (!validation.isValid) {
         console.error('Erro de validação:', validation.error);
+        
+        // Armazenar informações de erro técnico para diagnóstico
+        setTechnicalError({
+          message: validation.error || 'Erro de validação desconhecido',
+          category: validation.category || AuthErrorCategory.UNKNOWN,
+          timestamp: new Date().toISOString(),
+          context: { email, validationResult: validation }
+        });
+        
         updateState({ error: validation.error, isLoading: false });
         toast.error(validation.error);
         return;
@@ -38,29 +59,26 @@ export function useAuthActions(updateState: (state: any) => void) {
       
       // Ensure we have a valid role
       if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
-        console.warn(`Role inválido '${role}' fornecido, usando 'cliente' como padrão`);
-        role = 'cliente';
+        console.warn(`Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
+        role = DEFAULT_USER_ROLE as UserRole;
       }
       
-      const { data, error } = await authService.signUp(email, password, role);
+      const { data, error, profileCreated } = await authService.signUp(email, password, role);
 
       if (error) {
         console.error('Erro no cadastro de usuário:', error);
         
-        let errorMessage = 'Falha ao criar usuário';
+        // Categorizar e formatar a mensagem de erro
+        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
+        const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Falha ao criar usuário';
         
-        if (error.message?.includes('already registered')) {
-          errorMessage = 'Este email já está cadastrado.';
-        } else if (error.message?.includes('password')) {
-          errorMessage = 'Senha inválida: ' + error.message;
-        } else if (error.message?.includes('email')) {
-          errorMessage = 'Email inválido: ' + error.message;
-        } else if (error.message?.includes('database')) {
-          errorMessage = 'Erro de banco de dados: Falha ao criar perfil do usuário.';
-        } else if (error.message?.includes('captcha')) {
-          console.error('Erro de CAPTCHA:', error);
-          errorMessage = 'Erro de configuração do sistema. Entre em contato com o administrador.';
-        }
+        // Armazenar informações de erro técnico para diagnóstico
+        setTechnicalError({
+          message: error.message || 'Erro desconhecido durante o cadastro',
+          category: errorCategory,
+          timestamp: new Date().toISOString(),
+          context: { email, role, originalError: error }
+        });
         
         console.error('Erro traduzido:', errorMessage);
         updateState({ error: errorMessage, isLoading: false });
@@ -69,8 +87,14 @@ export function useAuthActions(updateState: (state: any) => void) {
       }
 
       if (data?.user) {
-        console.log('Usuário criado com sucesso:', data.user.id);
-        toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+        if (!profileCreated) {
+          // Exibir aviso não-bloqueante sobre possível problema com o perfil
+          toast.warning("Cadastro realizado, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
+          console.warn('Cadastro concluído, mas não foi possível confirmar a criação do perfil');
+        } else {
+          console.log('Usuário e perfil criados com sucesso:', data.user.id);
+          toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+        }
         
         // Short delay before redirect to ensure the user sees the success message
         setTimeout(() => {
@@ -82,7 +106,19 @@ export function useAuthActions(updateState: (state: any) => void) {
       }
     } catch (error: any) {
       console.error('Erro não tratado no processo de cadastro:', error);
-      const errorMessage = error.message || 'Ocorreu um erro inesperado durante o cadastro.';
+      
+      // Categorizar e formatar a mensagem de erro
+      const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
+      const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Ocorreu um erro inesperado durante o cadastro.';
+      
+      // Armazenar informações de erro técnico para diagnóstico
+      setTechnicalError({
+        message: error.message || 'Erro desconhecido durante o cadastro',
+        category: errorCategory,
+        timestamp: new Date().toISOString(),
+        context: { email, roleProvided: role, stack: error.stack }
+      });
+      
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     } finally {
@@ -101,26 +137,27 @@ export function useAuthActions(updateState: (state: any) => void) {
     try {
       setIsAuthProcessing(true);
       updateState({ isLoading: true, error: null });
+      setTechnicalError(null);
       
       if (!email || !password) {
-        throw new Error('Email e senha são obrigatórios');
+        throw { message: 'Email e senha são obrigatórios', category: AuthErrorCategory.INVALID_EMAIL };
       }
       
       console.log('AuthContext: Iniciando login para:', email);
       const { data, error } = await authService.signIn(email, password);
       
       if (error) {
-        let errorMessage = 'Erro ao fazer login';
+        // Categorizar o erro
+        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
+        const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Erro ao fazer login';
         
-        if (error.message?.includes('credentials')) {
-          errorMessage = 'Email ou senha incorretos.';
-        } else if (error.message?.includes('disabled')) {
-          errorMessage = 'Esta conta está desativada. Entre em contato com o administrador.';
-        } else if (error.message?.includes('fetch') || error.message?.includes('conectar')) {
-          errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão de internet e tente novamente.';
-        }
+        setTechnicalError({
+          message: error.message || 'Erro desconhecido durante login',
+          category: errorCategory,
+          timestamp: new Date().toISOString()
+        });
         
-        throw new Error(errorMessage);
+        throw { ...error, message: errorMessage, category: errorCategory };
       }
 
       if (data.user) {
@@ -130,10 +167,47 @@ export function useAuthActions(updateState: (state: any) => void) {
           console.log('Perfil obtido após login:', profile);
           
           // Verificando apenas se o perfil está ativo
-          if (!profile || !profile.is_active) {
+          if (!profile) {
+            console.error('Perfil não encontrado para usuário:', data.user.id);
+            
+            // Tentar criar o perfil manualmente
+            const { data: rpcData, error: rpcError } = await supabase
+              .rpc('ensure_user_profile', {
+                user_id: data.user.id,
+                user_email: data.user.email || email,
+                user_role: DEFAULT_USER_ROLE
+              });
+            
+            if (rpcError) {
+              console.error('Falha ao criar perfil manualmente:', rpcError);
+              await authService.signOut();
+              throw { 
+                message: 'Não foi possível criar seu perfil. Entre em contato com o suporte.', 
+                category: AuthErrorCategory.PROFILE_CREATION 
+              };
+            } else {
+              // Tentar obter o perfil novamente
+              const profileRetry = await profileService.fetchUserProfile(data.user.id);
+              if (!profileRetry) {
+                console.error('Perfil ainda não encontrado após criação manual');
+                await authService.signOut();
+                throw { 
+                  message: 'Erro na configuração do perfil. Entre em contato com o suporte.', 
+                  category: AuthErrorCategory.PROFILE_CREATION 
+                };
+              }
+              
+              profile = profileRetry;
+            }
+          }
+          
+          if (!profile.is_active) {
             console.log('Perfil inativo, fazendo logout:', profile);
             await authService.signOut();
-            throw new Error('Sua conta está desativada. Entre em contato com o administrador.');
+            throw { 
+              message: 'Sua conta está desativada. Entre em contato com o administrador.',
+              category: AuthErrorCategory.AUTHENTICATION
+            };
           }
           
           // Atualiza o estado com os dados do perfil
@@ -155,18 +229,34 @@ export function useAuthActions(updateState: (state: any) => void) {
           
         } catch (profileError) {
           console.error('Erro ao verificar perfil após login:', profileError);
+          
+          setTechnicalError({
+            message: profileError.message || 'Erro ao verificar perfil',
+            category: profileError.category || AuthErrorCategory.PROFILE_CREATION,
+            timestamp: new Date().toISOString(),
+            context: { userId: data.user.id, email: data.user.email }
+          });
+          
           await authService.signOut();
           throw profileError;
         }
       } else {
         console.error('Login falhou, dados incompletos:', data);
-        throw new Error('Falha no login: dados incompletos retornados');
+        throw {
+          message: 'Falha no login: dados incompletos retornados',
+          category: AuthErrorCategory.UNKNOWN
+        };
       }
       
     } catch (error: any) {
       console.error('Erro durante o login:', error);
-      updateState({ error: error.message || 'Erro ao fazer login', isLoading: false });
-      toast.error(error.message || 'Falha no login. Verifique suas credenciais.');
+      
+      // Formatar mensagem de erro amigável
+      const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
+      const errorMessage = error.message || AUTH_ERROR_MESSAGES[errorCategory] || 'Erro ao fazer login';
+      
+      updateState({ error: errorMessage, isLoading: false });
+      toast.error(errorMessage);
     } finally {
       if (isAuthProcessing) {
         setIsAuthProcessing(false);
@@ -205,5 +295,5 @@ export function useAuthActions(updateState: (state: any) => void) {
     }
   }, [isAuthProcessing, navigate, updateState]);
 
-  return { signIn, signUp, signOut };
+  return { signIn, signUp, signOut, technicalError };
 }

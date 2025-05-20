@@ -1103,60 +1103,20 @@ export type Database = {
       }
       v_problem_assets: {
         Row: {
-          iccid: string | null
-          line_number: number | null
-          manufacturer_id: number | null
-          model: string | null
-          password: string | null
-          plan_id: number | null
-          radio: string | null
-          rented_days: number | null
-          serial_number: string | null
-          solution_id: number | null
-          status_id: number | null
-          type_id: number | null
           uuid: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "assets_manufacturer_id_fkey"
-            columns: ["manufacturer_id"]
-            isOneToOne: false
-            referencedRelation: "manufacturers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assets_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_assets_solutions"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "asset_solutions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_assets_status"
-            columns: ["status_id"]
-            isOneToOne: false
-            referencedRelation: "asset_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_assets_type"
-            columns: ["type_id"]
-            isOneToOne: false
-            referencedRelation: "asset_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
+      ensure_user_profile: {
+        Args: {
+          user_id: string
+          user_email: string
+          user_role?: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Returns: boolean
+      }
       fix_missing_profiles: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1194,6 +1154,10 @@ export type Database = {
           user_email: string
           new_role: Database["public"]["Enums"]["user_role_enum"]
         }
+        Returns: boolean
+      }
+      user_has_profile: {
+        Args: { user_id: string }
         Returns: boolean
       }
     }

@@ -1,12 +1,21 @@
 
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile, UserRole } from './auth';
+import { AuthErrorCategory } from '@/constants/auth';
+
+export interface TechnicalErrorInfo {
+  message: string;
+  category?: AuthErrorCategory;
+  timestamp: string;
+  context?: Record<string, any>;
+}
 
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  technicalError?: TechnicalErrorInfo | null;
 }
 
 export interface AuthState {

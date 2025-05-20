@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
 import { UserRole } from '@/types/auth';
+import { DEFAULT_USER_ROLE, AuthErrorCategory } from '@/constants/auth';
 
 interface SignUpData {
   email: string;
@@ -12,10 +13,32 @@ interface SignUpData {
 interface ValidationResult {
   isValid: boolean;
   error?: string;
+  category?: AuthErrorCategory;
 }
 
 // Helper function to add delay for retrying operations
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper to categorize errors
+const categorizeError = (error: any) => {
+  const message = error?.message?.toLowerCase() || '';
+  
+  if (message.includes('already registered')) {
+    return AuthErrorCategory.DUPLICATE_EMAIL;
+  } else if (message.includes('password')) {
+    return AuthErrorCategory.INVALID_PASSWORD;
+  } else if (message.includes('email')) {
+    return AuthErrorCategory.INVALID_EMAIL;
+  } else if (message.includes('database') || message.includes('profile')) {
+    return AuthErrorCategory.PROFILE_CREATION;
+  } else if (message.includes('network') || message.includes('fetch') || message.includes('conectar')) {
+    return AuthErrorCategory.NETWORK;
+  } else if (message.includes('credentials') || message.includes('authentication')) {
+    return AuthErrorCategory.AUTHENTICATION;
+  }
+  
+  return AuthErrorCategory.UNKNOWN;
+};
 
 export const authService = {
   // Validation logic
@@ -23,14 +46,16 @@ export const authService = {
     if (!email || !email.includes('@') || !email.includes('.')) {
       return {
         isValid: false,
-        error: 'Email inválido. Por favor, forneça um email válido.'
+        error: 'Email inválido. Por favor, forneça um email válido.',
+        category: AuthErrorCategory.INVALID_EMAIL
       };
     }
     
     if (!password || password.length < 6) {
       return {
         isValid: false,
-        error: 'Senha muito curta. Deve ter pelo menos 6 caracteres.'
+        error: 'Senha muito curta. Deve ter pelo menos 6 caracteres.',
+        category: AuthErrorCategory.INVALID_PASSWORD
       };
     }
     
@@ -38,21 +63,22 @@ export const authService = {
     if (passwordStrength === 'weak') {
       return {
         isValid: false,
-        error: 'Senha fraca. Use uma combinação de letras, números e caracteres especiais.'
+        error: 'Senha fraca. Use uma combinação de letras, números e caracteres especiais.',
+        category: AuthErrorCategory.INVALID_PASSWORD
       };
     }
     
     return { isValid: true };
   },
 
-  // Sign up with retry
-  async signUp(email: string, password: string, role: UserRole = 'cliente') {
+  // Sign up with retry and profile verification
+  async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) {
     console.log('Iniciando processo de cadastro:', { email, role });
     
     // Ensure role is one of the valid enum values
     if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
-      console.warn(`Valor de role inválido: ${role}, usando 'cliente' como padrão`);
-      role = 'cliente';
+      console.warn(`Valor de role inválido: ${role}, usando '${DEFAULT_USER_ROLE}' como padrão`);
+      role = DEFAULT_USER_ROLE as UserRole;
     }
     
     try {
@@ -75,40 +101,88 @@ export const authService = {
           stack: error.stack
         });
         
-        // Translate the most common Supabase errors
-        if (error.message?.includes('already registered')) {
-          throw new Error('Este email já está cadastrado.');
-        } else if (error.message?.includes('password')) {
-          throw new Error('Problema com a senha: ' + error.message);
-        } else if (error.message?.includes('email')) {
-          throw new Error('Problema com o email: ' + error.message);
-        }
-        
-        throw error;
+        const errorCategory = categorizeError(error);
+        throw { ...error, category: errorCategory };
       }
       
       // Check if the user was created successfully
       if (!data.user || !data.user.id) {
         console.error('Usuário não foi criado corretamente:', data);
-        throw new Error('Falha ao criar usuário: dados incompletos retornados');
+        throw {
+          message: 'Falha ao criar usuário: dados incompletos retornados',
+          category: AuthErrorCategory.UNKNOWN
+        };
       }
       
-      // The user profile entry is created automatically via Supabase trigger
-      // No need to create a separate entry in a users table
+      // Verificação explícita de criação de perfil e tentativa de recuperação
+      const maxRetries = 3;
+      let profileCreated = false;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        if (attempt > 0) {
+          console.log(`Verificando criação de perfil: tentativa ${attempt + 1} de ${maxRetries}`);
+          await delay(1000 * attempt); // Backoff exponencial
+        }
+        
+        // Verificar se o perfil foi criado
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        if (!profileError && profileData) {
+          console.log('Perfil confirmado para usuário:', { 
+            id: data.user.id,
+            email: data.user.email
+          });
+          profileCreated = true;
+          break;
+        }
+        
+        // Se estamos na última tentativa e o perfil ainda não existe, tente criar manualmente
+        if (attempt === maxRetries - 1 && !profileCreated) {
+          console.warn('Perfil não detectado após múltiplas tentativas. Tentando criar manualmente...');
+          
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('ensure_user_profile', {
+              user_id: data.user.id,
+              user_email: data.user.email || email,
+              user_role: role
+            });
+          
+          if (rpcError) {
+            console.error('Falha ao criar perfil manualmente:', rpcError);
+          } else if (rpcData) {
+            console.log('Perfil criado manualmente com sucesso');
+            profileCreated = true;
+          }
+        }
+      }
+      
+      if (!profileCreated) {
+        console.error('Não foi possível confirmar a criação do perfil do usuário após múltiplas tentativas');
+        
+        // Lançamos um aviso, mas não bloqueamos o processo - o perfil pode ter sido criado
+        // mesmo que nossa verificação não tenha conseguido detectá-lo
+        console.warn('Continuando com o processo de registro, mas há risco de perfil ausente');
+      }
       
       console.log('Usuário criado com sucesso:', {
         id: data.user.id,
         email: data.user.email,
         role: role,
-        created_at: data.user.created_at
+        created_at: data.user.created_at,
+        profile_verified: profileCreated
       });
       
-      return { data, error: null };
+      return { data, error: null, profileCreated };
     } catch (error: any) {
       console.error('Erro detalhado durante o cadastro:', {
         message: error.message,
         name: error.name,
-        stack: error.stack
+        stack: error.stack,
+        category: error.category || categorizeError(error)
       });
       throw error;
     }
