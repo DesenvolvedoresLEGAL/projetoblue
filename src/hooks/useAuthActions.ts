@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -5,6 +6,7 @@ import { profileService } from '@/services/profileService';
 import { useState, useCallback } from 'react';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/constants/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 // Tipo para armazenar informações técnicas de erro para diagnóstico
 interface TechnicalErrorInfo {
@@ -163,11 +165,11 @@ export function useAuthActions(updateState: (state: any) => void) {
       if (data.user) {
         console.log('Login bem-sucedido para:', email);
         try {
-          const profile = await profileService.fetchUserProfile(data.user.id);
-          console.log('Perfil obtido após login:', profile);
+          let userProfile = await profileService.fetchUserProfile(data.user.id);
+          console.log('Perfil obtido após login:', userProfile);
           
           // Verificando apenas se o perfil está ativo
-          if (!profile) {
+          if (!userProfile) {
             console.error('Perfil não encontrado para usuário:', data.user.id);
             
             // Tentar criar o perfil manualmente
@@ -197,12 +199,12 @@ export function useAuthActions(updateState: (state: any) => void) {
                 };
               }
               
-              profile = profileRetry;
+              userProfile = profileRetry;
             }
           }
           
-          if (!profile.is_active) {
-            console.log('Perfil inativo, fazendo logout:', profile);
+          if (!userProfile.is_active) {
+            console.log('Perfil inativo, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
               message: 'Sua conta está desativada. Entre em contato com o administrador.',
@@ -212,7 +214,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           
           // Atualiza o estado com os dados do perfil
           updateState({ 
-            profile,
+            profile: userProfile,
             user: data.user,
             error: null,
             isLoading: false

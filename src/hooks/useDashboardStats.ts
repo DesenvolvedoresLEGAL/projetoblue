@@ -95,8 +95,8 @@ export function useDashboardStats() {
         
         // Process recent assets data
         const recentAssets = (recentAssetsResult.data || []).map(asset => ({
-          id: asset.uuid,
-          name: asset.radio || asset.line_number,
+          id: asset.uuid || asset.serial_number || String(asset.line_number || ''),
+          name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
           type: asset.asset_types?.type || 'Unknown',
           status: asset.asset_status?.status || 'Unknown'
         }));

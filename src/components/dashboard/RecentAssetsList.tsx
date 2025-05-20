@@ -9,8 +9,8 @@ interface Asset {
   id: string;
   type: string;
   status: string;
-  radio: string;
-  phoneNumber: string;
+  radio?: string;
+  phoneNumber?: string;
 }
 
 interface RecentAssetsListProps {
@@ -33,12 +33,16 @@ export function RecentAssetsList({ assets }: RecentAssetsListProps) {
           {assets.map(asset => (
             <div key={asset.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
               <div className="flex items-center gap-3">
-                {asset.type === "SPEEDY 5G" && <Wifi className="h-4 w-4 text-[#4D2BFB]" />}
                 {asset.type === "CHIP" && <Smartphone className="h-4 w-4 text-[#4D2BFB]" />}
+                {asset.type === "SPEEDY 5G" && <Wifi className="h-4 w-4 text-[#4D2BFB]" />}
                 {asset.type === "SWITCH" && <Server className="h-4 w-4 text-[#4D2BFB]" />}
                 <div>
-                  <p className="text-sm font-medium">{asset.name}</p>
-                  <p className="text-xs text-muted-foreground">{asset.type}</p>
+                  <p className="text-sm font-medium">
+                    {asset.type === "CHIP" ? asset.phoneNumber : asset.radio || asset.id}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {asset.type}
+                  </p>
                 </div>
               </div>
               <div>
