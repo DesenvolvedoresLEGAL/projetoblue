@@ -49,8 +49,8 @@ const Signup = () => {
       // By default, register new users as 'cliente' role
       const result = await signUp(email, password, 'cliente');
       
-      // Se houver informações técnicas de erro, armazená-las para exibição
-      if (result?.technicalError) {
+      // Check for technical error information from the result
+      if (result && result.technicalError) {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
       }
       

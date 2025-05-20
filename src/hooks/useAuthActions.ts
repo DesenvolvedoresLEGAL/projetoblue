@@ -25,7 +25,7 @@ export function useAuthActions(updateState: (state: any) => void) {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
-      return;
+      return { success: false, message: 'Operation in progress' };
     }
     
     try {
@@ -41,16 +41,18 @@ export function useAuthActions(updateState: (state: any) => void) {
         console.error('Erro de validação:', validation.error);
         
         // Armazenar informações de erro técnico para diagnóstico
-        setTechnicalError({
+        const techError = {
           message: validation.error || 'Erro de validação desconhecido',
           category: validation.category || AuthErrorCategory.UNKNOWN,
           timestamp: new Date().toISOString(),
           context: { email, validationResult: validation }
-        });
+        };
+        
+        setTechnicalError(techError);
         
         updateState({ error: validation.error, isLoading: false });
         toast.error(validation.error);
-        return;
+        return { success: false, message: validation.error, technicalError: techError };
       }
 
       console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
@@ -75,17 +77,19 @@ export function useAuthActions(updateState: (state: any) => void) {
         const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Falha ao criar usuário';
         
         // Armazenar informações de erro técnico para diagnóstico
-        setTechnicalError({
+        const techError = {
           message: error.message || 'Erro desconhecido durante o cadastro',
           category: errorCategory,
           timestamp: new Date().toISOString(),
           context: { email, role, originalError: error }
-        });
+        };
+        
+        setTechnicalError(techError);
         
         console.error('Erro traduzido:', errorMessage);
         updateState({ error: errorMessage, isLoading: false });
         toast.error(errorMessage);
-        return;
+        return { success: false, message: errorMessage, technicalError: techError };
       }
 
       if (data?.user) {
@@ -102,8 +106,17 @@ export function useAuthActions(updateState: (state: any) => void) {
         setTimeout(() => {
           navigate('/login');
         }, 1500);
+        
+        return { success: true, message: 'Cadastro realizado com sucesso' };
       } else {
         console.error('Usuário não foi criado, dados incompletos:', data);
+        const techError = {
+          message: 'Falha ao criar usuário: dados incompletos retornados',
+          category: AuthErrorCategory.UNKNOWN,
+          timestamp: new Date().toISOString(),
+          context: { data }
+        };
+        setTechnicalError(techError);
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
       }
     } catch (error: any) {
@@ -114,15 +127,18 @@ export function useAuthActions(updateState: (state: any) => void) {
       const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Ocorreu um erro inesperado durante o cadastro.';
       
       // Armazenar informações de erro técnico para diagnóstico
-      setTechnicalError({
+      const techError = {
         message: error.message || 'Erro desconhecido durante o cadastro',
         category: errorCategory,
         timestamp: new Date().toISOString(),
         context: { email, roleProvided: role, stack: error.stack }
-      });
+      };
+      
+      setTechnicalError(techError);
       
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
+      return { success: false, message: errorMessage, technicalError: techError };
     } finally {
       updateState({ isLoading: false });
       setIsAuthProcessing(false);

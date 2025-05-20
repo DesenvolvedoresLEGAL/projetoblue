@@ -40,6 +40,7 @@ import {
   PaginationPrevious
 } from '@/components/ui/pagination';
 import { toast } from '@/utils/toast';
+import { capitalize } from '@/utils/stringUtils';
 
 const ASSETS_PER_PAGE = 10;
 
@@ -240,7 +241,7 @@ const AssetsInventory = () => {
                       (asset as any).serial_number || 'N/A'
                     }
                   </TableCell>
-                  <TableCell>{asset.type.capitalize()}</TableCell>
+                  <TableCell>{capitalize(asset.type)}</TableCell>
                   <TableCell>
                     {/* Show line_number for chips and solution for routers */}
                     {asset.type === 'CHIP' ? 
@@ -252,8 +253,8 @@ const AssetsInventory = () => {
                   <TableCell>
                     {/* Show carrier for chips and marca for routers */}
                     {asset.type === 'CHIP' ? 
-                      asset.carrier.capitalize() || 'N/A' : 
-                      asset.marca.capitalize()  || 'N/A'
+                      capitalize(asset.carrier || 'N/A') : 
+                      capitalize(asset.marca || 'N/A')
                     }
                   </TableCell>
                   <TableCell>{asset.modelo || 'N/A'}</TableCell>
