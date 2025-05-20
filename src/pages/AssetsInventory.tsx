@@ -39,7 +39,6 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '@/components/ui/pagination';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/utils/toast';
 
 const ASSETS_PER_PAGE = 10;
@@ -234,16 +233,29 @@ const AssetsInventory = () => {
             {assets?.assets && assets.assets.length > 0 ? (
               assets.assets.map((asset: Asset) => (
                 <TableRow key={asset.id}>
-                  <TableCell className="font-medium">{asset.id.substring(0, 8)}...</TableCell>
+                  <TableCell className="font-medium">
+                    {/* Display ICCID for chips and serial_number for routers */}
+                    {asset.type === 'CHIP' ? 
+                      (asset as any).iccid || 'N/A' : 
+                      (asset as any).serial_number || 'N/A'
+                    }
+                  </TableCell>
                   <TableCell>{asset.type}</TableCell>
                   <TableCell>
+                    {/* Show line_number for chips and solution for routers */}
                     {asset.type === 'CHIP' ? 
-                      `ICCID: ${asset.iccid || 'N/A'}` : 
-                      `SN: ${asset.serial_number || 'N/A'}`
+                      `Número: ${(asset as any).phoneNumber || (asset as any).num_linha || 'N/A'}` : 
+                      `Solução: ${asset.solucao || 'N/A'}`
                     }
                   </TableCell>
                   <TableCell>{getStatusBadge(asset.status)}</TableCell>
-                  <TableCell>{asset.marca || 'N/A'}</TableCell>
+                  <TableCell>
+                    {/* Show carrier for chips and marca for routers */}
+                    {asset.type === 'CHIP' ? 
+                      (asset as any).carrier || 'N/A' : 
+                      asset.marca || 'N/A'
+                    }
+                  </TableCell>
                   <TableCell>{asset.modelo || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
