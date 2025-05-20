@@ -127,7 +127,7 @@ const SelectField = ({
                     key={option.value}
                     value={option.value.toString()}
                   >
-                    {option.label}
+                    {label != "Plano" && label != "Solução" ? option.label.capitalize() : option.label}
                   </SelectItem>
                 ))}
               </SelectContent>

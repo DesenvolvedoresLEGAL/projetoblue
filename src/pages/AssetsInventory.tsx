@@ -240,7 +240,7 @@ const AssetsInventory = () => {
                       (asset as any).serial_number || 'N/A'
                     }
                   </TableCell>
-                  <TableCell>{asset.type}</TableCell>
+                  <TableCell>{asset.type.capitalize()}</TableCell>
                   <TableCell>
                     {/* Show line_number for chips and solution for routers */}
                     {asset.type === 'CHIP' ? 
@@ -252,8 +252,8 @@ const AssetsInventory = () => {
                   <TableCell>
                     {/* Show carrier for chips and marca for routers */}
                     {asset.type === 'CHIP' ? 
-                      asset.carrier || 'N/A' : 
-                      asset.marca || 'N/A'
+                      asset.carrier.capitalize() || 'N/A' : 
+                      asset.marca.capitalize()  || 'N/A'
                     }
                   </TableCell>
                   <TableCell>{asset.modelo || 'N/A'}</TableCell>

@@ -42,6 +42,13 @@ import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
+Object.defineProperty(String.prototype, 'capitalize', {
+  value: function() {
+    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
+  },
+  enumerable: false
+});
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
