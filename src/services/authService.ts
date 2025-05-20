@@ -49,6 +49,12 @@ export const authService = {
   async signUp(email: string, password: string, role: UserRole = 'cliente') {
     console.log('Iniciando processo de cadastro:', { email, role });
     
+    // Ensure role is one of the valid enum values
+    if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
+      console.warn(`Valor de role inválido: ${role}, usando 'cliente' como padrão`);
+      role = 'cliente';
+    }
+    
     try {
       // Register in Supabase Auth
       const { data, error } = await supabase.auth.signUp({
@@ -56,7 +62,7 @@ export const authService = {
         password,
         options: {
           data: {
-            role
+            role // This will be used by the handle_new_user trigger
           }
         }
       });

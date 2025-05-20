@@ -22,7 +22,7 @@ export const profileService = {
       if (data) {
         console.log('Profile found:', data.email);
         
-        // Validar o role para garantir que é um dos valores válidos
+        // Validate the role to ensure it's one of the valid values
         const role = data.role as UserRole;
         if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
           console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
@@ -53,7 +53,7 @@ export const profileService = {
         return null;
       }
       
-      // Tentar criar o perfil automaticamente
+      // Try to create the profile automatically
       try {
         const defaultRole: UserRole = 'cliente';
         const profileData = {
@@ -86,7 +86,7 @@ export const profileService = {
         };
       } catch (createError) {
         console.error('Error creating missing profile:', createError);
-        // Ainda retornar um perfil mínimo para não interromper o fluxo
+        // Still return a minimal profile to avoid interrupting the flow
         return {
           id: userData.user.id,
           email: userData.user.email || '',

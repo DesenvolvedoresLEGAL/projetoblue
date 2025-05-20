@@ -30,12 +30,22 @@ export function useAuthActions(updateState: (state: any) => void) {
         return;
       }
 
-      console.log('AuthContext: Dados validados, enviando para o serviço de autenticação');
+      console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
+        email, 
+        roleType: typeof role, 
+        role 
+      });
+      
+      // Ensure we have a valid role
+      if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
+        console.warn(`Role inválido '${role}' fornecido, usando 'cliente' como padrão`);
+        role = 'cliente';
+      }
       
       const { data, error } = await authService.signUp(email, password, role);
 
       if (error) {
-        console.error('Erro no Supabase auth.signUp:', error);
+        console.error('Erro no cadastro de usuário:', error);
         
         let errorMessage = 'Falha ao criar usuário';
         
@@ -58,7 +68,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         return;
       }
 
-      if (data.user) {
+      if (data?.user) {
         console.log('Usuário criado com sucesso:', data.user.id);
         toast.success("Usuário criado com sucesso! Você já pode fazer login.");
         navigate('/login');

@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { NamedLogo } from '@/components/ui/namedlogo';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
+import { toast } from '@/utils/toast';
 
 const Signup = () => {
   const { signUp, isAuthenticated, error, isLoading } = useAuth();
@@ -46,6 +47,15 @@ const Signup = () => {
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
       // By default, register new users as 'cliente' role
       await signUp(email, password, 'cliente');
+      
+      // Show success message
+      toast.success("Cadastro realizado com sucesso! Você será redirecionado para o login.");
+      
+      // Redirect to login after a short delay (allowing the user to see the success message)
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
     } catch (error: any) {
       console.error("Erro capturado no componente Signup:", error);
       
