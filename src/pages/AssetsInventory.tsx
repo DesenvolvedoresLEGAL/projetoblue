@@ -252,7 +252,7 @@ const AssetsInventory = () => {
                   <TableCell>
                     {/* Show carrier for chips and marca for routers */}
                     {asset.type === 'CHIP' ? 
-                      (asset as any).carrier || 'N/A' : 
+                      asset.carrier || 'N/A' : 
                       asset.marca || 'N/A'
                     }
                   </TableCell>

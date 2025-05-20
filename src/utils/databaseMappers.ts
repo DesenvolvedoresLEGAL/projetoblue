@@ -91,7 +91,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
       ...baseAsset,
       iccid: dbAsset.iccid || '',
       phoneNumber: dbAsset.line_number?.toString() || '',
-      carrier: dbAsset.carrier || 'Unknown',
+      carrier: dbAsset.manufacturers?.name || 'Unknown',
       num_linha: dbAsset.line_number
     } as ChipAsset;
   } else {
