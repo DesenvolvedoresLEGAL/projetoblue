@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { 
   Table, 
   TableBody, 
@@ -11,12 +10,15 @@ import {
 } from "@/components/ui/table";
 import AssetStatusBadge from './AssetStatusBadge';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
+import AssetActions from './AssetActions';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
+  onAssetUpdated: () => void;
+  onAssetDeleted: () => void;
 }
 
-const AssetsTable = ({ assets }: AssetsTableProps) => {
+const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProps) => {
   return (
     <div className="border rounded-md">
       <Table>
@@ -54,9 +56,11 @@ const AssetsTable = ({ assets }: AssetsTableProps) => {
                 <TableCell>{asset.model || 'N/A'}</TableCell>
                 <TableCell>{asset.radio || 'N/A'}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    Ver
-                  </Button>
+                  <AssetActions 
+                    asset={asset} 
+                    onAssetUpdated={onAssetUpdated} 
+                    onAssetDeleted={onAssetDeleted}
+                  />
                 </TableCell>
               </TableRow>
             ))

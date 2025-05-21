@@ -61,6 +61,7 @@ export const useAssetsData = ({
             status:asset_status(id, status),
             solucao:asset_solutions(id, solution)
           `)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
         // Apply filters
@@ -113,6 +114,7 @@ export const useAssetsData = ({
             name: asset.solucao?.solution || 'Desconhecido'
           },
           status: {
+            id: asset.status?.id,
             name: asset.status?.status || 'Desconhecido'
           },
           manufacturer: {
@@ -123,10 +125,11 @@ export const useAssetsData = ({
           }
         })) || [];
 
-        // Get total count for pagination
+        // Get total count for pagination, excluding deleted items
         const { count: totalCount } = await supabase
           .from('assets')
-          .select('uuid', { count: 'exact', head: true });
+          .select('uuid', { count: 'exact', head: true })
+          .is('deleted_at', null);
 
         return {
           assets: mappedAssets,

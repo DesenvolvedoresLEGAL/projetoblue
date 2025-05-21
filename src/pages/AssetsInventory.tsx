@@ -44,6 +44,14 @@ const AssetsInventory = () => {
       setFilterStatus(value);
     }
   };
+
+  const handleAssetUpdated = () => {
+    refetch();
+  };
+
+  const handleAssetDeleted = () => {
+    refetch();
+  };
   
   // Renderizar estado de carregamento
   if (isLoading) {
@@ -68,7 +76,13 @@ const AssetsInventory = () => {
         handleFilterChange={handleFilterChange}
       />
       
-      {assetsData?.assets && <AssetsTable assets={assetsData.assets} />}
+      {assetsData?.assets && (
+        <AssetsTable 
+          assets={assetsData.assets} 
+          onAssetUpdated={handleAssetUpdated}
+          onAssetDeleted={handleAssetDeleted}
+        />
+      )}
       
       {assetsData?.totalPages && assetsData.totalPages > 1 && (
         <AssetsPagination 

@@ -66,11 +66,12 @@ export const assetMutations = {
       }
       
       // Update common fields
-      if (assetData.model) updateData.model = assetData.model;
-      if (assetData.serialNumber) updateData.serial_number = assetData.serialNumber;
-      if (assetData.password) updateData.password = assetData.password;
-      if (assetData.iccid) updateData.iccid = assetData.iccid;
-      if (assetData.phoneNumber) updateData.line_number = parseInt(assetData.phoneNumber, 10) || null;
+      if (assetData.model !== undefined) updateData.model = assetData.model;
+      if (assetData.serialNumber !== undefined) updateData.serial_number = assetData.serialNumber;
+      if (assetData.password !== undefined) updateData.password = assetData.password;
+      if (assetData.iccid !== undefined) updateData.iccid = assetData.iccid;
+      if (assetData.phoneNumber !== undefined) updateData.line_number = parseInt(assetData.phoneNumber, 10) || null;
+      if (assetData.radio !== undefined) updateData.radio = assetData.radio;
       
       // Perform the update
       const { error } = await supabase.from('assets').update(updateData).eq('uuid', id);
@@ -90,10 +91,14 @@ export const assetMutations = {
     }
   },
   
-  // Delete an asset
+  // Delete an asset (soft delete)
   async deleteAsset(id: string): Promise<boolean> {
     try {
-      const { error } = await supabase.from('assets').delete().eq('uuid', id);
+      // Use soft delete by setting deleted_at timestamp
+      const { error } = await supabase
+        .from('assets')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('uuid', id);
       
       if (error) {
         handleAssetError(error, `Failed to delete asset ${id}`);
