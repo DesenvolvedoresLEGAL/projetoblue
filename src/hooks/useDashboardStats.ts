@@ -64,8 +64,8 @@ export function useDashboardStats() {
               serial_number,
               line_number,
               radio,
-              asset_solutions(name),
-              asset_status(status)
+              asset_types!inner(type),
+              asset_status!inner(status)
             `)
             .order('created_at', { ascending: false })
             .limit(5)
@@ -97,7 +97,7 @@ export function useDashboardStats() {
         const recentAssets = (recentAssetsResult.data || []).map(asset => ({
           id: asset.serial_number || String(asset.line_number || ''),
           name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
-          type: asset.asset_solutions?.name || 'Unknown',
+          type: asset.asset_types?.type || 'Unknown',
           status: asset.asset_status?.status || 'Unknown'
         }));
         
@@ -145,11 +145,11 @@ export function useDashboardStats() {
           statusBreakdownResult.data.forEach((item: any) => {
             const status = item.status?.toLowerCase() || '';
             if (status.includes('active') || status.includes('disponível')) {
-              active += Number(item.count);
+              active += item.total;
             } else if (status.includes('warning') || status.includes('aviso')) {
-              warning += Number(item.count);
+              warning += item.total;
             } else if (status.includes('critical') || status.includes('crítico')) {
-              critical += Number(item.count);
+              critical += item.total;
             }
           });
         }

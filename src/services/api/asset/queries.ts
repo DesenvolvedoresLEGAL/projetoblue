@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
@@ -14,15 +13,19 @@ export const assetQueries = {
     try {
       let query = supabase.from('assets').select(`
         *,
-        asset_solutions(name),
+        asset_types(type),
         asset_status(status),
+        asset_solutions(solution),
         manufacturers(name)
       `);
       
       // Apply filters if provided
       if (params?.type) {
-        const typeId = params.type === 'CHIP' ? 11 : { not: 11 }; // 11 for CHIP, anything else for ROTEADOR
-        query = query.eq('type_id', typeId);
+        const typeQuery = supabase.from('asset_types').select('id').eq('type', params.type.toLowerCase());
+        const { data: typeData } = await typeQuery;
+        if (typeData && typeData.length > 0) {
+          query = query.eq('type_id', typeData[0].id);
+        }
       }
       
       if (params?.status) {
@@ -66,8 +69,9 @@ export const assetQueries = {
     try {
       const { data, error } = await supabase.from('assets').select(`
         *,
-        asset_solutions(name),
+        asset_types(type),
         asset_status(status),
+        asset_solutions(solution),
         manufacturers(name)
       `).eq('uuid', id).single();
       
@@ -102,7 +106,7 @@ export const assetQueries = {
           uuid,
           iccid,
           radio,
-          asset_solutions(name)
+          asset_types:type_id ( type )
         `)
         .in('status_id', PROBLEM_STATUS_IDS);
       
@@ -111,7 +115,7 @@ export const assetQueries = {
         return [];
       }
       
-      return (data as ProblemAsset[]) || [];
+      return data || [];
     } catch (error) {
       handleAssetError(error, "Error in listProblemAssets");
       return [];

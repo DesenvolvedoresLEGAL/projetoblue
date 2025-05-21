@@ -35,8 +35,8 @@ export const mapTypeIdToAssetType = (typeId: number, typeName?: string): AssetTy
     return typeName.toLowerCase() === 'chip' ? 'CHIP' : 'ROTEADOR';
   }
   
-  // Updated mapping - now using type_id = 11 for CHIP
-  return typeId === 11 ? 'CHIP' : 'ROTEADOR';
+  // Fallback to ID-based mapping
+  return typeId === 1 ? 'CHIP' : 'ROTEADOR';
 };
 
 // Map database solution to frontend SolutionType
@@ -60,10 +60,10 @@ export const mapSolutionToSolutionType = (solution?: string): SolutionType | und
 
 // Map database asset record to frontend Asset type
 export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
-  // Now we're using the same table for types and solutions
-  // Assuming the new table has 'name' instead of 'type' and 'solution'
-  const typeName = dbAsset?.asset_solutions?.name;
+  // Extract nested data if available
   const statusName = dbAsset?.asset_status?.status;
+  const typeName = dbAsset?.asset_types?.type;
+  const solutionName = dbAsset?.asset_solutions?.solution;
   
   const type = mapTypeIdToAssetType(dbAsset.type_id, typeName);
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
@@ -78,7 +78,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     notes: dbAsset.notes,
     lastSeen: dbAsset.last_seen,
     isOnline: dbAsset.is_online,
-    solucao: mapSolutionToSolutionType(dbAsset.asset_solutions?.name),
+    solucao: mapSolutionToSolutionType(solutionName),
     marca: dbAsset.manufacturers?.name || dbAsset.manufacturer_id?.toString(),
     modelo: dbAsset.model,
     serial_number: dbAsset.serial_number,

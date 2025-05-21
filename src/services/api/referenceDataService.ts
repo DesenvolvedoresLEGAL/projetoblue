@@ -27,22 +27,18 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset types from asset_solutions table
+  // Get all asset types
   async getAssetTypes(): Promise<{ id: number, type: string }[]> {
     try {
-      const { data, error } = await supabase.from('asset_solutions').select('id, name');
+      const { data, error } = await supabase.from('asset_types').select('*');
       
       if (error) {
-        console.error("Error fetching asset solutions:", error);
-        toast.error("Failed to fetch asset solutions");
+        console.error("Error fetching asset types:", error);
+        toast.error("Failed to fetch asset types");
         return [];
       }
       
-      // Transform the data to match the expected format
-      return data.map(category => ({
-        id: category.id,
-        type: category.name
-      })) || [];
+      return data || [];
     } catch (error) {
       console.error("Error in getAssetTypes:", error);
       toast.error("Failed to fetch asset types");
@@ -69,11 +65,10 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset solutions from asset_solutions table
+  // Get all asset solutions
   async getAssetSolutions(): Promise<{ id: number, solution: string }[]> {
     try {
-      // Use asset_solutions table
-      const { data, error } = await supabase.from('asset_solutions').select('id, name');
+      const { data, error } = await supabase.from('asset_solutions').select('*');
       
       if (error) {
         console.error("Error fetching asset solutions:", error);
@@ -81,11 +76,7 @@ export const referenceDataService = {
         return [];
       }
       
-      // Transform the data to match the expected format
-      return data.map(category => ({
-        id: category.id,
-        solution: category.name
-      })) || [];
+      return data || [];
     } catch (error) {
       console.error("Error in getAssetSolutions:", error);
       toast.error("Failed to fetch asset solutions");
