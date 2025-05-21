@@ -49,26 +49,48 @@ export function useDashboardWithFilters(): UseDashboardWithFiltersResult {
       
       // Apply filters
       if (filters.assetType) {
-        query = query.eq('solution_id', filters.assetType);
+        // Convert string to number for solution_id
+        const solutionId = parseInt(filters.assetType, 10);
+        if (!isNaN(solutionId)) {
+          query = query.eq('solution_id', solutionId);
+        }
       }
       
       if (filters.status) {
-        query = query.eq('status_id', filters.status);
+        // Convert string to number for status_id
+        const statusId = parseInt(filters.status, 10);
+        if (!isNaN(statusId)) {
+          query = query.eq('status_id', statusId);
+        }
       }
       
       if (filters.manufacturer) {
-        query = query.eq('manufacturer_id', filters.manufacturer);
+        // Convert string to number for manufacturer_id
+        const manufacturerId = parseInt(filters.manufacturer, 10);
+        if (!isNaN(manufacturerId)) {
+          query = query.eq('manufacturer_id', manufacturerId);
+        }
       }
       
       // Client filter requires a join with asset_client_assoc
       if (filters.client) {
-        query = query.in('uuid', 
-          supabase
-            .from('asset_client_assoc')
-            .select('asset_id')
-            .eq('client_id', filters.client)
-            .is('exit_date', null)
-        );
+        // Get asset IDs associated with the selected client
+        const { data: associatedAssets } = await supabase
+          .from('asset_client_assoc')
+          .select('asset_id')
+          .eq('client_id', filters.client)
+          .is('exit_date', null);
+        
+        // Extract asset_ids from the result
+        const assetIds = associatedAssets?.map(item => item.asset_id) || [];
+        
+        // Apply the filter only if we have asset IDs
+        if (assetIds.length > 0) {
+          query = query.in('uuid', assetIds);
+        } else {
+          // If no assets associated with client, return empty result
+          return [];
+        }
       }
       
       // Search text filter
