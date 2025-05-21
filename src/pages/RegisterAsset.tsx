@@ -99,6 +99,13 @@ export default function RegisterAsset() {
       iccid: "",
       line_number: null,
       plan_id: null,
+      // Equipment specific fields with empty defaults
+      serial_number: "",
+      model: "",
+      admin_user: "admin",
+      admin_pass: "",
+      ssid: "",
+      password: ""
     }
   });
   
@@ -233,13 +240,13 @@ export default function RegisterAsset() {
                   // Reset form values that are specific to the new type
                   if (value === "CHIP") {
                     // Clear equipment specific fields
-                    form.setValue("serial_number", undefined);
-                    form.setValue("model", undefined);
-                    form.setValue("radio", undefined);
-                    form.setValue("admin_user", undefined);
-                    form.setValue("admin_pass", undefined);
-                    form.setValue("ssid", undefined);
-                    form.setValue("password", undefined);
+                    form.setValue("serial_number", "");
+                    form.setValue("model", "");
+                    form.setValue("radio", "");
+                    form.setValue("admin_user", "admin");
+                    form.setValue("admin_pass", "");
+                    form.setValue("ssid", "");
+                    form.setValue("password", "");
                     
                     // Set required fields for chip
                     form.setValue("iccid", "");
@@ -247,9 +254,9 @@ export default function RegisterAsset() {
                     form.setValue("plan_id", null);
                   } else {
                     // Clear chip specific fields
-                    form.setValue("iccid", undefined);
-                    form.setValue("line_number", undefined);
-                    form.setValue("plan_id", undefined);
+                    form.setValue("iccid", "");
+                    form.setValue("line_number", null);
+                    form.setValue("plan_id", null);
                     
                     // Set required fields for equipment
                     form.setValue("serial_number", "");

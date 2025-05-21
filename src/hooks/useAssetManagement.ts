@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -12,6 +13,7 @@ export const assetQueryKeys = {
   manufacturers: ['manufacturers'],
   solutions: ['asset-solutions'],
   plans: ['plans'],
+  exists: (field: string, value: string) => ['asset-exists', field, value]
 };
 
 // Hook for fetching asset statuses
@@ -86,7 +88,7 @@ export const usePlans = () => {
 export const useCheckAssetExists = (field: string, value: string) => {
   // Use a plain array for query key to avoid deep type instantiation
   return useQuery({
-    queryKey: ['asset-exists', field, value],
+    queryKey: assetQueryKeys.exists(field, value),
     queryFn: async () => {
       if (!value) return { exists: false };
       
@@ -126,19 +128,19 @@ export const useCreateAsset = () => {
       
       // Add type-specific fields
       if (isChip) {
-        insertData.iccid = (data as any).iccid;
-        insertData.line_number = (data as any).line_number;
-        insertData.plan_id = (data as any).plan_id;
+        insertData.iccid = data.iccid;
+        insertData.line_number = data.line_number;
+        insertData.plan_id = data.plan_id;
       } else {
-        insertData.serial_number = (data as any).serial_number;
-        insertData.model = (data as any).model;
-        insertData.radio = (data as any).radio;
+        insertData.serial_number = data.serial_number;
+        insertData.model = data.model;
+        insertData.radio = data.radio;
         
         // Optional fields for equipment
-        insertData.admin_user = (data as any).admin_user || 'admin';
-        insertData.admin_pass = (data as any).admin_pass || '';
-        insertData.password = (data as any).password; // WiFi password
-        insertData.ssid = (data as any).ssid;
+        insertData.admin_user = data.admin_user || 'admin';
+        insertData.admin_pass = data.admin_pass || '';
+        insertData.password = data.password;
+        insertData.ssid = data.ssid;
       }
       
       // Insert the asset
@@ -176,8 +178,17 @@ export const useAssetsList = (filters?: {
   const { searchTerm = '', filterType, filterStatus, page = 1, pageSize = 10 } = filters || {};
   
   // Use primitive values in query key to avoid deep instantiation
+  const queryKey = [
+    'assets-list',
+    String(searchTerm), 
+    String(filterType || ''), 
+    String(filterStatus || ''), 
+    String(page), 
+    String(pageSize)
+  ];
+  
   return useQuery({
-    queryKey: ['assets-list', String(searchTerm), String(filterType || ''), String(filterStatus || ''), String(page), String(pageSize)],
+    queryKey: queryKey,
     queryFn: async () => {
       let query = supabase
         .from('assets')
