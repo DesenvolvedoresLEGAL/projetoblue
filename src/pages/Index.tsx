@@ -1,81 +1,83 @@
 
 import React from "react";
 import { 
-  DashboardKpis, 
-  AssetsChart, 
-  EventsTimeline,
-  AlertsPanel,
-  QuickActions 
+  DashboardHeader, 
+  LoadingState, 
+  ErrorState,
+  AlertsPanel
 } from "@/components/dashboard";
 import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
-import { Clock } from "lucide-react";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { LoadingState, ErrorState } from "@/components/dashboard";
+import { useDashboardWithFilters } from "@/hooks/useDashboardWithFilters";
+import { EnhancedKpiCards } from "@/components/dashboard/EnhancedKpiCards";
+import { AssetStatusByTypeCard } from "@/components/dashboard/AssetStatusByTypeCard";
+import { AssetFilters } from "@/components/dashboard/AssetFilters";
+import { HistoryAccessPanel } from "@/components/dashboard/HistoryAccessPanel";
+import { FilteredAssetsTable } from "@/components/dashboard/FilteredAssetsTable";
+import { ProblemAssetsCard } from "@/components/dashboard/ProblemAssetsCard";
 
 const Index = () => {
-  const { data, isLoading, isError } = useDashboardStats();
-  const lastSyncTime = new Date().toLocaleTimeString();
-  
+  const { 
+    dashboardStats, 
+    isLoading, 
+    isError,
+    filteredAssets,
+    isFilteredLoading,
+    filters,
+    setFilters
+  } = useDashboardWithFilters();
+
   // Show loading state while data is being fetched
   if (isLoading) {
     return <LoadingState />;
   }
 
   // Handle error state
-  if (isError || !data) {
-    return <ErrorState message="Failed to load dashboard data. Please try again later." />;
+  if (isError || !dashboardStats) {
+    return <ErrorState message="Falha ao carregar dados do dashboard. Tente novamente mais tarde." />;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageBreadcrumbs />
       
+      <DashboardHeader title="Visão Geral" />
+      
+      {/* Enhanced KPI Cards */}
+      <EnhancedKpiCards 
+        totalAssets={dashboardStats.totalAssets}
+        activeClients={dashboardStats.activeClients}
+        assetsWithIssues={dashboardStats.assetsWithIssues}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main content area (70%) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* KPIs */}
-          <DashboardKpis 
-            totalAssets={data.totalAssets}
-            activeClients={data.activeClients}
-            assetsWithIssues={data.assetsWithIssues}
+          {/* Filters */}
+          <AssetFilters onFilterChange={setFilters} />
+
+          {/* Filtered Asset Results */}
+          <FilteredAssetsTable 
+            assets={filteredAssets} 
+            isLoading={isFilteredLoading}
+            filters={filters}
           />
+
+          {/* Asset Status by Type */}
+          <AssetStatusByTypeCard />
           
-          {/* Chart */}
-          <div className="rounded-2xl border bg-card shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Assets Registered (Last 7 Days)</h2>
-            <AssetsChart />
-          </div>
-          
-          {/* Timeline */}
-          <div className="rounded-2xl border bg-card shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Recent Events</h2>
-            <EventsTimeline />
-          </div>
+          {/* History Panel */}
+          <HistoryAccessPanel />
         </div>
         
         {/* Right sidebar (30%) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Alerts */}
-          <AlertsPanel />
+          {/* Problem Assets Panel */}
+          <ProblemAssetsCard />
           
-          {/* Quick Actions */}
-          <QuickActions />
+          {/* Alerts Panel */}
+          <AlertsPanel />
         </div>
       </div>
-      
-      {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 border-t bg-background px-6 py-3 flex justify-between items-center text-sm text-muted-foreground mt-8">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          <span>Last synced: {lastSyncTime}</span>
-        </div>
-        <div>
-          <span>BLUE Platform v1.0.2</span>
-        </div>
-        <div>
-          <a href="#" className="text-primary hover:underline">Changelog</a>
-        </div>
-      </footer>
     </div>
   );
 };
