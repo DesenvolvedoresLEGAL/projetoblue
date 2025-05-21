@@ -229,7 +229,7 @@ export default function RegisterAsset() {
       manufacturer_id: null,
       plan_id: null,
     } as AssetFormValues
-  });
+  };
   
   const assetType = form.watch("type_id");
   const password = form.watch("password");

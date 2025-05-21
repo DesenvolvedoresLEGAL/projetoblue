@@ -102,7 +102,7 @@ export const assetQueries = {
           uuid,
           iccid,
           radio,
-          asset_categories:type_id ( name )
+          asset_categories(name)
         `)
         .in('status_id', PROBLEM_STATUS_IDS);
       
@@ -111,7 +111,7 @@ export const assetQueries = {
         return [];
       }
       
-      return data || [];
+      return (data as ProblemAsset[]) || [];
     } catch (error) {
       handleAssetError(error, "Error in listProblemAssets");
       return [];

@@ -27,18 +27,22 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset types
+  // Get all asset types from asset_categories table
   async getAssetTypes(): Promise<{ id: number, type: string }[]> {
     try {
-      const { data, error } = await supabase.from('asset_types').select('*');
+      const { data, error } = await supabase.from('asset_categories').select('id, name');
       
       if (error) {
-        console.error("Error fetching asset types:", error);
-        toast.error("Failed to fetch asset types");
+        console.error("Error fetching asset categories:", error);
+        toast.error("Failed to fetch asset categories");
         return [];
       }
       
-      return data || [];
+      // Transform the data to match the expected format
+      return data.map(category => ({
+        id: category.id,
+        type: category.name
+      })) || [];
     } catch (error) {
       console.error("Error in getAssetTypes:", error);
       toast.error("Failed to fetch asset types");
@@ -65,10 +69,11 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset solutions
+  // Get all asset solutions from asset_categories table
   async getAssetSolutions(): Promise<{ id: number, solution: string }[]> {
     try {
-      const { data, error } = await supabase.from('asset_solutions').select('*');
+      // We'll use the same asset_categories table but map the data differently
+      const { data, error } = await supabase.from('asset_categories').select('id, name');
       
       if (error) {
         console.error("Error fetching asset solutions:", error);
@@ -76,7 +81,11 @@ export const referenceDataService = {
         return [];
       }
       
-      return data || [];
+      // Transform the data to match the expected format
+      return data.map(category => ({
+        id: category.id,
+        solution: category.name
+      })) || [];
     } catch (error) {
       console.error("Error in getAssetSolutions:", error);
       toast.error("Failed to fetch asset solutions");

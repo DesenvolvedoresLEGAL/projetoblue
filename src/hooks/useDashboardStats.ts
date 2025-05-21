@@ -145,11 +145,11 @@ export function useDashboardStats() {
           statusBreakdownResult.data.forEach((item: any) => {
             const status = item.status?.toLowerCase() || '';
             if (status.includes('active') || status.includes('disponível')) {
-              active += item.total;
+              active += Number(item.count);
             } else if (status.includes('warning') || status.includes('aviso')) {
-              warning += item.total;
+              warning += Number(item.count);
             } else if (status.includes('critical') || status.includes('crítico')) {
-              critical += item.total;
+              critical += Number(item.count);
             }
           });
         }
