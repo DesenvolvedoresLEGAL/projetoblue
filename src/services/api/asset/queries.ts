@@ -16,7 +16,7 @@ export const assetQueries = {
       let query = supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
         manufacturer_id, model, line_number, admin_user,
-        radio, ssid, rented_days, created_at, updated_at
+        radio, rented_days, created_at, updated_at
       `);
       
       // Apply filters if provided
@@ -57,6 +57,10 @@ export const assetQueries = {
         return [];
       }
       
+      if (!data) {
+        return [];
+      }
+      
       // Fetch necessary related data in separate queries for mapping
       const solutionsPromise = supabase.from('asset_solutions').select('id, solution');
       const statusPromise = supabase.from('asset_status').select('id, status');
@@ -71,7 +75,7 @@ export const assetQueries = {
       const manufacturers = manufacturersResult.data || [];
       
       // Map database results to frontend Asset types with the fetched related data
-      return (data || []).map(item => {
+      return data.map(item => {
         // Safely access properties - TypeScript now knows item is a valid object
         const solution = solutions.find(s => s.id === item.solution_id);
         const status = statuses.find(s => s.id === item.status_id);
@@ -96,11 +100,15 @@ export const assetQueries = {
       const { data, error } = await supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
         manufacturer_id, model, line_number, admin_user,
-        radio, ssid, rented_days, created_at, updated_at
+        radio, rented_days, created_at, updated_at
       `).eq('uuid', id).single();
       
       if (error) {
         handleAssetError(error, `Failed to fetch asset ${id}`);
+        return null;
+      }
+      
+      if (!data) {
         return null;
       }
       
@@ -116,11 +124,6 @@ export const assetQueries = {
       const solutions = solutionsResult.data || [];
       const statuses = statusResult.data || [];
       const manufacturers = manufacturersResult.data || [];
-      
-      // Now we're sure data is not null due to the error check above
-      if (!data) {
-        return null;
-      }
       
       // Get the related data for this asset
       const solution = solutions.find(s => s.id === data.solution_id);
