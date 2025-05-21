@@ -16,8 +16,8 @@ export type AssetWithRelations = {
   plano: { id?: number; nome: string }; // Note: usando 'nome' em vez de 'name'
   status: { id?: number; name: string };
   solucao: { id: number; name: string };
-  admin_user?: string; // Added this property
-  admin_pass?: string; // Added this property
+  admin_user?: string;
+  admin_pass?: string;
 };
 
 export interface UseAssetsDataParams {
@@ -26,6 +26,7 @@ export interface UseAssetsDataParams {
   filterStatus?: string;
   currentPage?: number;
   pageSize?: number;
+  enabled?: boolean;
 }
 
 export interface AssetsDataResponse {
@@ -39,7 +40,8 @@ export const useAssetsData = ({
   filterType = 'all',
   filterStatus = 'all',
   currentPage = 1,
-  pageSize = 10
+  pageSize = 10,
+  enabled = true
 }: UseAssetsDataParams = {}) => {
   return useQuery({
     queryKey: ['assets', 'inventory', filterType, filterStatus, searchTerm, currentPage],
@@ -158,6 +160,7 @@ export const useAssetsData = ({
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: enabled, // Agora controlamos quando a query é executada
   });
 };
 

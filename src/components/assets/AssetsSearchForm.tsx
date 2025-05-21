@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -30,6 +30,17 @@ const AssetsSearchForm = ({
   handleFilterChange
 }: AssetsSearchFormProps) => {
   const { data: assetSolutions = [] } = useAssetSolutions();
+  const [inputValue, setInputValue] = useState(searchTerm);
+  
+  // Inicializar o inputValue com o searchTerm ao montar o componente
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
+  
+  // Função para lidar com mudanças no input sem atualizar searchTerm imediatamente
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
 
   return (
     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
@@ -38,8 +49,9 @@ const AssetsSearchForm = ({
         <Input
           placeholder="Buscar ativos..."
           className="pl-8"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={() => setSearchTerm(inputValue)} // Só atualiza o searchTerm quando o usuário sai do campo
         />
       </div>
       <div className="flex gap-2">

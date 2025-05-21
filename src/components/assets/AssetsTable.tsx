@@ -11,6 +11,7 @@ import {
 import AssetStatusBadge from './AssetStatusBadge';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
 import AssetActions from './AssetActions';
+import { capitalize } from '@/utils/stringUtils';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
@@ -52,8 +53,8 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
                 <TableCell>
                   <AssetStatusBadge status={asset.status.name} />
                 </TableCell>
-                <TableCell>{asset.manufacturer.name}</TableCell>
-                <TableCell>{asset.model || 'N/A'}</TableCell>
+                <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
+                <TableCell>{asset.model ? capitalize(asset.model) : 'N/A'}</TableCell>
                 <TableCell>{asset.solucao.name != "CHIP" ?
                     `ETIQUETA: ${asset.radio}` :
                     `NÚMERO: ${asset.line_number}`}</TableCell>

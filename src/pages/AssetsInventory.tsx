@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAssetsData } from '@/hooks/useAssetsData';
 import AssetsHeader from '@/components/assets/AssetsHeader';
 import AssetsSearchForm from '@/components/assets/AssetsSearchForm';
@@ -15,8 +15,9 @@ const AssetsInventory = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [shouldFetch, setShouldFetch] = useState(true);
   
-  // Utilizando o hook personalizado para buscar dados dos ativos
+  // Utilizando o hook personalizado para buscar dados dos ativos com controle de refetch
   const { 
     data: assetsData,
     isLoading, 
@@ -27,31 +28,47 @@ const AssetsInventory = () => {
     filterType,
     filterStatus,
     currentPage,
-    pageSize: ASSETS_PER_PAGE
+    pageSize: ASSETS_PER_PAGE,
+    enabled: shouldFetch
   });
   
-  const handleSearch = (e: React.FormEvent) => {
+  // Função para controlar quando a busca será realizada
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1); // Resetar para primeira página ao pesquisar
+    setShouldFetch(true); // Ativar a consulta
     refetch();
-  };
+  }, [refetch]);
   
-  const handleFilterChange = (type: string, value: string) => {
+  // Controlador do termo de busca para não disparar consultas a cada digitação
+  const handleSearchTermChange = useCallback((value: string) => {
+    setShouldFetch(false); // Desativar consultas automáticas
+    setSearchTerm(value);
+  }, []);
+  
+  // Controlador de filtros
+  const handleFilterChange = useCallback((type: string, value: string) => {
     setCurrentPage(1); // Resetar para primeira página ao filtrar
+    setShouldFetch(true); // Ativar a consulta quando um filtro mudar
+    
     if (type === 'type') {
       setFilterType(value);
     } else if (type === 'status') {
       setFilterStatus(value);
     }
-  };
+  }, []);
 
-  const handleAssetUpdated = () => {
+  // Controlador para atualização de ativos
+  const handleAssetUpdated = useCallback(() => {
+    setShouldFetch(true);
     refetch();
-  };
+  }, [refetch]);
 
-  const handleAssetDeleted = () => {
+  // Controlador para exclusão de ativos
+  const handleAssetDeleted = useCallback(() => {
+    setShouldFetch(true);
     refetch();
-  };
+  }, [refetch]);
   
   // Renderizar estado de carregamento
   if (isLoading) {
@@ -69,7 +86,7 @@ const AssetsInventory = () => {
       
       <AssetsSearchForm 
         searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+        setSearchTerm={handleSearchTermChange}
         filterType={filterType}
         filterStatus={filterStatus}
         handleSearch={handleSearch}
