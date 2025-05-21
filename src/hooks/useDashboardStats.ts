@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,66 +43,63 @@ export function useDashboardStats() {
           // Total assets count
           supabase
             .from('assets')
-            .select('*', { head: true, count: 'exact' })
-            .throwOnError(),
+            .select('*', { count: 'exact', head: true }),
             
           // Active clients count
           supabase
             .from('v_active_clients')
-            .select('*', { head: true, count: 'exact' })
-            .throwOnError(),
+            .select('*', { count: 'exact', head: true }),
             
           // Assets with issues count
           supabase
             .from('v_problem_assets')
-            .select('*', { head: true, count: 'exact' })
-            .throwOnError(),
+            .select('*', { count: 'exact', head: true }),
             
-          // 5 most recently created assets - remove nested select
+          // 5 most recently created assets
           supabase
             .from('assets')
             .select(`
               uuid, serial_number, line_number, radio, solution_id, status_id
             `)
             .order('created_at', { ascending: false })
-            .limit(5)
-            .throwOnError(),
+            .limit(5),
             
           // 5 most recent events
           supabase
             .from('asset_logs')
             .select('id, event, date, details')
             .order('date', { ascending: false })
-            .limit(5)
-            .throwOnError(),
+            .limit(5),
             
           // Status breakdown for summary statistics
-          supabase.rpc('status_by_asset_type')
-            .throwOnError()
+          supabase
+            .rpc('status_by_asset_type')
         ]);
+
+        // Error handling for individual queries
+        if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
+        if (activeClientsResult.error) throw new Error(`Active clients query error: ${activeClientsResult.error.message}`);
+        if (assetsWithIssuesResult.error) throw new Error(`Problem assets query error: ${assetsWithIssuesResult.error.message}`);
+        if (recentAssetsResult.error) throw new Error(`Recent assets query error: ${recentAssetsResult.error.message}`);
+        if (recentEventsResult.error) throw new Error(`Recent events query error: ${recentEventsResult.error.message}`);
+        if (statusBreakdownResult.error) throw new Error(`Status breakdown query error: ${statusBreakdownResult.error.message}`);
         
         // Fetch additional data needed for mapping
         const solutionsResult = await supabase
           .from('asset_solutions')
-          .select('id, solution')
-          .throwOnError();
+          .select('id, solution');
           
         const statusResult = await supabase
           .from('asset_status')
-          .select('id, status')
-          .throwOnError();
+          .select('id, status');
+        
+        if (solutionsResult.error) throw new Error(`Solutions query error: ${solutionsResult.error.message}`);
+        if (statusResult.error) throw new Error(`Status query error: ${statusResult.error.message}`);
         
         const solutions = solutionsResult.data || [];
         const statuses = statusResult.data || [];
         
-        console.log('Dashboard data fetched:', {
-          totalAssets: totalAssetsResult,
-          activeClients: activeClientsResult,
-          assetsWithIssues: assetsWithIssuesResult,
-          recentAssets: recentAssetsResult,
-          recentEvents: recentEventsResult,
-          statusBreakdown: statusBreakdownResult
-        });
+        console.log('Dashboard data fetched successfully');
         
         // Process recent assets data
         const recentAssets = (recentAssetsResult.data || []).map(asset => {
@@ -109,8 +107,8 @@ export function useDashboardStats() {
           const status = statuses.find(s => s.id === asset.status_id);
           
           return {
-            id: asset.serial_number || String(asset.line_number || ''),
-            name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
+            id: asset.uuid.substring(0, 8),
+            name: asset.radio || asset.line_number?.toString() || asset.serial_number || 'N/A',
             type: solution?.solution || 'Unknown',
             status: status?.status || 'Unknown'
           };
@@ -120,7 +118,7 @@ export function useDashboardStats() {
         const recentEvents = (recentEventsResult.data || []).map(event => {
           const details = event.details as Record<string, any> | null;
           let description = event.event || 'Event logged';
-          let asset_name = ''; // Initialize asset_name
+          let asset_name = 'N/A'; 
           
           // Extract more meaningful description and asset_name from details if available
           if (details && details.asset_id) {
@@ -128,9 +126,6 @@ export function useDashboardStats() {
             description = `${event.event} para ${asset_name}`;
           } else if (details && details.description) {
             description = details.description;
-            asset_name = 'N/A';
-          } else {
-            asset_name = 'N/A';
           }
           
           // Determine event type for color coding
@@ -146,7 +141,7 @@ export function useDashboardStats() {
             id: event.id,
             type,
             description,
-            asset_name, // Add the asset_name to the return object
+            asset_name,
             time: event.date ? new Date(event.date) : new Date()
           };
         });

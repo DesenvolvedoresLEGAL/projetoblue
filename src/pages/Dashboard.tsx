@@ -1,3 +1,4 @@
+
 import { useAssets } from "@/context/useAssets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,22 +7,29 @@ import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, C
 import { exportToExcel } from "@/utils/excelExport";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import AssetsStatusCard from "@/components/dashboard/AssetsStatusCard"; // ⬅ novo
+import AssetsStatusCard from "@/components/dashboard/AssetsStatusCard"; 
+import { Skeleton } from "@/components/ui/skeleton";
+
 const Dashboard = () => {
   const {
     assets,
     clients,
     getAssetsByType,
     getAssetsByStatus,
-    getExpiredSubscriptions
+    getExpiredSubscriptions,
+    isLoading: assetsLoading
   } = useAssets();
+  
   const navigate = useNavigate();
-  const totalChips = getAssetsByType("CHIP").length;
-  const totalRouters = getAssetsByType("ROTEADOR").length;
-  const availableChips = getAssetsByType("CHIP").filter(chip => chip.status === "DISPONÍVEL").length;
-  const availableRouters = getAssetsByType("ROTEADOR").filter(router => router.status === "DISPONÍVEL").length;
-  const problemAssets = assets.filter(asset => ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"].includes(asset.status));
-  const expiredSubscriptions = getExpiredSubscriptions();
+  
+  // Only compute these values when assets are loaded
+  const totalChips = !assetsLoading ? getAssetsByType("CHIP").length : 0;
+  const totalRouters = !assetsLoading ? getAssetsByType("ROTEADOR").length : 0;
+  const availableChips = !assetsLoading ? getAssetsByType("CHIP").filter(chip => chip.status === "DISPONÍVEL").length : 0;
+  const availableRouters = !assetsLoading ? getAssetsByType("ROTEADOR").filter(router => router.status === "DISPONÍVEL").length : 0;
+  const problemAssets = !assetsLoading ? assets.filter(asset => ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"].includes(asset.status)) : [];
+  const expiredSubscriptions = !assetsLoading ? getExpiredSubscriptions() : [];
+  
   const handleExportToExcel = () => {
     exportToExcel({
       assets,
@@ -40,6 +48,50 @@ const Dashboard = () => {
     }
     // número = (99) 99999-9999
     return '';
+  }
+
+  // Loading state - show skeleton UI
+  if (assetsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <Skeleton className="h-9 w-44" />
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map(i => (
+            <Card key={i} className="col-span-1">
+              <CardHeader>
+                <Skeleton className="h-6 w-40 mb-2" />
+                <Skeleton className="h-4 w-56" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[1, 2, 3].map(j => (
+                    <Skeleton key={j} className="h-16 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return <div className="space-y-6">
