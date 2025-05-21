@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAssets } from "@/context/useAssets";
 import { Download } from "lucide-react";
@@ -10,6 +9,7 @@ import InventoryFilters from "@/components/inventory/InventoryFilters";
 import AssetList from "@/components/inventory/AssetList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/utils/toast";
+import { capitalize } from "@/utils/stringUtils";
 
 const Inventory = () => {
   const { assets, updateAsset, deleteAsset, statusRecords, loading } = useAssets();

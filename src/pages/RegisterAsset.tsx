@@ -159,7 +159,7 @@ const routerBaseSchema = baseSchema.extend({
 
 // Chip type schema (does not include solution_id)
 const chipSchema = baseSchema.extend({
-  type_id: z.literal(1), // Chip type
+  type_id: z.literal(11), // Chip type updated to 11
   iccid: z.string()
     .min(1, "ICCID é obrigatório")
     .regex(/^\d{19,20}$/, { message: "ICCID deve ter 19-20 dígitos" })
@@ -222,7 +222,7 @@ export default function RegisterAsset() {
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      type_id: 1 as const, // Use literal type
+      type_id: 11 as const, // Use literal type, updated to 11
       status_id: 1, // Default to Available
       iccid: "",
       line_number: null,
@@ -351,7 +351,7 @@ export default function RegisterAsset() {
   // Handle form submission
   const onSubmit = (formData: AssetFormValues) => {
     // Ensure the type_id is the correct literal type
-    if (formData.type_id !== 1 && formData.type_id !== 2) {
+    if (formData.type_id !== 11 && formData.type_id !== 2) {
       toast.error("Tipo de ativo inválido");
       return;
     }
@@ -439,13 +439,13 @@ export default function RegisterAsset() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Tabs
-                value={assetType === 1 ? "CHIP" : "ROTEADOR"}
+                value={assetType === 11 ? "CHIP" : "ROTEADOR"}
                 onValueChange={(value) => {
                   // When changing tab, reset the form for the new type
-                  const newTypeId = value === "CHIP" ? 1 : 2;
+                  const newTypeId = value === "CHIP" ? 11 : 2;
                   
                   // Need to type cast as const to match the literal type
-                  form.setValue("type_id", newTypeId as 1 | 2);
+                  form.setValue("type_id", newTypeId as 11 | 2);
                   
                   // Reset form values that are specific to the other type
                   if (value === "CHIP") {

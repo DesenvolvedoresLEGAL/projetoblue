@@ -12,7 +12,10 @@ export interface TechnicalErrorInfo {
 
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role?: UserRole) => Promise<any>;
+  signUp: (email: string, password: string, role?: UserRole) => Promise<{
+    success: boolean;
+    technicalError?: TechnicalErrorInfo;
+  }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   technicalError?: TechnicalErrorInfo | null;

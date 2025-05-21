@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -24,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/utils/toast";
+import { capitalize } from "@/utils/stringUtils";
 
 interface AssetRowProps {
   asset: Asset;

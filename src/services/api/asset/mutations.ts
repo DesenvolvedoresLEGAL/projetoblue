@@ -13,7 +13,7 @@ export const assetMutations = {
     try {
       // Prepare data for insertion
       const insertData: any = {
-        type_id: assetData.type === 'CHIP' ? 1 : 2, // Default type IDs
+        type_id: assetData.type === 'CHIP' ? 11 : 2, // Updated: 11 for CHIP
         status_id: assetData.statusId || 1, // Default to 'Disponível'
         model: assetData.type === 'ROTEADOR' ? assetData.model : null,
         serial_number: assetData.type === 'ROTEADOR' ? assetData.serialNumber : null,
