@@ -8,7 +8,7 @@ import { RecentEventsList } from "@/components/dashboard/RecentEventsList";
 import { LoadingState } from "@/components/dashboard/LoadingState";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Home: React.FC = () => {
   const { data: dashboardStats, isLoading, error, refetch } = useDashboardStats();
@@ -17,10 +17,7 @@ const Home: React.FC = () => {
   React.useEffect(() => {
     if (error) {
       console.error("Dashboard data fetch error:", error);
-      toast({
-        description: `Error loading dashboard: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Error loading dashboard: ${error.message}`);
     }
   }, [error]);
 
