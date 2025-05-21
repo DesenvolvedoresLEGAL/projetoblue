@@ -18,8 +18,7 @@ const Home: React.FC = () => {
     if (error) {
       console.error("Dashboard data fetch error:", error);
       toast({
-        title: "Error loading dashboard",
-        description: error.message,
+        description: `Error loading dashboard: ${error.message}`,
         variant: "destructive",
       });
     }
