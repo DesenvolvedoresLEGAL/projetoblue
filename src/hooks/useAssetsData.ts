@@ -13,9 +13,9 @@ export type AssetWithRelations = {
   radio?: string;
   created_at: string;
   updated_at: string;
-  manufacturer: { name: string };
-  plano: { name: string };
-  status: { name: string };
+  manufacturer: { id?: number; name: string };
+  plano: { id?: number; nome: string }; // Note: usando 'nome' em vez de 'name'
+  status: { id?: number; name: string };
   solucao: { id: number; name: string };
 };
 
@@ -27,6 +27,12 @@ export interface UseAssetsDataParams {
   pageSize?: number;
 }
 
+export interface AssetsDataResponse {
+  assets: AssetWithRelations[];
+  totalCount: number;
+  totalPages: number;
+}
+
 export const useAssetsData = ({
   searchTerm = '',
   filterType = 'all',
@@ -36,7 +42,7 @@ export const useAssetsData = ({
 }: UseAssetsDataParams = {}) => {
   return useQuery({
     queryKey: ['assets', 'inventory', filterType, filterStatus, searchTerm, currentPage],
-    queryFn: async () => {
+    queryFn: async (): Promise<AssetsDataResponse> => {
       try {
         let query = supabase
           .from('assets')
@@ -113,7 +119,7 @@ export const useAssetsData = ({
             name: asset.manufacturer?.name || 'Desconhecido'
           },
           plano: {
-            name: asset.plano?.nome || 'Desconhecido' // Changed from 'name' to 'nome'
+            nome: asset.plano?.nome || 'Desconhecido' // Note: using 'nome' instead of 'name'
           }
         })) || [];
 
