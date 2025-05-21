@@ -71,13 +71,8 @@ export const assetQueries = {
       const manufacturers = manufacturersResult.data || [];
       
       // Map database results to frontend Asset types with the fetched related data
-      return data?.map(item => {
-        // Check if item is an error object before accessing properties
-        if ('error' in item) {
-          console.error("Error in asset data:", item);
-          return null;
-        }
-        
+      return (data || []).map(item => {
+        // Safely access properties - TypeScript now knows item is a valid object
         const solution = solutions.find(s => s.id === item.solution_id);
         const status = statuses.find(s => s.id === item.status_id);
         const manufacturer = manufacturers.find(m => m.id === item.manufacturer_id);
@@ -88,7 +83,7 @@ export const assetQueries = {
           asset_status: status ? { status: status.status } : { status: 'Unknown' },
           manufacturers: manufacturer ? { name: manufacturer.name } : { name: 'Unknown' }
         });
-      }).filter(Boolean) as Asset[]; // Filter out any null values and cast to Asset[]
+      });
     } catch (error) {
       handleAssetError(error, "Error in getAssets");
       return [];
@@ -122,9 +117,8 @@ export const assetQueries = {
       const statuses = statusResult.data || [];
       const manufacturers = manufacturersResult.data || [];
       
-      // Check if data is an error object
-      if ('error' in data) {
-        console.error("Error in asset data:", data);
+      // Now we're sure data is not null due to the error check above
+      if (!data) {
         return null;
       }
       
