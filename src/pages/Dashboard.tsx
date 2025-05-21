@@ -17,7 +17,7 @@ const Dashboard = () => {
     getAssetsByType,
     getAssetsByStatus,
     getExpiredSubscriptions,
-    isLoading: assetsLoading
+    loading: assetsLoading // Fixed property name from isLoading to loading
   } = useAssets();
   
   const navigate = useNavigate();
