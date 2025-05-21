@@ -86,9 +86,11 @@ export const usePlans = () => {
 
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
+  // Completely flat query key structure to avoid any nesting
+  const queryKey = ['asset-exists', field, value];
+  
   return useQuery({
-    // Simplify query key to avoid deep type instantiation
-    queryKey: ['asset-exists', field, value],
+    queryKey: queryKey,
     queryFn: async () => {
       if (!value) return { exists: false };
       
@@ -181,9 +183,9 @@ export const useAssetsList = (filters?: {
 }) => {
   const { searchTerm = '', filterType, filterStatus, page = 1, pageSize = 10 } = filters || {};
   
+  // Use a completely flat structure for the query key
   return useQuery({
-    // Simplified query key structure to avoid deep type instantiation
-    queryKey: ['assets', 'list', { searchTerm, filterType, filterStatus, page, pageSize }],
+    queryKey: ['assets-list', searchTerm, String(filterType || ''), String(filterStatus || ''), String(page), String(pageSize)],
     queryFn: async () => {
       let query = supabase
         .from('assets')
