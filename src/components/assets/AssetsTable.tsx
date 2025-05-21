@@ -30,7 +30,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
             <TableHead>Status</TableHead>
             <TableHead>Fabricante</TableHead>
             <TableHead>Modelo</TableHead>
-            <TableHead>Radio</TableHead>
+            <TableHead>Radio/Número</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,7 +54,9 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
                 </TableCell>
                 <TableCell>{asset.manufacturer.name}</TableCell>
                 <TableCell>{asset.model || 'N/A'}</TableCell>
-                <TableCell>{asset.radio || 'N/A'}</TableCell>
+                <TableCell>{asset.solucao.name != "CHIP" ?
+                    `ETIQUETA: ${asset.radio}` :
+                    `NÚMERO: ${asset.line_number}`}</TableCell>
                 <TableCell className="text-right">
                   <AssetActions 
                     asset={asset} 
