@@ -23,7 +23,12 @@ export const assetMutations = {
         password: assetData.type === 'ROTEADOR' ? assetData.password : null,
         iccid: assetData.type === 'CHIP' ? assetData.iccid : null,
         line_number: assetData.type === 'CHIP' && assetData.phoneNumber ? 
-          parseInt(assetData.phoneNumber, 10) || null : null
+          parseInt(assetData.phoneNumber, 10) || null : null,
+        manufacturer_id: assetData.manufacturer_id,
+        plan_id: assetData.plan_id,
+        radio: assetData.radio,
+        admin_user: assetData.admin_user || 'admin',
+        admin_pass: assetData.admin_pass || ''
       };
       
       // Insert the new asset
@@ -50,6 +55,7 @@ export const assetMutations = {
       // Prepare update data
       const updateData: any = {};
       
+      // Common fields
       if (assetData.statusId) {
         updateData.status_id = assetData.statusId;
       } else if (assetData.status) {
@@ -65,13 +71,25 @@ export const assetMutations = {
         updateData.status_id = statusMap[assetData.status] || 1;
       }
       
-      // Update common fields
+      // CHIP specific fields
+      if (assetData.iccid !== undefined) updateData.iccid = assetData.iccid;
+      if (assetData.line_number !== undefined) updateData.line_number = assetData.line_number;
+      if (assetData.phoneNumber !== undefined && assetData.line_number === undefined) {
+        updateData.line_number = parseInt(assetData.phoneNumber, 10) || null;
+      }
+      
+      // Router specific fields
       if (assetData.model !== undefined) updateData.model = assetData.model;
       if (assetData.serialNumber !== undefined) updateData.serial_number = assetData.serialNumber;
-      if (assetData.password !== undefined) updateData.password = assetData.password;
-      if (assetData.iccid !== undefined) updateData.iccid = assetData.iccid;
-      if (assetData.phoneNumber !== undefined) updateData.line_number = parseInt(assetData.phoneNumber, 10) || null;
+      if (assetData.serial_number !== undefined) updateData.serial_number = assetData.serial_number;
+      
+      // Common fields
       if (assetData.radio !== undefined) updateData.radio = assetData.radio;
+      if (assetData.manufacturer_id !== undefined) updateData.manufacturer_id = assetData.manufacturer_id;
+      if (assetData.plan_id !== undefined) updateData.plan_id = assetData.plan_id;
+      if (assetData.rented_days !== undefined) updateData.rented_days = assetData.rented_days;
+      if (assetData.admin_user !== undefined) updateData.admin_user = assetData.admin_user;
+      if (assetData.admin_pass !== undefined) updateData.admin_pass = assetData.admin_pass;
       
       // Perform the update
       const { error } = await supabase.from('assets').update(updateData).eq('uuid', id);

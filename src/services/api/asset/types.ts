@@ -33,6 +33,13 @@ export interface AssetCreateParams {
   password?: string;
   serialNumber?: string;
   radio?: string; // Added radio field
+  
+  // Added fields for database compatibility
+  manufacturer_id?: number;
+  plan_id?: number;
+  rented_days?: number;
+  admin_user?: string;
+  admin_pass?: string;
 }
 
 export interface AssetUpdateParams {
@@ -45,6 +52,7 @@ export interface AssetUpdateParams {
   iccid?: string;
   phoneNumber?: string;
   carrier?: string;
+  line_number?: number; // Added for CHIP updates
   
   // Router fields
   brand?: string;
@@ -53,6 +61,14 @@ export interface AssetUpdateParams {
   password?: string;
   serialNumber?: string;
   radio?: string; // Added radio field
+  
+  // Added fields for database compatibility
+  manufacturer_id?: number;
+  plan_id?: number;
+  serial_number?: string;
+  rented_days?: number;
+  admin_user?: string;
+  admin_pass?: string;
 }
 
 // Type for status by asset type response

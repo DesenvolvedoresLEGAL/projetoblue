@@ -66,12 +66,21 @@ export const useAssetsData = ({
 
         // Apply filters
         if (filterType !== 'all') {
-          if (filterType === 'chip') {
-            // For chips (solution_id = 11)
-            query = query.eq('solution_id', 11);
+          // Check if filterType is a number (solution_id) or string (solution name)
+          if (!isNaN(Number(filterType))) {
+            // Filter by solution_id
+            query = query.eq('solution_id', Number(filterType));
           } else {
-            // For other types (solution_id != 11)
-            query = query.neq('solution_id', 11);
+            // Filter by solution name - need to join with asset_solutions
+            const { data: solutionData } = await supabase
+              .from('asset_solutions')
+              .select('id')
+              .eq('solution', filterType)
+              .single();
+            
+            if (solutionData) {
+              query = query.eq('solution_id', solutionData.id);
+            }
           }
         }
 
@@ -118,9 +127,11 @@ export const useAssetsData = ({
             name: asset.status?.status || 'Desconhecido'
           },
           manufacturer: {
+            id: asset.manufacturer?.id,
             name: asset.manufacturer?.name || 'Desconhecido'
           },
           plano: {
+            id: asset.plano?.id,
             nome: asset.plano?.nome || 'Desconhecido' // Note: using 'nome' instead of 'name'
           }
         })) || [];

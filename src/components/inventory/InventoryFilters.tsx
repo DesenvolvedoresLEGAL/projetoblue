@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { StatusRecord } from "@/types/asset";
+import { useAssetSolutions } from "@/hooks/useAssetSolutions";
 
 interface InventoryFiltersProps {
   search: string;
@@ -38,6 +39,9 @@ const InventoryFilters = ({
   statusRecords,
   clearFilters
 }: InventoryFiltersProps) => {
+  // Get asset solutions dynamically from the API
+  const { data: assetSolutions = [] } = useAssetSolutions();
+
   // Helper function to map status names to filter values
   function mapStatusToFilter(statusName: string): string {
     switch (statusName) {
@@ -77,8 +81,11 @@ const InventoryFilters = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Tipos</SelectItem>
-              <SelectItem value="CHIP">Chip</SelectItem>
-              <SelectItem value="ROTEADOR">Roteador</SelectItem>
+              {assetSolutions.map((solution) => (
+                <SelectItem key={solution.id} value={solution.solution}>
+                  {solution.solution}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           

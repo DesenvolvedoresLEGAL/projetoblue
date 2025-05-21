@@ -10,6 +10,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Search, Filter } from "lucide-react";
+import { useAssetSolutions } from '@/hooks/useAssetSolutions';
 
 interface AssetsSearchFormProps {
   searchTerm: string;
@@ -28,6 +29,8 @@ const AssetsSearchForm = ({
   handleSearch,
   handleFilterChange
 }: AssetsSearchFormProps) => {
+  const { data: assetSolutions = [] } = useAssetSolutions();
+
   return (
     <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
@@ -47,8 +50,11 @@ const AssetsSearchForm = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos Tipos</SelectItem>
-            <SelectItem value="chip">Chip</SelectItem>
-            <SelectItem value="router">Roteador</SelectItem>
+            {assetSolutions.map((solution) => (
+              <SelectItem key={solution.id} value={solution.id.toString()}>
+                {solution.solution}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         

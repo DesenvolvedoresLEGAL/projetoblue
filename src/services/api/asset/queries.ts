@@ -49,12 +49,34 @@ export const assetQueries = {
       
       // Apply filters if provided
       if (params) {
-        if (params.statusId) {
+        if (params.statusId !== undefined) {
           query = query.eq('status_id', params.statusId);
+        } else if (params.status) {
+          // Get status ID from status name
+          const { data: statusData } = await supabase
+            .from('asset_status')
+            .select('id')
+            .eq('status', params.status)
+            .single();
+            
+          if (statusData) {
+            query = query.eq('status_id', statusData.id);
+          }
         }
         
-        if (params.typeId) {
+        if (params.typeId !== undefined) {
           query = query.eq('solution_id', params.typeId);
+        } else if (params.type) {
+          // Get solution ID from type name
+          const { data: solutionData } = await supabase
+            .from('asset_solutions')
+            .select('id')
+            .eq('solution', params.type)
+            .single();
+            
+          if (solutionData) {
+            query = query.eq('solution_id', solutionData.id);
+          }
         }
         
         if (params.search) {
@@ -177,7 +199,7 @@ export const assetQueries = {
         manufacturer: item.manufacturer?.name || 'Unknown',
         solution: item.solucao?.solution || 'Unknown',
         createdAt: item.created_at
-      }));
+      })) as ProblemAsset[];
     } catch (error) {
       handleAssetError(error, "Error in listProblemAssets");
       return [];
