@@ -95,4 +95,6 @@ export interface ProblemAsset {
   manufacturer?: string;
   solution?: string;
   createdAt?: string;
+  admin_user?: string;
+  admin_pass?: string;
 }

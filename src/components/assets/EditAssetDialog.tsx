@@ -73,7 +73,7 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
         iccid: asset.iccid || '',
         line_number: asset.line_number?.toString() || '',
         radio: asset.radio || '',
-        status_id: asset.status.id || 1,
+        status_id: asset.status?.id || 1,
         manufacturer_id: asset.manufacturer?.id || undefined,
         plan_id: asset.plano?.id || undefined,
         rented_days: asset.rented_days?.toString() || '0',
