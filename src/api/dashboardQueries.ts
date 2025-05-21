@@ -6,7 +6,8 @@ export async function fetchTotalAssets() {
   console.log('Executing fetchTotalAssets query');
   const result = await supabase
     .from('assets')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null);
   
   console.log('fetchTotalAssets result:', result);
   return result;
@@ -40,8 +41,9 @@ export async function fetchRecentAssets() {
   const result = await supabase
     .from('assets')
     .select(`
-      uuid, serial_number, line_number, radio, solution_id, status_id
+      uuid, serial_number, iccid, line_number, radio, solution_id, status_id, model
     `)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(5);
   

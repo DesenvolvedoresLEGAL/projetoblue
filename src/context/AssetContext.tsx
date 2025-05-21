@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
@@ -8,7 +7,7 @@ import { Client } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { assetService } from '@/services/api/assetService';
 import { referenceDataService } from '@/services/api/referenceDataService';
-import authService from '@/services/api/authService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Default context value
 const defaultContextValue: AssetContextType = {
@@ -93,9 +92,9 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
   };
 
-  // Load assets when status records are available
+  // Load assets and clients when status records are available
   useEffect(() => {
-    const loadAssets = async () => {
+    const loadData = async () => {
       if (statusRecords.length === 0) return; // Wait for status records
       
       setLoading(true);
@@ -104,18 +103,47 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Fetch assets from the API
         const assetsData = await assetService.getAssets();
         setAssets(assetsData);
+        
+        // Fetch clients from the database
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select('*')
+          .is('deleted_at', null);
+          
+        if (clientsError) {
+          console.error('Error loading clients:', clientsError);
+          toast.error('Failed to load clients');
+          return;
+        }
+        
+        // Map clients data to our format
+        const mappedClients: Client[] = clientsData.map(client => ({
+          id: client.uuid,
+          name: client.nome,
+          document: client.cnpj,
+          documentType: client.cnpj.length === 11 ? "CPF" : "CNPJ",
+          contact: client.contato?.toString() || "",
+          email: client.email || "",
+          address: "",
+          city: "",
+          state: "",
+          zipCode: "",
+          assets: []
+        }));
+        
+        setClients(mappedClients);
       } catch (error) {
-        console.error('Error loading assets:', error);
-        toast.error('Failed to load assets');
+        console.error('Error loading assets or clients:', error);
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
     if (statusRecords.length > 0) {
-      loadAssets();
+      loadData();
     }
-  }, [statusRecords]); 
+  }, [statusRecords]);
 
   const addAsset = async (assetData: Omit<Asset, "id" | "status">): Promise<Asset | null> => {
     try {
@@ -224,6 +252,96 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return assetActions.getAssetById(assets, id);
   };
 
+  // NEW IMPLEMENTATION: Asset-Client Association Functions
+  const associateAssetToClient = async (assetId: string, clientId: string): Promise<void> => {
+    try {
+      console.log(`Associating asset ${assetId} to client ${clientId}`);
+      
+      // Get current date in YYYY-MM-DD format
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      // Insert association record
+      const { error } = await supabase
+        .from('asset_client_assoc')
+        .insert({
+          asset_id: assetId,
+          client_id: clientId,
+          entry_date: currentDate,
+          exit_date: null,
+          association_id: 1 // Default to rental
+        });
+        
+      if (error) {
+        console.error('Error associating asset to client:', error);
+        throw new Error(`Association failed: ${error.message}`);
+      }
+      
+      // Update asset status in local state
+      const updatedAssets = assets.map(asset => {
+        if (asset.id === assetId) {
+          return {
+            ...asset,
+            status: 'ALUGADO',
+            statusId: 2, // ALUGADO
+            clientId: clientId
+          };
+        }
+        return asset;
+      });
+      
+      setAssets(updatedAssets);
+      toast.success('Asset associated to client successfully');
+    } catch (error) {
+      console.error('Error in associateAssetToClient:', error);
+      toast.error(`Failed to associate asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
+  };
+
+  const removeAssetFromClient = async (assetId: string, clientId: string): Promise<void> => {
+    try {
+      console.log(`Removing association of asset ${assetId} from client ${clientId}`);
+      
+      // Get current date in YYYY-MM-DD format
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      // Update the existing association with an exit date
+      const { error } = await supabase
+        .from('asset_client_assoc')
+        .update({
+          exit_date: currentDate
+        })
+        .eq('asset_id', assetId)
+        .eq('client_id', clientId)
+        .is('exit_date', null);
+        
+      if (error) {
+        console.error('Error removing asset association:', error);
+        throw new Error(`Removal failed: ${error.message}`);
+      }
+      
+      // Update asset status in local state
+      const updatedAssets = assets.map(asset => {
+        if (asset.id === assetId) {
+          return {
+            ...asset,
+            status: 'DISPONÍVEL',
+            statusId: 1, // DISPONÍVEL
+            clientId: undefined
+          };
+        }
+        return asset;
+      });
+      
+      setAssets(updatedAssets);
+      toast.success('Asset removed from client successfully');
+    } catch (error) {
+      console.error('Error in removeAssetFromClient:', error);
+      toast.error(`Failed to remove asset association: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error;
+    }
+  };
+
   const filterAssets = (criteria: any) => {
     let filteredAssets = [...assets];
     
@@ -251,6 +369,36 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       timestamp: new Date().toISOString(),
       ...entry
     };
+    
+    // Log the entry to the database
+    (async () => {
+      try {
+        console.log('Adding history entry:', newEntry);
+        
+        // Format the entry for the asset_logs table
+        const { error } = await supabase
+          .from('asset_logs')
+          .insert({
+            event: newEntry.operationType,
+            date: newEntry.timestamp,
+            details: {
+              description: newEntry.description || newEntry.operationType,
+              assets: newEntry.assets,
+              client_id: newEntry.clientId,
+              client_name: newEntry.clientName,
+              comments: newEntry.comments
+            }
+          });
+          
+        if (error) {
+          console.error('Error logging history entry:', error);
+        }
+      } catch (err) {
+        console.error('Error in history logging:', err);
+      }
+    })();
+    
+    // Update local state
     setHistory(prev => [newEntry, ...prev]);
   };
 
@@ -262,6 +410,41 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getClientHistory = (clientId: string): AssetHistoryEntry[] => {
     return history.filter(entry => entry.clientId === clientId)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  };
+
+  const getExpiredSubscriptions = () => {
+    const today = new Date();
+    return assets.filter(asset => 
+      asset.subscription && 
+      asset.subscription.endDate && 
+      new Date(asset.subscription.endDate) < today
+    );
+  };
+
+  const returnAssetsToStock = async (assetIds: string[]) => {
+    for (const assetId of assetIds) {
+      const asset = getAssetById(assetId);
+      if (asset && asset.clientId) {
+        await removeAssetFromClient(assetId, asset.clientId);
+      }
+    }
+  };
+
+  const extendSubscription = (assetId: string, newEndDate: string) => {
+    const updatedAssets = assets.map(asset => {
+      if (asset.id === assetId && asset.subscription) {
+        return {
+          ...asset,
+          subscription: {
+            ...asset.subscription,
+            endDate: newEndDate
+          }
+        };
+      }
+      return asset;
+    });
+    
+    setAssets(updatedAssets);
   };
 
   return (
@@ -283,11 +466,11 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateClient: () => {}, // Implement as needed
         deleteClient: () => {}, // Implement as needed
         getClientById,
-        associateAssetToClient: () => {}, // Implement as needed
-        removeAssetFromClient: () => {}, // Implement as needed
-        getExpiredSubscriptions: () => [], // Implement as needed
-        returnAssetsToStock: () => {}, // Implement as needed
-        extendSubscription: () => {}, // Implement as needed
+        associateAssetToClient,
+        removeAssetFromClient,
+        getExpiredSubscriptions,
+        returnAssetsToStock,
+        extendSubscription,
         addHistoryEntry,
         getAssetHistory,
         getClientHistory,

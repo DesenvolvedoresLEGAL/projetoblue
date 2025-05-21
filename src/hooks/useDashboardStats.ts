@@ -1,12 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@/api/dashboardQueries';
-import { 
-  processRecentAssets, 
-  processRecentEvents,
-  calculateStatusSummary,
-  formatRelativeTime
-} from '@/utils/dashboardUtils';
 
 export interface DashboardStats {
   totalAssets: number;
@@ -17,15 +11,16 @@ export interface DashboardStats {
     name: string;
     type: string;
     status: string;
+    solution: string;
   }[];
   recentEvents: {
     id: number;
     type: string;
     description: string;
-    time: Date;
-    asset_name: string;
+    time: string;
+    asset_id?: string;
   }[];
-  statusSummary: {
+  statusSummary?: {
     active: number;
     warning: number;
     critical: number;
@@ -45,15 +40,13 @@ export function useDashboardStats() {
           activeClientsResult,
           assetsWithIssuesResult,
           recentAssetsResult,
-          recentEventsResult,
-          statusBreakdownResult
+          recentEventsResult
         ] = await Promise.all([
           dashboardQueries.fetchTotalAssets(),
           dashboardQueries.fetchActiveClients(),
           dashboardQueries.fetchAssetsWithIssues(),
           dashboardQueries.fetchRecentAssets(),
-          dashboardQueries.fetchRecentEvents(),
-          dashboardQueries.fetchStatusBreakdown()
+          dashboardQueries.fetchRecentEvents()
         ]);
 
         // Log query results for debugging
@@ -62,7 +55,6 @@ export function useDashboardStats() {
         console.log('Assets with issues result:', assetsWithIssuesResult);
         console.log('Recent assets result:', recentAssetsResult);
         console.log('Recent events result:', recentEventsResult);
-        console.log('Status breakdown result:', statusBreakdownResult);
 
         // Error handling for individual queries
         if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
@@ -70,7 +62,6 @@ export function useDashboardStats() {
         if (assetsWithIssuesResult.error) throw new Error(`Problem assets query error: ${assetsWithIssuesResult.error.message}`);
         if (recentAssetsResult.error) throw new Error(`Recent assets query error: ${recentAssetsResult.error.message}`);
         if (recentEventsResult.error) throw new Error(`Recent events query error: ${recentEventsResult.error.message}`);
-        if (statusBreakdownResult.error) throw new Error(`Status breakdown query error: ${statusBreakdownResult.error.message}`);
         
         // Fetch additional data needed for mapping
         const solutionsResult = await dashboardQueries.fetchSolutions();
@@ -85,21 +76,40 @@ export function useDashboardStats() {
         const solutions = solutionsResult.data || [];
         const statuses = statusResult.data || [];
         
+        // Process recent assets data
+        const processedRecentAssets = recentAssetsResult.data?.map(asset => {
+          const solution = solutions.find(s => s.id === asset.solution_id);
+          const status = statuses.find(s => s.id === asset.status_id);
+          
+          return {
+            id: asset.uuid,
+            name: asset.type === 'CHIP' ? asset.iccid : asset.serial_number,
+            type: solution?.solution || 'Unknown',
+            status: status?.status || 'Unknown',
+            solution: solution?.solution || 'Unknown'
+          };
+        }) || [];
+        
+        // Process recent events data
+        const processedRecentEvents = recentEventsResult.data?.map(event => {
+          return {
+            id: event.id,
+            type: event.event,
+            description: event.details?.description || event.event,
+            time: event.date,
+            asset_id: event.details?.asset_id
+          };
+        }) || [];
+        
         console.log('Dashboard data fetched successfully');
         
-        // Process data using utility functions
-        const recentAssets = processRecentAssets(recentAssetsResult.data, solutions, statuses);
-        const recentEvents = processRecentEvents(recentEventsResult.data);
-        const statusSummary = calculateStatusSummary(statusBreakdownResult.data);
-        
-        // Return data in the exact shape expected by components
+        // Return data in the expected format
         return {
           totalAssets: totalAssetsResult.count || 0,
           activeClients: activeClientsResult.count || 0,
           assetsWithIssues: assetsWithIssuesResult.count || 0,
-          recentAssets,
-          recentEvents,
-          statusSummary
+          recentAssets: processedRecentAssets,
+          recentEvents: processedRecentEvents
         };
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -107,11 +117,8 @@ export function useDashboardStats() {
       }
     },
     staleTime: 60000, // 1 minute
-    gcTime: 300000,   // 5 minutes (renamed from cacheTime)
+    gcTime: 300000,   // 5 minutes
     retry: 1,
     refetchOnWindowFocus: false
   });
 }
-
-// Export formatRelativeTime for components that need it
-export { formatRelativeTime };

@@ -12,15 +12,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAssets } from "@/context/useAssets";
 import { Asset, ChipAsset, RouterAsset } from "@/types/asset";
-import { Client } from "@/types/asset";
-import { toast } from "@/utils/toast";
+import { toast } from "sonner";
 
 const Association = () => {
   const { assets, clients, associateAssetToClient, removeAssetFromClient, addHistoryEntry } = useAssets();
   const [assetId, setAssetId] = useState<string>('');
   const [clientId, setClientId] = useState<string>('');
   const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(undefined);
-  const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
+  const [selectedClient, setSelectedClient] = useState<{ id: string, name: string } | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     // Find the asset when the assetId changes
@@ -29,7 +29,8 @@ const Association = () => {
 
   useEffect(() => {
     // Find the client when the clientId changes
-    setSelectedClient(clients.find(client => client.id === clientId));
+    const client = clients.find(client => client.id === clientId);
+    setSelectedClient(client ? { id: client.id, name: client.name } : undefined);
   }, [clientId, clients]);
 
   const handleAssociate = async () => {
@@ -42,31 +43,35 @@ const Association = () => {
       return;
     }
 
-    if (assetId && clientId) {
-      try {
-        await associateAssetToClient(assetId, clientId);
-        toast.success("Ativo associado ao cliente com sucesso.");
-
-        // Fix the history entry
+    setIsLoading(true);
+    try {
+      await associateAssetToClient(assetId, clientId);
+      
+      // Add history entry
+      if (selectedAsset && selectedClient) {
         addHistoryEntry({
-          operationType: "ALUGUEL",
-          description: `Ativo associado ao cliente`,
+          operationType: "ASSOCIATION",
+          description: `Ativo associado ao cliente ${selectedClient.name}`,
           assetIds: [assetId],
           clientId: clientId,
-          clientName: selectedClient?.name || "",
+          clientName: selectedClient.name,
           assets: [{
             id: assetId,
-            type: selectedAsset?.type || "CHIP",
-            identifier: selectedAsset?.type === 'CHIP' 
+            type: selectedAsset.type,
+            identifier: selectedAsset.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
               : (selectedAsset as RouterAsset).uniqueId
           }],
-          comments: `Ativo associado ao cliente ${selectedClient?.name || ""}`
+          comments: `Ativo associado ao cliente ${selectedClient.name}`
         });
-      } catch (error) {
-        console.error("Erro ao associar ativo ao cliente:", error);
-        toast.error("Erro ao associar ativo ao cliente.");
       }
+      
+      toast.success("Ativo associado ao cliente com sucesso.");
+    } catch (error) {
+      console.error("Erro ao associar ativo ao cliente:", error);
+      toast.error(`Erro ao associar ativo ao cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,31 +85,35 @@ const Association = () => {
       return;
     }
 
-    if (assetId && clientId) {
-      try {
-        await removeAssetFromClient(assetId, clientId);
-        toast.success("Ativo removido do cliente com sucesso.");
-
-        // Fix the history entry
+    setIsLoading(true);
+    try {
+      await removeAssetFromClient(assetId, clientId);
+      
+      // Add history entry
+      if (selectedAsset && selectedClient) {
         addHistoryEntry({
-          operationType: "ALUGUEL",
-          description: `Ativo removido do cliente`,
+          operationType: "DISASSOCIATION",
+          description: `Ativo removido do cliente ${selectedClient.name}`,
           assetIds: [assetId],
           clientId: clientId,
-          clientName: selectedClient?.name || "",
+          clientName: selectedClient.name,
           assets: [{
             id: assetId,
-            type: selectedAsset?.type || "CHIP",
-            identifier: selectedAsset?.type === 'CHIP' 
+            type: selectedAsset.type,
+            identifier: selectedAsset.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
               : (selectedAsset as RouterAsset).uniqueId
           }],
-          comments: `Ativo removido do cliente ${selectedClient?.name || ""}`
+          comments: `Ativo removido do cliente ${selectedClient.name}`
         });
-      } catch (error) {
-        console.error("Erro ao remover associação do ativo:", error);
-        toast.error("Erro ao remover associação do ativo.");
       }
+      
+      toast.success("Ativo removido do cliente com sucesso.");
+    } catch (error) {
+      console.error("Erro ao remover associação do ativo:", error);
+      toast.error(`Erro ao remover associação do ativo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -125,10 +134,13 @@ const Association = () => {
               id="asset-id"
               value={assetId}
               onChange={(e) => setAssetId(e.target.value)}
+              disabled={isLoading}
             />
             {selectedAsset && (
               <div className="text-sm text-muted-foreground">
-                Ativo selecionado: {selectedAsset.type === 'CHIP' ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId}
+                Ativo selecionado: {selectedAsset.type === 'CHIP' 
+                  ? (selectedAsset as ChipAsset).iccid 
+                  : (selectedAsset as RouterAsset).uniqueId}
               </div>
             )}
           </div>
@@ -139,6 +151,7 @@ const Association = () => {
               id="client-id"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
+              disabled={isLoading}
             />
             {selectedClient && (
               <div className="text-sm text-muted-foreground">
@@ -146,7 +159,9 @@ const Association = () => {
               </div>
             )}
           </div>
-          <Button onClick={handleAssociate}>Associar Ativo</Button>
+          <Button onClick={handleAssociate} disabled={isLoading}>
+            {isLoading ? 'Processando...' : 'Associar Ativo'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -165,10 +180,13 @@ const Association = () => {
               id="asset-id-remove"
               value={assetId}
               onChange={(e) => setAssetId(e.target.value)}
+              disabled={isLoading}
             />
             {selectedAsset && (
               <div className="text-sm text-muted-foreground">
-                Ativo selecionado: {selectedAsset.type === 'CHIP' ? (selectedAsset as ChipAsset).iccid : (selectedAsset as RouterAsset).uniqueId}
+                Ativo selecionado: {selectedAsset.type === 'CHIP' 
+                  ? (selectedAsset as ChipAsset).iccid 
+                  : (selectedAsset as RouterAsset).uniqueId}
               </div>
             )}
           </div>
@@ -179,6 +197,7 @@ const Association = () => {
               id="client-id-remove"
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
+              disabled={isLoading}
             />
             {selectedClient && (
               <div className="text-sm text-muted-foreground">
@@ -186,7 +205,9 @@ const Association = () => {
               </div>
             )}
           </div>
-          <Button onClick={handleRemoveAssociation}>Remover Associação</Button>
+          <Button onClick={handleRemoveAssociation} disabled={isLoading} variant="outline">
+            {isLoading ? 'Processando...' : 'Remover Associação'}
+          </Button>
         </CardContent>
       </Card>
     </div>
