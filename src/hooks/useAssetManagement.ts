@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { z } from "zod";
-import { AssetFormValues } from "@/schemas/assetSchemas";
+import { AssetFormValues, ChipFormValues, EquipmentFormValues } from "@/schemas/assetSchemas";
 
 // Reusable query keys
 export const assetQueryKeys = {
@@ -87,7 +87,7 @@ export const usePlans = () => {
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
   return useQuery({
-    queryKey: [...assetQueryKeys.all, 'exists', field, value],
+    queryKey: ['assets', 'exists', field, value] as const,
     queryFn: async () => {
       if (!value) return { exists: false };
       
@@ -114,34 +114,36 @@ export const useCreateAsset = () => {
   
   return useMutation({
     mutationFn: async (data: AssetFormValues) => {
-      // Prepare data for insertion based on asset type
+      // Determine if this is a chip based on solution_id
       const isChip = data.solution_id === 1 || data.solution_id === 11;
       
-      // Prepare data for insertion
+      // Common fields for both asset types
       const insertData: Record<string, any> = {
         solution_id: data.solution_id,
         status_id: data.status_id || 1, // Default to 'Disponível'
         manufacturer_id: data.manufacturer_id,
-        notes: data.notes // New field for both types
+        notes: data.notes
       };
       
-      // Type-specific fields
+      // Add type-specific fields
       if (isChip) {
-        // Chip specific fields
-        insertData.iccid = data.iccid;
-        insertData.line_number = data.line_number;
-        insertData.plan_id = data.plan_id;
+        // Type assertion to access chip-specific fields
+        const chipData = data as ChipFormValues;
+        insertData.iccid = chipData.iccid;
+        insertData.line_number = chipData.line_number;
+        insertData.plan_id = chipData.plan_id;
       } else {
-        // Equipment specific fields
-        insertData.serial_number = data.serial_number;
-        insertData.model = data.model;
-        insertData.radio = data.radio;
+        // Type assertion to access equipment-specific fields
+        const equipmentData = data as EquipmentFormValues;
+        insertData.serial_number = equipmentData.serial_number;
+        insertData.model = equipmentData.model;
+        insertData.radio = equipmentData.radio;
         
-        // New optional fields for equipment
-        insertData.admin_user = data.admin_user || 'admin';
-        insertData.admin_pass = data.admin_pass || '';
-        insertData.password = data.password; // WiFi password
-        insertData.ssid = data.ssid;
+        // Optional fields for equipment
+        insertData.admin_user = equipmentData.admin_user || 'admin';
+        insertData.admin_pass = equipmentData.admin_pass || '';
+        insertData.password = equipmentData.password; // WiFi password
+        insertData.ssid = equipmentData.ssid;
       }
       
       // Insert the asset

@@ -48,7 +48,7 @@ export const equipmentSchema = baseAssetSchema.extend({
   password: z.string().optional(), // WiFi password
 });
 
-// Combined discriminated union schema
+// Combined schema for both types using discriminated union
 export const assetSchema = z.discriminatedUnion("solution_id", [
   chipSchema,
   equipmentSchema

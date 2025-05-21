@@ -2,7 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'sonner';
 import App from './App';
 import './index.css';
@@ -12,7 +12,7 @@ import { AuthProvider } from './context/AuthContext';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ThemeProvider defaultTheme="dark" storageKey="blue-ui-theme">
+      <ThemeProvider>
         <AuthProvider>
           <AssetProvider>
             <App />
