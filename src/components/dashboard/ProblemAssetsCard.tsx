@@ -9,7 +9,22 @@ import { Badge } from "@/components/ui/badge";
 export const ProblemAssetsCard: React.FC = () => {
   const { data: problemAssets = [], isLoading } = useQuery({
     queryKey: ['problem-assets'],
-    queryFn: assetService.listProblemAssets
+    queryFn: async () => {
+      // Fetch problem assets and solution data
+      const assets = await assetService.listProblemAssets();
+      
+      // Fetch solutions to map solution_id to solution name
+      const { data: solutions } = await supabase.from('asset_solutions').select('id, solution');
+      
+      // Return assets with solution info
+      return assets.map(asset => {
+        const solution = solutions?.find(s => s.id === asset.solution_id);
+        return {
+          ...asset,
+          solutionName: solution?.solution || 'Unknown'
+        };
+      });
+    }
   });
 
   return (
@@ -32,7 +47,7 @@ export const ProblemAssetsCard: React.FC = () => {
               <li key={asset.uuid} className="truncate flex items-center gap-2">
                 <CircleAlert className="h-4 w-4 text-red-500" />
                 <span className="font-mono">
-                  {asset.asset_types?.type?.toLowerCase() === 'chip' 
+                  {asset.solution_id === 1 
                     ? asset.iccid 
                     : asset.radio}
                 </span>

@@ -18,7 +18,12 @@ export type Database = {
           deleted_at: string | null
           entry_date: string
           exit_date: string | null
+          gb: number
           id: number
+          notes: string | null
+          pass: string | null
+          plan_id: number
+          ssid: string | null
           updated_at: string
         }
         Insert: {
@@ -29,7 +34,12 @@ export type Database = {
           deleted_at?: string | null
           entry_date: string
           exit_date?: string | null
+          gb?: number
           id?: number
+          notes?: string | null
+          pass?: string | null
+          plan_id: number
+          ssid?: string | null
           updated_at?: string
         }
         Update: {
@@ -40,7 +50,12 @@ export type Database = {
           deleted_at?: string | null
           entry_date?: string
           exit_date?: string | null
+          gb?: number
           id?: number
+          notes?: string | null
+          pass?: string | null
+          plan_id?: number
+          ssid?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -64,6 +79,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "asset_client_assoc_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fk_assoc_association_type"
@@ -201,82 +223,58 @@ export type Database = {
           },
         ]
       }
-      asset_types: {
-        Row: {
-          created_at: string
-          deleted_at: string | null
-          id: number
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          deleted_at?: string | null
-          id?: number
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          deleted_at?: string | null
-          id?: number
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       assets: {
         Row: {
+          admin_pass: string
+          admin_user: string
           created_at: string | null
           deleted_at: string | null
           iccid: string | null
           line_number: number | null
           manufacturer_id: number | null
           model: string | null
-          password: string | null
           plan_id: number | null
           radio: string | null
           rented_days: number
           serial_number: string | null
           solution_id: number | null
           status_id: number | null
-          type_id: number | null
           updated_at: string
           uuid: string
         }
         Insert: {
+          admin_pass?: string
+          admin_user?: string
           created_at?: string | null
           deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
           model?: string | null
-          password?: string | null
           plan_id?: number | null
           radio?: string | null
           rented_days?: number
           serial_number?: string | null
           solution_id?: number | null
           status_id?: number | null
-          type_id?: number | null
           updated_at?: string
           uuid?: string
         }
         Update: {
+          admin_pass?: string
+          admin_user?: string
           created_at?: string | null
           deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
           model?: string | null
-          password?: string | null
           plan_id?: number | null
           radio?: string | null
           rented_days?: number
           serial_number?: string | null
           solution_id?: number | null
           status_id?: number | null
-          type_id?: number | null
           updated_at?: string
           uuid?: string
         }
@@ -307,13 +305,6 @@ export type Database = {
             columns: ["status_id"]
             isOneToOne: false
             referencedRelation: "asset_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_assets_type"
-            columns: ["type_id"]
-            isOneToOne: false
-            referencedRelation: "asset_types"
             referencedColumns: ["id"]
           },
         ]

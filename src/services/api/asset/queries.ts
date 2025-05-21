@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
@@ -11,20 +12,20 @@ export const assetQueries = {
   // Get all assets with filtering
   async getAssets(params?: AssetListParams): Promise<Asset[]> {
     try {
+      // Build basic query without nested selects
       let query = supabase.from('assets').select(`
-        *,
-        asset_types(type),
-        asset_status(status),
-        asset_solutions(solution),
-        manufacturers(name)
+        uuid, solution_id, status_id, iccid, serial_number, 
+        manufacturer_id, model, line_number, admin_user, admin_password,
+        password, radio, ssid, rented_days, created_at, updated_at
       `);
       
       // Apply filters if provided
       if (params?.type) {
-        const typeQuery = supabase.from('asset_types').select('id').eq('type', params.type.toLowerCase());
-        const { data: typeData } = await typeQuery;
-        if (typeData && typeData.length > 0) {
-          query = query.eq('type_id', typeData[0].id);
+        // Filter by chip or router
+        if (params.type === 'CHIP') {
+          query = query.not('iccid', 'is', null);
+        } else {
+          query = query.not('serial_number', 'is', null);
         }
       }
       
@@ -56,8 +57,32 @@ export const assetQueries = {
         return [];
       }
       
-      // Map database results to frontend Asset types
-      return data.map(item => mapDatabaseAssetToFrontend(item)) || [];
+      // Fetch necessary related data in separate queries for mapping
+      const solutionsPromise = supabase.from('asset_solutions').select('id, solution');
+      const statusPromise = supabase.from('asset_status').select('id, status');
+      const manufacturersPromise = supabase.from('manufacturers').select('id, name');
+      
+      const [solutionsResult, statusResult, manufacturersResult] = await Promise.all([
+        solutionsPromise, statusPromise, manufacturersPromise
+      ]);
+      
+      const solutions = solutionsResult.data || [];
+      const statuses = statusResult.data || [];
+      const manufacturers = manufacturersResult.data || [];
+      
+      // Map database results to frontend Asset types with the fetched related data
+      return data.map(item => {
+        const solution = solutions.find(s => s.id === item.solution_id);
+        const status = statuses.find(s => s.id === item.status_id);
+        const manufacturer = manufacturers.find(m => m.id === item.manufacturer_id);
+        
+        return mapDatabaseAssetToFrontend({
+          ...item,
+          asset_solutions: solution ? { solution: solution.solution } : { solution: 'Unknown' },
+          asset_status: status ? { status: status.status } : { status: 'Unknown' },
+          manufacturers: manufacturer ? { name: manufacturer.name } : { name: 'Unknown' }
+        });
+      }) || [];
     } catch (error) {
       handleAssetError(error, "Error in getAssets");
       return [];
@@ -68,11 +93,9 @@ export const assetQueries = {
   async getAssetById(id: string): Promise<Asset | null> {
     try {
       const { data, error } = await supabase.from('assets').select(`
-        *,
-        asset_types(type),
-        asset_status(status),
-        asset_solutions(solution),
-        manufacturers(name)
+        uuid, solution_id, status_id, iccid, serial_number, 
+        manufacturer_id, model, line_number, admin_user, admin_password,
+        password, radio, ssid, rented_days, created_at, updated_at
       `).eq('uuid', id).single();
       
       if (error) {
@@ -80,7 +103,31 @@ export const assetQueries = {
         return null;
       }
       
-      return mapDatabaseAssetToFrontend(data) || null;
+      // Fetch necessary related data in separate queries for mapping
+      const solutionsPromise = supabase.from('asset_solutions').select('id, solution');
+      const statusPromise = supabase.from('asset_status').select('id, status');
+      const manufacturersPromise = supabase.from('manufacturers').select('id, name');
+      
+      const [solutionsResult, statusResult, manufacturersResult] = await Promise.all([
+        solutionsPromise, statusPromise, manufacturersPromise
+      ]);
+      
+      const solutions = solutionsResult.data || [];
+      const statuses = statusResult.data || [];
+      const manufacturers = manufacturersResult.data || [];
+      
+      // Get the related data for this asset
+      const solution = solutions.find(s => s.id === data.solution_id);
+      const status = statuses.find(s => s.id === data.status_id);
+      const manufacturer = manufacturers.find(m => m.id === data.manufacturer_id);
+      
+      // Map to frontend Asset type
+      return mapDatabaseAssetToFrontend({
+        ...data,
+        asset_solutions: solution ? { solution: solution.solution } : { solution: 'Unknown' },
+        asset_status: status ? { status: status.status } : { status: 'Unknown' },
+        manufacturers: manufacturer ? { name: manufacturer.name } : { name: 'Unknown' }
+      });
     } catch (error) {
       handleAssetError(error, `Error in getAssetById ${id}`);
       return null;
@@ -100,13 +147,14 @@ export const assetQueries = {
   // List assets with problem status
   async listProblemAssets(): Promise<ProblemAsset[]> {
     try {
+      // Get problem assets without nested selects
       const { data, error } = await supabase
         .from('assets')
         .select(`
           uuid,
           iccid,
           radio,
-          asset_types:type_id ( type )
+          solution_id
         `)
         .in('status_id', PROBLEM_STATUS_IDS);
       

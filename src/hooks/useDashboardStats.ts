@@ -57,15 +57,11 @@ export function useDashboardStats() {
             .select('*', { head: true, count: 'exact' })
             .throwOnError(),
             
-          // 5 most recently created assets
+          // 5 most recently created assets - remove nested select
           supabase
             .from('assets')
             .select(`
-              serial_number,
-              line_number,
-              radio,
-              asset_types!inner(type),
-              asset_status!inner(status)
+              uuid, serial_number, line_number, radio, solution_id, status_id
             `)
             .order('created_at', { ascending: false })
             .limit(5)
@@ -84,6 +80,20 @@ export function useDashboardStats() {
             .throwOnError()
         ]);
         
+        // Fetch additional data needed for mapping
+        const solutionsResult = await supabase
+          .from('asset_solutions')
+          .select('id, solution')
+          .throwOnError();
+          
+        const statusResult = await supabase
+          .from('asset_status')
+          .select('id, status')
+          .throwOnError();
+        
+        const solutions = solutionsResult.data || [];
+        const statuses = statusResult.data || [];
+        
         console.log('Dashboard data fetched:', {
           totalAssets: totalAssetsResult,
           activeClients: activeClientsResult,
@@ -94,12 +104,17 @@ export function useDashboardStats() {
         });
         
         // Process recent assets data
-        const recentAssets = (recentAssetsResult.data || []).map(asset => ({
-          id: asset.serial_number || String(asset.line_number || ''),
-          name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
-          type: asset.asset_types?.type || 'Unknown',
-          status: asset.asset_status?.status || 'Unknown'
-        }));
+        const recentAssets = (recentAssetsResult.data || []).map(asset => {
+          const solution = solutions.find(s => s.id === asset.solution_id);
+          const status = statuses.find(s => s.id === asset.status_id);
+          
+          return {
+            id: asset.serial_number || String(asset.line_number || ''),
+            name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
+            type: solution?.solution || 'Unknown',
+            status: status?.status || 'Unknown'
+          };
+        });
         
         // Process recent events data
         const recentEvents = (recentEventsResult.data || []).map(event => {
@@ -145,11 +160,11 @@ export function useDashboardStats() {
           statusBreakdownResult.data.forEach((item: any) => {
             const status = item.status?.toLowerCase() || '';
             if (status.includes('active') || status.includes('disponível')) {
-              active += item.total;
+              active += item.count || 0;
             } else if (status.includes('warning') || status.includes('aviso')) {
-              warning += item.total;
+              warning += item.count || 0;
             } else if (status.includes('critical') || status.includes('crítico')) {
-              critical += item.total;
+              critical += item.count || 0;
             }
           });
         }

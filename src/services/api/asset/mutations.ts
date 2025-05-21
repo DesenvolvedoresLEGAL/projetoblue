@@ -11,9 +11,12 @@ export const assetMutations = {
   // Create a new asset
   async createAsset(assetData: AssetCreateParams): Promise<Asset | null> {
     try {
+      // Determine solution_id based on asset type
+      const solutionId = assetData.type === 'CHIP' ? 1 : 2; // Assuming 1=CHIP, 2=ROUTER
+      
       // Prepare data for insertion
       const insertData: any = {
-        type_id: assetData.type === 'CHIP' ? 1 : 2, // Default type IDs
+        solution_id: solutionId,
         status_id: assetData.statusId || 1, // Default to 'Disponível'
         model: assetData.type === 'ROTEADOR' ? assetData.model : null,
         serial_number: assetData.type === 'ROTEADOR' ? assetData.serialNumber : null,

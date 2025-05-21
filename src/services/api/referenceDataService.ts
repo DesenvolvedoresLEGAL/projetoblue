@@ -8,7 +8,7 @@ export const referenceDataService = {
   // Get all status records
   async getStatusRecords(): Promise<StatusRecord[]> {
     try {
-      const { data, error } = await supabase.from('asset_status').select('*');
+      const { data, error } = await supabase.from('asset_status').select('id, status');
       
       if (error) {
         console.error("Error fetching status records:", error);
@@ -27,21 +27,24 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset types
-  async getAssetTypes(): Promise<{ id: number, type: string }[]> {
+  // Get all asset solutions
+  async getAssetSolutions(): Promise<{ id: number, type: string }[]> {
     try {
-      const { data, error } = await supabase.from('asset_types').select('*');
+      const { data, error } = await supabase.from('asset_solutions').select('id, solution');
       
       if (error) {
-        console.error("Error fetching asset types:", error);
-        toast.error("Failed to fetch asset types");
+        console.error("Error fetching asset solutions:", error);
+        toast.error("Failed to fetch asset solutions");
         return [];
       }
       
-      return data || [];
+      return data.map(solution => ({
+        id: solution.id,
+        type: solution.solution
+      })) || [];
     } catch (error) {
-      console.error("Error in getAssetTypes:", error);
-      toast.error("Failed to fetch asset types");
+      console.error("Error in getAssetSolutions:", error);
+      toast.error("Failed to fetch asset solutions");
       return [];
     }
   },
@@ -68,7 +71,7 @@ export const referenceDataService = {
   // Get all asset solutions
   async getAssetSolutions(): Promise<{ id: number, solution: string }[]> {
     try {
-      const { data, error } = await supabase.from('asset_solutions').select('*');
+      const { data, error } = await supabase.from('asset_solutions').select('id, solution');
       
       if (error) {
         console.error("Error fetching asset solutions:", error);

@@ -42,12 +42,6 @@ const useReferenceData = () => {
         staleTime: 5 * 60 * 1000,
       },
       {
-        queryKey: ['assetTypes'],
-        queryFn: referenceDataService.getAssetTypes,
-        placeholderData: [],
-        staleTime: 5 * 60 * 1000,
-      },
-      {
         queryKey: ['plans'],
         queryFn: async () => {
           const { data, error } = await supabase
@@ -64,7 +58,7 @@ const useReferenceData = () => {
     ]
   });
 
-  const [manufacturersQuery, solutionsQuery, statusQuery, typesQuery, plansQuery] = queries;
+  const [manufacturersQuery, solutionsQuery, statusQuery, plansQuery] = queries;
 
   // Sort data alphabetically where applicable
   const manufacturers = manufacturersQuery.data?.sort((a, b) => a.name.localeCompare(b.name)) || [];
@@ -72,7 +66,6 @@ const useReferenceData = () => {
   const operators = manufacturers.filter(m => [13, 14, 15].includes(m.id)) || [];
   const solutions = solutionsQuery.data?.sort((a, b) => a.solution.localeCompare(b.solution)) || [];
   const statuses = statusQuery.data?.sort((a, b) => a.nome.localeCompare(b.nome)) || [];
-  const types = typesQuery.data || [];
   const plans = plansQuery.data || [];
 
   const isLoading = queries.some(query => query.isLoading);
@@ -83,7 +76,6 @@ const useReferenceData = () => {
     operators,
     solutions,
     statuses,
-    types,
     plans,
     isLoading,
     isError
@@ -149,17 +141,9 @@ const baseSchema = z.object({
   )
 });
 
-// Base schema for routers which includes solution_id
-const routerBaseSchema = baseSchema.extend({
-  solution_id: z.preprocess(
-    val => val === "" || isNaN(Number(val)) ? null : Number(val),
-    z.number().nullable()
-  ),
-});
-
-// Chip type schema (does not include solution_id)
+// Chip type schema 
 const chipSchema = baseSchema.extend({
-  type_id: z.literal(1), // Chip type
+  solution_id: z.literal(1), // CHIP solution ID
   iccid: z.string()
     .min(1, "ICCID é obrigatório")
     .regex(/^\d{19,20}$/, { message: "ICCID deve ter 19-20 dígitos" })
@@ -179,9 +163,9 @@ const chipSchema = baseSchema.extend({
   ),
 });
 
-// Router type schema (includes solution_id)
-const routerSchema = routerBaseSchema.extend({
-  type_id: z.literal(2), // Router type
+// Router type schema
+const routerSchema = baseSchema.extend({
+  solution_id: z.literal(2), // ROUTER solution ID
   serial_number: z.string().min(1, "Número de série é obrigatório"),
   manufacturer_id: z.preprocess(
     val => val === "" || isNaN(Number(val)) ? null : Number(val),
@@ -193,7 +177,7 @@ const routerSchema = routerBaseSchema.extend({
 });
 
 // Combined discriminated union schema
-const assetSchema = z.discriminatedUnion("type_id", [chipSchema, routerSchema]);
+const assetSchema = z.discriminatedUnion("solution_id", [chipSchema, routerSchema]);
 
 // Define TypeScript types from schemas
 type ChipFormValues = z.infer<typeof chipSchema>;
@@ -211,7 +195,6 @@ export default function RegisterAsset() {
     operators,
     solutions, 
     statuses, 
-    types,
     plans,
     isLoading: isReferenceDataLoading
   } = useReferenceData();
@@ -222,7 +205,7 @@ export default function RegisterAsset() {
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      type_id: 1 as const, // Use literal type
+      solution_id: 1 as const, // Use literal type
       status_id: 1, // Default to Available
       iccid: "",
       line_number: null,
@@ -231,7 +214,7 @@ export default function RegisterAsset() {
     } as AssetFormValues
   });
   
-  const assetType = form.watch("type_id");
+  const solutionId = form.watch("solution_id");
   const password = form.watch("password");
   
   // Handle password strength checking
@@ -245,7 +228,7 @@ export default function RegisterAsset() {
   const createAssetMutation = useMutation({
     mutationFn: async (data: AssetFormValues) => {
       // Check if ICCID already exists for chip
-      if (data.type_id === 1 && data.iccid) {
+      if (data.solution_id === 1 && data.iccid) {
         const { data: existingChip, error: chipError } = await supabase
           .from('assets')
           .select('uuid')
@@ -262,7 +245,7 @@ export default function RegisterAsset() {
       }
       
       // Check if serial_number already exists for router
-      if (data.type_id === 2 && "serial_number" in data) {
+      if (data.solution_id === 2 && "serial_number" in data) {
         const { data: existingRouter, error: routerError } = await supabase
           .from('assets')
           .select('uuid')
@@ -280,13 +263,13 @@ export default function RegisterAsset() {
       
       // Prepare data for insertion
       let insertData: Record<string, any> = {
-        type_id: data.type_id,
+        solution_id: data.solution_id,
         status_id: data.status_id
       };
       
-      // Add type-specific fields based on asset type
-      if (data.type_id === 1) {
-        // Chip specific fields (no solution_id)
+      // Add type-specific fields based on solution_id
+      if (data.solution_id === 1) {
+        // Chip specific fields
         insertData = {
           ...insertData,
           iccid: data.iccid,
@@ -294,8 +277,8 @@ export default function RegisterAsset() {
           manufacturer_id: data.manufacturer_id, // This is the carrier/operator
           plan_id: data.plan_id,
         };
-      } else if (data.type_id === 2 && "serial_number" in data) {
-        // Router specific fields (including solution_id)
+      } else if (data.solution_id === 2 && "serial_number" in data) {
+        // Router specific fields
         insertData = {
           ...insertData,
           serial_number: data.serial_number,
@@ -303,7 +286,6 @@ export default function RegisterAsset() {
           model: data.model,
           password: data.password,
           radio: data.radio,
-          solution_id: data.solution_id,
         };
       }
       
@@ -341,23 +323,23 @@ export default function RegisterAsset() {
       toast.error(error.message);
       
       // Focus the first invalid field
-      const fields = form.getFieldState(assetType === 1 ? "iccid" : "serial_number");
+      const fields = form.getFieldState(solutionId === 1 ? "iccid" : "serial_number");
       if (fields.invalid) {
-        document.getElementById(assetType === 1 ? "iccid" : "serial_number")?.focus();
+        document.getElementById(solutionId === 1 ? "iccid" : "serial_number")?.focus();
       }
     }
   });
   
   // Handle form submission
   const onSubmit = (formData: AssetFormValues) => {
-    // Ensure the type_id is the correct literal type
-    if (formData.type_id !== 1 && formData.type_id !== 2) {
+    // Ensure the solution_id is the correct literal type
+    if (formData.solution_id !== 1 && formData.solution_id !== 2) {
       toast.error("Tipo de ativo inválido");
       return;
     }
 
     // Validate password strength if it's a router and password is provided
-    if (formData.type_id === 2 && "password" in formData && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
+    if (formData.solution_id === 2 && "password" in formData && formData.password && passwordStrength === 'weak' && !allowWeakPassword) {
       toast.error("Por favor, use uma senha mais forte ou confirme o uso de senha fraca.");
       return;
     }
@@ -439,13 +421,13 @@ export default function RegisterAsset() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Tabs
-                value={assetType === 1 ? "CHIP" : "ROTEADOR"}
+                value={solutionId === 1 ? "CHIP" : "ROTEADOR"}
                 onValueChange={(value) => {
                   // When changing tab, reset the form for the new type
-                  const newTypeId = value === "CHIP" ? 1 : 2;
+                  const newSolutionId = value === "CHIP" ? 1 : 2;
                   
                   // Need to type cast as const to match the literal type
-                  form.setValue("type_id", newTypeId as 1 | 2);
+                  form.setValue("solution_id", newSolutionId as 1 | 2);
                   
                   // Reset form values that are specific to the other type
                   if (value === "CHIP") {
@@ -453,8 +435,6 @@ export default function RegisterAsset() {
                     form.setValue("model", "" as any);
                     form.setValue("password", "" as any);
                     form.setValue("radio", "" as any);
-                    // Also reset solution_id when switching to CHIP since we don't want it there
-                    form.setValue("solution_id", null as any);
                   } else {
                     form.setValue("iccid", "");
                     form.setValue("line_number", null);
@@ -538,8 +518,6 @@ export default function RegisterAsset() {
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
                     />
-
-                    {/* Removed Solution field from Chip form */}
 
                     <SelectField
                       control={form.control}
@@ -644,16 +622,6 @@ export default function RegisterAsset() {
                           <FormMessage />
                         </FormItem>
                       )}
-                    />
-
-                    <SelectField
-                      control={form.control}
-                      name="solution_id"
-                      label="Solução"
-                      placeholder="Selecione a solução"
-                      options={solutionOptions}
-                      isLoading={isReferenceDataLoading}
-                      disabled={createAssetMutation.isPending}
                     />
 
                     <SelectField

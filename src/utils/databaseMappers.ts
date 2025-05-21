@@ -28,15 +28,11 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
   }
 };
 
-// Map database type ID to frontend AssetType
-export const mapTypeIdToAssetType = (typeId: number, typeName?: string): AssetType => {
-  // If we have the type name, use it
-  if (typeName) {
-    return typeName.toLowerCase() === 'chip' ? 'CHIP' : 'ROTEADOR';
-  }
-  
-  // Fallback to ID-based mapping
-  return typeId === 1 ? 'CHIP' : 'ROTEADOR';
+// Map database solution to AssetType based on solution_id
+export const mapSolutionIdToAssetType = (solutionId: number, solutionName?: string): AssetType => {
+  // Assume solution_id values: 1 for CHIP, 2 for ROTEADOR
+  // You might need to adjust these IDs based on your actual data
+  return solutionId === 1 ? 'CHIP' : 'ROTEADOR';
 };
 
 // Map database solution to frontend SolutionType
@@ -62,10 +58,11 @@ export const mapSolutionToSolutionType = (solution?: string): SolutionType | und
 export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
   // Extract nested data if available
   const statusName = dbAsset?.asset_status?.status;
-  const typeName = dbAsset?.asset_types?.type;
   const solutionName = dbAsset?.asset_solutions?.solution;
   
-  const type = mapTypeIdToAssetType(dbAsset.type_id, typeName);
+  // Determine asset type based on solution_id or presence of specific fields
+  const isChip = dbAsset.solution_id === 1 || !!dbAsset.iccid;
+  const type = isChip ? 'CHIP' : 'ROTEADOR';
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
   
   // Common asset properties

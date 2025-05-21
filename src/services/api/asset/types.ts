@@ -63,7 +63,5 @@ export interface ProblemAsset {
   uuid: string;
   iccid: string | null;
   radio: string | null;
-  asset_types: {
-    type: string;
-  };
+  solution_id: number;
 }
