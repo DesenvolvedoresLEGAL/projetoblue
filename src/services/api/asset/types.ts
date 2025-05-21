@@ -9,6 +9,9 @@ export interface AssetListParams {
   phoneSearch?: string;
   page?: number;
   limit?: number;
+  statusId?: number; // Added to match usage in queries.ts
+  typeId?: number;   // Added to match usage in queries.ts
+  offset?: number;   // Added to match usage in queries.ts
 }
 
 export interface AssetCreateParams {
@@ -29,6 +32,7 @@ export interface AssetCreateParams {
   ssid?: string;
   password?: string;
   serialNumber?: string;
+  radio?: string; // Added radio field
 }
 
 export interface AssetUpdateParams {
@@ -48,6 +52,7 @@ export interface AssetUpdateParams {
   ssid?: string;
   password?: string;
   serialNumber?: string;
+  radio?: string; // Added radio field
 }
 
 // Type for status by asset type response
@@ -64,4 +69,14 @@ export interface ProblemAsset {
   iccid: string | null;
   radio: string | null;
   solution_id: number;
+  // Adding missing fields required by the implementation
+  id?: string;
+  type?: string;
+  status?: string;
+  statusId?: number;
+  identifier?: string;
+  model?: string;
+  manufacturer?: string;
+  solution?: string;
+  createdAt?: string;
 }

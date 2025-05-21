@@ -65,7 +65,7 @@ export const assetQueries = {
           query = query.limit(params.limit);
         }
         
-        if (params.offset) {
+        if (params.offset !== undefined) {
           query = query.range(params.offset, params.offset + (params.limit || 10) - 1);
         }
       }
@@ -148,6 +148,7 @@ export const assetQueries = {
           model,
           serial_number,
           iccid,
+          radio,
           created_at,
           manufacturer:manufacturers(name),
           status:asset_status(status),
@@ -163,6 +164,10 @@ export const assetQueries = {
       }
       
       return data.map(item => ({
+        uuid: item.uuid,
+        iccid: item.iccid,
+        radio: item.radio,
+        solution_id: item.solution_id,
         id: item.uuid,
         type: item.solution_id === 11 ? 'CHIP' : 'ROUTER',
         status: item.status?.status || 'Unknown',
