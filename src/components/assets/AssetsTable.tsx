@@ -28,7 +28,7 @@ const AssetsTable = ({ assets }: AssetsTableProps) => {
             <TableHead>Status</TableHead>
             <TableHead>Fabricante</TableHead>
             <TableHead>Modelo</TableHead>
-            <TableHead>Radio/Número</TableHead>
+            <TableHead>Radio</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -52,9 +52,7 @@ const AssetsTable = ({ assets }: AssetsTableProps) => {
                 </TableCell>
                 <TableCell>{asset.manufacturer.name}</TableCell>
                 <TableCell>{asset.model || 'N/A'}</TableCell>
-                <TableCell>{asset.solucao.id === 11 ?
-                    `RADIO: ${asset.radio}` :
-                    `NÚMERO: ${asset.line_number}`}</TableCell>
+                <TableCell>{asset.radio || 'N/A'}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm">
                     Ver
