@@ -1,14 +1,12 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
-import { z } from "zod";
-import { AssetFormValues, ChipFormValues, EquipmentFormValues } from "@/schemas/assetSchemas";
+import { AssetFormValues } from "@/schemas/assetSchemas";
 
-// Reusable query keys - simplified to avoid deep type instantiation
+// Simple query keys to avoid deep type instantiation issues
 export const assetQueryKeys = {
   all: ['assets'],
-  list: () => ['assets', 'list'],
+  list: ['assets', 'list'],
   detail: (id: string) => ['assets', 'detail', id],
   statuses: ['asset-statuses'],
   manufacturers: ['manufacturers'],
@@ -86,11 +84,9 @@ export const usePlans = () => {
 
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
-  // Completely flat query key structure to avoid any nesting
-  const queryKey = ['asset-exists', field, value];
-  
+  // Use a plain array for query key to avoid deep type instantiation
   return useQuery({
-    queryKey: queryKey,
+    queryKey: ['asset-exists', field, value],
     queryFn: async () => {
       if (!value) return { exists: false };
       
@@ -130,23 +126,19 @@ export const useCreateAsset = () => {
       
       // Add type-specific fields
       if (isChip) {
-        // Type assertion to access chip-specific fields
-        const chipData = data as ChipFormValues;
-        insertData.iccid = chipData.iccid;
-        insertData.line_number = chipData.line_number;
-        insertData.plan_id = chipData.plan_id;
+        insertData.iccid = (data as any).iccid;
+        insertData.line_number = (data as any).line_number;
+        insertData.plan_id = (data as any).plan_id;
       } else {
-        // Type assertion to access equipment-specific fields
-        const equipmentData = data as EquipmentFormValues;
-        insertData.serial_number = equipmentData.serial_number;
-        insertData.model = equipmentData.model;
-        insertData.radio = equipmentData.radio;
+        insertData.serial_number = (data as any).serial_number;
+        insertData.model = (data as any).model;
+        insertData.radio = (data as any).radio;
         
         // Optional fields for equipment
-        insertData.admin_user = equipmentData.admin_user || 'admin';
-        insertData.admin_pass = equipmentData.admin_pass || '';
-        insertData.password = equipmentData.password; // WiFi password
-        insertData.ssid = equipmentData.ssid;
+        insertData.admin_user = (data as any).admin_user || 'admin';
+        insertData.admin_pass = (data as any).admin_pass || '';
+        insertData.password = (data as any).password; // WiFi password
+        insertData.ssid = (data as any).ssid;
       }
       
       // Insert the asset
@@ -183,9 +175,9 @@ export const useAssetsList = (filters?: {
 }) => {
   const { searchTerm = '', filterType, filterStatus, page = 1, pageSize = 10 } = filters || {};
   
-  // Use a completely flat structure for the query key
+  // Use primitive values in query key to avoid deep instantiation
   return useQuery({
-    queryKey: ['assets-list', searchTerm, String(filterType || ''), String(filterStatus || ''), String(page), String(pageSize)],
+    queryKey: ['assets-list', String(searchTerm), String(filterType || ''), String(filterStatus || ''), String(page), String(pageSize)],
     queryFn: async () => {
       let query = supabase
         .from('assets')

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -87,17 +87,18 @@ export default function RegisterAsset() {
   // Create asset mutation
   const createAssetMutation = useCreateAsset();
 
-  // Set up the form with zod resolver
+  // Set up the form with zod resolver using our updated schema
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      solution_id: 1 as const, // Default to CHIP
+      solution_id: 1,
       status_id: 1, // Default to Available
+      manufacturer_id: null,
+      notes: "",
+      // Chip specific fields with empty defaults
       iccid: "",
       line_number: null,
-      manufacturer_id: null,
       plan_id: null,
-      notes: "",
     }
   });
   
@@ -108,8 +109,8 @@ export default function RegisterAsset() {
   
   // Check if asset already exists
   const isChip = solutionId === 1 || solutionId === 11;
-  const { data: iccidExists } = useCheckAssetExists('iccid', iccid);
-  const { data: serialExists } = useCheckAssetExists('serial_number', serialNumber);
+  const { data: iccidExists } = useCheckAssetExists('iccid', iccid || "");
+  const { data: serialExists } = useCheckAssetExists('serial_number', serialNumber || "");
   
   // Handle password strength checking
   const handlePasswordChange = (value: string) => {
@@ -226,9 +227,12 @@ export default function RegisterAsset() {
                   // When changing tab, reset the form for the new type
                   const newSolutionId = value === "CHIP" ? chipSolutionId : equipmentSolutionId;
                   
-                  // Reset form values that are specific to the other type
+                  // Update the solution ID first
+                  form.setValue("solution_id", newSolutionId);
+                  
+                  // Reset form values that are specific to the new type
                   if (value === "CHIP") {
-                    form.setValue("solution_id", newSolutionId);
+                    // Clear equipment specific fields
                     form.setValue("serial_number", undefined);
                     form.setValue("model", undefined);
                     form.setValue("radio", undefined);
@@ -236,11 +240,20 @@ export default function RegisterAsset() {
                     form.setValue("admin_pass", undefined);
                     form.setValue("ssid", undefined);
                     form.setValue("password", undefined);
-                  } else {
-                    form.setValue("solution_id", newSolutionId);
+                    
+                    // Set required fields for chip
                     form.setValue("iccid", "");
                     form.setValue("line_number", null);
                     form.setValue("plan_id", null);
+                  } else {
+                    // Clear chip specific fields
+                    form.setValue("iccid", undefined);
+                    form.setValue("line_number", undefined);
+                    form.setValue("plan_id", undefined);
+                    
+                    // Set required fields for equipment
+                    form.setValue("serial_number", "");
+                    form.setValue("model", "");
                   }
                   
                   // Reset manufacturer_id in both cases
