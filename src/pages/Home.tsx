@@ -8,18 +8,35 @@ import { RecentEventsList } from "@/components/dashboard/RecentEventsList";
 import { LoadingState } from "@/components/dashboard/LoadingState";
 import { ErrorState } from "@/components/dashboard/ErrorState";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { toast } from "@/components/ui/use-toast";
 
 const Home: React.FC = () => {
-  const { data: dashboardStats, isLoading, error } = useDashboardStats();
+  const { data: dashboardStats, isLoading, error, refetch } = useDashboardStats();
+  
+  // Effects for debugging
+  React.useEffect(() => {
+    if (error) {
+      console.error("Dashboard data fetch error:", error);
+      toast({
+        title: "Error loading dashboard",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }, [error]);
+
+  React.useEffect(() => {
+    console.log("Dashboard data:", dashboardStats);
+  }, [dashboardStats]);
   
   // Loading state
   if (isLoading) {
     return <LoadingState />;
   }
 
-  // Error state
+  // Error state with retry button
   if (error || !dashboardStats) {
-    return <ErrorState error={error} />;
+    return <ErrorState error={error} onRetry={refetch} />;
   }
 
   return (

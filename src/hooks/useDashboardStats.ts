@@ -37,6 +37,8 @@ export function useDashboardStats() {
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
       try {
+        console.log('Fetching dashboard stats...');
+        
         // Parallel queries for better performance
         const [
           totalAssetsResult,
@@ -54,6 +56,14 @@ export function useDashboardStats() {
           dashboardQueries.fetchStatusBreakdown()
         ]);
 
+        // Log query results for debugging
+        console.log('Total assets result:', totalAssetsResult);
+        console.log('Active clients result:', activeClientsResult);
+        console.log('Assets with issues result:', assetsWithIssuesResult);
+        console.log('Recent assets result:', recentAssetsResult);
+        console.log('Recent events result:', recentEventsResult);
+        console.log('Status breakdown result:', statusBreakdownResult);
+
         // Error handling for individual queries
         if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
         if (activeClientsResult.error) throw new Error(`Active clients query error: ${activeClientsResult.error.message}`);
@@ -65,6 +75,9 @@ export function useDashboardStats() {
         // Fetch additional data needed for mapping
         const solutionsResult = await dashboardQueries.fetchSolutions();
         const statusResult = await dashboardQueries.fetchStatuses();
+        
+        console.log('Solutions result:', solutionsResult);
+        console.log('Status result:', statusResult);
         
         if (solutionsResult.error) throw new Error(`Solutions query error: ${solutionsResult.error.message}`);
         if (statusResult.error) throw new Error(`Status query error: ${statusResult.error.message}`);
@@ -79,7 +92,7 @@ export function useDashboardStats() {
         const recentEvents = processRecentEvents(recentEventsResult.data);
         const statusSummary = calculateStatusSummary(statusBreakdownResult.data);
         
-        // Return data in the exact shape expected by Dashboard.tsx
+        // Return data in the exact shape expected by components
         return {
           totalAssets: totalAssetsResult.count || 0,
           activeClients: activeClientsResult.count || 0,

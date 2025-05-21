@@ -12,7 +12,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AuthRoute } from "@/components/auth/AuthRoute";
 
 // Pages
-import GeneralDashboard from "./pages/Home";
+import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetsDashboard from "./pages/AssetsDashboard";
@@ -38,9 +38,17 @@ import BitsMyReferrals from "./pages/bits/BitsMyReferrals";
 import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
 import BitsSettings from "./pages/bits/BitsSettings";
 import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
-import Home from "./pages/Home";
 
-const queryClient = new QueryClient();
+// Configure React Query client with global settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 60000, // 1 minute
+    },
+  },
+});
 
 Object.defineProperty(String.prototype, 'capitalize', {
   value: function() {
@@ -72,7 +80,7 @@ const App = () => (
                   }>
                     <Route index element={<Home />} />
                     
-                    {/* Dashboard routes */}
+                    {/* Dashboard routes - Redirect to Home for consistent experience */}
                     <Route path="dashboard" element={<Dashboard />} />
                     
                     {/* Assets module routes */}
