@@ -28,6 +28,20 @@ const Dashboard = () => {
       clients
     });
   };
+
+  function formatNumber(number) {
+    // número = +5599999999999
+    const cleaned = ('' + number).replace(/\D/g, '');
+    // número = 5599999999999
+    const match = cleaned.match(/^(\d{2})(\d{2})(\d{4}|\d{5})(\d{4})$/);
+    // número = 55 99 99999 9999
+    if (match) {
+      return ['(', match[2], ') ', match[3], '-', match[4]].join('')
+    }
+    // número = (99) 99999-9999
+    return '';
+  }
+
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -114,7 +128,7 @@ const Dashboard = () => {
                       {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
                       <div>
                         <p className="text-sm font-medium">
-                          {asset.type === "CHIP" ? (asset as any).phoneNumber : (asset as any).radio}
+                          {asset.type === "CHIP" ? formatNumber(`+55${(asset as any).phoneNumber}`) : (asset as any).radio}
                         </p>
                         <p className="text-xs text-gray-500">
                           {asset.type === "CHIP" ? (asset as any).iccid : (asset as any).serialNumber}

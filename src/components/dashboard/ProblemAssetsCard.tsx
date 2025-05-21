@@ -48,7 +48,7 @@ export const ProblemAssetsCard: React.FC = () => {
               <li key={asset.uuid} className="truncate flex items-center gap-2">
                 <CircleAlert className="h-4 w-4 text-red-500" />
                 <span className="font-mono">
-                  {asset.solution_id === 1 
+                  {asset.solution_id === 11 
                     ? asset.iccid 
                     : asset.radio}
                 </span>
