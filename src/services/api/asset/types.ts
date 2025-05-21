@@ -12,6 +12,7 @@ export interface AssetListParams {
   statusId?: number; // Added to match usage in queries.ts
   typeId?: number;   // Added to match usage in queries.ts
   offset?: number;   // Added to match usage in queries.ts
+  solutionId?: number; // Added for dynamic solution filtering
 }
 
 export interface AssetCreateParams {
@@ -32,7 +33,7 @@ export interface AssetCreateParams {
   ssid?: string;
   password?: string;
   serialNumber?: string;
-  radio?: string; // Added radio field
+  radio?: string;
   
   // Added fields for database compatibility
   manufacturer_id?: number;
@@ -52,7 +53,7 @@ export interface AssetUpdateParams {
   iccid?: string;
   phoneNumber?: string;
   carrier?: string;
-  line_number?: number; // Added for CHIP updates
+  line_number?: number;
   
   // Router fields
   brand?: string;
@@ -60,19 +61,18 @@ export interface AssetUpdateParams {
   ssid?: string;
   password?: string;
   serialNumber?: string;
-  radio?: string; // Added radio field
+  serial_number?: string;
+  radio?: string;
   
   // Added fields for database compatibility
   manufacturer_id?: number;
   plan_id?: number;
-  serial_number?: string;
   rented_days?: number;
   admin_user?: string;
   admin_pass?: string;
 }
 
 // Type for status by asset type response
-// Updated to match the actual data structure returned by the SQL function
 export interface AssetStatusByType {
   type: string;
   status: string;

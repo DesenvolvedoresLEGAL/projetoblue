@@ -71,7 +71,6 @@ const AssetsSearchForm = ({
             <SelectItem value="sem dados">Sem Dados</SelectItem>
             <SelectItem value="bloqueado">Bloqueado</SelectItem>
             <SelectItem value="em manutenção">Manutenção</SelectItem>
-            <SelectItem value="extraviado">Extraviado</SelectItem>
           </SelectContent>
         </Select>
         

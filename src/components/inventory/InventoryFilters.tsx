@@ -55,6 +55,11 @@ const InventoryFilters = ({
     }
   }
 
+  // Check if the current filter is for CHIP solution
+  const isChipFilter = assetSolutions.some(
+    solution => solution.solution === "CHIP" && typeFilter === solution.solution
+  );
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -107,8 +112,8 @@ const InventoryFilters = ({
           </Select>
         </div>
         
-        {/* Phone number search for chips */}
-        {(typeFilter === "all" || typeFilter === "CHIP") && (
+        {/* Phone number search for chips - only show when filter type is CHIP or all */}
+        {(typeFilter === "all" || typeFilter === "CHIP" || isChipFilter) && (
           <div className="relative max-w-md">
             <Smartphone className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -34,12 +35,20 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
     admin_pass?: string;
   }>({});
   
+  // Determine if asset is a CHIP based on solution id
+  const isChip = asset?.solucao?.id === 11;
+  
   // Fetch manufacturers and plans for dropdowns
-  const { data: manufacturers = [] } = useQuery({
+  const { data: allManufacturers = [] } = useQuery({
     queryKey: ['manufacturers'],
     queryFn: () => referenceDataService.getManufacturers(),
     enabled: isOpen,
   });
+  
+  // Filter manufacturers - only show operators for chips
+  const manufacturers = isChip
+    ? allManufacturers.filter(m => ['CLARO', 'VIVO', 'TIM', 'OI'].includes(m.name.toUpperCase()))
+    : allManufacturers;
   
   const { data: plans = [] } = useQuery({
     queryKey: ['plans'],
@@ -68,8 +77,8 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
         manufacturer_id: asset.manufacturer?.id || undefined,
         plan_id: asset.plano?.id || undefined,
         rented_days: asset.rented_days?.toString() || '0',
-        admin_user: 'admin', // Default value from schema
-        admin_pass: '', // Default value from schema
+        admin_user: asset.admin_user || 'admin',
+        admin_pass: asset.admin_pass || '',
       });
     }
   }, [asset]);
@@ -80,15 +89,21 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
   };
 
   const handleStatusChange = (value: string) => {
-    setFormData(prev => ({ ...prev, status_id: parseInt(value) }));
+    const statusId = parseInt(value);
+    console.log(`Setting status_id to: ${statusId}`);
+    setFormData(prev => ({ ...prev, status_id: statusId }));
   };
   
   const handleManufacturerChange = (value: string) => {
-    setFormData(prev => ({ ...prev, manufacturer_id: parseInt(value) }));
+    const manufacturerId = parseInt(value);
+    console.log(`Setting manufacturer_id to: ${manufacturerId}`);
+    setFormData(prev => ({ ...prev, manufacturer_id: manufacturerId }));
   };
   
   const handlePlanChange = (value: string) => {
-    setFormData(prev => ({ ...prev, plan_id: parseInt(value) }));
+    const planId = parseInt(value);
+    console.log(`Setting plan_id to: ${planId}`);
+    setFormData(prev => ({ ...prev, plan_id: planId }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,29 +112,32 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
     if (!asset) return;
     
     setIsLoading(true);
+    console.log('Form data to submit:', formData);
     
     try {
       // Prepare data to update based on the asset type
       const dataToUpdate: any = {
-        status_id: formData.status_id,
-        manufacturer_id: formData.manufacturer_id,
-        radio: formData.radio
+        statusId: formData.status_id,
+        manufacturer_id: formData.manufacturer_id
       };
       
-      if (asset.solucao.id === 11) {
+      if (isChip) {
         // For CHIP type
         dataToUpdate.iccid = formData.iccid;
         dataToUpdate.line_number = formData.line_number ? parseInt(formData.line_number) : null;
         dataToUpdate.plan_id = formData.plan_id;
+        // Explicitly do NOT include radio field for CHIP
       } else {
         // For other asset types (non-CHIP)
         dataToUpdate.model = formData.model;
         dataToUpdate.serial_number = formData.serial_number;
+        dataToUpdate.radio = formData.radio; // Include radio only for non-CHIP assets
         dataToUpdate.rented_days = formData.rented_days ? parseInt(formData.rented_days) : 0;
         dataToUpdate.admin_user = formData.admin_user || 'admin';
         dataToUpdate.admin_pass = formData.admin_pass || '';
       }
       
+      console.log('Calling updateAsset with data:', dataToUpdate);
       const updatedAsset = await assetService.updateAsset(asset.uuid, dataToUpdate);
       
       if (updatedAsset) {
@@ -138,8 +156,6 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
   };
 
   if (!asset) return null;
-  
-  const isChip = asset.solucao.id === 11;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -171,13 +187,13 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="manufacturer_id">Fabricante</Label>
+              <Label htmlFor="manufacturer_id">{isChip ? 'Operadora' : 'Fabricante'}</Label>
               <Select
                 value={formData.manufacturer_id?.toString()}
                 onValueChange={handleManufacturerChange}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione um fabricante" />
+                  <SelectValue placeholder={`Selecione ${isChip ? 'uma operadora' : 'um fabricante'}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {manufacturers.map(manufacturer => (
@@ -189,15 +205,18 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="radio">Etiqueta / Rádio</Label>
-              <Input
-                id="radio"
-                name="radio"
-                value={formData.radio || ''}
-                onChange={handleChange}
-              />
-            </div>
+            {/* Only show Radio field for non-CHIP assets */}
+            {!isChip && (
+              <div className="space-y-2">
+                <Label htmlFor="radio">Etiqueta / Rádio</Label>
+                <Input
+                  id="radio"
+                  name="radio"
+                  value={formData.radio || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
 
             {isChip ? (
               <>
