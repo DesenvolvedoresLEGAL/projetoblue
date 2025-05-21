@@ -2,27 +2,28 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { assetService, ProblemAsset } from "@/services/api/asset";
+import { assetService } from "@/services/api/asset";
 import { CircleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const ProblemAssetsCard: React.FC = () => {
   const { data: problemAssets = [], isLoading } = useQuery({
     queryKey: ['problem-assets'],
     queryFn: async () => {
-      // Fetch problem assets and solution data
+      // Buscar ativos com problema e dados de solução
       const assets = await assetService.listProblemAssets();
       
-      // Fetch solutions to map solution_id to solution name
+      // Buscar soluções para mapear solution_id para nome da solução
       const { data: solutions } = await supabase.from('asset_solutions').select('id, solution');
       
-      // Return assets with solution info
+      // Retornar ativos com info de solução
       return assets.map(asset => {
         const solution = solutions?.find(s => s.id === asset.solution_id);
         return {
           ...asset,
-          solutionName: solution?.solution || 'Unknown'
+          solutionName: solution?.solution || 'Desconhecida'
         };
       });
     }
@@ -32,15 +33,23 @@ export const ProblemAssetsCard: React.FC = () => {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-2xl flex items-center">
-          {problemAssets.length}
-          <Badge className="ml-2 bg-red-500" variant="secondary">Critical</Badge>
+          {isLoading ? (
+            <Skeleton className="h-8 w-16" />
+          ) : (
+            <>
+              {problemAssets.length}
+              <Badge className="ml-2 bg-red-500" variant="secondary">Crítico</Badge>
+            </>
+          )}
         </CardTitle>
         <CardDescription>Ativos com problema</CardDescription>
       </CardHeader>
       <CardContent className="max-h-64 overflow-y-auto pt-2">
         {isLoading ? (
-          <div className="flex justify-center items-center h-20">
-            <p className="text-muted-foreground">Carregando...</p>
+          <div className="space-y-2">
+            {Array(3).fill(0).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
           </div>
         ) : problemAssets.length > 0 ? (
           <ul className="space-y-1 text-sm">

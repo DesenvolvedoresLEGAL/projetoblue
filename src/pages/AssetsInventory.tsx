@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -26,10 +25,8 @@ import {
   Search, 
   Filter 
 } from "lucide-react";
-import { LoadingState } from "@/components/dashboard/LoadingState";
-import { ErrorState } from "@/components/dashboard/ErrorState";
-import { assetQueries } from '@/services/api/asset/queries';
-import { Asset } from '@/types/asset';
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAssetsData } from '@/hooks/useAssetsData';
 import {
   Pagination,
   PaginationContent,
@@ -40,7 +37,6 @@ import {
   PaginationPrevious
 } from '@/components/ui/pagination';
 import { toast } from '@/utils/toast';
-import { capitalize } from '@/utils/stringUtils';
 
 const ASSETS_PER_PAGE = 10;
 
@@ -50,66 +46,28 @@ const AssetsInventory = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   
-  // Query assets with filters
+  // Utilizando o hook personalizado para buscar dados dos ativos
   const { 
-    data: assets, 
+    data: assetsData,
     isLoading, 
     error, 
     refetch 
-  } = useQuery({
-    queryKey: ['assets', 'inventory', filterType, filterStatus, searchTerm, currentPage],
-    queryFn: async () => {
-      // Prepare filters for the API call
-      const params: any = {};
-      
-      if (filterType !== "all") {
-        params.type = filterType;
-      }
-      
-      if (filterStatus !== "all") {
-        params.status = filterStatus;
-      }
-      
-      // Handle search term
-      if (searchTerm) {
-        // Check if search term might be a phone number
-        if (/^\d[-\d\s]*$/.test(searchTerm)) {
-          params.phoneSearch = searchTerm;
-        } else {
-          params.search = searchTerm;
-        }
-      }
-      
-      try {
-        // Use the existing assetQueries service to fetch data
-        const fetchedAssets = await assetQueries.getAssets(params);
-        
-        // Add pagination in memory for now
-        // In a real implementation, this would be handled server-side
-        const startIndex = (currentPage - 1) * ASSETS_PER_PAGE;
-        const paginatedAssets = fetchedAssets.slice(startIndex, startIndex + ASSETS_PER_PAGE);
-        
-        return {
-          assets: paginatedAssets,
-          totalCount: fetchedAssets.length,
-          totalPages: Math.ceil(fetchedAssets.length / ASSETS_PER_PAGE)
-        };
-      } catch (err) {
-        console.error('Error fetching assets:', err);
-        throw new Error('Failed to fetch assets. Please try again.');
-      }
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+  } = useAssetsData({
+    searchTerm,
+    filterType,
+    filterStatus,
+    currentPage,
+    pageSize: ASSETS_PER_PAGE
   });
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1); // Resetar para primeira página ao pesquisar
     refetch();
   };
   
   const handleFilterChange = (type: string, value: string) => {
-    setCurrentPage(1); // Reset to first page when filtering
+    setCurrentPage(1); // Resetar para primeira página ao filtrar
     if (type === 'type') {
       setFilterType(value);
     } else if (type === 'status') {
@@ -138,19 +96,41 @@ const AssetsInventory = () => {
     }
   };
   
-  // Render loading state
+  // Renderizar estado de carregamento
   if (isLoading) {
-    return <LoadingState message="Carregando inventário de ativos..." />;
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Inventário de Ativos</h1>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </div>
+    );
   }
   
-  // Render error state
+  // Renderizar estado de erro
   if (error) {
     return (
-      <ErrorState 
-        error={error} 
-        message="Não foi possível carregar os ativos." 
-        onRetry={() => refetch()}
-      />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Inventário de Ativos</h1>
+        </div>
+        <div className="p-6 border rounded-md bg-red-50">
+          <div className="text-red-600">
+            Erro ao carregar ativos: {error instanceof Error ? error.message : 'Erro desconhecido'}
+          </div>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => refetch()}
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
     );
   }
   
@@ -192,8 +172,8 @@ const AssetsInventory = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Tipos</SelectItem>
-              <SelectItem value="CHIP">Chip</SelectItem>
-              <SelectItem value="ROTEADOR">Roteador</SelectItem>
+              <SelectItem value="chip">Chip</SelectItem>
+              <SelectItem value="router">Roteador</SelectItem>
             </SelectContent>
           </Select>
           
@@ -221,7 +201,7 @@ const AssetsInventory = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead>Identificador</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Detalhes</TableHead>
               <TableHead>Status</TableHead>
@@ -231,33 +211,27 @@ const AssetsInventory = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assets?.assets && assets.assets.length > 0 ? (
-              assets.assets.map((asset: Asset) => (
-                <TableRow key={asset.id}>
+            {assetsData?.assets && assetsData.assets.length > 0 ? (
+              assetsData.assets.map((asset) => (
+                <TableRow key={asset.uuid}>
                   <TableCell className="font-medium">
-                    {/* Display ICCID for chips and serial_number for routers */}
-                    {asset.type === 'CHIP' ? 
-                      (asset as any).iccid || 'N/A' : 
-                      (asset as any).serial_number || 'N/A'
+                    {/* Identificador: ICCID para chips e radio para outros */}
+                    {asset.solucao.id === 11 ? 
+                      asset.iccid || 'N/A' : 
+                      asset.radio || 'N/A'
                     }
                   </TableCell>
-                  <TableCell>{capitalize(asset.type)}</TableCell>
+                  <TableCell>{asset.solucao.name}</TableCell>
                   <TableCell>
-                    {/* Show line_number for chips and solution for routers */}
-                    {asset.type === 'CHIP' ? 
-                      `Número: ${(asset as any).phoneNumber || (asset as any).num_linha || 'N/A'}` : 
-                      `Etiqueta: ${asset.radio || 'N/A'}`
+                    {/* Mostrar número da linha para chips e número de série para outros */}
+                    {asset.solucao.id === 11 ? 
+                      `Número: ${asset.line_number || 'N/A'}` : 
+                      `Serial: ${asset.serial_number || 'N/A'}`
                     }
                   </TableCell>
-                  <TableCell>{getStatusBadge(asset.status)}</TableCell>
-                  <TableCell>
-                    {/* Show carrier for chips and marca for routers */}
-                    {asset.type === 'CHIP' ? 
-                      capitalize(asset.carrier || 'N/A') : 
-                      capitalize(asset.marca || 'N/A')
-                    }
-                  </TableCell>
-                  <TableCell>{asset.modelo || 'N/A'}</TableCell>
+                  <TableCell>{getStatusBadge(asset.status.name)}</TableCell>
+                  <TableCell>{asset.manufacturer.name}</TableCell>
+                  <TableCell>{asset.model || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
                       Ver
@@ -276,7 +250,7 @@ const AssetsInventory = () => {
         </Table>
       </div>
       
-      {assets?.totalPages && assets.totalPages > 1 && (
+      {assetsData?.totalPages && assetsData.totalPages > 1 && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
@@ -286,11 +260,11 @@ const AssetsInventory = () => {
               />
             </PaginationItem>
             
-            {Array.from({ length: assets.totalPages }, (_, i) => i + 1)
-              .filter(page => page === 1 || page === assets.totalPages || 
+            {Array.from({ length: assetsData.totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === assetsData.totalPages || 
                       (page >= currentPage - 1 && page <= currentPage + 1))
               .map((page, index, array) => {
-                // Add ellipsis if there are gaps
+                // Adicionar elipse se houver lacunas
                 if (index > 0 && array[index - 1] !== page - 1) {
                   return (
                     <React.Fragment key={`ellipsis-${page}`}>
@@ -324,11 +298,11 @@ const AssetsInventory = () => {
             <PaginationItem>
               <PaginationNext 
                 onClick={() => {
-                  if (assets.totalPages && currentPage < assets.totalPages) {
+                  if (assetsData.totalPages && currentPage < assetsData.totalPages) {
                     setCurrentPage((prev) => prev + 1);
                   }
                 }}
-                className={currentPage >= assets.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={currentPage >= assetsData.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
               />
             </PaginationItem>
           </PaginationContent>
