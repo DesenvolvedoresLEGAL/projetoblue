@@ -51,7 +51,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
                   }
                 </TableCell>
                 <TableCell>
-                  <AssetStatusBadge status={asset.status.name} />
+                  <AssetStatusBadge status={capitalize(asset.status.name)} />
                 </TableCell>
                 <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
                 <TableCell>{asset.model ? capitalize(asset.model) : 'N/A'}</TableCell>
