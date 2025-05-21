@@ -64,7 +64,7 @@ export function useDashboardStats() {
               serial_number,
               line_number,
               radio,
-              asset_categories(name),
+              asset_solutions(name),
               asset_status(status)
             `)
             .order('created_at', { ascending: false })
@@ -97,7 +97,7 @@ export function useDashboardStats() {
         const recentAssets = (recentAssetsResult.data || []).map(asset => ({
           id: asset.serial_number || String(asset.line_number || ''),
           name: asset.radio || asset.line_number?.toString() || asset.serial_number || '',
-          type: asset.asset_categories?.name || 'Unknown',
+          type: asset.asset_solutions?.name || 'Unknown',
           status: asset.asset_status?.status || 'Unknown'
         }));
         

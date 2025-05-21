@@ -63,7 +63,7 @@ export interface ProblemAsset {
   uuid: string;
   iccid: string | null;
   radio: string | null;
-  asset_categories: {
+  asset_solutions: {
     name: string;
   };
 }

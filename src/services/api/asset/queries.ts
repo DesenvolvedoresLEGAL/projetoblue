@@ -14,7 +14,7 @@ export const assetQueries = {
     try {
       let query = supabase.from('assets').select(`
         *,
-        asset_categories(name),
+        asset_solutions(name),
         asset_status(status),
         manufacturers(name)
       `);
@@ -66,7 +66,7 @@ export const assetQueries = {
     try {
       const { data, error } = await supabase.from('assets').select(`
         *,
-        asset_categories(name),
+        asset_solutions(name),
         asset_status(status),
         manufacturers(name)
       `).eq('uuid', id).single();
@@ -102,7 +102,7 @@ export const assetQueries = {
           uuid,
           iccid,
           radio,
-          asset_categories(name)
+          asset_solutions(name)
         `)
         .in('status_id', PROBLEM_STATUS_IDS);
       

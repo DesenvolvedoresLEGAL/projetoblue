@@ -62,7 +62,7 @@ export const mapSolutionToSolutionType = (solution?: string): SolutionType | und
 export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
   // Now we're using the same table for types and solutions
   // Assuming the new table has 'name' instead of 'type' and 'solution'
-  const typeName = dbAsset?.asset_categories?.name;
+  const typeName = dbAsset?.asset_solutions?.name;
   const statusName = dbAsset?.asset_status?.status;
   
   const type = mapTypeIdToAssetType(dbAsset.type_id, typeName);
@@ -78,7 +78,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     notes: dbAsset.notes,
     lastSeen: dbAsset.last_seen,
     isOnline: dbAsset.is_online,
-    solucao: mapSolutionToSolutionType(dbAsset.asset_categories?.name),
+    solucao: mapSolutionToSolutionType(dbAsset.asset_solutions?.name),
     marca: dbAsset.manufacturers?.name || dbAsset.manufacturer_id?.toString(),
     modelo: dbAsset.model,
     serial_number: dbAsset.serial_number,
