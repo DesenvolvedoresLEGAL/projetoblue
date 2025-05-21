@@ -11,6 +11,7 @@ interface Event {
   type: string;
   description: string;
   time: Date;
+  asset_name: string;
 }
 
 interface RecentEventsListProps {

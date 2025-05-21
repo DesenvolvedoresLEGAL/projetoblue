@@ -122,16 +122,16 @@ export function useDashboardStats() {
           let description = event.event || 'Event logged';
           
           // Extract more meaningful description from details if available
-          if (details) {
-            if (details.asset_id) {
-              const assetId = typeof details.asset_id === 'string' 
-                ? details.asset_id.substring(0, 8)
-                : 'unknown';
-              description = `${event.event} for asset ${assetId}`;
-            } else if (details.description) {
-              description = details.description;
-            }
-          }
+          // if (details) {
+          //   if (details.asset_id) {
+          //     const assetId = typeof details.asset_id === 'string' 
+          //       ? details.radio.subString(0, details.radio.lenght)
+          //       : 'unknown';
+          //     description = `${event.event} para ${assetId}`;
+          //   } else if (details.description) {
+          //     description = details.description;
+          //   }
+          // }
           
           // Determine event type for color coding
           let type = 'status';
