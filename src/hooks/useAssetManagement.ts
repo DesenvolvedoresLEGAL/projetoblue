@@ -5,15 +5,15 @@ import { toast } from "@/utils/toast";
 import { z } from "zod";
 import { AssetFormValues, ChipFormValues, EquipmentFormValues } from "@/schemas/assetSchemas";
 
-// Reusable query keys
+// Reusable query keys - simplified to avoid deep type instantiation
 export const assetQueryKeys = {
-  all: ['assets'] as const,
-  list: () => [...assetQueryKeys.all, 'list'] as const,
-  detail: (id: string) => [...assetQueryKeys.all, 'detail', id] as const,
-  statuses: ['asset-statuses'] as const,
-  manufacturers: ['manufacturers'] as const,
-  solutions: ['asset-solutions'] as const,
-  plans: ['plans'] as const,
+  all: ['assets'],
+  list: () => ['assets', 'list'],
+  detail: (id: string) => ['assets', 'detail', id],
+  statuses: ['asset-statuses'],
+  manufacturers: ['manufacturers'],
+  solutions: ['asset-solutions'],
+  plans: ['plans'],
 };
 
 // Hook for fetching asset statuses
@@ -162,7 +162,7 @@ export const useCreateAsset = () => {
     },
     onSuccess: () => {
       // Invalidate assets queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: assetQueryKeys.list() });
+      queryClient.invalidateQueries({ queryKey: ['assets', 'list'] });
       toast.success("Ativo cadastrado com sucesso!");
     },
     onError: (error: Error) => {
@@ -182,7 +182,7 @@ export const useAssetsList = (filters?: {
   const { searchTerm = '', filterType, filterStatus, page = 1, pageSize = 10 } = filters || {};
   
   return useQuery({
-    // Fix the deep type instantiation by using a simpler query key structure
+    // Simplified query key structure to avoid deep type instantiation
     queryKey: ['assets', 'list', { searchTerm, filterType, filterStatus, page, pageSize }],
     queryFn: async () => {
       let query = supabase
