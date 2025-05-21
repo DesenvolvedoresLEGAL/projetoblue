@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -87,7 +86,7 @@ export const usePlans = () => {
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
   return useQuery({
-    queryKey: ['assets', 'exists', field, value] as const,
+    queryKey: ['asset-exists', field, value] as const,
     queryFn: async () => {
       if (!value) return { exists: false };
       
