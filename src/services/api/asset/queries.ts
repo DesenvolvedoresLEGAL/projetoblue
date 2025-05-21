@@ -15,7 +15,7 @@ export const assetQueries = {
       // Build basic query without nested selects
       let query = supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
-        manufacturer_id, model, line_number, admin_user, password,
+        manufacturer_id, model, line_number, admin_user,
         radio, ssid, rented_days, created_at, updated_at
       `);
       
@@ -72,6 +72,12 @@ export const assetQueries = {
       
       // Map database results to frontend Asset types with the fetched related data
       return data?.map(item => {
+        // Check if item is an error object before accessing properties
+        if ('error' in item) {
+          console.error("Error in asset data:", item);
+          return null;
+        }
+        
         const solution = solutions.find(s => s.id === item.solution_id);
         const status = statuses.find(s => s.id === item.status_id);
         const manufacturer = manufacturers.find(m => m.id === item.manufacturer_id);
@@ -82,7 +88,7 @@ export const assetQueries = {
           asset_status: status ? { status: status.status } : { status: 'Unknown' },
           manufacturers: manufacturer ? { name: manufacturer.name } : { name: 'Unknown' }
         });
-      }) || [];
+      }).filter(Boolean) as Asset[]; // Filter out any null values and cast to Asset[]
     } catch (error) {
       handleAssetError(error, "Error in getAssets");
       return [];
@@ -94,7 +100,7 @@ export const assetQueries = {
     try {
       const { data, error } = await supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
-        manufacturer_id, model, line_number, admin_user, password,
+        manufacturer_id, model, line_number, admin_user,
         radio, ssid, rented_days, created_at, updated_at
       `).eq('uuid', id).single();
       
@@ -115,6 +121,12 @@ export const assetQueries = {
       const solutions = solutionsResult.data || [];
       const statuses = statusResult.data || [];
       const manufacturers = manufacturersResult.data || [];
+      
+      // Check if data is an error object
+      if ('error' in data) {
+        console.error("Error in asset data:", data);
+        return null;
+      }
       
       // Get the related data for this asset
       const solution = solutions.find(s => s.id === data.solution_id);
