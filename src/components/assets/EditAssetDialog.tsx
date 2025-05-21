@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,7 @@ interface EditAssetDialogProps {
 
 const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<{
+  const [formData, setFormData<{
     model?: string;
     serial_number?: string;
     iccid?: string;

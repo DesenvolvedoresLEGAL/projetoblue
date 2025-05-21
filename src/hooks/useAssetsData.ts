@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -17,6 +16,8 @@ export type AssetWithRelations = {
   plano: { id?: number; nome: string }; // Note: usando 'nome' em vez de 'name'
   status: { id?: number; name: string };
   solucao: { id: number; name: string };
+  admin_user?: string; // Added this property
+  admin_pass?: string; // Added this property
 };
 
 export interface UseAssetsDataParams {
@@ -56,6 +57,8 @@ export const useAssetsData = ({
             radio,
             created_at,
             updated_at,
+            admin_user,
+            admin_pass,
             manufacturer:manufacturers(id, name),
             plano:plans(id, nome),
             status:asset_status(id, status),
@@ -133,7 +136,9 @@ export const useAssetsData = ({
           plano: {
             id: asset.plano?.id,
             nome: asset.plano?.nome || 'Desconhecido' // Note: using 'nome' instead of 'name'
-          }
+          },
+          admin_user: asset.admin_user,
+          admin_pass: asset.admin_pass
         })) || [];
 
         // Get total count for pagination, excluding deleted items
