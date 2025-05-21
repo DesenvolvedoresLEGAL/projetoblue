@@ -1,6 +1,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@/api/dashboardQueries';
+import { mapStatusIdToAssetStatus } from '@/utils/databaseMappers';
+import { formatRelativeTime } from '@/utils/dashboardUtils';
 
 export interface DashboardStats {
   totalAssets: number;
@@ -19,6 +21,7 @@ export interface DashboardStats {
     description: string;
     time: string;
     asset_id?: string;
+    asset_name?: string;
   }[];
   statusSummary?: {
     active: number;
@@ -83,7 +86,7 @@ export function useDashboardStats() {
           
           return {
             id: asset.uuid,
-            name: asset.type === 'CHIP' ? asset.iccid : asset.serial_number,
+            name: asset.radio || asset.line_number?.toString() || asset.serial_number || 'N/A',
             type: solution?.solution || 'Unknown',
             status: status?.status || 'Unknown',
             solution: solution?.solution || 'Unknown'
@@ -92,12 +95,33 @@ export function useDashboardStats() {
         
         // Process recent events data
         const processedRecentEvents = recentEventsResult.data?.map(event => {
+          let description = event.event || 'Event logged';
+          let asset_name = 'N/A';
+          
+          // Extract more meaningful description from details if available
+          if (event.details && typeof event.details === 'object') {
+            // Ensure we're dealing with an object
+            const details = event.details as Record<string, any>;
+            
+            if (details.description) {
+              description = details.description;
+            }
+            
+            if (details.asset_id) {
+              asset_name = details.radio || details.asset_id.toString().substring(0, 8) || 'unknown';
+            }
+          }
+          
           return {
             id: event.id,
-            type: event.event,
-            description: event.details?.description || event.event,
+            type: event.event?.toLowerCase().includes('register') ? 'register' : 
+                  event.event?.toLowerCase().includes('link') || event.event?.toLowerCase().includes('assoc') ? 'link' : 
+                  'status',
+            description,
+            asset_name,
             time: event.date,
-            asset_id: event.details?.asset_id
+            asset_id: (typeof event.details === 'object' && event.details) ? 
+                      (event.details as any).asset_id : undefined
           };
         }) || [];
         

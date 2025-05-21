@@ -2,19 +2,20 @@
 import { Asset } from "@/types/asset";
 
 // Helper function to format relative time
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(date: Date | string): string {
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const dateObj = date instanceof Date ? date : new Date(date);
+  const diffMs = now.getTime() - dateObj.getTime();
   const diffMins = Math.round(diffMs / 60000);
   const diffHours = Math.round(diffMs / 3600000);
   const diffDays = Math.round(diffMs / 86400000);
   
   if (diffMins < 60) {
-    return diffMins <= 1 ? '1 minute ago' : `${diffMins} minutes ago`;
+    return diffMins <= 1 ? '1 minuto atrás' : `${diffMins} minutos atrás`;
   } else if (diffHours < 24) {
-    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    return diffHours === 1 ? '1 hora atrás' : `${diffHours} horas atrás`;
   } else {
-    return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+    return diffDays === 1 ? '1 dia atrás' : `${diffDays} dias atrás`;
   }
 }
 

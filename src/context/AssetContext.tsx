@@ -260,7 +260,16 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Get current date in YYYY-MM-DD format
       const currentDate = new Date().toISOString().split('T')[0];
       
-      // Insert association record
+      // Get a default plan ID (this was missing in the original implementation)
+      const { data: defaultPlan } = await supabase
+        .from('plans')
+        .select('id')
+        .limit(1)
+        .single();
+        
+      const planId = defaultPlan?.id || 1; // Fallback to ID 1 if no plans exist
+      
+      // Insert association record with required plan_id
       const { error } = await supabase
         .from('asset_client_assoc')
         .insert({
@@ -268,7 +277,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           client_id: clientId,
           entry_date: currentDate,
           exit_date: null,
-          association_id: 1 // Default to rental
+          association_id: 1, // Default to rental
+          plan_id: planId // Add the required plan_id
         });
         
       if (error) {
@@ -279,12 +289,17 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Update asset status in local state
       const updatedAssets = assets.map(asset => {
         if (asset.id === assetId) {
-          return {
+          // Ensure we maintain the correct AssetStatus type
+          const newAsset = {
             ...asset,
-            status: 'ALUGADO',
             statusId: 2, // ALUGADO
             clientId: clientId
           };
+          
+          // Set the status as an AssetStatus enum value
+          newAsset.status = 'ALUGADO';
+          
+          return newAsset;
         }
         return asset;
       });
@@ -323,12 +338,17 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Update asset status in local state
       const updatedAssets = assets.map(asset => {
         if (asset.id === assetId) {
-          return {
+          // Ensure we maintain the correct AssetStatus type
+          const newAsset = {
             ...asset,
-            status: 'DISPONÍVEL',
             statusId: 1, // DISPONÍVEL
             clientId: undefined
           };
+          
+          // Set the status as an AssetStatus enum value
+          newAsset.status = 'DISPONÍVEL';
+          
+          return newAsset;
         }
         return asset;
       });

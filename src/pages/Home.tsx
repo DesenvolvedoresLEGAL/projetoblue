@@ -56,7 +56,11 @@ const Home: React.FC = () => {
         <RecentAssetsList assets={dashboardStats.recentAssets} />
 
         {/* Recent Events */}
-        <RecentEventsList events={dashboardStats.recentEvents} />
+        <RecentEventsList events={dashboardStats.recentEvents.map(event => ({
+          ...event,
+          asset_name: event.asset_name || 'N/A',
+          time: new Date(event.time)
+        }))} />
       </div>
     </div>
   );

@@ -4,13 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { formatRelativeTime } from "@/hooks/useDashboardStats";
+import { formatRelativeTime } from "@/utils/dashboardUtils";
 
 interface Event {
   id: number;
   type: string;
   description: string;
-  time: Date;
+  time: Date | string;
   asset_name: string;
 }
 
