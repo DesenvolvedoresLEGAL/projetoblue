@@ -51,7 +51,7 @@ export const useAssetsData = ({
             created_at,
             updated_at,
             manufacturer:manufacturers(id, name),
-            plano:plans(id, name),
+            plano:plans(id, nome),
             status:asset_status(id, status),
             solucao:asset_solutions(id, solution)
           `)
@@ -113,7 +113,7 @@ export const useAssetsData = ({
             name: asset.manufacturer?.name || 'Desconhecido'
           },
           plano: {
-            name: asset.plano?.name || 'Desconhecido'
+            name: asset.plano?.nome || 'Desconhecido' // Changed from 'name' to 'nome'
           }
         })) || [];
 

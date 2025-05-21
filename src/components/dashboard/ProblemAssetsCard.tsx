@@ -12,20 +12,25 @@ export const ProblemAssetsCard: React.FC = () => {
   const { data: problemAssets = [], isLoading } = useQuery({
     queryKey: ['problem-assets'],
     queryFn: async () => {
-      // Buscar ativos com problema e dados de solução
-      const assets = await assetService.listProblemAssets();
-      
-      // Buscar soluções para mapear solution_id para nome da solução
-      const { data: solutions } = await supabase.from('asset_solutions').select('id, solution');
-      
-      // Retornar ativos com info de solução
-      return assets.map(asset => {
-        const solution = solutions?.find(s => s.id === asset.solution_id);
-        return {
-          ...asset,
-          solutionName: solution?.solution || 'Desconhecida'
-        };
-      });
+      try {
+        // Buscar ativos com problema e dados de solução
+        const assets = await assetService.listProblemAssets();
+        
+        // Buscar soluções para mapear solution_id para nome da solução
+        const { data: solutions } = await supabase.from('asset_solutions').select('id, solution');
+        
+        // Retornar ativos com info de solução
+        return assets.map(asset => {
+          const solution = solutions?.find(s => s.id === asset.solution_id);
+          return {
+            ...asset,
+            solutionName: solution?.solution || 'Desconhecida'
+          };
+        });
+      } catch (error) {
+        console.error('Error fetching problem assets:', error);
+        return [];
+      }
     }
   });
 
@@ -58,8 +63,8 @@ export const ProblemAssetsCard: React.FC = () => {
                 <CircleAlert className="h-4 w-4 text-red-500" />
                 <span className="font-mono">
                   {asset.solution_id === 11 
-                    ? asset.iccid 
-                    : asset.radio}
+                    ? asset.iccid || 'N/A'
+                    : asset.radio || 'N/A'}
                 </span>
               </li>
             ))}

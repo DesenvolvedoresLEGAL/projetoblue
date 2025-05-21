@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,6 +16,7 @@ export interface DashboardStats {
     type: string;
     description: string;
     time: Date;
+    asset_name: string;
   }[];
   statusSummary: {
     active: number;
@@ -120,18 +120,18 @@ export function useDashboardStats() {
         const recentEvents = (recentEventsResult.data || []).map(event => {
           const details = event.details as Record<string, any> | null;
           let description = event.event || 'Event logged';
+          let asset_name = ''; // Initialize asset_name
           
-          // Extract more meaningful description from details if available
-          // if (details) {
-          //   if (details.asset_id) {
-          //     const assetId = typeof details.asset_id === 'string' 
-          //       ? details.radio.subString(0, details.radio.lenght)
-          //       : 'unknown';
-          //     description = `${event.event} para ${assetId}`;
-          //   } else if (details.description) {
-          //     description = details.description;
-          //   }
-          // }
+          // Extract more meaningful description and asset_name from details if available
+          if (details && details.asset_id) {
+            asset_name = details.radio || details.asset_id.toString().substring(0, 8) || 'unknown';
+            description = `${event.event} para ${asset_name}`;
+          } else if (details && details.description) {
+            description = details.description;
+            asset_name = 'N/A';
+          } else {
+            asset_name = 'N/A';
+          }
           
           // Determine event type for color coding
           let type = 'status';
@@ -146,6 +146,7 @@ export function useDashboardStats() {
             id: event.id,
             type,
             description,
+            asset_name, // Add the asset_name to the return object
             time: event.date ? new Date(event.date) : new Date()
           };
         });

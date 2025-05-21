@@ -75,7 +75,13 @@ const AssetsInventory = () => {
     }
   };
   
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
+    // Handle undefined or null status
+    if (!status) {
+      return <Badge variant="outline">Desconhecido</Badge>;
+    }
+    
+    // Now we can safely use toLowerCase()
     switch (status.toLowerCase()) {
       case "disponível":
       case "disponivel":
