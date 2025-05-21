@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { assetService, ProblemAsset } from "@/services/api/asset";
 import { CircleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 export const ProblemAssetsCard: React.FC = () => {
   const { data: problemAssets = [], isLoading } = useQuery({

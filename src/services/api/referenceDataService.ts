@@ -27,28 +27,6 @@ export const referenceDataService = {
     }
   },
   
-  // Get all asset solutions
-  async getAssetSolutions(): Promise<{ id: number, type: string }[]> {
-    try {
-      const { data, error } = await supabase.from('asset_solutions').select('id, solution');
-      
-      if (error) {
-        console.error("Error fetching asset solutions:", error);
-        toast.error("Failed to fetch asset solutions");
-        return [];
-      }
-      
-      return data.map(solution => ({
-        id: solution.id,
-        type: solution.solution
-      })) || [];
-    } catch (error) {
-      console.error("Error in getAssetSolutions:", error);
-      toast.error("Failed to fetch asset solutions");
-      return [];
-    }
-  },
-  
   // Get all manufacturers
   async getManufacturers(): Promise<{ id: number, name: string }[]> {
     try {

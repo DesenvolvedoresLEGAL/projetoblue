@@ -15,8 +15,8 @@ export const assetQueries = {
       // Build basic query without nested selects
       let query = supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
-        manufacturer_id, model, line_number, admin_user, admin_password,
-        password, radio, ssid, rented_days, created_at, updated_at
+        manufacturer_id, model, line_number, admin_user, password,
+        radio, ssid, rented_days, created_at, updated_at
       `);
       
       // Apply filters if provided
@@ -71,7 +71,7 @@ export const assetQueries = {
       const manufacturers = manufacturersResult.data || [];
       
       // Map database results to frontend Asset types with the fetched related data
-      return data.map(item => {
+      return data?.map(item => {
         const solution = solutions.find(s => s.id === item.solution_id);
         const status = statuses.find(s => s.id === item.status_id);
         const manufacturer = manufacturers.find(m => m.id === item.manufacturer_id);
@@ -94,8 +94,8 @@ export const assetQueries = {
     try {
       const { data, error } = await supabase.from('assets').select(`
         uuid, solution_id, status_id, iccid, serial_number, 
-        manufacturer_id, model, line_number, admin_user, admin_password,
-        password, radio, ssid, rented_days, created_at, updated_at
+        manufacturer_id, model, line_number, admin_user, password,
+        radio, ssid, rented_days, created_at, updated_at
       `).eq('uuid', id).single();
       
       if (error) {
