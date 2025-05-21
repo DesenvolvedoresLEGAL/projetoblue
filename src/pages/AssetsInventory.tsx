@@ -155,7 +155,7 @@ const AssetsInventory = () => {
           </Button>
           <Button size="sm">
             <PlusCircle className="w-4 h-4 mr-2" />
-            Novo Ativo
+            <a href="/assets/register">Novo Ativo</a>
           </Button>
         </div>
       </div>
@@ -190,12 +190,13 @@ const AssetsInventory = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="DISPONÍVEL">Disponível</SelectItem>
-              <SelectItem value="ALUGADO">Alugado</SelectItem>
-              <SelectItem value="ASSINATURA">Assinatura</SelectItem>
-              <SelectItem value="SEM DADOS">Sem Dados</SelectItem>
-              <SelectItem value="BLOQUEADO">Bloqueado</SelectItem>
-              <SelectItem value="MANUTENÇÃO">Manutenção</SelectItem>
+              <SelectItem value="disponível">Disponível</SelectItem>
+              <SelectItem value="em locação">Alugado</SelectItem>
+              <SelectItem value="em assinatura">Assinatura</SelectItem>
+              <SelectItem value="sem dados">Sem Dados</SelectItem>
+              <SelectItem value="bloqueado">Bloqueado</SelectItem>
+              <SelectItem value="em manutenção">Manutenção</SelectItem>
+              <SelectItem value="extraviado">Manutenção</SelectItem>
             </SelectContent>
           </Select>
           
@@ -213,6 +214,7 @@ const AssetsInventory = () => {
               <TableHead>Status</TableHead>
               <TableHead>Fabricante</TableHead>
               <TableHead>Modelo</TableHead>
+              <TableHead>Radio</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -222,22 +224,20 @@ const AssetsInventory = () => {
                 <TableRow key={asset.uuid}>
                   <TableCell className="font-medium">
                     {/* Identificador: ICCID para chips e radio para outros */}
-                    {asset.solucao.id === 11 ? 
-                      asset.iccid || 'N/A' : 
-                      asset.radio || 'N/A'
-                    }
+                    {asset.uuid.substring(0, 8)}
                   </TableCell>
                   <TableCell>{asset.solucao.name}</TableCell>
                   <TableCell>
                     {/* Mostrar número da linha para chips e número de série para outros */}
                     {asset.solucao.id === 11 ? 
-                      `Número: ${asset.line_number || 'N/A'}` : 
+                      `ICCID: ${asset.iccid.substring(asset.iccid.length - 5, asset.iccid.length) || 'N/A'}` : 
                       `Serial: ${asset.serial_number || 'N/A'}`
                     }
                   </TableCell>
-                  <TableCell>{getStatusBadge(asset.status.name)}</TableCell>
-                  <TableCell>{asset.manufacturer.name}</TableCell>
+                  <TableCell>{getStatusBadge(asset.status.name.capitalize())}</TableCell>
+                  <TableCell>{asset.manufacturer.name.capitalize()}</TableCell>
                   <TableCell>{asset.model || 'N/A'}</TableCell>
+                  <TableCell>{asset.radio || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">
                       Ver
