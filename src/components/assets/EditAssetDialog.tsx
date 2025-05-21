@@ -20,7 +20,7 @@ interface EditAssetDialogProps {
 
 const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData<{
+  const [formData, setFormData] = useState<{
     model?: string;
     serial_number?: string;
     iccid?: string;
