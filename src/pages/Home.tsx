@@ -60,6 +60,8 @@ const Home: React.FC = () => {
     name: item.status,
     value: item.count,
   }));
+
+  console.log(dashboard.problemAssets);
   
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
@@ -70,107 +72,12 @@ const Home: React.FC = () => {
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
       </div>
       
-      {/* Top Priority Cards - Status Imediato */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Ativos com Problema Card */}
-        <Card className={`bg-red-50 border-red-200`}>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-                <span>
-                  {dashboard.problemAssets.isLoading ? (
-                    <Skeleton className="h-6 w-16" />
-                  ) : (
-                    <>
-                      {dashboard.problemAssets.count} Ativos com Problema
-                    </>
-                  )}
-                </span>
-              </CardTitle>
-            </div>
-            <CardDescription className="text-red-700">
-              Ativos que necessitam de atenção imediata
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-2">
-            {dashboard.problemAssets.isLoading ? (
-              <div className="space-y-2">
-                {Array(3).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-5 w-full" />
-                ))}
-              </div>
-            ) : dashboard.problemAssets.data.length > 0 ? (
-              <ul className="space-y-1">
-                {dashboard.problemAssets.data.map(asset => (
-                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
-                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
-                    <span className="font-semibold">{asset.identifier}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.status})
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center py-3 text-sm text-muted-foreground">
-                Nenhum ativo com problema detectado.
-              </p>
-            )}
-          </CardContent>
-          <CardFooter className="pt-0">
-            <Link to="/assets/inventory?status=problem" className="w-full">
-              <Button variant="destructive" className="w-full" size="sm">
-                Ver todos os problemas
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
-        
-        {/* Status da Rede Card */}
-        <Card className={`${dashboard.networkStatus.data?.isOperational ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {dashboard.networkStatus.data?.isOperational ? (
-                <Wifi className="h-5 w-5 text-green-600" />
-              ) : (
-                <WifiOff className="h-5 w-5 text-amber-600" />
-              )}
-              Status da Rede
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center pt-4 pb-6">
-            {dashboard.networkStatus.isLoading ? (
-              <Skeleton className="h-20 w-20 rounded-full" />
-            ) : (
-              <>
-                <div className={`h-20 w-20 rounded-full flex items-center justify-center ${dashboard.networkStatus.data?.isOperational ? 'bg-green-100' : 'bg-amber-100'}`}>
-                  {dashboard.networkStatus.data?.isOperational ? (
-                    <Check className="h-10 w-10 text-green-600" />
-                  ) : (
-                    <X className="h-10 w-10 text-amber-600" />
-                  )}
-                </div>
-                <p className={`mt-4 font-medium ${dashboard.networkStatus.data?.isOperational ? 'text-green-700' : 'text-amber-700'}`}>
-                  {dashboard.networkStatus.data?.message}
-                </p>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground w-full text-center">
-              Última verificação: {new Date().toLocaleTimeString('pt-BR')}
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
-      
       {/* Inventory Cards - Inventário Rápido */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Total de Chips Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Total de Chips</CardTitle>
+            <CardTitle className="text-3xl font-normal">Total de Chips: <span className="font-semibold">{dashboard.assetsStats.data.chips.total}</span></CardTitle>
             <CardDescription>Disponibilidade atual do inventário</CardDescription>
           </CardHeader>
           <CardContent>
@@ -184,9 +91,6 @@ const Home: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="text-3xl font-bold">
-                  {dashboard.assetsStats.data.chips.total}
-                </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
                   <div className="flex items-center gap-2">
                     <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
@@ -226,7 +130,7 @@ const Home: React.FC = () => {
         {/* Total de Equipamentos Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Total de Equipamentos</CardTitle>
+            <CardTitle className="text-3xl font-normal">Total de Equipamentos: <span className="font-semibold">{dashboard.assetsStats.data.equipment.total}</span></CardTitle>
             <CardDescription>Disponibilidade atual do inventário</CardDescription>
           </CardHeader>
           <CardContent>
@@ -240,9 +144,6 @@ const Home: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="text-3xl font-bold">
-                  {dashboard.assetsStats.data.equipment.total}
-                </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
                   <div className="flex items-center gap-2">
                     <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
@@ -271,7 +172,7 @@ const Home: React.FC = () => {
             )}
           </CardContent>
           <CardFooter>
-            <Link to="/assets/inventory?type=2" className="w-full">
+            <Link to="/assets/inventory" className="w-full">
               <Button variant="outline" className="w-full" size="sm">
                 Ver todos os equipamentos
               </Button>
@@ -279,6 +180,120 @@ const Home: React.FC = () => {
           </CardFooter>
         </Card>
       </div>
+      
+      {/* Top Priority Cards - Status Imediato */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Chips com Problema Card */}
+        <Card className={`bg-red-50 border-red-200`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type ===  "CHIP").length} Chips com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type === "CHIP").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0">
+            <Link to="/assets/inventory" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        {/* Equipamentos com problema CARD */}
+        <Card className={`bg-red-50 border-red-200`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type !==  "CHIP").length} Equipamentos com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type !== "CHIP").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0">
+            <Link to="/assets/inventory?status=problem" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+      
       
       {/* Action Card - Associar/Desassociar */}
       <Card>
@@ -328,10 +343,10 @@ const Home: React.FC = () => {
                 {dashboard.recentAlerts.data.map((alert) => (
                   <li key={alert.id} className="bg-muted/50 p-2 rounded-lg text-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium">{alert.assetType}</span>
+                      <span className="font-medium">{alert.assetType} - {alert.name}</span>
                       <span className="text-xs text-muted-foreground">{alert.date}</span>
                     </div>
-                    <p className="text-muted-foreground">{alert.description}</p>
+                    <p className="text-muted-foreground">{alert.description} de {alert.old_status} para {alert.new_status}</p>
                   </li>
                 ))}
               </ul>
@@ -356,10 +371,10 @@ const Home: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5" />
-              Equipamentos por Status
+              Ativos por Status
             </CardTitle>
             <CardDescription>
-              Distribuição dos equipamentos por status
+              Distribuição dos ativos por status
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">

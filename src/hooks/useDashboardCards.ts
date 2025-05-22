@@ -65,8 +65,8 @@ export const useDashboardCards = () => {
           
           return {
             uuid: asset.uuid,
-            identifier: asset.solution_id === 1 
-              ? asset.iccid || 'N/A' 
+            identifier: asset.solution_id === 11 
+              ? asset.line_number || 'N/A' 
               : asset.radio || asset.id || 'N/A', // Using asset.id instead of serial_number
             type: solution?.solution || 'Desconhecido',
             status: status?.status || 'Desconhecido'
@@ -140,8 +140,8 @@ export const useDashboardCards = () => {
         const availableStatusId = availableStatus?.id || 1;
         
         // Filter chips (solution_id === 1) and equipment (solution_id !== 1)
-        const chips = (assets || []).filter(a => a.solution_id === 1);
-        const equipment = (assets || []).filter(a => a.solution_id !== 1);
+        const chips = (assets || []).filter(a => a.solution_id === 11);
+        const equipment = (assets || []).filter(a => a.solution_id !== 11);
         
         // Count available and unavailable assets
         const availableChips = chips.filter(a => a.status_id === availableStatusId);
@@ -173,13 +173,21 @@ export const useDashboardCards = () => {
     queryFn: async () => {
       try {
         // Get recent logs with alert/problem events
-        const { data: logs, error } = await supabase
+        const { data: logs, error: eLogs } = await supabase
           .from('asset_logs')
           .select('*')
           .order('date', { ascending: false })
           .limit(5);
-          
-        if (error) throw error;
+
+        const { data: assetStatus, error: eAssetStatus } = await supabase
+          .from('asset_status').select('id, status');
+
+        if (eLogs) throw eLogs;
+        if (eAssetStatus) throw eAssetStatus;
+
+        const m = new Map<number,string>();
+        assetStatus.forEach(({ id, status }) => m.set(id, status));
+
         
         // Transform logs to alerts format
         return (logs || []).map(log => {
@@ -189,9 +197,12 @@ export const useDashboardCards = () => {
           
           return {
             id: log.id,
-            date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : 'N/A',
-            assetType: solutionId === 1 ? 'Chip' : 'Equipamento',
-            description: log.event || 'Evento registrado'
+            date: log.date ? new Date(log.date).toLocaleString().replace(',', '') : 'N/A',
+            assetType: solutionId === 11 ? 'Chip' : 'Equipamento',
+            description: log.event || 'Evento registrado',
+            name: solutionId === 11 ? details.line_number : details.radio,
+            old_status: m.get(details.old_status),
+            new_status: m.get(details.new_status)
           };
         });
       } catch (error) {

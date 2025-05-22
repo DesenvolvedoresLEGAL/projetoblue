@@ -84,6 +84,7 @@ export interface ProblemAsset {
   uuid: string;
   iccid: string | null;
   radio: string | null;
+  line_number: number;
   solution_id: number;
   // Adding missing fields required by the implementation
   id?: string;
