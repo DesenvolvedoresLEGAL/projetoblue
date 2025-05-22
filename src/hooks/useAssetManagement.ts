@@ -80,7 +80,7 @@ export const useCreateAsset = () => {
   return createAssetMutation;
 };
 
-// Fix: Use direct array literals for query keys to prevent deep type instantiation
+// Fix: Use simple string literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
     queryKey: ['assets', 'exists', identifier, field],

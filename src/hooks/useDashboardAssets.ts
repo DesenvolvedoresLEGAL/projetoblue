@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@/services/api/assetService";
@@ -39,7 +38,13 @@ export const useDashboardAssets = () => {
           subscriptionStatusId?.id
         ].filter(Boolean);
         
-        const assets = await assetService.getAssetsByMultipleStatus(statusIds);
+        // Make sure statusIds is not empty to avoid SQL error
+        if (statusIds.length === 0) {
+          return { assets: [], problemStatusIds: [], leaseStatusId: null, subscriptionStatusId: null };
+        }
+        
+        // Use the assetQueries directly since the assetService might not have the method yet
+        const assets = await assetService.assetQueries.getAssetsByMultipleStatus(statusIds);
         
         return {
           assets,
@@ -172,6 +177,10 @@ export const useDashboardAssets = () => {
     if (!multiStatusAssetsQuery.data) return [];
     
     const { assets, problemStatusIds } = multiStatusAssetsQuery.data;
+    
+    // Handle potential undefined values safely
+    if (!assets || !problemStatusIds) return [];
+    
     return assets
       .filter(asset => problemStatusIds.includes(asset.status_id))
       .map(asset => {

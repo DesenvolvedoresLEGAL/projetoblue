@@ -132,6 +132,32 @@ export const assetQueries = {
     }
   },
   
+  // Get assets by multiple statuses
+  async getAssetsByMultipleStatus(statusIds: number[]): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          *,
+          manufacturer:manufacturers(*),
+          status:asset_status(*),
+          solucao:asset_solutions(*)
+        `)
+        .in('status_id', statusIds)
+        .is('deleted_at', null);
+      
+      if (error) {
+        handleAssetError(error, `Failed to fetch assets with status IDs [${statusIds.join(', ')}]`);
+        return [];
+      }
+      
+      return data;
+    } catch (error) {
+      handleAssetError(error, `Error in getAssetsByMultipleStatus [${statusIds.join(', ')}]`);
+      return [];
+    }
+  },
+  
   // Get assets by type
   async getAssetsByType(typeId: number): Promise<Asset[]> {
     try {
