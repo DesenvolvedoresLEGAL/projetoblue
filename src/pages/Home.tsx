@@ -402,60 +402,117 @@ const Home: React.FC = () => {
         </Card>
       </div>
 
-      {/*chips em locação*/}
-      <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <AlertTriangle className="h-6 w-6 text-yellow-600" />
-              <span>
-                {dashboard.onLeaseAssets.isLoading ? (
-                  <Skeleton className="h-6 w-16" />
-                ) : (
-                  <>
-                    {dashboard.onLeaseAssets.data.length} Ativos em locação
-                  </>
-                )}
-              </span>
-            </CardTitle>
-          </div>
-          <CardDescription className="text-yellow-700">
-            Ativos atualmente em locação
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pb-2 flex-1">
-          {dashboard.onLeaseAssets.isLoading ? (
-            <div className="space-y-2">
-              {Array(3).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-5 w-full" />
-              ))}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/*chips em locação*/}
+        <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <span>
+                  {dashboard.onLeaseAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.onLeaseAssets.data.length} Ativos em locação
+                    </>
+                  )}
+                </span>
+              </CardTitle>
             </div>
-          ) : dashboard.onLeaseAssets.data.length > 0 ? (
-            <ul className="space-y-1">
-              {dashboard.onLeaseAssets.data.map(asset => (
-                <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
-                  <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
-                  <span className="font-semibold">{asset.identifier}</span>
-                  <span className="text-xs text-muted-foreground">
-                    ({asset.type} - {asset.identifier})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-center py-3 text-sm text-muted-foreground">
-              Nenhum ativo em locação detectado.
-            </p>
-          )}
-        </CardContent>
-        <CardFooter className="pt-0 mt-auto">
-          <Link to="/assets/inventory?status=on-lease" className="w-full">
-            <Button variant="destructive" className="w-full" size="sm">
-              Ver todos em locação
-            </Button>
-          </Link>
-        </CardFooter>
-      </Card>
+            <CardDescription className="text-yellow-700">
+              Ativos atualmente em locação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.onLeaseAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.onLeaseAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.onLeaseAssets.data.map(asset => (
+                  <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.identifier})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo em locação detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=on-lease" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos em locação
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        {/*ativos em assinatura*/}
+        <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <span>
+                  {dashboard.onSubscriptionAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.onSubscriptionAssets.data.length} Ativos em assinatura
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-yellow-700">
+              Ativos atualmente em locação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.onSubscriptionAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.onSubscriptionAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.onSubscriptionAssets.data.map(asset => (
+                  <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.identifier})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo em locação detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=on-lease" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos em locação
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     
 
 

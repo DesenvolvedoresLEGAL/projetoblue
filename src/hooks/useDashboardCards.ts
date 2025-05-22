@@ -344,6 +344,12 @@ export const useDashboardCards = () => {
       isLoading: onLeaseAssetsQuery.isLoading,
       error: onLeaseAssetsQuery.error
     },
+    onSubscriptionAssets: {
+      data: onSubscriptionAssetsQuery.data?.items || [],
+      count: onSubscriptionAssetsQuery.data?.count || 0,
+      isLoading: onSubscriptionAssetsQuery.isLoading,
+      error: onSubscriptionAssetsQuery.error
+    },
     networkStatus: {
       data: networkStatusQuery.data || { isOperational: false, message: "Carregando..." },
       isLoading: networkStatusQuery.isLoading,
