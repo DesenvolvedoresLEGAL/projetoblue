@@ -43,7 +43,7 @@ const AssetRow = ({
 }: AssetRowProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus: any] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
