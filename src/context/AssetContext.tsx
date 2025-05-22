@@ -70,7 +70,9 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         case 'assinatura': return 'ASSINATURA';
         case 'sem dados': return 'SEM DADOS';
         case 'bloqueado': return 'BLOQUEADO';
-        case 'em manutenção': return 'MANUTENÇÃO';
+        case 'em manutenção': 
+        case 'manutencao': return 'MANUTENÇÃO';
+        case 'extraviado': return 'EXTRAVIADO';
         default: return 'DISPONÍVEL';
       }
     }
@@ -85,7 +87,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       'ASSINATURA': 'assinatura',
       'SEM DADOS': 'sem dados',
       'BLOQUEADO': 'bloqueado',
-      'MANUTENÇÃO': 'em manutenção'
+      'MANUTENÇÃO': 'em manutenção',
+      'EXTRAVIADO': 'extraviado'
     };
     
     const found = statusRecords.find(s => s.nome.toLowerCase() === statusMap[status].toLowerCase());

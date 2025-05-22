@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -92,7 +91,8 @@ export const useCreateAsset = () => {
 // Fix: Use direct string literals for query keys to prevent type instantiation issues
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    queryKey: ['asset-exists', field, identifier],
+    // Use string literals directly instead of helper function to avoid deep type instantiation
+    queryKey: ['asset-exists', field, identifier] as const,
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };
@@ -119,7 +119,7 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 export const useManufacturers = () => {
   return useQuery({
     // Fixed query key using direct string array instead of helper function
-    queryKey: ['manufacturers'],
+    queryKey: ['manufacturers'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -133,11 +133,10 @@ export const useManufacturers = () => {
   });
 };
 
-// Hook for fetching asset solutions
+// Ensure all other hooks use constant query keys
 export const useAssetSolutions = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['assetSolutions'],
+    queryKey: ['assetSolutions'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -151,11 +150,9 @@ export const useAssetSolutions = () => {
   });
 };
 
-// Hook for fetching status records
 export const useStatusRecords = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['statusRecords'],
+    queryKey: ['statusRecords'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -169,11 +166,9 @@ export const useStatusRecords = () => {
   });
 };
 
-// Hook for fetching plans
 export const usePlans = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['plans'],
+    queryKey: ['plans'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -44,7 +43,7 @@ const AssetRow = ({
 }: AssetRowProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
+  const [selectedStatus, setSelectedStatus: any] = useState<{ id: number, name: string, status: AssetStatus } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
