@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -173,3 +172,75 @@ export const usePlans = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
+
+export function useAssetManagement() {
+  const queryClient = useQueryClient();
+
+  // Fix for "Type instantiation is excessively deep and possibly infinite"
+  // Problem: Deep type instantiation causing build error
+  // Solução: Simplificar a estrutura de query keys
+  const createAsset = useMutation({
+    mutationFn: (data: AssetCreateParams) => assetService.createAsset(data),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (error) => {
+      console.error('Error creating asset:', error);
+      toast.error('Erro ao criar ativo');
+    },
+    onSuccess: () => {
+      toast.success('Ativo criado com sucesso');
+    },
+  });
+
+  const updateAsset = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AssetUpdateParams }) => 
+      assetService.updateAsset(id, data),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (error) => {
+      console.error('Error updating asset:', error);
+      toast.error('Erro ao atualizar ativo');
+    },
+    onSuccess: () => {
+      toast.success('Ativo atualizado com sucesso');
+    },
+  });
+
+  const deleteAsset = useMutation({
+    mutationFn: (id: string) => assetService.deleteAsset(id),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting asset:', error);
+      toast.error('Erro ao excluir ativo');
+    },
+    onSuccess: () => {
+      toast.success('Ativo excluído com sucesso');
+    },
+  });
+
+  const updateAssetStatus = useMutation({
+    mutationFn: ({ id, statusId }: { id: string; statusId: number }) =>
+      assetService.updateAssetStatus(id, statusId),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (error) => {
+      console.error('Error updating asset status:', error);
+      toast.error('Erro ao atualizar status do ativo');
+    },
+    onSuccess: () => {
+      toast.success('Status atualizado com sucesso');
+    },
+  });
+
+  return {
+    createAsset,
+    updateAsset,
+    deleteAsset,
+    updateAssetStatus,
+  };
+}

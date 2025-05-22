@@ -23,6 +23,7 @@ export const assetService = {
   getAssetById: assetQueries.getAssetById,
   getAssetsByStatus: assetQueries.getAssetsByStatus,
   getAssetsByType: assetQueries.getAssetsByType,
+  getAssetsByMultipleStatus: assetQueries.getAssetsByMultipleStatus,
   listProblemAssets: assetQueries.listProblemAssets,
   statusByType: assetQueries.statusByType,
 
@@ -33,4 +34,5 @@ export const assetService = {
   updateAssetStatus: assetMutations.updateAssetStatus
 };
 
+// Export as default and named export for backward compatibility
 export default assetService;
