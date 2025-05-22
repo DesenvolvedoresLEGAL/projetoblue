@@ -1,16 +1,36 @@
 
 import { assetQueries } from './queries';
 import { assetMutations } from './mutations';
+import { AssetListParams, AssetCreateParams, AssetUpdateParams, AssetStatusByType, ProblemAsset } from './types';
+import { PROBLEM_STATUS_IDS } from './constants';
 
-// Create the asset service object
-const assetService = {
-  ...assetQueries,
-  ...assetMutations,
-  assetQueries  // Explicitly add the assetQueries object for direct access
+// Export all types
+export type {
+  AssetListParams,
+  AssetCreateParams,
+  AssetUpdateParams,
+  AssetStatusByType,
+  ProblemAsset
 };
 
-// Export the main assetService object as both default and named export
-export { assetService };
-export { assetQueries };
-export { assetMutations };
+// Export constants
+export { PROBLEM_STATUS_IDS };
+
+// Combine all asset service functionality
+export const assetService = {
+  // Queries
+  getAssets: assetQueries.getAssets,
+  getAssetById: assetQueries.getAssetById,
+  getAssetsByStatus: assetQueries.getAssetsByStatus,
+  getAssetsByType: assetQueries.getAssetsByType,
+  listProblemAssets: assetQueries.listProblemAssets,
+  statusByType: assetQueries.statusByType,
+
+  // Mutations
+  createAsset: assetMutations.createAsset,
+  updateAsset: assetMutations.updateAsset,
+  deleteAsset: assetMutations.deleteAsset,
+  updateAssetStatus: assetMutations.updateAssetStatus
+};
+
 export default assetService;

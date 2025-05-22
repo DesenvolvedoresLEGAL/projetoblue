@@ -1,6 +1,6 @@
 
-import React, { useMemo } from "react";
-import { useDashboardAssets } from "@/hooks/useDashboardAssets";
+import React from "react";
+import { useDashboardCards } from "@/hooks/useDashboardCards";
 import {
   Card,
   CardContent,
@@ -15,17 +15,19 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
-  Loader2,
-  PieChart as PieChartIcon,
+  Wifi,
+  WifiOff,
+  Check,
+  X,
+  ArrowRight,
   Bell,
-  CircleAlert
+  PieChart as PieChartIcon,
+  CircleAlert,
+  Loader2
 } from "lucide-react";
-import { StatusCard } from "@/components/dashboard/StatusCard";
-import { StatsSummaryCard } from "@/components/dashboard/StatsSummaryCard";
-import { formatDate, formatPhoneNumber, capitalize } from "@/utils/formatters";
 
 const Home: React.FC = () => {
-  const dashboard = useDashboardAssets();
+  const dashboard = useDashboardCards();
 
   // Loading state for the entire dashboard
   if (dashboard.isLoading) {
@@ -54,12 +56,12 @@ const Home: React.FC = () => {
   }
 
   // Prepare data for pie chart
-  const statusChartData = useMemo(() => {
-    return dashboard.statusDistribution.data.map(item => ({
-      name: capitalize(item.status),
-      value: item.count,
-    }));
-  }, [dashboard.statusDistribution.data]);
+  const statusChartData = dashboard.statusDistribution.data.map(item => ({
+    name: item.status.capitalize(),
+    value: item.count,
+  }));
+
+  console.log(dashboard.problemAssets);
 
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
@@ -73,117 +75,446 @@ const Home: React.FC = () => {
       {/* Inventory Cards - Inventário Rápido */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {/* Total de Chips Card */}
-        <StatsSummaryCard
-          title="Total de Chips"
-          total={dashboard.assetsStats.data.chips.total}
-          available={dashboard.assetsStats.data.chips.available}
-          unavailable={dashboard.assetsStats.data.chips.unavailable}
-          isLoading={dashboard.assetsStats.isLoading}
-          actionLabel="Ver todos os chips"
-          actionPath="/assets/inventory?type=11"
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl font-normal">Total de Chips: <span className="font-semibold">{dashboard.assetsStats.data.chips.total}</span></CardTitle>
+            <CardDescription>Disponibilidade atual do inventário</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboard.assetsStats.isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Disponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.chips.available}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
+                      <X className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Indisponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.chips.unavailable}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Link to="/assets/inventory?type=1" className="w-full">
+              <Button variant="outline" className="w-full" size="sm">
+                Ver todos os chips
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
 
         {/* Total de SPEEDYS 5G */}
-        <StatsSummaryCard
-          title="Total de Speedys 5G"
-          total={dashboard.assetsStats.data.speedys.total}
-          available={dashboard.assetsStats.data.speedys.available}
-          unavailable={dashboard.assetsStats.data.speedys.unavailable}
-          isLoading={dashboard.assetsStats.isLoading}
-          actionLabel="Ver todos os Speedys 5G"
-          actionPath="/assets/inventory?type=1"
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl font-normal">Total de Speedys 5G: <span className="font-semibold">{dashboard.assetsStats.data.speedys.total}</span></CardTitle>
+            <CardDescription>Disponibilidade atual do inventário</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboard.assetsStats.isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Disponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.speedys.available}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
+                      <X className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Indisponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.speedys.unavailable}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Link to="/assets/inventory?type=1" className="w-full">
+              <Button variant="outline" className="w-full" size="sm">
+                Ver todos os Speedys 5G
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
 
         {/* Total de Equipamentos Card */}
-        <StatsSummaryCard
-          title="Total de Equipamentos"
-          total={dashboard.assetsStats.data.equipment.total}
-          available={dashboard.assetsStats.data.equipment.available}
-          unavailable={dashboard.assetsStats.data.equipment.unavailable}
-          isLoading={dashboard.assetsStats.isLoading}
-          actionLabel="Ver todos os equipamentos"
-          actionPath="/assets/inventory"
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl font-normal">Total de Equipamentos: <span className="font-semibold">{dashboard.assetsStats.data.equipment.total}</span></CardTitle>
+            <CardDescription>Disponibilidade atual do inventário</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboard.assetsStats.isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Disponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.equipment.available}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
+                      <X className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Indisponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.equipment.unavailable}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Link to="/assets/inventory" className="w-full">
+              <Button variant="outline" className="w-full" size="sm">
+                Ver todos os equipamentos
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
 
       {/* Top Priority Cards - Status Imediato */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Chips com Problema Card */}
-        <StatusCard
-          title="Chips com Problema"
-          description="Ativos que necessitam de atenção imediata"
-          items={dashboard.problemAssets.data.filter(a => a.type === "CHIP")}
-          isLoading={dashboard.problemAssets.isLoading}
-          emptyMessage="Nenhum chip com problema detectado."
-          actionLabel="Ver todos os problemas"
-          actionPath="/assets/inventory?status=problem"
-          variant="problem"
-          icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
-          itemRenderer={(item) => (
-            <li key={item.id} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
-              <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
-              <span className="font-semibold">{item.identifier}</span>
-              <span className="text-xs text-muted-foreground">
-                ({item.type} - {item.status})
-              </span>
-            </li>
-          )}
-        />
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type === "CHIP").length} Chips com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type === "CHIP").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
 
         {/* Speedys com problema CARD */}
-        <StatusCard
-          title="Speedys com Problema"
-          description="Ativos que necessitam de atenção imediata"
-          items={dashboard.problemAssets.data.filter(a => a.type === "SPEEDY 5G")}
-          isLoading={dashboard.problemAssets.isLoading}
-          emptyMessage="Nenhum Speedy com problema detectado."
-          actionLabel="Ver todos os problemas"
-          actionPath="/assets/inventory?status=problem"
-          variant="problem"
-          icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
-        />
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type === "SPEEDY 5G").length} Speedys com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type === "SPEEDY 5G").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=problem" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
 
         {/* Equipamentos com problema CARD */}
-        <StatusCard
-          title="Equipamentos com Problema"
-          description="Ativos que necessitam de atenção imediata"
-          items={dashboard.problemAssets.data.filter(a => a.type !== "CHIP" && a.type !== "SPEEDY 5G")}
-          isLoading={dashboard.problemAssets.isLoading}
-          emptyMessage="Nenhum equipamento com problema detectado."
-          actionLabel="Ver todos os problemas"
-          actionPath="/assets/inventory?status=problem"
-          variant="problem"
-          icon={<AlertTriangle className="h-6 w-6 text-red-600" />}
-        />
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type !== "CHIP").length} Equipamentos com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type !== "CHIP").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=problem" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Ativos em locação */}
-        <StatusCard
-          title="Ativos em locação"
-          description="Ativos atualmente em locação"
-          items={dashboard.onLeaseAssets.data}
-          isLoading={dashboard.onLeaseAssets.isLoading}
-          emptyMessage="Nenhum ativo em locação no momento."
-          actionLabel="Ver todos em locação"
-          actionPath="/assets/inventory?status=2" // Assuming 2 is the status ID for leased assets
-          variant="warning"
-          icon={<AlertTriangle className="h-6 w-6 text-yellow-600" />}
-        />
+        {/*chips em locação*/}
+        <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <span>
+                  {dashboard.onLeaseAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.onLeaseAssets.data.length} Ativos em locação
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-yellow-700">
+              Ativos atualmente em locação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.onLeaseAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.onLeaseAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.onLeaseAssets.data.map(asset => (
+                  <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.identifier})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo em locação detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=on-lease" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos em locação
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
         
-        {/* Ativos em assinatura */}
-        <StatusCard
-          title="Ativos em assinatura"
-          description="Ativos atualmente em assinatura"
-          items={dashboard.onSubscriptionAssets.data}
-          isLoading={dashboard.onSubscriptionAssets.isLoading}
-          emptyMessage="Nenhum ativo em assinatura no momento."
-          actionLabel="Ver todos em assinatura"
-          actionPath="/assets/inventory?status=3" // Assuming 3 is the status ID for subscription assets
-          variant="warning"
-          icon={<AlertTriangle className="h-6 w-6 text-yellow-600" />}
-        />
+        {/*ativos em assinatura*/}
+        <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+                <span>
+                  {dashboard.onSubscriptionAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.onSubscriptionAssets.data.length} Ativos em assinatura
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-yellow-700">
+              Ativos atualmente em locação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.onSubscriptionAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.onSubscriptionAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.onSubscriptionAssets.data.map(asset => (
+                  <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.identifier})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo em locação detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=on-lease" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos em locação
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
       </div>
+    
+
 
       {/* Bottom Row - Monitoring Cards */}
       <div className="grid gap-4 md:grid-cols-2">
@@ -216,13 +547,13 @@ const Home: React.FC = () => {
                         {alert.assetType} - {alert.name}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {formatDate(alert.date)}
+                        {alert.date}
                       </span>
                     </div>
                     <p className="text-muted-foreground">
                       {alert.description?.includes('CRIADO')
-                        ? capitalize(alert.description)
-                        : `${capitalize(alert.description)} de ${alert.old_status} para ${alert.new_status}`}
+                        ? alert.description.capitalize()
+                        : `${alert.description.capitalize()} de ${alert.old_status} para ${alert.new_status}`}
                     </p>
                   </li>
                 ))}
@@ -259,7 +590,7 @@ const Home: React.FC = () => {
               <div className="h-[250px] w-full flex items-center justify-center">
                 <Skeleton className="h-[220px] w-[220px] rounded-full" />
               </div>
-            ) : statusChartData.length > 0 ? (
+            ) : dashboard.statusDistribution.data.length > 0 ? (
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
