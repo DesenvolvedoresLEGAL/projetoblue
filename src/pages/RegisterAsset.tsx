@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -14,13 +13,91 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
 import { assetSchema, AssetFormValues } from "@/schemas/assetSchemas";
-import { 
-  useCreateAsset,
-  useManufacturers,
-  useAssetSolutions,
-  useStatusRecords,
-  usePlans
-} from "@/hooks/useAssetManagement";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "@/utils/toast";
+
+// Mock data for testing until we integrate with a real API
+const mockManufacturers = [
+  { id: 13, name: "Vivo" },
+  { id: 14, name: "Claro" },
+  { id: 15, name: "Tim" },
+  { id: 1, name: "TP-Link" },
+  { id: 2, name: "D-Link" },
+  { id: 3, name: "Cisco" }
+];
+
+const mockSolutions = [
+  { id: 1, solution: "Wi-Fi" },
+  { id: 2, solution: "Router" },
+  { id: 11, solution: "CHIP" }
+];
+
+const mockStatuses = [
+  { id: 1, status: "DISPONÍVEL" },
+  { id: 2, status: "ALUGADO" },
+  { id: 3, status: "ASSINATURA" },
+  { id: 4, status: "SEM DADOS" },
+  { id: 5, status: "BLOQUEADO" },
+  { id: 6, status: "MANUTENÇÃO" }
+];
+
+const mockPlans = [
+  { id: 1, nome: "Plano Básico 5GB" },
+  { id: 2, nome: "Plano Standard 15GB" },
+  { id: 3, nome: "Plano Premium 50GB" }
+];
+
+// Custom hooks to replace the deleted useAssetManagement
+const useManufacturers = () => {
+  return useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: () => Promise.resolve(mockManufacturers),
+    staleTime: 300000, // 5 minutes
+  });
+};
+
+const useAssetSolutions = () => {
+  return useQuery({
+    queryKey: ['solutions'],
+    queryFn: () => Promise.resolve(mockSolutions),
+    staleTime: 300000,
+  });
+};
+
+const useStatusRecords = () => {
+  return useQuery({
+    queryKey: ['statuses'],
+    queryFn: () => Promise.resolve(mockStatuses),
+    staleTime: 300000,
+  });
+};
+
+const usePlans = () => {
+  return useQuery({
+    queryKey: ['plans'],
+    queryFn: () => Promise.resolve(mockPlans),
+    staleTime: 300000,
+  });
+};
+
+const useCreateAsset = () => {
+  return useMutation({
+    mutationFn: (formData: AssetFormValues) => {
+      // Simulate API call to create asset
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          console.log("Asset created:", formData);
+          toast.success("Ativo cadastrado com sucesso!");
+          resolve();
+        }, 1000);
+      });
+    },
+    onError: (error) => {
+      console.error("Error creating asset:", error);
+      toast.error("Erro ao cadastrar ativo. Tente novamente.");
+    }
+  });
+};
 
 // Reusable SelectField component
 const SelectField = ({ 
