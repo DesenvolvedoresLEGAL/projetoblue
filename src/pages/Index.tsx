@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, ChevronRight, Cpu, HardDrive, Chip, CircleAlert } from "lucide-react";
+import { AlertCircle, ChevronRight, HardDrive, CircleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -145,7 +145,7 @@ const Index = () => {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-medium">Total de Chips</CardTitle>
-              <Chip className="h-5 w-5 text-blue-500" />
+              <CircleAlert className="h-5 w-5 text-blue-500" />
             </div>
             <CardDescription>Todos os chips cadastrados</CardDescription>
           </CardHeader>
@@ -226,8 +226,8 @@ const Index = () => {
                       <Badge variant="destructive" className="shrink-0">
                         {chip.status?.status || "Problema"}
                       </Badge>
-                      <span className="truncate" title={chip.iccid || chip.line_number || chip.serial_number}>
-                        {chip.iccid || chip.line_number || chip.serial_number || "Chip sem ID"}
+                      <span className="truncate" title={chip.iccid || chip.line_number?.toString() || chip.serial_number}>
+                        {chip.iccid || (chip.line_number !== null ? String(chip.line_number) : chip.serial_number) || "Chip sem ID"}
                       </span>
                     </li>
                   ))}
@@ -463,8 +463,8 @@ const RecentActivitiesPanel = () => {
       {activities.map((activity) => {
         // Extrair informações do objeto details
         const details = typeof activity.details === 'object' ? activity.details : {};
-        const assetId = details.asset_id || 'N/A';
-        const clientId = details.client_id;
+        const assetId = details?.asset_id || 'N/A';
+        const clientId = details?.client_id;
         
         return (
           <div key={activity.id} className="border-b pb-4 last:border-b-0 last:pb-0">
@@ -481,7 +481,7 @@ const RecentActivitiesPanel = () => {
               <p>
                 <span className="font-medium">Asset ID: </span>
                 <Link to={`/assets/details/${assetId}`} className="text-blue-500 hover:underline">
-                  {assetId.substring(0, 8)}...
+                  {typeof assetId === 'string' && assetId.substring(0, 8)}...
                 </Link>
               </p>
               
@@ -489,7 +489,7 @@ const RecentActivitiesPanel = () => {
                 <p>
                   <span className="font-medium">Cliente: </span>
                   <Link to={`/clients/${clientId}`} className="text-blue-500 hover:underline">
-                    {clientId.substring(0, 8)}...
+                    {typeof clientId === 'string' && clientId.substring(0, 8)}...
                   </Link>
                 </p>
               )}
