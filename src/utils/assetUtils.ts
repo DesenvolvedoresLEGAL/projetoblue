@@ -1,7 +1,5 @@
 
-import { AssetStatus,
-  Asset
-} from "@/types/asset";
+import { AssetStatus, Asset } from "@/types/asset";
 
 // Constants for asset type identification
 export const SOLUTION_IDS = {
@@ -77,10 +75,10 @@ export const isSameStatus = (status1: string | undefined, status2: string | unde
  * Type guard to check if a value is a valid AssetStatus
  */
 export const isValidAssetStatus = (status: string): status is AssetStatus => {
-  const validStatuses = [
+  const validStatuses: AssetStatus[] = [
     "DISPONÍVEL", "ALUGADO", "ASSINATURA", "SEM DADOS", "BLOQUEADO", "MANUTENÇÃO", "extraviado"
   ];
-  return validStatuses.includes(status);
+  return validStatuses.includes(status as AssetStatus);
 };
 
 /**

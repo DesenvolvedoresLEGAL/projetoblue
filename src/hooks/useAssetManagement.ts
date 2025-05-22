@@ -83,8 +83,7 @@ export const useCreateAsset = () => {
 // Fix: Use direct array literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    // Array literal + as const, tudo primitivo: seguro!
-    queryKey: ['assets', 'exists', identifier, field] as const,
+    queryKey: ['assets', 'exists', identifier, field],
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };
@@ -110,8 +109,7 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 // Hook for fetching manufacturers
 export const useManufacturers = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['manufacturers'] as const,
+    queryKey: ['manufacturers'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -128,8 +126,7 @@ export const useManufacturers = () => {
 // Hook for fetching asset solutions
 export const useAssetSolutions = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['assetSolutions'] as const,
+    queryKey: ['assetSolutions'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -146,8 +143,7 @@ export const useAssetSolutions = () => {
 // Hook for fetching status records
 export const useStatusRecords = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['statusRecords'] as const,
+    queryKey: ['statusRecords'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -164,8 +160,7 @@ export const useStatusRecords = () => {
 // Hook for fetching plans
 export const usePlans = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['plans'] as const,
+    queryKey: ['plans'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')
