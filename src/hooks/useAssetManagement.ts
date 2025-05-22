@@ -21,27 +21,6 @@ interface AssetInsertData {
   notes?: string;
 }
 
-// Types for queries and filtering
-interface AssetFilters {
-  status?: string;
-  type?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
-}
-
-// Simplified query keys to prevent deep type instantiation
-const queryKeys = {
-  assets: 'assets',
-  asset: (id: string) => ['assets', id] as const,
-  assetsList: (filters?: AssetFilters) => ['assets', 'list', filters] as const,
-  assetExists: (identifier: string, field: string) => ['assets', 'exists', identifier, field] as const,
-  manufacturers: 'manufacturers',
-  assetSolutions: 'assetSolutions',
-  statusRecords: 'statusRecords',
-  plans: 'plans'
-};
-
 // Hook for creating a new asset
 export const useCreateAsset = () => {
   const queryClient = useQueryClient();
@@ -104,7 +83,7 @@ export const useCreateAsset = () => {
 // Fix: Use direct array literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    // Using direct array literal with 'as const' to prevent excessive type instantiation
+    // Array literal + as const, tudo primitivo: seguro!
     queryKey: ['assets', 'exists', identifier, field] as const,
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
@@ -113,7 +92,7 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 
       const { data, error, count } = await supabase
         .from('assets')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'estimated' })
         .eq(field, identifier)
         .is('deleted_at', null)
         .limit(1);

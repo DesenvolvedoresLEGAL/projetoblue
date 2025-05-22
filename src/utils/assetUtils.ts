@@ -1,5 +1,7 @@
 
-import { Asset } from "@/types/asset";
+import { AssetStatus,
+  Asset
+} from "@/types/asset";
 
 // Constants for asset type identification
 export const SOLUTION_IDS = {
