@@ -347,10 +347,10 @@ const Index = () => {
 };
 
 // Componente para exibir distribuição de status
-const StatusDistributionChart = ({ assets }) => {
+const StatusDistributionChart = ({ assets }: { assets: any[] }) => {
   // Agrupar por status
   const statusCounts = React.useMemo(() => {
-    const counts = {};
+    const counts: Record<string, number> = {};
     
     assets.forEach(asset => {
       const status = asset.status?.status || "Desconhecido";
@@ -367,7 +367,7 @@ const StatusDistributionChart = ({ assets }) => {
   }
   
   // Define cores por status
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
     if (statusLower.includes('disponível')) return "bg-green-500";
     if (statusLower.includes('alugado')) return "bg-blue-500";
@@ -447,7 +447,7 @@ const RecentActivitiesPanel = () => {
   }
   
   // Formatar data para exibição
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pt-BR', { 
       day: '2-digit',
@@ -463,8 +463,8 @@ const RecentActivitiesPanel = () => {
       {activities.map((activity) => {
         // Extrair informações do objeto details
         const details = typeof activity.details === 'object' ? activity.details : {};
-        const assetId = details?.asset_id || 'N/A';
-        const clientId = details?.client_id;
+        const assetId = details && typeof details === 'object' && 'asset_id' in details ? details.asset_id : 'N/A';
+        const clientId = details && typeof details === 'object' && 'client_id' in details ? details.client_id : undefined;
         
         return (
           <div key={activity.id} className="border-b pb-4 last:border-b-0 last:pb-0">
