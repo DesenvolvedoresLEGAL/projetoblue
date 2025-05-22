@@ -1,9 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { AssetListParams, AssetStatusByType, ProblemAsset } from "./types";
 import { handleAssetError } from "./utils";
 import { PROBLEM_STATUS_IDS } from "./constants";
+import { normalizeAsset } from "@/utils/assetUtils";
 
 // Functions for querying assets
 export const assetQueries = {
@@ -186,22 +186,40 @@ export const assetQueries = {
         return [];
       }
       
-      return data.map(item => ({
-        uuid: item.uuid,
-        iccid: item.iccid,
-        radio: item.radio,
-        line_number: item.line_number,
-        solution_id: item.solution_id,
-        id: item.uuid,
-        type: item.solution_id === 11 ? 'CHIP' : 'ROUTER',
-        status: item.status?.status || 'Unknown',
-        statusId: item.status_id,
-        identifier: item.solution_id === 11 ? item.iccid : item.serial_number,
-        model: item.model,
-        manufacturer: item.manufacturer?.name || 'Unknown',
-        solution: item.solucao?.solution || 'Unknown',
-        createdAt: item.created_at
-      })) as ProblemAsset[];
+      return data.map(item => {
+        const normalized = normalizeAsset({
+          uuid: item.uuid,
+          iccid: item.iccid,
+          radio: item.radio,
+          line_number: item.line_number,
+          solution_id: item.solution_id,
+          status_id: item.status_id,
+          serial_number: item.serial_number,
+          model: item.model,
+          manufacturer: item.manufacturer,
+          status: item.status,
+          solucao: item.solucao,
+          created_at: item.created_at
+        });
+        
+        return {
+          uuid: normalized.uuid,
+          iccid: normalized.iccid,
+          radio: normalized.radio,
+          line_number: normalized.line_number,
+          solution_id: normalized.solution_id,
+          id: normalized.id,
+          type: normalized.type,
+          status: normalized.status,
+          statusId: normalized.statusId,
+          identifier: normalized.identifier,
+          model: normalized.model,
+          manufacturer: normalized.manufacturer,
+          solution: normalized.solution,
+          createdAt: normalized.createdAt,
+          serial_number: normalized.serial_number
+        };
+      }) as ProblemAsset[];
     } catch (error) {
       handleAssetError(error, "Error in listProblemAssets");
       return [];

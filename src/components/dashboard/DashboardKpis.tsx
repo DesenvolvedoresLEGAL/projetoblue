@@ -2,17 +2,32 @@
 import React from "react";
 import { useAssets } from "@/context/useAssets";
 import { Card, CardContent } from "@/components/ui/card";
-import { Wifi, AlertTriangle, Clock } from "lucide-react";
-import { PackageSearch } from "lucide-react";
+import { Wifi, AlertTriangle, Clock, PackageSearch } from "lucide-react";
+import { SOLUTION_IDS, getAssetType } from "@/utils/assetUtils";
 
 export function DashboardKpis() {
   const { assets, loading } = useAssets();
   
-  // Calculate KPIs
+  // Calculate KPIs using standardized type checking
   const totalAssets = assets.length;
-  const availableChips = assets.filter(a => a.type === 'CHIP' && a.status === 'DISPONÍVEL').length;
-  const availableRouters = assets.filter(a => a.type === 'ROTEADOR' && a.status === 'DISPONÍVEL').length;
-  const problemAssets = assets.filter(a => ['BLOQUEADO', 'MANUTENÇÃO', 'SEM DADOS'].includes(a.status)).length;
+  
+  const availableChips = assets.filter(a => 
+    (a.solution_id === SOLUTION_IDS.CHIP || a.type === 'CHIP') && 
+    a.status.toUpperCase() === 'DISPONÍVEL'
+  ).length;
+  
+  const availableRouters = assets.filter(a => 
+    (a.solution_id !== SOLUTION_IDS.CHIP) && 
+    a.type === 'ROTEADOR' && 
+    a.status.toUpperCase() === 'DISPONÍVEL'
+  ).length;
+  
+  const problemAssets = assets.filter(a => 
+    ['BLOQUEADO', 'MANUTENÇÃO', 'SEM DADOS'].includes(
+      (a.status || '').toUpperCase()
+    )
+  ).length;
+  
   const expiredSubscriptions = assets.filter(a => 
     a.subscription?.isExpired || 
     (a.subscription?.endDate && new Date(a.subscription.endDate) < new Date())

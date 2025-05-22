@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@/services/api/assetService";
-import { count } from "console";
+import { normalizeAsset, getAssetIdentifier } from "@/utils/assetUtils";
 
 // Types for dashboard data
 export interface DashboardStatsData {
@@ -48,6 +48,7 @@ export const useDashboardCards = () => {
       try {
         // Use the API service to fetch problem assets
         const assets = await assetService.listProblemAssets();
+        console.log("Raw problem assets data:", assets);
         
         // Get status names for mapping
         const { data: statuses } = await supabase
@@ -59,21 +60,18 @@ export const useDashboardCards = () => {
           .from('asset_solutions')
           .select('id, solution');
           
-        // Transform data for the dashboard
+        // Transform data for the dashboard using the utility function
         const items = assets.map(asset => {
-          const solution = solutions?.find(s => s.id === asset.solution_id);
-          const status = statuses?.find(s => s.id === asset.statusId);
-          
+          const normalized = normalizeAsset(asset);
           return {
-            uuid: asset.uuid,
-            identifier: asset.solution_id === 11 
-              ? asset.line_number || 'N/A' 
-              : asset.radio || asset.id || 'N/A', // Using asset.id instead of serial_number
-            type: solution?.solution || 'Desconhecido',
-            status: status?.status || 'Desconhecido'
+            uuid: normalized.uuid,
+            identifier: normalized.identifier,
+            type: normalized.type,
+            status: normalized.status
           };
         });
         
+        console.log("Transformed problem assets:", items);
         return {
           count: items.length,
           items: items.slice(0, 5) // Return only the first 5 for the card display
@@ -90,65 +88,61 @@ export const useDashboardCards = () => {
     queryKey: ["dashboard", "onLeaseAssets"],
     queryFn: async () => {
       try {
-      const assets = await assetService.getAssetsByStatus(2);
+        const assets = await assetService.getAssetsByStatus(2);
+        console.log("Raw on-lease assets:", assets);
 
-      const items = assets.map((asset) => {
-
-        return {
-          id: asset.id,
-          identifier:
-            asset.solucao === "CHIP"
-              ? asset.line_number || "N/A"
-              : asset.radio || asset.serial_number || "N/A", // Using asset.id instead of serial_number
-          type: asset.type || "Desconhecido",
-          status: asset.status || "Desconhecido",
-        };
-      });
+        const items = assets.map((asset) => {
+          const normalized = normalizeAsset(asset);
+          return {
+            id: normalized.id,
+            identifier: normalized.identifier,
+            type: normalized.type,
+            status: normalized.status,
+          };
+        });
         
+        console.log("Transformed on-lease assets:", items);
         return {
           count: items.length,
           items: items.slice(0, 5) // Return only the first 5 for the card display
         };
       } catch (error) {
-        console.error("Error fetching problem assets:", error);
+        console.error("Error fetching on-lease assets:", error);
         throw error;
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+  });
 
   const onSubscriptionAssetsQuery = useQuery({
-    queryKey: ["dashboard", "onLeaseAssets"],
+    queryKey: ["dashboard", "onSubscriptionAssets"],
     queryFn: async () => {
       try {
-      const assets = await assetService.getAssetsByStatus(3);
+        const assets = await assetService.getAssetsByStatus(3);
+        console.log("Raw subscription assets:", assets);
 
-      const items = assets.map((asset) => {
-
-        return {
-          id: asset.id,
-          identifier:
-            asset.type === "CHIP"
-              ? asset.num_linha || "N/A"
-              : asset.radio || asset.serialNumber || "N/A", // Using asset.id instead of serial_number
-          type: asset.type || "Desconhecido",
-          status: asset.status || "Desconhecido",
-        };
-      });
+        const items = assets.map((asset) => {
+          const normalized = normalizeAsset(asset);
+          return {
+            id: normalized.id,
+            identifier: normalized.identifier,
+            type: normalized.type,
+            status: normalized.status,
+          };
+        });
         
+        console.log("Transformed subscription assets:", items);
         return {
           count: items.length,
           items: items.slice(0, 5) // Return only the first 5 for the card display
         };
       } catch (error) {
-        console.error("Error fetching problem assets:", error);
+        console.error("Error fetching subscription assets:", error);
         throw error;
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  );
+  });
   
   // 2. Network Status (status da rede)
   const networkStatusQuery = useQuery({

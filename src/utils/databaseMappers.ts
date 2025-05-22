@@ -1,5 +1,5 @@
-
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
+import { SOLUTION_IDS } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus
 export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string): AssetStatus => {
@@ -56,18 +56,20 @@ export const mapSolutionToSolutionType = (solution?: string): SolutionType | und
 
 // Map database asset record to frontend Asset type
 export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
+  if (!dbAsset) return null;
+
   // Extract nested data if available
-  const statusName = dbAsset?.asset_status?.status;
-  const solutionName = dbAsset?.asset_solutions?.solution;
+  const statusName = dbAsset?.asset_status?.status || dbAsset?.status?.status;
+  const solutionName = dbAsset?.asset_solutions?.solution || dbAsset?.solucao?.solution;
   
   // Determine asset type based on solution_id or presence of specific fields
-  const isChip = dbAsset.solution_id === 1 || !!dbAsset.iccid;
+  const isChip = dbAsset.solution_id === SOLUTION_IDS.CHIP || !!dbAsset.iccid;
   const type = isChip ? 'CHIP' : 'ROTEADOR';
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
   
   // Common asset properties
   const baseAsset = {
-    id: dbAsset.uuid,
+    id: dbAsset.uuid || dbAsset.id,
     type,
     status,
     statusId: dbAsset.status_id,
@@ -76,7 +78,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     lastSeen: dbAsset.last_seen,
     isOnline: dbAsset.is_online,
     solucao: mapSolutionToSolutionType(solutionName),
-    marca: dbAsset.manufacturers?.name || dbAsset.manufacturer_id?.toString(),
+    marca: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name || dbAsset.manufacturer_id?.toString(),
     modelo: dbAsset.model,
     serial_number: dbAsset.serial_number,
     dias_alugada: dbAsset.rented_days,
@@ -88,21 +90,21 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
       ...baseAsset,
       iccid: dbAsset.iccid || '',
       phoneNumber: dbAsset.line_number?.toString() || '',
-      carrier: dbAsset.manufacturers?.name || 'Unknown',
+      carrier: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name || 'Unknown',
       num_linha: dbAsset.line_number
     } as ChipAsset;
   } else {
     return {
       ...baseAsset,
       uniqueId: dbAsset.uuid,
-      brand: dbAsset.manufacturers?.name || '',
+      brand: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name || '',
       model: dbAsset.model || '',
       ssid: dbAsset.ssid || '',
       password: dbAsset.password || '',
       serialNumber: dbAsset.serial_number || '',
       ipAddress: dbAsset.ip_address,
       adminUser: dbAsset.admin_user,
-      adminPassword: dbAsset.admin_password,
+      adminPassword: dbAsset.admin_password || dbAsset.admin_pass,
       imei: dbAsset.imei
     } as RouterAsset;
   }
