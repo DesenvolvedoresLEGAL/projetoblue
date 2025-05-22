@@ -107,7 +107,7 @@ export const assetQueries = {
   },
   
   // Get assets by status
-  async getAssetsByStatus(statusId: number): Promise<Asset[]> {
+  async getAssetsByStatus(statusId: number): Promise<any> {
     try {
       const { data, error } = await supabase
         .from('assets')
@@ -125,7 +125,7 @@ export const assetQueries = {
         return [];
       }
       
-      return data as unknown as Asset[];
+      return data;
     } catch (error) {
       handleAssetError(error, `Error in getAssetsByStatus ${statusId}`);
       return [];

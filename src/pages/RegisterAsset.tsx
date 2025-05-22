@@ -207,10 +207,10 @@ export default function RegisterAsset() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Tabs
-                value={solutionId === 1 ? "CHIP" : "ROTEADOR"}
+                value={solutionId === 11 ? "CHIP" : "EQUIPAMENTO"}
                 onValueChange={(value) => {
                   // When changing tab, reset the form for the new type
-                  const newSolutionId = value === "CHIP" ? 1 : 2;
+                  const newSolutionId = value === "CHIP" ? 11 : 2;
                   form.setValue("solution_id", newSolutionId);
                   
                   // Reset form values that are specific to the other type
@@ -233,7 +233,7 @@ export default function RegisterAsset() {
               >
                 <TabsList className="grid grid-cols-2 mb-8">
                   <TabsTrigger value="CHIP">Chip</TabsTrigger>
-                  <TabsTrigger value="ROTEADOR">Roteador</TabsTrigger>
+                  <TabsTrigger value="EQUIPAMENTO">Equipamento</TabsTrigger>
                 </TabsList>
 
                 {/* CHIP FORM */}
@@ -318,7 +318,7 @@ export default function RegisterAsset() {
                 </TabsContent>
 
                 {/* ROUTER FORM */}
-                <TabsContent value="ROTEADOR" className="space-y-6">
+                <TabsContent value="EQUIPAMENTO" className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}

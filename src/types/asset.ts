@@ -1,11 +1,12 @@
 
 export type AssetStatus = 
-  | "DISPONÍVEL" 
-  | "ALUGADO" 
-  | "ASSINATURA" 
-  | "SEM DADOS" 
-  | "BLOQUEADO" 
-  | "MANUTENÇÃO";
+  | "disponível" 
+  | "em locação" 
+  | "em assinatura" 
+  | "sem dados" 
+  | "bloqueado" 
+  | "manutenção"
+  | "extraviado";
 
 export type AssetType = "CHIP" | "ROTEADOR";
 
@@ -19,7 +20,8 @@ export type SolutionType =
   | "SWITCH"
   | "HUB USB"
   | "ANTENA"
-  | "LOAD BALANCE";
+  | "LOAD BALANCE"
+  | "CHIP";
 
 export type SubscriptionType = "MENSAL" | "ANUAL" | "ALUGUEL";
 

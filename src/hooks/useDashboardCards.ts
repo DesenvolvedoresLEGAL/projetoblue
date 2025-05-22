@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@/services/api/assetService";
+import { count } from "console";
 
 // Types for dashboard data
 export interface DashboardStatsData {
@@ -84,6 +85,70 @@ export const useDashboardCards = () => {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const onLeaseAssetsQuery = useQuery({
+    queryKey: ["dashboard", "onLeaseAssets"],
+    queryFn: async () => {
+      try {
+      const assets = await assetService.getAssetsByStatus(2);
+
+      const items = assets.map((asset) => {
+
+        return {
+          id: asset.id,
+          identifier:
+            asset.solucao === "CHIP"
+              ? asset.line_number || "N/A"
+              : asset.radio || asset.serial_number || "N/A", // Using asset.id instead of serial_number
+          type: asset.type || "Desconhecido",
+          status: asset.status || "Desconhecido",
+        };
+      });
+        
+        return {
+          count: items.length,
+          items: items.slice(0, 5) // Return only the first 5 for the card display
+        };
+      } catch (error) {
+        console.error("Error fetching problem assets:", error);
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  );
+
+  const onSubscriptionAssetsQuery = useQuery({
+    queryKey: ["dashboard", "onLeaseAssets"],
+    queryFn: async () => {
+      try {
+      const assets = await assetService.getAssetsByStatus(3);
+
+      const items = assets.map((asset) => {
+
+        return {
+          id: asset.id,
+          identifier:
+            asset.type === "CHIP"
+              ? asset.num_linha || "N/A"
+              : asset.radio || asset.serialNumber || "N/A", // Using asset.id instead of serial_number
+          type: asset.type || "Desconhecido",
+          status: asset.status || "Desconhecido",
+        };
+      });
+        
+        return {
+          count: items.length,
+          items: items.slice(0, 5) // Return only the first 5 for the card display
+        };
+      } catch (error) {
+        console.error("Error fetching problem assets:", error);
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  );
   
   // 2. Network Status (status da rede)
   const networkStatusQuery = useQuery({
@@ -134,7 +199,7 @@ export const useDashboardCards = () => {
         const { data: availableStatus } = await supabase
           .from('asset_status')
           .select('id')
-          .ilike('status', 'disponivel')
+          .ilike('status', 'disponível')
           .single();
         
         const availableStatusId = availableStatus?.id || 1;
@@ -149,21 +214,36 @@ export const useDashboardCards = () => {
         const availableEquipment = equipment.filter(a => a.status_id === availableStatusId);
         const availableSpeedy = speedy.filter(a => a.status_id === availableStatusId);
         
+        const onLeaseChips = chips.filter(a => a.status_id === 2);
+        const onSubscriptionChips = chips.filter(a => a.status_id === 3);
+        
+        const onLeaseEquipment = equipment.filter(a => a.status_id === 2);
+        const onSubscriptionEquipment = equipment.filter(a => a.status_id === 3);
+
+        const onLeaseSpeedy = speedy.filter(a => a.status_id === 2);
+        const onSubscriptionSpeedy = speedy.filter(a => a.status_id === 3);
+
         return {
           chipsStats: {
             total: chips.length,
             available: availableChips.length,
-            unavailable: chips.length - availableChips.length
+            unavailable: chips.length - availableChips.length,
+            onLease: onLeaseChips.length,
+            onSubscription: onSubscriptionChips.length
           },
           speedyStats: {
             total: speedy.length,
             available: availableSpeedy.length,
-            unavailable: speedy.length - availableSpeedy.length
+            unavailable: speedy.length - availableSpeedy.length,
+            onLease: onLeaseSpeedy.length,
+            onSubscription: onSubscriptionSpeedy.length
           },
           equipmentStats: {
             total: equipment.length,
             available: availableEquipment.length,
-            unavailable: equipment.length - availableEquipment.length
+            unavailable: equipment.length - availableEquipment.length,
+            onLease: onLeaseEquipment.length,
+            onSubscription: onSubscriptionEquipment.length
           }
         };
       } catch (error) {
@@ -207,7 +287,7 @@ export const useDashboardCards = () => {
             date: log.date ? new Date(log.date).toLocaleString().replace(',', '') : 'N/A',
             assetType: solutionId === 11 ? 'Chip' : 'Equipamento',
             description: log.event || 'Evento registrado',
-            name: solutionId === 11 ? details.line_number : details.radio,
+            name: solutionId === 11 ? details?.line_number || [] : details?.radio || [],
             old_status: m.get(details.old_status),
             new_status: m.get(details.new_status)
           };
@@ -258,6 +338,12 @@ export const useDashboardCards = () => {
       isLoading: problemAssetsQuery.isLoading,
       error: problemAssetsQuery.error
     },
+    onLeaseAssets: {
+      data: onLeaseAssetsQuery.data?.items || [],
+      count: onLeaseAssetsQuery.data?.count || 0,
+      isLoading: onLeaseAssetsQuery.isLoading,
+      error: onLeaseAssetsQuery.error
+    },
     networkStatus: {
       data: networkStatusQuery.data || { isOperational: false, message: "Carregando..." },
       isLoading: networkStatusQuery.isLoading,
@@ -265,9 +351,9 @@ export const useDashboardCards = () => {
     },
     assetsStats: {
       data: {
-        chips: assetsStatsQuery.data?.chipsStats || { total: 0, available: 0, unavailable: 0 },
-        speedys: assetsStatsQuery.data?.speedyStats || { total: 0, available: 0, unavailable: 0 },
-        equipment: assetsStatsQuery.data?.equipmentStats || { total: 0, available: 0, unavailable: 0 }
+        chips: assetsStatsQuery.data?.chipsStats || { total: 0, available: 0, unavailable: 0, onLease: 0, onSubscription: 0 },
+        speedys: assetsStatsQuery.data?.speedyStats || { total: 0, available: 0, unavailable: 0, onLease: 0, onSubscription: 0 },
+        equipment: assetsStatsQuery.data?.equipmentStats || { total: 0, available: 0, unavailable: 0, onLease: 0, onSubscription: 0 }
       },
       isLoading: assetsStatsQuery.isLoading,
       error: assetsStatsQuery.error

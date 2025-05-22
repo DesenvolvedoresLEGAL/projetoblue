@@ -1,20 +1,20 @@
 
 import React from "react";
 import { useDashboardCards } from "@/hooks/useDashboardCards";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Link } from "react-router-dom";
-import { 
-  AlertTriangle, 
+import {
+  AlertTriangle,
   Wifi,
   WifiOff,
   Check,
@@ -28,7 +28,7 @@ import {
 
 const Home: React.FC = () => {
   const dashboard = useDashboardCards();
-  
+
   // Loading state for the entire dashboard
   if (dashboard.isLoading) {
     return (
@@ -38,7 +38,7 @@ const Home: React.FC = () => {
       </div>
     );
   }
-  
+
   // Error state - only shown if all data failed to load
   if (dashboard.error) {
     return (
@@ -62,16 +62,16 @@ const Home: React.FC = () => {
   }));
 
   console.log(dashboard.problemAssets);
-  
+
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
-  
+
   return (
     <div className="space-y-6 pb-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
       </div>
-      
+
       {/* Inventory Cards - Inventário Rápido */}
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {/* Total de Chips Card */}
@@ -126,7 +126,7 @@ const Home: React.FC = () => {
             </Link>
           </CardFooter>
         </Card>
-        
+
         {/* Total de SPEEDYS 5G */}
         <Card>
           <CardHeader>
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
             </Link>
           </CardFooter>
         </Card>
-        
+
         {/* Total de Equipamentos Card */}
         <Card>
           <CardHeader>
@@ -233,7 +233,7 @@ const Home: React.FC = () => {
           </CardFooter>
         </Card>
       </div>
-      
+
       {/* Top Priority Cards - Status Imediato */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Chips com Problema Card */}
@@ -247,7 +247,7 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.problemAssets.data.filter(a => a.type ===  "CHIP").length} Chips com Problema
+                      {dashboard.problemAssets.data.filter(a => a.type === "CHIP").length} Chips com Problema
                     </>
                   )}
                 </span>
@@ -290,7 +290,7 @@ const Home: React.FC = () => {
             </Link>
           </CardFooter>
         </Card>
-        
+
         {/* Speedys com problema CARD */}
         <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
           <CardHeader className="pb-2">
@@ -302,7 +302,7 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.problemAssets.data.filter(a => a.type ===  "SPEEDY 5G").length} Speedys com Problema
+                      {dashboard.problemAssets.data.filter(a => a.type === "SPEEDY 5G").length} Speedys com Problema
                     </>
                   )}
                 </span>
@@ -357,7 +357,7 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.problemAssets.data.filter(a => a.type !==  "CHIP").length} Equipamentos com Problema
+                      {dashboard.problemAssets.data.filter(a => a.type !== "CHIP").length} Equipamentos com Problema
                     </>
                   )}
                 </span>
@@ -401,7 +401,64 @@ const Home: React.FC = () => {
           </CardFooter>
         </Card>
       </div>
-      
+
+      {/*chips em locação*/}
+      <Card className="bg-yellow-50 border-yellow-200 flex flex-col h-full">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              <span>
+                {dashboard.onLeaseAssets.isLoading ? (
+                  <Skeleton className="h-6 w-16" />
+                ) : (
+                  <>
+                    {dashboard.onLeaseAssets.data.length} Ativos em locação
+                  </>
+                )}
+              </span>
+            </CardTitle>
+          </div>
+          <CardDescription className="text-yellow-700">
+            Ativos atualmente em locação
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pb-2 flex-1">
+          {dashboard.onLeaseAssets.isLoading ? (
+            <div className="space-y-2">
+              {Array(3).fill(0).map((_, i) => (
+                <Skeleton key={i} className="h-5 w-full" />
+              ))}
+            </div>
+          ) : dashboard.onLeaseAssets.data.length > 0 ? (
+            <ul className="space-y-1">
+              {dashboard.onLeaseAssets.data.map(asset => (
+                <li key={asset.id} className="flex items-center gap-2 text-sm font-mono border-b border-yellow-100 py-1">
+                  <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                  <span className="font-semibold">{asset.identifier}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({asset.type} - {asset.identifier})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center py-3 text-sm text-muted-foreground">
+              Nenhum ativo em locação detectado.
+            </p>
+          )}
+        </CardContent>
+        <CardFooter className="pt-0 mt-auto">
+          <Link to="/assets/inventory?status=on-lease" className="w-full">
+            <Button variant="destructive" className="w-full" size="sm">
+              Ver todos em locação
+            </Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    
+
+
       {/* Bottom Row - Monitoring Cards */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Recent Alerts Card */}
@@ -418,21 +475,28 @@ const Home: React.FC = () => {
           <CardContent>
             {dashboard.recentAlerts.isLoading ? (
               <div className="space-y-3">
-                {Array(4).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
+                {Array(4)
+                  .fill(0)
+                  .map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
               </div>
-            ) : dashboard.recentAlerts.data.length > 0 ? (
+            ) : (dashboard.recentAlerts.data?.length ?? 0) > 0 ? (
               <ul className="space-y-3">
                 {dashboard.recentAlerts.data.map((alert) => (
                   <li key={alert.id} className="bg-muted/50 p-2 rounded-lg text-sm">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium">{alert.assetType} - {alert.name}</span>
-                      <span className="text-xs text-muted-foreground">{alert.date}</span>
+                      <span className="font-medium">
+                        {alert.assetType} - {alert.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {alert.date}
+                      </span>
                     </div>
-                    <p className="text-muted-foreground">{alert.description.includes('CRIADO') ? 
-                    alert.description.capitalize() :
-                    `${alert.description.capitalize()} de ${alert.old_status} para ${alert.new_status}`}
+                    <p className="text-muted-foreground">
+                      {alert.description?.includes('CRIADO')
+                        ? alert.description.capitalize()
+                        : `${alert.description.capitalize()} de ${alert.old_status} para ${alert.new_status}`}
                     </p>
                   </li>
                 ))}
@@ -452,7 +516,7 @@ const Home: React.FC = () => {
             </Link>
           </CardFooter>
         </Card>
-        
+
         {/* Asset Status Distribution */}
         <Card>
           <CardHeader>
@@ -490,8 +554,8 @@ const Home: React.FC = () => {
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => [`${value} ativos`, null]} />
-                    <Legend 
-                      layout="vertical" 
+                    <Legend
+                      layout="vertical"
                       verticalAlign="middle"
                       align="right"
                     />
