@@ -86,8 +86,8 @@ export const usePlans = () => {
 
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
-  // Use explicit literal strings for query key to avoid deep type instantiation
-  const queryKey = ['asset-exists', field, value] as const;
+  // Use simple string literals for query key to avoid deep type instantiation
+  const queryKey = ["asset-exists", field, value];
   
   return useQuery({
     queryKey: queryKey,
