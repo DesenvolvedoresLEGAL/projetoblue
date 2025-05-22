@@ -1,14 +1,12 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { assetService } from "@/services/api/asset";
 import { CircleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 
 export const ProblemAssetsCard: React.FC = () => {
   const { data: problemAssets = [], isLoading } = useQuery({
@@ -68,9 +66,6 @@ export const ProblemAssetsCard: React.FC = () => {
                     ? asset.iccid || 'N/A'
                     : asset.radio || 'N/A'}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  ({asset.solutionName})
-                </span>
               </li>
             ))}
           </ul>
@@ -80,13 +75,6 @@ export const ProblemAssetsCard: React.FC = () => {
           </p>
         )}
       </CardContent>
-      <CardFooter>
-        <Link to="/assets/inventory?status=problem" className="w-full">
-          <Button variant="outline" className="w-full">
-            Ver todos os ativos com problema
-          </Button>
-        </Link>
-      </CardFooter>
     </Card>
   );
 };

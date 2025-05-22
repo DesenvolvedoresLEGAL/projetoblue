@@ -1,10 +1,6 @@
 
 export { DashboardHeader } from './DashboardHeader';
 export { KpiCards as DashboardKpis } from './KpiCards';
-export { EnhancedKpiCards } from './EnhancedKpiCards';
-export { AssetStatusByTypeCard } from './AssetStatusByTypeCard';
-export { AssetFilters } from './AssetFilters';
-export { FilteredAssetsTable } from './FilteredAssetsTable';
 export { AssetsChart } from './AssetsChart';
 export { EventsTimeline } from './EventsTimeline';
 export { AlertsPanel } from './AlertsPanel';
@@ -14,5 +10,3 @@ export { RecentAssetsList } from './RecentAssetsList';
 export { RecentEventsList } from './RecentEventsList';
 export { LoadingState } from './LoadingState';
 export { ErrorState } from './ErrorState';
-export { HistoryAccessPanel } from './HistoryAccessPanel';
-export { ProblemAssetsCard } from './ProblemAssetsCard';
