@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -86,8 +85,8 @@ export const usePlans = () => {
 
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
-  // Use simple string literals for query key to avoid deep type instantiation
-  const queryKey = ["asset-exists", field, value];
+  // Fix: Use primitive array type to avoid deep type instantiation
+  const queryKey = ['asset-exists', field, value] as const;
   
   return useQuery({
     queryKey: queryKey,
