@@ -30,18 +30,6 @@ interface AssetFilters {
   limit?: number;
 }
 
-// Simplified query keys to prevent deep type instantiation
-const queryKeys = {
-  assets: 'assets',
-  asset: (id: string) => ['assets', id] as const,
-  assetsList: (filters?: AssetFilters) => ['assets', 'list', filters] as const,
-  assetExists: (identifier: string, field: string) => ['assets', 'exists', identifier, field] as const,
-  manufacturers: 'manufacturers',
-  assetSolutions: 'assetSolutions',
-  statusRecords: 'statusRecords',
-  plans: 'plans'
-};
-
 // Hook for creating a new asset
 export const useCreateAsset = () => {
   const queryClient = useQueryClient();
@@ -101,11 +89,10 @@ export const useCreateAsset = () => {
   return createAssetMutation;
 };
 
-// Fix: Use direct array literals for query keys to prevent deep type instantiation
+// Fix: Use direct string literals for query keys to prevent type instantiation issues
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    // Using direct array literal with 'as const' to prevent excessive type instantiation
-    queryKey: ['assets', 'exists', identifier, field] as const,
+    queryKey: ['asset-exists', field, identifier],
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };
@@ -132,7 +119,7 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 export const useManufacturers = () => {
   return useQuery({
     // Fixed query key using direct string array instead of helper function
-    queryKey: ['manufacturers'] as const,
+    queryKey: ['manufacturers'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -150,7 +137,7 @@ export const useManufacturers = () => {
 export const useAssetSolutions = () => {
   return useQuery({
     // Fixed query key using direct string array instead of helper function
-    queryKey: ['assetSolutions'] as const,
+    queryKey: ['assetSolutions'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -168,7 +155,7 @@ export const useAssetSolutions = () => {
 export const useStatusRecords = () => {
   return useQuery({
     // Fixed query key using direct string array instead of helper function
-    queryKey: ['statusRecords'] as const,
+    queryKey: ['statusRecords'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -186,7 +173,7 @@ export const useStatusRecords = () => {
 export const usePlans = () => {
   return useQuery({
     // Fixed query key using direct string array instead of helper function
-    queryKey: ['plans'] as const,
+    queryKey: ['plans'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')

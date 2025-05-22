@@ -26,6 +26,17 @@ import {
   Loader2
 } from "lucide-react";
 
+// Add this extension to capitalize strings
+declare global {
+  interface String {
+    capitalize(): string;
+  }
+}
+
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
 const Home: React.FC = () => {
   const dashboard = useDashboardCards();
 
@@ -57,11 +68,9 @@ const Home: React.FC = () => {
 
   // Prepare data for pie chart
   const statusChartData = dashboard.statusDistribution.data.map(item => ({
-    name: item.status.capitalize(),
+    name: item.status.charAt(0).toUpperCase() + item.status.slice(1),
     value: item.count,
   }));
-
-  console.log(dashboard.problemAssets);
 
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
@@ -264,17 +273,19 @@ const Home: React.FC = () => {
                   <Skeleton key={i} className="h-5 w-full" />
                 ))}
               </div>
-            ) : dashboard.problemAssets.data.length > 0 ? (
+            ) : dashboard.problemAssets.data.filter(asset => asset.type === "CHIP").length > 0 ? (
               <ul className="space-y-1">
-                {dashboard.problemAssets.data.filter(asset => asset.type === "CHIP").map(asset => (
-                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
-                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
-                    <span className="font-semibold">{asset.identifier}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.status})
-                    </span>
-                  </li>
-                ))}
+                {dashboard.problemAssets.data
+                  .filter(asset => asset.type === "CHIP")
+                  .map(asset => (
+                    <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                      <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <span className="font-semibold">{asset.identifier}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({asset.type} - {asset.status})
+                      </span>
+                    </li>
+                  ))}
               </ul>
             ) : (
               <p className="text-center py-3 text-sm text-muted-foreground">
@@ -319,17 +330,19 @@ const Home: React.FC = () => {
                   <Skeleton key={i} className="h-5 w-full" />
                 ))}
               </div>
-            ) : dashboard.problemAssets.data.length > 0 ? (
+            ) : dashboard.problemAssets.data.filter(a => a.type === "SPEEDY 5G").length > 0 ? (
               <ul className="space-y-1">
-                {dashboard.problemAssets.data.filter(asset => asset.type === "SPEEDY 5G").map(asset => (
-                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
-                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
-                    <span className="font-semibold">{asset.identifier}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.status})
-                    </span>
-                  </li>
-                ))}
+                {dashboard.problemAssets.data
+                  .filter(asset => asset.type === "SPEEDY 5G")
+                  .map(asset => (
+                    <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                      <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <span className="font-semibold">{asset.identifier}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({asset.type} - {asset.status})
+                      </span>
+                    </li>
+                  ))}
               </ul>
             ) : (
               <p className="text-center py-3 text-sm text-muted-foreground">
@@ -357,7 +370,7 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.problemAssets.data.filter(a => a.type !== "CHIP").length} Equipamentos com Problema
+                      {dashboard.problemAssets.data.filter(a => a.type !== "CHIP" && a.type !== "SPEEDY 5G").length} Equipamentos com Problema
                     </>
                   )}
                 </span>
@@ -374,17 +387,19 @@ const Home: React.FC = () => {
                   <Skeleton key={i} className="h-5 w-full" />
                 ))}
               </div>
-            ) : dashboard.problemAssets.data.length > 0 ? (
+            ) : dashboard.problemAssets.data.filter(a => a.type !== "CHIP" && a.type !== "SPEEDY 5G").length > 0 ? (
               <ul className="space-y-1">
-                {dashboard.problemAssets.data.filter(asset => asset.type !== "CHIP").map(asset => (
-                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
-                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
-                    <span className="font-semibold">{asset.identifier}</span>
-                    <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.status})
-                    </span>
-                  </li>
-                ))}
+                {dashboard.problemAssets.data
+                  .filter(asset => asset.type !== "CHIP" && asset.type !== "SPEEDY 5G")
+                  .map(asset => (
+                    <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                      <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <span className="font-semibold">{asset.identifier}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({asset.type} - {asset.status})
+                      </span>
+                    </li>
+                  ))}
               </ul>
             ) : (
               <p className="text-center py-3 text-sm text-muted-foreground">
@@ -414,7 +429,7 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.onLeaseAssets.data.length} Ativos em locação
+                      {dashboard.onLeaseAssets.count} Ativos em locação
                     </>
                   )}
                 </span>
@@ -438,7 +453,7 @@ const Home: React.FC = () => {
                     <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
                     <span className="font-semibold">{asset.identifier}</span>
                     <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.identifier})
+                      ({asset.type})
                     </span>
                   </li>
                 ))}
@@ -469,14 +484,14 @@ const Home: React.FC = () => {
                     <Skeleton className="h-6 w-16" />
                   ) : (
                     <>
-                      {dashboard.onSubscriptionAssets.data.length} Ativos em assinatura
+                      {dashboard.onSubscriptionAssets.count} Ativos em assinatura
                     </>
                   )}
                 </span>
               </CardTitle>
             </div>
             <CardDescription className="text-yellow-700">
-              Ativos atualmente em locação
+              Ativos atualmente em assinatura
             </CardDescription>
           </CardHeader>
           <CardContent className="pb-2 flex-1">
@@ -493,29 +508,27 @@ const Home: React.FC = () => {
                     <CircleAlert className="h-4 w-4 text-yellow-500 flex-shrink-0" />
                     <span className="font-semibold">{asset.identifier}</span>
                     <span className="text-xs text-muted-foreground">
-                      ({asset.type} - {asset.identifier})
+                      ({asset.type})
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="text-center py-3 text-sm text-muted-foreground">
-                Nenhum ativo em locação detectado.
+                Nenhum ativo em assinatura detectado.
               </p>
             )}
           </CardContent>
           <CardFooter className="pt-0 mt-auto">
-            <Link to="/assets/inventory?status=on-lease" className="w-full">
+            <Link to="/assets/inventory?status=on-subscription" className="w-full">
               <Button variant="destructive" className="w-full" size="sm">
-                Ver todos em locação
+                Ver todos em assinatura
               </Button>
             </Link>
           </CardFooter>
         </Card>
       </div>
     
-
-
       {/* Bottom Row - Monitoring Cards */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Recent Alerts Card */}
@@ -552,8 +565,8 @@ const Home: React.FC = () => {
                     </div>
                     <p className="text-muted-foreground">
                       {alert.description?.includes('CRIADO')
-                        ? alert.description.capitalize()
-                        : `${alert.description.capitalize()} de ${alert.old_status} para ${alert.new_status}`}
+                        ? alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()
+                        : `${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status} para ${alert.new_status}`}
                     </p>
                   </li>
                 ))}

@@ -79,14 +79,14 @@ export interface AssetStatusByType {
   count: number;  // Changed from 'total' to 'count' to match the SQL function's return value
 }
 
-// Define a specific type for problem assets from the database
+// Define a specific type for problem assets from the database with all required fields
 export interface ProblemAsset {
   uuid: string;
-  iccid: string | null;
-  radio: string | null;
-  line_number: number;
+  iccid?: string | null;
+  radio?: string | null;
+  line_number?: number | null;
   solution_id: number;
-  // Adding missing fields required by the implementation
+  // Adding all fields that might be used in the components
   id?: string;
   type?: string;
   status?: string;
@@ -98,6 +98,8 @@ export interface ProblemAsset {
   createdAt?: string;
   admin_user?: string;
   admin_pass?: string;
-  // serial_number was missing, let's add it
   serial_number?: string;
+  serialNumber?: string;
+  solucao?: string;
+  num_linha?: number | null;
 }
