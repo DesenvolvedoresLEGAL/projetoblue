@@ -1,6 +1,7 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { assetService } from "@/services/api/assetService";
+import assetService from "@/services/api/asset";
 import { normalizeAsset, getAssetIdentifier } from "@/utils/assetUtils";
 
 // Types for dashboard data

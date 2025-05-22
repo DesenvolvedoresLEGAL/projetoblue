@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
-import { assetService } from '@/services/api/asset';
+import assetService from '@/services/api/asset';
 import { toast } from '@/utils/toast';
 
 interface UseAssetEditFormProps {

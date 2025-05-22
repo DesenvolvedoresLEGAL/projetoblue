@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -80,10 +79,10 @@ export const useCreateAsset = () => {
   return createAssetMutation;
 };
 
-// Fix: Use simple string literals for query keys to prevent deep type instantiation
+// Use simple string literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    queryKey: ['assets', 'exists', identifier, field],
+    queryKey: ['assets-exists', identifier, field], // Modified to be simpler
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };

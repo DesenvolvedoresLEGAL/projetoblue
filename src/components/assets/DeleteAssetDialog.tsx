@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { assetService } from '@/services/api/asset';
+import assetService from '@/services/api/asset';
 import { toast } from '@/utils/toast';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
 

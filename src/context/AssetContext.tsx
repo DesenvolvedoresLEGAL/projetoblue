@@ -6,7 +6,7 @@ import { toast } from '@/utils/toast';
 import { AssetContextType } from './AssetContextTypes';
 import { Client } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
-import { assetService } from '@/services/api/assetService';
+import assetService from '@/services/api/asset';
 import { referenceDataService } from '@/services/api/referenceDataService';
 import { supabase } from '@/integrations/supabase/client';
 import { getValidAssetStatus } from '@/utils/assetUtils';
