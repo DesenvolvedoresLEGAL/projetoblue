@@ -73,7 +73,7 @@ const Home: React.FC = () => {
       </div>
       
       {/* Inventory Cards - Inventário Rápido */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {/* Total de Chips Card */}
         <Card>
           <CardHeader>
@@ -122,6 +122,59 @@ const Home: React.FC = () => {
             <Link to="/assets/inventory?type=1" className="w-full">
               <Button variant="outline" className="w-full" size="sm">
                 Ver todos os chips
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        {/* Total de SPEEDYS 5G */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl font-normal">Total de Speedys 5G: <span className="font-semibold">{dashboard.assetsStats.data.speedys.total}</span></CardTitle>
+            <CardDescription>Disponibilidade atual do inventário</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboard.assetsStats.isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-32" />
+                <div className="flex gap-4">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Disponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.speedys.available}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
+                      <X className="size-3 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Indisponíveis</p>
+                      <p className="text-lg font-bold">
+                        {dashboard.assetsStats.data.speedys.unavailable}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Link to="/assets/inventory?type=1" className="w-full">
+              <Button variant="outline" className="w-full" size="sm">
+                Ver todos os Speedys 5G
               </Button>
             </Link>
           </CardFooter>
@@ -182,9 +235,9 @@ const Home: React.FC = () => {
       </div>
       
       {/* Top Priority Cards - Status Imediato */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         {/* Chips com Problema Card */}
-        <Card className={`bg-red-50 border-red-200`}>
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl flex items-center gap-2">
@@ -204,7 +257,7 @@ const Home: React.FC = () => {
               Ativos que necessitam de atenção imediata
             </CardDescription>
           </CardHeader>
-          <CardContent className="pb-2">
+          <CardContent className="pb-2 flex-1">
             {dashboard.problemAssets.isLoading ? (
               <div className="space-y-2">
                 {Array(3).fill(0).map((_, i) => (
@@ -229,7 +282,7 @@ const Home: React.FC = () => {
               </p>
             )}
           </CardContent>
-          <CardFooter className="pt-0">
+          <CardFooter className="pt-0 mt-auto">
             <Link to="/assets/inventory" className="w-full">
               <Button variant="destructive" className="w-full" size="sm">
                 Ver todos os problemas
@@ -238,8 +291,63 @@ const Home: React.FC = () => {
           </CardFooter>
         </Card>
         
+        {/* Speedys com problema CARD */}
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <span>
+                  {dashboard.problemAssets.isLoading ? (
+                    <Skeleton className="h-6 w-16" />
+                  ) : (
+                    <>
+                      {dashboard.problemAssets.data.filter(a => a.type ===  "SPEEDY 5G").length} Speedys com Problema
+                    </>
+                  )}
+                </span>
+              </CardTitle>
+            </div>
+            <CardDescription className="text-red-700">
+              Ativos que necessitam de atenção imediata
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-2 flex-1">
+            {dashboard.problemAssets.isLoading ? (
+              <div className="space-y-2">
+                {Array(3).fill(0).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+              </div>
+            ) : dashboard.problemAssets.data.length > 0 ? (
+              <ul className="space-y-1">
+                {dashboard.problemAssets.data.filter(asset => asset.type === "SPEEDY 5G").map(asset => (
+                  <li key={asset.uuid} className="flex items-center gap-2 text-sm font-mono border-b border-red-100 py-1">
+                    <CircleAlert className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <span className="font-semibold">{asset.identifier}</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({asset.type} - {asset.status})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-center py-3 text-sm text-muted-foreground">
+                Nenhum ativo com problema detectado.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter className="pt-0 mt-auto">
+            <Link to="/assets/inventory?status=problem" className="w-full">
+              <Button variant="destructive" className="w-full" size="sm">
+                Ver todos os problemas
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
         {/* Equipamentos com problema CARD */}
-        <Card className={`bg-red-50 border-red-200`}>
+        <Card className={`bg-red-50 border-red-200 flex flex-col h-full`}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl flex items-center gap-2">
@@ -259,7 +367,7 @@ const Home: React.FC = () => {
               Ativos que necessitam de atenção imediata
             </CardDescription>
           </CardHeader>
-          <CardContent className="pb-2">
+          <CardContent className="pb-2 flex-1">
             {dashboard.problemAssets.isLoading ? (
               <div className="space-y-2">
                 {Array(3).fill(0).map((_, i) => (
@@ -284,7 +392,7 @@ const Home: React.FC = () => {
               </p>
             )}
           </CardContent>
-          <CardFooter className="pt-0">
+          <CardFooter className="pt-0 mt-auto">
             <Link to="/assets/inventory?status=problem" className="w-full">
               <Button variant="destructive" className="w-full" size="sm">
                 Ver todos os problemas
@@ -294,30 +402,6 @@ const Home: React.FC = () => {
         </Card>
       </div>
       
-      
-      {/* Action Card - Associar/Desassociar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ArrowRight className="h-5 w-5" />
-            Associar/Desassociar Ativos
-          </CardTitle>
-          <CardDescription>
-            Acesso rápido às operações de associação de ativos a clientes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link to="/association">
-              <Button className="w-full">Associar Ativo a Cliente</Button>
-            </Link>
-            <Link to="/association?operation=remove">
-              <Button variant="outline" className="w-full">Desassociar Ativo</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-      
       {/* Bottom Row - Monitoring Cards */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Recent Alerts Card */}
@@ -325,7 +409,7 @@ const Home: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Alertas Recentes
+              Atividades Recentes
             </CardTitle>
             <CardDescription>
               Últimos eventos e alertas registrados no sistema
@@ -346,7 +430,10 @@ const Home: React.FC = () => {
                       <span className="font-medium">{alert.assetType} - {alert.name}</span>
                       <span className="text-xs text-muted-foreground">{alert.date}</span>
                     </div>
-                    <p className="text-muted-foreground">{alert.description} de {alert.old_status} para {alert.new_status}</p>
+                    <p className="text-muted-foreground">{alert.description.includes('CRIADO') ? 
+                    alert.description.capitalize() :
+                    `${alert.description.capitalize()} de ${alert.old_status} para ${alert.new_status}`}
+                    </p>
                   </li>
                 ))}
               </ul>

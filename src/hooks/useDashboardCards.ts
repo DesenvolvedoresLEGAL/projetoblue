@@ -141,17 +141,24 @@ export const useDashboardCards = () => {
         
         // Filter chips (solution_id === 1) and equipment (solution_id !== 1)
         const chips = (assets || []).filter(a => a.solution_id === 11);
-        const equipment = (assets || []).filter(a => a.solution_id !== 11);
+        const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
+        const speedy = (assets || []).filter(a => a.solution_id === 1);
         
         // Count available and unavailable assets
         const availableChips = chips.filter(a => a.status_id === availableStatusId);
         const availableEquipment = equipment.filter(a => a.status_id === availableStatusId);
+        const availableSpeedy = speedy.filter(a => a.status_id === availableStatusId);
         
         return {
           chipsStats: {
             total: chips.length,
             available: availableChips.length,
             unavailable: chips.length - availableChips.length
+          },
+          speedyStats: {
+            total: speedy.length,
+            available: availableSpeedy.length,
+            unavailable: speedy.length - availableSpeedy.length
           },
           equipmentStats: {
             total: equipment.length,
@@ -259,6 +266,7 @@ export const useDashboardCards = () => {
     assetsStats: {
       data: {
         chips: assetsStatsQuery.data?.chipsStats || { total: 0, available: 0, unavailable: 0 },
+        speedys: assetsStatsQuery.data?.speedyStats || { total: 0, available: 0, unavailable: 0 },
         equipment: assetsStatsQuery.data?.equipmentStats || { total: 0, available: 0, unavailable: 0 }
       },
       isLoading: assetsStatsQuery.isLoading,
