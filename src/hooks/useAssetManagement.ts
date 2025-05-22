@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -88,11 +89,11 @@ export const useCreateAsset = () => {
   return createAssetMutation;
 };
 
-// Fix: Use direct string literals for query keys to prevent type instantiation issues
+// Fix the deep type instantiation issue by using explicit string literals for query keys
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    // Use string literals directly instead of helper function to avoid deep type instantiation
-    queryKey: ['asset-exists', field, identifier] as const,
+    // Use explicitly defined array elements for queryKey
+    queryKey: ['asset-exists', field, identifier],
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };
@@ -118,8 +119,8 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 // Hook for fetching manufacturers
 export const useManufacturers = () => {
   return useQuery({
-    // Fixed query key using direct string array instead of helper function
-    queryKey: ['manufacturers'] as const,
+    // Removed 'as const' to prevent deep type instantiation
+    queryKey: ['manufacturers'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -133,10 +134,10 @@ export const useManufacturers = () => {
   });
 };
 
-// Ensure all other hooks use constant query keys
+// Ensure all other hooks use simple array literals for query keys
 export const useAssetSolutions = () => {
   return useQuery({
-    queryKey: ['assetSolutions'] as const,
+    queryKey: ['assetSolutions'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -152,7 +153,7 @@ export const useAssetSolutions = () => {
 
 export const useStatusRecords = () => {
   return useQuery({
-    queryKey: ['statusRecords'] as const,
+    queryKey: ['statusRecords'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -168,7 +169,7 @@ export const useStatusRecords = () => {
 
 export const usePlans = () => {
   return useQuery({
-    queryKey: ['plans'] as const,
+    queryKey: ['plans'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')
