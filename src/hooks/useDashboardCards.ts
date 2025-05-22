@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@/services/api/assetService";
@@ -68,7 +67,7 @@ export const useDashboardCards = () => {
             uuid: asset.uuid,
             identifier: asset.solution_id === 1 
               ? asset.iccid || 'N/A' 
-              : asset.radio || asset.serial_number || 'N/A',
+              : asset.radio || asset.id || 'N/A', // Using asset.id instead of serial_number
             type: solution?.solution || 'Desconhecido',
             status: status?.status || 'Desconhecido'
           };

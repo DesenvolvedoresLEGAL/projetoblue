@@ -104,6 +104,7 @@ export const useCreateAsset = () => {
 // Fix: Use direct array literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
+    // Using direct array literal with 'as const' to prevent excessive type instantiation
     queryKey: ['assets', 'exists', identifier, field] as const,
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
@@ -130,7 +131,8 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 // Hook for fetching manufacturers
 export const useManufacturers = () => {
   return useQuery({
-    queryKey: [queryKeys.manufacturers],
+    // Fixed query key using direct string array instead of helper function
+    queryKey: ['manufacturers'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -147,7 +149,8 @@ export const useManufacturers = () => {
 // Hook for fetching asset solutions
 export const useAssetSolutions = () => {
   return useQuery({
-    queryKey: [queryKeys.assetSolutions],
+    // Fixed query key using direct string array instead of helper function
+    queryKey: ['assetSolutions'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -164,7 +167,8 @@ export const useAssetSolutions = () => {
 // Hook for fetching status records
 export const useStatusRecords = () => {
   return useQuery({
-    queryKey: [queryKeys.statusRecords],
+    // Fixed query key using direct string array instead of helper function
+    queryKey: ['statusRecords'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -181,7 +185,8 @@ export const useStatusRecords = () => {
 // Hook for fetching plans
 export const usePlans = () => {
   return useQuery({
-    queryKey: [queryKeys.plans],
+    // Fixed query key using direct string array instead of helper function
+    queryKey: ['plans'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')

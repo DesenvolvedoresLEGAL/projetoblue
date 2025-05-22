@@ -97,4 +97,6 @@ export interface ProblemAsset {
   createdAt?: string;
   admin_user?: string;
   admin_pass?: string;
+  // serial_number was missing, let's add it
+  serial_number?: string;
 }
