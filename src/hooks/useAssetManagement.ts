@@ -33,8 +33,9 @@ interface AssetFilters {
 // Simplified query keys to prevent deep type instantiation
 const queryKeys = {
   assets: 'assets',
-  asset: (id: string) => ['assets', id],
-  assetsList: (filters?: AssetFilters) => ['assets', 'list', filters],
+  asset: (id: string) => ['assets', id] as const,
+  assetsList: (filters?: AssetFilters) => ['assets', 'list', filters] as const,
+  assetExists: (identifier: string, field: string) => ['assets', 'exists', identifier, field] as const,
   manufacturers: 'manufacturers',
   assetSolutions: 'assetSolutions',
   statusRecords: 'statusRecords',
@@ -87,7 +88,7 @@ export const useCreateAsset = () => {
     },
     onSuccess: () => {
       // Invalidate assets queries to refetch the data
-      queryClient.invalidateQueries({ queryKey: [queryKeys.assets] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
       toast.success("Asset created successfully");
       navigate("/assets/inventory"); // Redirect to inventory
     },
@@ -98,6 +99,32 @@ export const useCreateAsset = () => {
   });
 
   return createAssetMutation;
+};
+
+// Fix: Use direct array literals for query keys to prevent deep type instantiation
+export const useCheckAssetExists = (identifier: string, field: string) => {
+  return useQuery({
+    queryKey: ['assets', 'exists', identifier, field] as const,
+    queryFn: async () => {
+      if (!identifier || identifier.trim() === '') {
+        return { exists: false, data: null };
+      }
+
+      const { data, error, count } = await supabase
+        .from('assets')
+        .select('*', { count: 'exact' })
+        .eq(field, identifier)
+        .is('deleted_at', null)
+        .limit(1);
+
+      if (error) {
+        throw new Error(`Error checking if asset exists: ${error.message}`);
+      }
+
+      return { exists: (count || 0) > 0, data: data?.[0] || null };
+    },
+    enabled: !!identifier && identifier.trim() !== '',
+  });
 };
 
 // Hook for fetching manufacturers
