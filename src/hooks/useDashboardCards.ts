@@ -1,7 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@/services/api/assetService";
+import { count } from "console";
 
 // Types for dashboard data
 export interface DashboardStatsData {
@@ -59,23 +59,16 @@ export const useDashboardCards = () => {
           .from('asset_solutions')
           .select('id, solution');
           
-        // Transform data for the dashboard with consistent identifiers
+        // Transform data for the dashboard
         const items = assets.map(asset => {
           const solution = solutions?.find(s => s.id === asset.solution_id);
           const status = statuses?.find(s => s.id === asset.statusId);
           
-          // Standardized identifier logic
-          let identifier;
-          if (asset.solution_id === 11) { // CHIP
-            identifier = asset.line_number || asset.iccid || 'N/A';
-          } else {
-            // For equipment, prefer radio, then serial_number, then id
-            identifier = asset.radio || asset.serial_number || asset.id || 'N/A';
-          }
-          
           return {
             uuid: asset.uuid,
-            identifier,
+            identifier: asset.solution_id === 11 
+              ? asset.line_number || 'N/A' 
+              : asset.radio || asset.id || 'N/A', // Using asset.id instead of serial_number
             type: solution?.solution || 'Desconhecido',
             status: status?.status || 'Desconhecido'
           };
@@ -97,74 +90,65 @@ export const useDashboardCards = () => {
     queryKey: ["dashboard", "onLeaseAssets"],
     queryFn: async () => {
       try {
-        const assets = await assetService.getAssetsByStatus(2); // Status ID 2 for "em locação"
+      const assets = await assetService.getAssetsByStatus(2);
 
-        // Standardized identifier logic
-        const items = assets.map((asset) => {
-          // Determine identifier based on solution type
-          let identifier;
-          if (asset.solucao === "CHIP" || asset.solution_id === 11) {
-            identifier = asset.line_number || asset.iccid || "N/A";
-          } else {
-            identifier = asset.radio || asset.serial_number || asset.id || "N/A";
-          }
+      const items = assets.map((asset) => {
 
-          return {
-            id: asset.id,
-            identifier,
-            type: asset.solucao || asset.type || "Desconhecido",
-            status: asset.status || "Desconhecido",
-          };
-        });
+        return {
+          id: asset.id,
+          identifier:
+            asset.solucao === "CHIP"
+              ? asset.line_number || "N/A"
+              : asset.radio || asset.serial_number || "N/A", // Using asset.id instead of serial_number
+          type: asset.type || "Desconhecido",
+          status: asset.status || "Desconhecido",
+        };
+      });
         
         return {
           count: items.length,
           items: items.slice(0, 5) // Return only the first 5 for the card display
         };
       } catch (error) {
-        console.error("Error fetching assets on lease:", error);
+        console.error("Error fetching problem assets:", error);
         throw error;
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+    }
+  );
 
-  // Fix queryKey collision with onLeaseAssetsQuery by using a unique key
   const onSubscriptionAssetsQuery = useQuery({
-    queryKey: ["dashboard", "onSubscriptionAssets"],
+    queryKey: ["dashboard", "onLeaseAssets"],
     queryFn: async () => {
       try {
-        const assets = await assetService.getAssetsByStatus(3); // Status ID 3 for "em assinatura"
+      const assets = await assetService.getAssetsByStatus(3);
 
-        // Standardized identifier logic
-        const items = assets.map((asset) => {
-          // Determine identifier based on solution type
-          let identifier;
-          if (asset.type === "CHIP" || asset.solution_id === 11) {
-            identifier = asset.line_number || asset.num_linha || asset.iccid || "N/A";
-          } else {
-            identifier = asset.radio || asset.serial_number || asset.serialNumber || asset.id || "N/A";
-          }
+      const items = assets.map((asset) => {
 
-          return {
-            id: asset.id,
-            identifier,
-            type: asset.solucao || asset.type || "Desconhecido",
-            status: asset.status || "Desconhecido",
-          };
-        });
+        return {
+          id: asset.id,
+          identifier:
+            asset.type === "CHIP"
+              ? asset.num_linha || "N/A"
+              : asset.radio || asset.serialNumber || "N/A", // Using asset.id instead of serial_number
+          type: asset.type || "Desconhecido",
+          status: asset.status || "Desconhecido",
+        };
+      });
         
         return {
           count: items.length,
           items: items.slice(0, 5) // Return only the first 5 for the card display
         };
       } catch (error) {
-        console.error("Error fetching subscription assets:", error);
+        console.error("Error fetching problem assets:", error);
         throw error;
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+    }
+  );
   
   // 2. Network Status (status da rede)
   const networkStatusQuery = useQuery({
@@ -220,7 +204,7 @@ export const useDashboardCards = () => {
         
         const availableStatusId = availableStatus?.id || 1;
         
-        // Filter chips (solution_id === 11) and equipment (solution_id !== 11)
+        // Filter chips (solution_id === 1) and equipment (solution_id !== 1)
         const chips = (assets || []).filter(a => a.solution_id === 11);
         const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
         const speedy = (assets || []).filter(a => a.solution_id === 1);
@@ -288,35 +272,24 @@ export const useDashboardCards = () => {
         if (eLogs) throw eLogs;
         if (eAssetStatus) throw eAssetStatus;
 
-        // Create a map for faster lookup
-        const statusMap = new Map();
-        assetStatus?.forEach(({ id, status }) => statusMap.set(id, status));
+        const m = new Map<number,string>();
+        assetStatus.forEach(({ id, status }) => m.set(id, status));
+
         
-        console.log("Recent logs data:", logs);
-        
-        // Transform logs to alerts format with better property normalization
+        // Transform logs to alerts format
         return (logs || []).map(log => {
+          // Extract asset type and description from details
           const details = log.details as Record<string, any> || {};
           const solutionId = details.solution_id;
           
-          // More consistent name extraction with fallbacks
-          let name = 'N/A';
-          if (solutionId === 11) {
-            // For chips, use line_number
-            name = details.line_number?.toString() || 'N/A';
-          } else {
-            // For equipment, prefer radio
-            name = details.radio || 'N/A';
-          }
-
           return {
             id: log.id,
             date: log.date ? new Date(log.date).toLocaleString().replace(',', '') : 'N/A',
             assetType: solutionId === 11 ? 'Chip' : 'Equipamento',
             description: log.event || 'Evento registrado',
-            name,
-            old_status: statusMap.get(details.old_status) || 'Desconhecido',
-            new_status: statusMap.get(details.new_status) || 'Desconhecido'
+            name: solutionId === 11 ? details?.line_number || [] : details?.radio || [],
+            old_status: m.get(details.old_status),
+            new_status: m.get(details.new_status)
           };
         });
       } catch (error) {
@@ -335,8 +308,6 @@ export const useDashboardCards = () => {
         const { data, error } = await supabase.rpc('status_by_asset_type');
         
         if (error) throw error;
-        
-        console.log("Status distribution data:", data);
         
         // Aggregate data by status across all types
         const statusCounts = new Map<string, number>();

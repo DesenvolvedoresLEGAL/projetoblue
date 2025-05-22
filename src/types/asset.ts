@@ -1,11 +1,12 @@
+
 export type AssetStatus = 
-  | "DISPONÍVEL" 
-  | "ALUGADO" 
-  | "ASSINATURA" 
-  | "SEM DADOS" 
-  | "BLOQUEADO" 
-  | "MANUTENÇÃO"
-  | "EXTRAVIADO";
+  | "disponível" 
+  | "em locação" 
+  | "em assinatura" 
+  | "sem dados" 
+  | "bloqueado" 
+  | "manutenção"
+  | "extraviado";
 
 export type AssetType = "CHIP" | "ROTEADOR";
 

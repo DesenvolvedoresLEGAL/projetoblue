@@ -13,20 +13,20 @@ export const AssetStatusBadge = ({ status }: AssetStatusBadgeProps) => {
   }
   
   // Now we can safely use toLowerCase()
-  switch (status.toUpperCase()) {
-    case "DISPONÍVEL":
-    case "DISPONIVEL":
+  switch (status.toLowerCase()) {
+    case "disponível":
+    case "disponivel":
       return <Badge className="bg-green-500">Disponível</Badge>;
-    case "ALUGADO":
+    case "alugado":
       return <Badge variant="outline">Alugado</Badge>;
-    case "ASSINATURA":
+    case "assinatura":
       return <Badge variant="secondary">Assinatura</Badge>;
-    case "SEM DADOS":
+    case "sem dados":
       return <Badge variant="outline">Sem Dados</Badge>;
-    case "BLOQUEADO":
+    case "bloqueado":
       return <Badge variant="destructive">Bloqueado</Badge>;
-    case "MANUTENÇÃO":
-    case "MANUTENCAO":
+    case "manutenção":
+    case "manutencao":
       return <Badge variant="warning">Manutenção</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;

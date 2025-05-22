@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";

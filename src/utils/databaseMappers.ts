@@ -13,8 +13,6 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
       case 'bloqueado': return 'BLOQUEADO';
       case 'em manutenção':
       case 'manutencao': return 'MANUTENÇÃO';
-      case 'extraviado': return 'EXTRAVIADO';
-      default: return 'DISPONÍVEL';
     }
   }
   
@@ -26,7 +24,6 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
     case 4: return 'SEM DADOS';
     case 5: return 'BLOQUEADO';
     case 6: return 'MANUTENÇÃO';
-    case 7: return 'EXTRAVIADO';
     default: return 'DISPONÍVEL';
   }
 };
@@ -120,7 +117,6 @@ export const mapAssetStatusToId = (status: AssetStatus): number => {
     case 'SEM DADOS': return 4;
     case 'BLOQUEADO': return 5;
     case 'MANUTENÇÃO': return 6;
-    case 'EXTRAVIADO': return 7;
     default: return 1;
   }
 };
