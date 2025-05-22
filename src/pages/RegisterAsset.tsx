@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
@@ -7,20 +8,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
-import { AssetFormValues, assetSchema } from "@/schemas/assetSchemas";
+import { assetSchema, AssetFormValues } from "@/schemas/assetSchemas";
 import { 
-  useAssetStatuses,
+  useCreateAsset,
   useManufacturers,
   useAssetSolutions,
-  usePlans,
-  useCreateAsset,
-  useCheckAssetExists
+  useStatusRecords,
+  usePlans
 } from "@/hooks/useAssetManagement";
 
 // Reusable SelectField component
@@ -46,7 +45,7 @@ const SelectField = ({
           ) : (
             <Select
               value={field.value?.toString() || ""}
-              onValueChange={field.onChange}
+              onValueChange={(value) => field.onChange(Number(value))}
               disabled={disabled}
             >
               <FormControl>
@@ -60,7 +59,7 @@ const SelectField = ({
                     key={option.value}
                     value={option.value.toString()}
                   >
-                    {label != "Plano" && label != "Solução" ? option.label.capitalize() : option.label}
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -78,71 +77,55 @@ export default function RegisterAsset() {
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
   const [allowWeakPassword, setAllowWeakPassword] = useState(false);
   
-  // Fetch reference data using React Query hooks
-  const { data: statuses = [], isLoading: statusesLoading } = useAssetStatuses();
-  const { data: manufacturers = [], isLoading: manufacturersLoading } = useManufacturers();
-  const { data: solutions = [], isLoading: solutionsLoading } = useAssetSolutions();
-  const { data: plans = [], isLoading: plansLoading } = usePlans();
+  // Fetch reference data using custom hooks
+  const { data: manufacturers = [], isLoading: isManufacturersLoading } = useManufacturers();
+  const { data: solutions = [], isLoading: isSolutionsLoading } = useAssetSolutions();
+  const { data: statuses = [], isLoading: isStatusesLoading } = useStatusRecords();
+  const { data: plans = [], isLoading: isPlansLoading } = usePlans();
   
-  // Create asset mutation
-  const createAssetMutation = useCreateAsset();
-
-  // Set up the form with zod resolver using our updated schema
+  const isReferenceDataLoading = isManufacturersLoading || isSolutionsLoading || 
+                                isStatusesLoading || isPlansLoading;
+  
+  // Filter operators (carriers) from manufacturers - IDs 13, 14, 15
+  const operators = manufacturers.filter(m => [13, 14, 15].includes(m.id)) || [];
+  
+  // Set up the form with zod resolver
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
       solution_id: 1,
-      status_id: 1, // Default to Available
-      manufacturer_id: null,
-      notes: "",
-      // Chip specific fields with empty defaults
+      status_id: 1,
+      manufacturer_id: undefined,
       iccid: "",
-      line_number: null,
-      plan_id: null,
-      // Equipment specific fields with empty defaults
+      line_number: undefined,
+      plan_id: undefined,
       serial_number: "",
       model: "",
+      radio: "",
       admin_user: "admin",
-      admin_pass: "",
-      ssid: "",
-      password: ""
+      admin_pass: ""
     }
   });
   
+  const createAssetMutation = useCreateAsset();
   const solutionId = form.watch("solution_id");
-  const password = form.watch("password");
-  const iccid = form.watch("iccid");
-  const serialNumber = form.watch("serial_number");
-  
-  // Check if asset already exists
-  const isChip = solutionId === 1 || solutionId === 11;
-  const { data: iccidExists } = useCheckAssetExists('iccid', iccid || "");
-  const { data: serialExists } = useCheckAssetExists('serial_number', serialNumber || "");
+  const password = form.watch("admin_pass");
   
   // Handle password strength checking
   const handlePasswordChange = (value: string) => {
     const strength = checkPasswordStrength(value);
     setPasswordStrength(strength);
-    form.setValue("password", value);
+    form.setValue("admin_pass", value);
   };
   
   // Handle form submission
   const onSubmit = (formData: AssetFormValues) => {
-    // Check for existing assets first
-    if (isChip && iccidExists?.exists) {
-      form.setError("iccid", { message: "Este ICCID já está cadastrado no sistema" });
-      return;
-    }
-    
-    if (!isChip && serialExists?.exists) {
-      form.setError("serial_number", { message: "Este número de série já está cadastrado no sistema" });
-      return;
-    }
-    
-    // Validate password strength if it's equipment and password is provided
-    if (!isChip && password && passwordStrength === 'weak' && !allowWeakPassword) {
-      form.setError("password", { 
-        message: "Por favor, use uma senha mais forte ou confirme o uso de senha fraca." 
+    // Check password strength for routers
+    if (formData.solution_id === 2 && formData.admin_pass && 
+        passwordStrength === 'weak' && !allowWeakPassword) {
+      form.setError("admin_pass", {
+        type: "manual",
+        message: "Please use a stronger password or confirm the use of a weak password."
       });
       return;
     }
@@ -150,18 +133,18 @@ export default function RegisterAsset() {
     createAssetMutation.mutate(formData);
   };
 
-  // Filter manufacturers - only show operators for chips
-  const filteredManufacturers = isChip
-    ? manufacturers.filter(m => ['CLARO', 'VIVO', 'TIM', 'OI'].includes(m.name?.toUpperCase()))
-    : manufacturers;
-  
   // Map options for select fields
   const solutionOptions = solutions.map(item => ({
     value: item.id,
     label: item.solution
   }));
   
-  const manufacturerOptions = filteredManufacturers.map(item => ({
+  const manufacturerOptions = manufacturers.map(item => ({
+    value: item.id,
+    label: item.name
+  }));
+  
+  const operatorOptions = operators.map(item => ({
     value: item.id,
     label: item.name
   }));
@@ -178,7 +161,7 @@ export default function RegisterAsset() {
 
   // Render the password strength indicator
   const renderPasswordStrength = () => {
-    if (!passwordStrength || !password) return null;
+    if (!passwordStrength) return null;
 
     if (passwordStrength === 'strong') {
       return <div className="text-green-600 text-sm mt-1">Senha forte</div>;
@@ -212,7 +195,7 @@ export default function RegisterAsset() {
           Cadastrar Novo Ativo
         </h1>
         <p className="text-muted-foreground">
-          Adicione chips e equipamentos ao inventário
+          Adicione chips e roteadores ao inventário
         </p>
       </div>
 
@@ -224,53 +207,33 @@ export default function RegisterAsset() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Tabs
-                value={isChip ? "CHIP" : "EQUIPAMENTO"}
+                value={solutionId === 1 ? "CHIP" : "ROTEADOR"}
                 onValueChange={(value) => {
-                  const chipSolutionId = solutions.find(s => s.solution?.toUpperCase() === "CHIP")?.id || 1;
-                  const equipmentSolutionId = solutions.find(s => 
-                    s.solution?.toUpperCase() !== "CHIP" && s.id !== chipSolutionId
-                  )?.id || 2;
-                  
                   // When changing tab, reset the form for the new type
-                  const newSolutionId = value === "CHIP" ? chipSolutionId : equipmentSolutionId;
-                  
-                  // Update the solution ID first
+                  const newSolutionId = value === "CHIP" ? 1 : 2;
                   form.setValue("solution_id", newSolutionId);
                   
-                  // Reset form values that are specific to the new type
+                  // Reset form values that are specific to the other type
                   if (value === "CHIP") {
-                    // Clear equipment specific fields
                     form.setValue("serial_number", "");
                     form.setValue("model", "");
-                    form.setValue("radio", "");
-                    form.setValue("admin_user", "admin");
                     form.setValue("admin_pass", "");
-                    form.setValue("ssid", "");
-                    form.setValue("password", "");
-                    
-                    // Set required fields for chip
-                    form.setValue("iccid", "");
-                    form.setValue("line_number", null);
-                    form.setValue("plan_id", null);
+                    form.setValue("radio", "");
+                    setPasswordStrength(null);
                   } else {
-                    // Clear chip specific fields
                     form.setValue("iccid", "");
-                    form.setValue("line_number", null);
-                    form.setValue("plan_id", null);
-                    
-                    // Set required fields for equipment
-                    form.setValue("serial_number", "");
-                    form.setValue("model", "");
+                    form.setValue("line_number", undefined);
+                    form.setValue("plan_id", undefined);
                   }
                   
                   // Reset manufacturer_id in both cases
-                  form.setValue("manufacturer_id", null);
+                  form.setValue("manufacturer_id", undefined);
                 }}
                 className="w-full"
               >
                 <TabsList className="grid grid-cols-2 mb-8">
                   <TabsTrigger value="CHIP">Chip</TabsTrigger>
-                  <TabsTrigger value="EQUIPAMENTO">Equipamento</TabsTrigger>
+                  <TabsTrigger value="ROTEADOR">Roteador</TabsTrigger>
                 </TabsList>
 
                 {/* CHIP FORM */}
@@ -310,7 +273,7 @@ export default function RegisterAsset() {
                               value={field.value || ""}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                field.onChange(value === "" ? null : parseInt(value));
+                                field.onChange(value === "" ? undefined : parseInt(value));
                               }}
                             />
                           </FormControl>
@@ -324,8 +287,8 @@ export default function RegisterAsset() {
                       name="manufacturer_id"
                       label="Operadora"
                       placeholder="Selecione a operadora"
-                      options={manufacturerOptions}
-                      isLoading={manufacturersLoading}
+                      options={operatorOptions}
+                      isLoading={isReferenceDataLoading}
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
                     />
@@ -336,7 +299,7 @@ export default function RegisterAsset() {
                       label="Plano"
                       placeholder="Selecione o plano"
                       options={planOptions}
-                      isLoading={plansLoading}
+                      isLoading={isReferenceDataLoading}
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
                     />
@@ -347,34 +310,15 @@ export default function RegisterAsset() {
                       label="Status"
                       placeholder="Selecione o status"
                       options={statusOptions}
-                      isLoading={statusesLoading}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
                       disabled={createAssetMutation.isPending}
-                    />
-                    
-                    {/* New notes field for CHIP */}
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Observações</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              id="notes"
-                              placeholder="Observações adicionais sobre o chip"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
                     />
                   </div>
                 </TabsContent>
 
-                {/* EQUIPMENT FORM (previously ROUTER) */}
-                <TabsContent value="EQUIPAMENTO" className="space-y-6">
+                {/* ROUTER FORM */}
+                <TabsContent value="ROTEADOR" className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
@@ -398,10 +342,10 @@ export default function RegisterAsset() {
                     <SelectField
                       control={form.control}
                       name="manufacturer_id"
-                      label="Fabricante"
-                      placeholder="Selecione o fabricante"
+                      label="Marca"
+                      placeholder="Selecione a marca"
                       options={manufacturerOptions}
-                      isLoading={manufacturersLoading}
+                      isLoading={isReferenceDataLoading}
                       isRequired={true}
                       disabled={createAssetMutation.isPending}
                     />
@@ -420,6 +364,27 @@ export default function RegisterAsset() {
                               {...field}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="admin_pass"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Senha</FormLabel>
+                          <FormControl>
+                            <PasswordInput
+                              id="admin_pass"
+                              value={field.value || ""}
+                              onChange={(e) => handlePasswordChange(e.target.value)}
+                              placeholder="Senha da rede Wi-Fi"
+                              disabled={createAssetMutation.isPending}
+                            />
+                          </FormControl>
+                          {renderPasswordStrength()}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -450,107 +415,9 @@ export default function RegisterAsset() {
                       label="Status"
                       placeholder="Selecione o status"
                       options={statusOptions}
-                      isLoading={statusesLoading}
+                      isLoading={isReferenceDataLoading}
+                      isRequired={true}
                       disabled={createAssetMutation.isPending}
-                    />
-                    
-                    {/* New fields for EQUIPMENT */}
-                    <FormField
-                      control={form.control}
-                      name="admin_user"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Usuário Admin</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="admin_user"
-                              placeholder="Ex: admin"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="admin_pass"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Senha Admin</FormLabel>
-                          <FormControl>
-                            <PasswordInput
-                              id="admin_pass"
-                              placeholder="Senha de administrador"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="ssid"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>SSID</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="ssid"
-                              placeholder="Nome da rede Wi-Fi"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Senha da Rede</FormLabel>
-                          <FormControl>
-                            <PasswordInput
-                              id="password"
-                              value={field.value || ""}
-                              onChange={(e) => handlePasswordChange(e.target.value)}
-                              placeholder="Senha da rede Wi-Fi"
-                              disabled={createAssetMutation.isPending}
-                            />
-                          </FormControl>
-                          {renderPasswordStrength()}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Notes field for EQUIPMENT */}
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Observações</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              id="notes"
-                              placeholder="Observações adicionais sobre o equipamento"
-                              disabled={createAssetMutation.isPending}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
                     />
                   </div>
                 </TabsContent>

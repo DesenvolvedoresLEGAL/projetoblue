@@ -1,25 +1,14 @@
 
-export const checkPasswordStrength = (password: string): 'weak' | 'medium' | 'strong' | null => {
-  if (!password) return null;
-  
-  // Check password length
+export const checkPasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(password);
   const isLongEnough = password.length >= 8;
-  
-  // Check for uppercase, lowercase, numbers, and special characters
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumbers = /[0-9]/.test(password);
-  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  
-  // Count the different character types
-  const charTypesCount = [hasUppercase, hasLowercase, hasNumbers, hasSpecialChars]
-    .filter(Boolean).length;
-  
-  if (isLongEnough && charTypesCount >= 3) {
+
+  if (isLongEnough && hasLetter && hasNumber && hasSpecial) {
     return 'strong';
-  } else if (isLongEnough && charTypesCount >= 2) {
+  } else if (isLongEnough && ((hasLetter && hasNumber) || (hasLetter && hasSpecial) || (hasNumber && hasSpecial))) {
     return 'medium';
-  } else {
-    return 'weak';
   }
+  return 'weak';
 };

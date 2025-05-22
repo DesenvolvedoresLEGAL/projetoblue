@@ -1,48 +1,115 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { AssetFormValues } from "@/schemas/assetSchemas";
+import { useNavigate } from "react-router-dom";
 
-// Simple query keys to avoid deep type instantiation issues
-export const assetQueryKeys = {
-  all: ['assets'],
-  list: ['assets', 'list'],
-  detail: (id: string) => ['assets', 'detail', id],
-  statuses: ['asset-statuses'],
-  manufacturers: ['manufacturers'],
-  solutions: ['asset-solutions'],
-  plans: ['plans'],
-  exists: (field: string, value: string) => ['asset-exists', field, value]
+// Type for asset insert data
+interface AssetInsertData {
+  solution_id: number;
+  status_id: number;
+  manufacturer_id?: number;
+  iccid?: string;
+  line_number?: number;
+  plan_id?: number;
+  serial_number?: string;
+  model?: string;
+  radio?: string;
+  admin_user?: string;
+  admin_pass?: string;
+  notes?: string;
+}
+
+// Types for queries and filtering
+interface AssetFilters {
+  status?: string;
+  type?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Simplified query keys to prevent deep type instantiation
+const queryKeys = {
+  assets: 'assets',
+  asset: (id: string) => ['assets', id],
+  assetsList: (filters?: AssetFilters) => ['assets', 'list', filters],
+  manufacturers: 'manufacturers',
+  assetSolutions: 'assetSolutions',
+  statusRecords: 'statusRecords',
+  plans: 'plans'
 };
 
-// Hook for fetching asset statuses
-export const useAssetStatuses = () => {
-  return useQuery({
-    queryKey: assetQueryKeys.statuses,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_status')
-        .select('id, status')
-        .order('id', { ascending: true });
-        
-      if (error) throw error;
-      return data || [];
+// Hook for creating a new asset
+export const useCreateAsset = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const createAssetMutation = useMutation({
+    mutationFn: async (formData: AssetFormValues) => {
+      // Prepare the data for insertion based on solution type
+      const data: AssetInsertData = {
+        solution_id: formData.solution_id,
+        status_id: formData.status_id || 1, // Default to Available (1)
+        manufacturer_id: formData.manufacturer_id,
+        notes: formData.notes
+      };
+
+      // Add fields specific to solution type
+      if (formData.solution_id === 1) { // CHIP
+        data.iccid = formData.iccid;
+        data.line_number = formData.line_number 
+          ? parseInt(formData.line_number.toString(), 10) 
+          : undefined;
+        data.plan_id = formData.plan_id;
+      } else if (formData.solution_id === 2) { // ROUTER/EQUIPMENT
+        data.serial_number = formData.serial_number;
+        data.model = formData.model;
+        data.radio = formData.radio;
+        data.admin_user = formData.admin_user;
+        data.admin_pass = formData.admin_pass;
+      }
+
+      // Insert the asset
+      const { data: insertedData, error } = await supabase
+        .from('assets')
+        .insert(data)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error("Error creating asset:", error);
+        throw new Error(`Failed to create asset: ${error.message}`);
+      }
+
+      return insertedData;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    onSuccess: () => {
+      // Invalidate assets queries to refetch the data
+      queryClient.invalidateQueries({ queryKey: [queryKeys.assets] });
+      toast.success("Asset created successfully");
+      navigate("/assets/inventory"); // Redirect to inventory
+    },
+    onError: (error: Error) => {
+      console.error("Asset creation error:", error);
+      toast.error(error.message);
+    }
   });
+
+  return createAssetMutation;
 };
 
-// Hook for fetching manufacturers/operators
+// Hook for fetching manufacturers
 export const useManufacturers = () => {
   return useQuery({
-    queryKey: assetQueryKeys.manufacturers,
+    queryKey: [queryKeys.manufacturers],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
-        .select('id, name')
+        .select('*')
         .order('name', { ascending: true });
-        
+
       if (error) throw error;
       return data || [];
     },
@@ -50,235 +117,53 @@ export const useManufacturers = () => {
   });
 };
 
-// Hook for fetching asset solutions (types)
+// Hook for fetching asset solutions
 export const useAssetSolutions = () => {
   return useQuery({
-    queryKey: assetQueryKeys.solutions,
+    queryKey: [queryKeys.assetSolutions],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
-        .select('id, solution')
+        .select('*')
         .order('solution', { ascending: true });
-        
+
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
-// Hook for fetching plans (for chips)
+// Hook for fetching status records
+export const useStatusRecords = () => {
+  return useQuery({
+    queryKey: [queryKeys.statusRecords],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_status')
+        .select('*')
+        .order('status', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook for fetching plans
 export const usePlans = () => {
   return useQuery({
-    queryKey: assetQueryKeys.plans,
+    queryKey: [queryKeys.plans],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')
         .select('id, nome')
         .order('nome', { ascending: true });
-        
+
       if (error) throw error;
       return data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// Hook for checking if an asset exists (ICCID or Serial Number)
-export const useCheckAssetExists = (field: string, value: string) => {
-  // Use a plain array for query key to avoid deep type instantiation
-  return useQuery({
-    queryKey: assetQueryKeys.exists(field, value),
-    queryFn: async () => {
-      if (!value) return { exists: false };
-      
-      const { data, error } = await supabase
-        .from('assets')
-        .select('uuid')
-        .eq(field, value)
-        .maybeSingle();
-        
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-      
-      return { exists: !!data, existingId: data?.uuid };
-    },
-    enabled: !!value && value.length > 3,
-    staleTime: 0, // Always revalidate this query
-  });
-};
-
-// Hook for creating an asset
-export const useCreateAsset = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (data: AssetFormValues) => {
-      // Determine if this is a chip based on solution_id
-      const isChip = data.solution_id === 1 || data.solution_id === 11;
-      
-      // Common fields for both asset types
-      const insertData: Record<string, any> = {
-        solution_id: data.solution_id,
-        status_id: data.status_id || 1, // Default to 'Disponível'
-        manufacturer_id: data.manufacturer_id,
-        notes: data.notes
-      };
-      
-      // Add type-specific fields
-      if (isChip) {
-        insertData.iccid = data.iccid;
-        insertData.line_number = data.line_number;
-        insertData.plan_id = data.plan_id;
-      } else {
-        insertData.serial_number = data.serial_number;
-        insertData.model = data.model;
-        insertData.radio = data.radio;
-        
-        // Optional fields for equipment
-        insertData.admin_user = data.admin_user || 'admin';
-        insertData.admin_pass = data.admin_pass || '';
-        insertData.password = data.password;
-        insertData.ssid = data.ssid;
-      }
-      
-      // Insert the asset
-      const { data: newAsset, error } = await supabase
-        .from('assets')
-        .insert(insertData)
-        .select()
-        .single();
-        
-      if (error) {
-        throw new Error(`Erro ao cadastrar ativo: ${error.message}`);
-      }
-      
-      return newAsset;
-    },
-    onSuccess: () => {
-      // Invalidate assets queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['assets', 'list'] });
-      toast.success("Ativo cadastrado com sucesso!");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
-  });
-};
-
-// Hook for listing assets with filters
-export const useAssetsList = (filters?: {
-  searchTerm?: string;
-  filterType?: string | number;
-  filterStatus?: string | number;
-  page?: number;
-  pageSize?: number;
-}) => {
-  const { searchTerm = '', filterType, filterStatus, page = 1, pageSize = 10 } = filters || {};
-  
-  // Use primitive values in query key to avoid deep instantiation
-  const queryKey = [
-    'assets-list',
-    String(searchTerm), 
-    String(filterType || ''), 
-    String(filterStatus || ''), 
-    String(page), 
-    String(pageSize)
-  ];
-  
-  return useQuery({
-    queryKey: queryKey,
-    queryFn: async () => {
-      let query = supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          notes,
-          password,
-          ssid,
-          manufacturer:manufacturers(id, name),
-          plano:plans(id, nome),
-          status:asset_status(id, status),
-          solucao:asset_solutions(id, solution)
-        `)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (filterType) {
-        if (typeof filterType === 'number') {
-          query = query.eq('solution_id', filterType);
-        } else {
-          // Find solution ID by name
-          const { data: solutionData } = await supabase
-            .from('asset_solutions')
-            .select('id')
-            .eq('solution', filterType)
-            .single();
-            
-          if (solutionData) {
-            query = query.eq('solution_id', solutionData.id);
-          }
-        }
-      }
-
-      if (filterStatus) {
-        if (typeof filterStatus === 'number') {
-          query = query.eq('status_id', filterStatus);
-        } else {
-          // Find status ID by name
-          const { data: statusData } = await supabase
-            .from('asset_status')
-            .select('id')
-            .eq('status', filterStatus)
-            .single();
-            
-          if (statusData) {
-            query = query.eq('status_id', statusData.id);
-          }
-        }
-      }
-
-      if (searchTerm) {
-        // Search in multiple fields
-        query = query.or(
-          `iccid.ilike.%${searchTerm}%,radio.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`
-        );
-      }
-
-      // Add pagination
-      const startIndex = (page - 1) * pageSize;
-      query = query.range(startIndex, startIndex + pageSize - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        throw new Error(`Erro ao carregar ativos: ${error.message}`);
-      }
-
-      // Get total count for pagination
-      const { count: totalCount } = await supabase
-        .from('assets')
-        .select('uuid', { count: 'exact', head: true })
-        .is('deleted_at', null);
-
-      return {
-        assets: data || [],
-        totalCount: totalCount || 0,
-        totalPages: Math.ceil((totalCount || 0) / pageSize)
-      };
-    },
-    staleTime: 60 * 1000 // 1 minute
+    staleTime: 5 * 60 * 1000,
   });
 };
