@@ -57,7 +57,7 @@ const Home: React.FC = () => {
 
   // Prepare data for pie chart
   const statusChartData = dashboard.statusDistribution.data.map(item => ({
-    name: item.status,
+    name: item.status.capitalize(),
     value: item.count,
   }));
 
@@ -491,9 +491,9 @@ const Home: React.FC = () => {
                     </Pie>
                     <Tooltip formatter={(value) => [`${value} ativos`, null]} />
                     <Legend 
-                      layout="horizontal" 
-                      verticalAlign="bottom" 
-                      align="center"
+                      layout="vertical" 
+                      verticalAlign="middle"
+                      align="right"
                     />
                   </PieChart>
                 </ResponsiveContainer>
