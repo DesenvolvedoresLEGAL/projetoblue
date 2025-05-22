@@ -1,30 +1,31 @@
+
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset, SolutionType } from "@/types/asset";
-import { SOLUTION_IDS } from "./assetUtils";
+import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus
 export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string): AssetStatus => {
   // If we have the status name, use it to determine the frontend status
   if (statusName) {
     switch (statusName.toLowerCase()) {
-      case 'disponivel': return 'DISPONÍVEL';
-      case 'alugado': return 'ALUGADO';
-      case 'assinatura': return 'ASSINATURA';
-      case 'sem dados': return 'SEM DADOS';
-      case 'bloqueado': return 'BLOQUEADO';
+      case 'disponivel': return "DISPONÍVEL";
+      case 'alugado': return "ALUGADO";
+      case 'assinatura': return "ASSINATURA";
+      case 'sem dados': return "SEM DADOS";
+      case 'bloqueado': return "BLOQUEADO";
       case 'em manutenção':
-      case 'manutencao': return 'MANUTENÇÃO';
+      case 'manutencao': return "MANUTENÇÃO";
     }
   }
   
   // Fallback to ID-based mapping
   switch (statusId) {
-    case 1: return 'DISPONÍVEL';
-    case 2: return 'ALUGADO';
-    case 3: return 'ASSINATURA';
-    case 4: return 'SEM DADOS';
-    case 5: return 'BLOQUEADO';
-    case 6: return 'MANUTENÇÃO';
-    default: return 'DISPONÍVEL';
+    case 1: return "DISPONÍVEL";
+    case 2: return "ALUGADO";
+    case 3: return "ASSINATURA";
+    case 4: return "SEM DADOS";
+    case 5: return "BLOQUEADO";
+    case 6: return "MANUTENÇÃO";
+    default: return "DISPONÍVEL";
   }
 };
 
@@ -104,7 +105,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
       serialNumber: dbAsset.serial_number || '',
       ipAddress: dbAsset.ip_address,
       adminUser: dbAsset.admin_user,
-      adminPassword: dbAsset.admin_password || dbAsset.admin_pass,
+      adminPassword: dbAsset.admin_pass || dbAsset.admin_password,
       imei: dbAsset.imei
     } as RouterAsset;
   }
@@ -113,12 +114,12 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
 // Map frontend AssetStatus to database status ID
 export const mapAssetStatusToId = (status: AssetStatus): number => {
   switch (status) {
-    case 'DISPONÍVEL': return 1;
-    case 'ALUGADO': return 2;
-    case 'ASSINATURA': return 3;
-    case 'SEM DADOS': return 4;
-    case 'BLOQUEADO': return 5;
-    case 'MANUTENÇÃO': return 6;
+    case "DISPONÍVEL": return 1;
+    case "ALUGADO": return 2;
+    case "ASSINATURA": return 3;
+    case "SEM DADOS": return 4;
+    case "BLOQUEADO": return 5;
+    case "MANUTENÇÃO": return 6;
     default: return 1;
   }
 };

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
@@ -8,6 +9,7 @@ import { AssetHistoryEntry } from '@/types/assetHistory';
 import { assetService } from '@/services/api/assetService';
 import { referenceDataService } from '@/services/api/referenceDataService';
 import { supabase } from '@/integrations/supabase/client';
+import { getValidAssetStatus } from '@/utils/assetUtils';
 
 // Default context value
 const defaultContextValue: AssetContextType = {
@@ -65,27 +67,28 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const found = statusRecords.find(s => s.id === statusId);
     if (found) {
       switch (found.nome.toLowerCase()) {
-        case 'disponivel': return 'DISPONÍVEL';
-        case 'alugado': return 'ALUGADO';
-        case 'assinatura': return 'ASSINATURA';
-        case 'sem dados': return 'SEM DADOS';
-        case 'bloqueado': return 'BLOQUEADO';
-        case 'em manutenção': return 'MANUTENÇÃO';
-        default: return 'DISPONÍVEL';
+        case 'disponivel': return "DISPONÍVEL";
+        case 'alugado': return "ALUGADO";
+        case 'assinatura': return "ASSINATURA";
+        case 'sem dados': return "SEM DADOS";
+        case 'bloqueado': return "BLOQUEADO";
+        case 'em manutenção': return "MANUTENÇÃO";
+        default: return "DISPONÍVEL";
       }
     }
-    return 'DISPONÍVEL'; // Default fallback
+    return "DISPONÍVEL"; // Default fallback
   };
 
   // Helper function to map AssetStatus to status_id
   const mapAssetStatusToId = (status: AssetStatus): number => {
     const statusMap: Record<AssetStatus, string> = {
-      'DISPONÍVEL': 'disponivel',
-      'ALUGADO': 'alugado',
-      'ASSINATURA': 'assinatura',
-      'SEM DADOS': 'sem dados',
-      'BLOQUEADO': 'bloqueado',
-      'MANUTENÇÃO': 'em manutenção'
+      "DISPONÍVEL": 'disponivel',
+      "ALUGADO": 'alugado',
+      "ASSINATURA": 'assinatura',
+      "SEM DADOS": 'sem dados',
+      "BLOQUEADO": 'bloqueado',
+      "MANUTENÇÃO": 'em manutenção',
+      "extraviado": 'extraviado'
     };
     
     const found = statusRecords.find(s => s.nome.toLowerCase() === statusMap[status].toLowerCase());
@@ -297,7 +300,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           };
           
           // Set the status as an AssetStatus enum value
-          newAsset.status = 'ALUGADO';
+          newAsset.status = "ALUGADO";
           
           return newAsset;
         }
@@ -346,7 +349,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           };
           
           // Set the status as an AssetStatus enum value
-          newAsset.status = 'DISPONÍVEL';
+          newAsset.status = "DISPONÍVEL";
           
           return newAsset;
         }

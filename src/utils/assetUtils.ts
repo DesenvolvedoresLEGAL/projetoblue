@@ -62,3 +62,39 @@ export const normalizeAsset = (asset: any) => {
     createdAt: asset.created_at || asset.createdAt
   };
 };
+
+/**
+ * Checks if two status values refer to the same status
+ */
+export const isSameStatus = (status1: string | undefined, status2: string | undefined): boolean => {
+  if (!status1 || !status2) return false;
+  return status1.toUpperCase() === status2.toUpperCase();
+};
+
+/**
+ * Type guard to check if a value is a valid AssetStatus
+ */
+export const isValidAssetStatus = (status: string): status is AssetStatus => {
+  const validStatuses = [
+    "DISPONÍVEL", "ALUGADO", "ASSINATURA", "SEM DADOS", "BLOQUEADO", "MANUTENÇÃO", "extraviado"
+  ];
+  return validStatuses.includes(status);
+};
+
+/**
+ * Get a status as AssetStatus type, with guards
+ */
+export const getValidAssetStatus = (status: string): AssetStatus => {
+  const normalizedStatus = status.toUpperCase();
+  
+  switch (normalizedStatus) {
+    case "DISPONÍVEL": return "DISPONÍVEL";
+    case "ALUGADO": return "ALUGADO";
+    case "ASSINATURA": return "ASSINATURA";
+    case "SEM DADOS": return "SEM DADOS";
+    case "BLOQUEADO": return "BLOQUEADO";
+    case "MANUTENÇÃO": return "MANUTENÇÃO";
+    case "EXTRAVIADO": return "extraviado";
+    default: return "DISPONÍVEL"; // Default fallback
+  }
+};

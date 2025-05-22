@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Wifi, Clock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { isSameStatus } from "@/utils/assetUtils";
 
 export function AlertsPanel() {
   const { assets } = useAssets();
   
   // Calculate alerts
-  const noDataChips = assets.filter(a => a.type === 'CHIP' && a.status === 'SEM DADOS').length;
+  const noDataChips = assets.filter(a => a.type === 'CHIP' && isSameStatus(a.status, 'SEM DADOS')).length;
   const unassignedAssets = assets.filter(a => !a.clientId).length;
   
   // Calculate subscriptions that expire in the next 7 days

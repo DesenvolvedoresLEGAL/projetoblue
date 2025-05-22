@@ -7,6 +7,7 @@ import { Client } from "@/types/asset";
 import { SubscriptionInfo } from "@/types/asset";
 import { getAssetById } from "../assetActions";
 import { getClientById } from "../clientActions";
+import { isSameStatus } from "@/utils/assetUtils";
 
 // Asset operations
 
@@ -52,7 +53,7 @@ export const returnAssetsToStock = (
               type: asset.type,
               identifier: assetIdentifier
             }],
-            operationType: asset.status === "ASSINATURA" ? "ASSINATURA" : "ALUGUEL",
+            operationType: isSameStatus(asset.status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
             event: "Retorno ao estoque",
             comments: `Ativo ${assetIdentifier} retornado ao estoque`
           });
@@ -144,7 +145,7 @@ export const associateAssetToClient = (
         type: asset.type,
         identifier: assetIdentifier
       }],
-      operationType: status === "ASSINATURA" ? "ASSINATURA" : "ALUGUEL",
+      operationType: isSameStatus(status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
       comments: `Ativo ${assetIdentifier} associado ao cliente ${client.name}`
     });
     
@@ -196,7 +197,7 @@ export const removeAssetFromClient = (
         type: asset.type,
         identifier: assetIdentifier
       }],
-      operationType: asset.status === "ASSINATURA" ? "ASSINATURA" : "ALUGUEL",
+      operationType: isSameStatus(asset.status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
       event: "Retorno ao estoque",
       comments: `Ativo ${assetIdentifier} removido do cliente ${client.name}`
     });

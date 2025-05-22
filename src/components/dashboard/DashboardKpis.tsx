@@ -3,7 +3,7 @@ import React from "react";
 import { useAssets } from "@/context/useAssets";
 import { Card, CardContent } from "@/components/ui/card";
 import { Wifi, AlertTriangle, Clock, PackageSearch } from "lucide-react";
-import { SOLUTION_IDS, getAssetType } from "@/utils/assetUtils";
+import { SOLUTION_IDS, isSameStatus } from "@/utils/assetUtils";
 
 export function DashboardKpis() {
   const { assets, loading } = useAssets();
@@ -12,19 +12,19 @@ export function DashboardKpis() {
   const totalAssets = assets.length;
   
   const availableChips = assets.filter(a => 
-    (a.solution_id === SOLUTION_IDS.CHIP || a.type === 'CHIP') && 
-    a.status.toUpperCase() === 'DISPONÍVEL'
+    ((a as any).solution_id === SOLUTION_IDS.CHIP || a.type === 'CHIP') && 
+    isSameStatus(a.status, 'DISPONÍVEL')
   ).length;
   
   const availableRouters = assets.filter(a => 
-    (a.solution_id !== SOLUTION_IDS.CHIP) && 
+    ((a as any).solution_id !== SOLUTION_IDS.CHIP) && 
     a.type === 'ROTEADOR' && 
-    a.status.toUpperCase() === 'DISPONÍVEL'
+    isSameStatus(a.status, 'DISPONÍVEL')
   ).length;
   
   const problemAssets = assets.filter(a => 
-    ['BLOQUEADO', 'MANUTENÇÃO', 'SEM DADOS'].includes(
-      (a.status || '').toUpperCase()
+    ['BLOQUEADO', 'MANUTENÇÃO', 'SEM DADOS'].some(status => 
+      isSameStatus(a.status, status)
     )
   ).length;
   

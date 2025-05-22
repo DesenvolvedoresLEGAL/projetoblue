@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
+import { isSameStatus } from "@/utils/assetUtils";
 
 export const getAssetById = (assets: Asset[], id: string) => {
   return assets.find(asset => asset.id === id);
@@ -63,7 +64,7 @@ export const validateAssetDeletion = (asset: Asset | undefined): { valid: boolea
   }
   
   // Check if the asset is currently in use (alugado or assinatura)
-  if (asset.status === "ALUGADO" || asset.status === "ASSINATURA") {
+  if (isSameStatus(asset.status, "ALUGADO") || isSameStatus(asset.status, "ASSINATURA")) {
     return { 
       valid: false, 
       message: "Não é possível excluir um ativo que está atualmente em uso (alugado ou em assinatura)." 
