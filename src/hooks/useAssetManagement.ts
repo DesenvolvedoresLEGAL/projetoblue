@@ -6,14 +6,14 @@ import { AssetFormValues } from "@/schemas/assetSchemas";
 
 // Simple query keys to avoid deep type instantiation issues
 export const assetQueryKeys = {
-  all: ['assets'],
-  list: ['assets', 'list'],
-  detail: (id: string) => ['assets', 'detail', id],
-  statuses: ['asset-statuses'],
-  manufacturers: ['manufacturers'],
-  solutions: ['asset-solutions'],
-  plans: ['plans'],
-  exists: (field: string, value: string) => ['asset-exists', field, value]
+  all: ['assets'] as const,
+  list: ['assets', 'list'] as const,
+  detail: (id: string) => ['assets', 'detail', id] as const,
+  statuses: ['asset-statuses'] as const,
+  manufacturers: ['manufacturers'] as const,
+  solutions: ['asset-solutions'] as const,
+  plans: ['plans'] as const,
+  exists: (field: string, value: string) => ['asset-exists', field, value] as const
 };
 
 // Hook for fetching asset statuses
@@ -86,7 +86,7 @@ export const usePlans = () => {
 
 // Hook for checking if an asset exists (ICCID or Serial Number)
 export const useCheckAssetExists = (field: string, value: string) => {
-  // Use a plain array for query key to avoid deep type instantiation
+  // Use stable query key to avoid deep type instantiation
   return useQuery({
     queryKey: assetQueryKeys.exists(field, value),
     queryFn: async () => {
@@ -185,7 +185,7 @@ export const useAssetsList = (filters?: {
     String(filterStatus || ''), 
     String(page), 
     String(pageSize)
-  ];
+  ] as const;
   
   return useQuery({
     queryKey: queryKey,
