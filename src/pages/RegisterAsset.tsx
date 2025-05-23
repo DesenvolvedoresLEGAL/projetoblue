@@ -563,6 +563,7 @@ export default function RegisterAsset() {
                           <FormLabel>Senha Admin *</FormLabel>
                           <FormControl>
                             <PasswordInput
+                              id="admin_pass"
                               value={field.value || ""}
                               onChange={(e) => handlePasswordChange(e.target.value)}
                               placeholder="Senha de administração"
