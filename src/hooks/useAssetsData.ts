@@ -19,7 +19,6 @@ export type AssetWithRelations = {
   solucao: { id: number; name: string };
   admin_user?: string;
   admin_pass?: string;
-  // Novo campo para indicar qual campo correspondeu à busca
   matchedField?: string;
 };
 
@@ -48,6 +47,11 @@ const sanitizeSearchTerm = (term: string): string => {
     .trim()
     .replace(/[^\w\s\-._@]/g, '') // Remove caracteres especiais perigosos
     .substring(0, 50); // Limita o tamanho máximo
+};
+
+// Função para detectar se o termo é numérico
+const isNumericTerm = (term: string): boolean => {
+  return /^\d+$/.test(term.trim());
 };
 
 // Função para detectar qual campo correspondeu à busca
@@ -114,12 +118,9 @@ export const useAssetsData = ({
 
         // Apply filters
         if (filterType !== 'all') {
-          // Check if filterType is a number (solution_id) or string (solution name)
           if (!isNaN(Number(filterType))) {
-            // Filter by solution_id
             query = query.eq('solution_id', Number(filterType));
           } else {
-            // Filter by solution name - need to join with asset_solutions
             const { data: solutionData } = await supabase
               .from('asset_solutions')
               .select('id')
@@ -133,7 +134,6 @@ export const useAssetsData = ({
         }
 
         if (filterStatus !== 'all') {
-          // Join with asset_status to filter by status name
           const { data: statusData } = await supabase
             .from('asset_status')
             .select('id')
@@ -149,18 +149,37 @@ export const useAssetsData = ({
         if (searchTerm) {
           const sanitizedTerm = sanitizeSearchTerm(searchTerm);
           
-          if (sanitizedTerm.length >= 1) { // Permite busca com pelo menos 1 caractere
+          if (sanitizedTerm.length >= 1) {
             console.log('Aplicando busca multi-campo com termo sanitizado:', sanitizedTerm);
             
-            // Correção: usar múltiplas condições .or() em vez de concatenação problemática
-            // Aplica busca em cada campo individualmente com operador OR
-            query = query.or(
-              `line_number::text.ilike.%${sanitizedTerm}%,` +
-              `iccid.ilike.%${sanitizedTerm}%,` +
-              `radio.ilike.%${sanitizedTerm}%,` +
-              `serial_number.ilike.%${sanitizedTerm}%,` +
-              `model.ilike.%${sanitizedTerm}%`
-            );
+            const isNumeric = isNumericTerm(sanitizedTerm);
+            
+            if (isNumeric) {
+              // Para termos numéricos, busca principalmente em line_number e também em outros campos
+              console.log('Termo numérico detectado, priorizando line_number');
+              
+              // Busca exata em line_number (bigint)
+              const numericValue = parseInt(sanitizedTerm);
+              
+              // Combinamos busca exata em line_number com busca textual em outros campos
+              query = query.or(
+                `line_number.eq.${numericValue},` +
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            } else {
+              // Para termos não-numéricos, busca apenas em campos textuais
+              console.log('Termo textual detectado, buscando em campos de texto');
+              
+              query = query.or(
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            }
           }
         }
 
@@ -236,13 +255,25 @@ export const useAssetsData = ({
         if (searchTerm) {
           const sanitizedTerm = sanitizeSearchTerm(searchTerm);
           if (sanitizedTerm.length >= 1) {
-            countQuery = countQuery.or(
-              `line_number::text.ilike.%${sanitizedTerm}%,` +
-              `iccid.ilike.%${sanitizedTerm}%,` +
-              `radio.ilike.%${sanitizedTerm}%,` +
-              `serial_number.ilike.%${sanitizedTerm}%,` +
-              `model.ilike.%${sanitizedTerm}%`
-            );
+            const isNumeric = isNumericTerm(sanitizedTerm);
+            
+            if (isNumeric) {
+              const numericValue = parseInt(sanitizedTerm);
+              countQuery = countQuery.or(
+                `line_number.eq.${numericValue},` +
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            } else {
+              countQuery = countQuery.or(
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            }
           }
         }
 
@@ -261,7 +292,7 @@ export const useAssetsData = ({
         // Tratamento robusto de diferentes tipos de erro
         if (err instanceof Error) {
           if (err.message.includes('failed to parse logic tree')) {
-            toast.error('Erro na sintaxe de busca. Tente um termo mais simples.');
+            toast.error('Erro na sintaxe de busca. Termo simplificado automaticamente.');
           } else if (err.message.includes('timeout')) {
             toast.error('Busca demorou muito para responder. Tente novamente.');
           } else {

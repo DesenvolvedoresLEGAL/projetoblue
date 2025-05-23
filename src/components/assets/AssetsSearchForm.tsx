@@ -62,6 +62,23 @@ const AssetsSearchForm = ({
     return '';
   };
   
+  // Função para detectar o tipo de busca
+  const getSearchType = (value: string): string => {
+    if (!value) return '';
+    
+    const trimmedValue = value.trim();
+    
+    if (/^\d+$/.test(trimmedValue)) {
+      return 'numérico (linha)';
+    }
+    
+    if (trimmedValue.length >= 15 && /^\d+$/.test(trimmedValue)) {
+      return 'ICCID';
+    }
+    
+    return 'texto geral';
+  };
+  
   // Função para lidar com mudanças no input com validação
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -93,6 +110,8 @@ const AssetsSearchForm = ({
     handleSearch(e);
   };
 
+  const searchType = getSearchType(inputValue);
+
   return (
     <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
@@ -117,6 +136,13 @@ const AssetsSearchForm = ({
           </div>
         )}
         
+        {/* Mostra tipo de busca detectado */}
+        {searchType && !inputError && inputValue && (
+          <div className="absolute top-full left-0 mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200 z-10">
+            Busca {searchType} detectada
+          </div>
+        )}
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -126,7 +152,10 @@ const AssetsSearchForm = ({
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p className="text-xs max-w-xs">
-                A busca funciona em: número da linha, ICCID, rádio, número de série e modelo.
+                <strong>Busca inteligente:</strong>
+                <br />• Números: busca em linha telefônica
+                <br />• Texto: busca em ICCID, rádio, serial e modelo
+                <br />• Suporta termos parciais
                 <br />
                 <span className="text-muted-foreground">
                   Evite caracteres especiais para melhores resultados.
