@@ -130,7 +130,13 @@ export default function RegisterAsset() {
       return;
     }
     
-    createAssetMutation.mutate(formData);
+    // Add the required 'type' field based on solution_id
+    const createData = {
+      ...formData,
+      type: formData.solution_id === 11 ? 'CHIP' as const : 'ROTEADOR' as const
+    };
+    
+    createAssetMutation.mutate(createData);
   };
 
   // Map options for select fields
@@ -151,7 +157,7 @@ export default function RegisterAsset() {
   
   const statusOptions = statuses.map(item => ({
     value: item.id,
-    label: item.status
+    label: item.nome // Use 'nome' instead of 'status'
   }));
   
   const planOptions = plans.map(item => ({
