@@ -9,7 +9,7 @@ export const createHistoryEntry = (
   description: string
 ): AssetHistoryEntry => {
   return {
-    id: Date.now().toString(), // Convert to string to match interface
+    id: Number(Date.now()), // Corrigido: convertendo para number conforme interface
     timestamp: new Date().toISOString(),
     clientId,
     clientName,

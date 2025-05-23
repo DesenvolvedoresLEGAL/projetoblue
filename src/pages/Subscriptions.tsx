@@ -87,67 +87,64 @@ export default function Subscriptions() {
       filtered = expiredSubscriptions;
     } else if (activeTab === "ending-soon") {
       // Assets expiring in the next 30 days
-      const thirtyDaysFromNow = addDays(new Date(), 30).toISOString();
-      
-      filtered = activeSubscriptions.filter(asset => {
-        const endDate = new Date(asset.subscription?.endDate || "");
-        const now = new Date();
-        return isBefore(endDate, new Date(thirtyDaysFromNow)) && isAfter(endDate, now);
+      const thirtyDaysFromNow = addDays(new Date(), 30);
+      filtered = subscriptionAssets.filter(asset => {
+        if (!asset.subscription?.endDate) return false;
+        const endDate = new Date(asset.subscription.endDate);
+        return isAfter(endDate, new Date()) && isBefore(endDate, thirtyDaysFromNow);
       });
     }
     
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(asset => {
-        const client = asset.clientId ? getClientById(asset.clientId) : null;
-        const searchFields = [
-          asset.id,
-          asset.type,
-          client?.name || "",
-          client?.document || "",
-          asset.subscription?.event || "",
-          asset.type === "CHIP" 
-            ? `${(asset as any).iccid} ${(asset as any).phoneNumber} ${(asset as any).carrier}`
-            : `${(asset as any).uniqueId} ${(asset as any).brand} ${(asset as any).model}`
-        ];
-        
-        return searchFields.some(field => 
-          field.toLowerCase().includes(searchTerm.toLowerCase())
+        const client = getClientById(asset.clientId!);
+        return (
+          client?.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client?.cnpj.includes(searchTerm) ||
+          asset.id.toLowerCase().includes(searchTerm.toLowerCase())
         );
       });
     }
     
     setDisplayedAssets(filtered);
-  }, [activeTab, searchTerm, subscriptionAssets, activeSubscriptions, expiredSubscriptions]);
+  }, [activeTab, searchTerm, subscriptionAssets, activeSubscriptions, expiredSubscriptions, getClientById]);
   
-  // Toggle select all assets
-  const toggleSelectAll = () => {
-    if (selectedAssets.length === displayedAssets.length) {
-      setSelectedAssets([]);
-    } else {
-      setSelectedAssets(displayedAssets.map(asset => asset.id));
-    }
-  };
-  
-  // Toggle select single asset
-  const toggleSelectAsset = (assetId: string) => {
-    if (selectedAssets.includes(assetId)) {
-      setSelectedAssets(selectedAssets.filter(id => id !== assetId));
-    } else {
+  // Handle asset selection for bulk operations
+  const handleAssetSelection = (assetId: string, checked: boolean) => {
+    if (checked) {
       setSelectedAssets([...selectedAssets, assetId]);
+    } else {
+      setSelectedAssets(selectedAssets.filter(id => id !== assetId));
     }
   };
   
-  // Handle return to stock action
-  const handleReturnToStock = () => {
-    if (selectedAssets.length > 0) {
-      returnAssetsToStock(selectedAssets);
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAssets(displayedAssets.map(asset => asset.id));
+    } else {
       setSelectedAssets([]);
     }
+  };
+  
+  // Handle bulk return to stock
+  const handleBulkReturnToStock = () => {
+    returnAssetsToStock(selectedAssets);
+    setSelectedAssets([]);
   };
   
   // Handle extend subscription
-  const handleExtendSubscription = () => {
+  const handleExtendSubscription = (asset: Asset) => {
+    setAssetToExtend(asset);
+    if (asset.subscription?.endDate) {
+      setNewEndDate(asset.subscription.endDate.split('T')[0]);
+    }
+    setShowExtendDialog(true);
+  };
+  
+  // Handle confirm extend subscription
+  const handleConfirmExtendSubscription = () => {
     if (assetToExtend && newEndDate) {
       extendSubscription(assetToExtend.id, newEndDate);
       setShowExtendDialog(false);
@@ -156,298 +153,270 @@ export default function Subscriptions() {
     }
   };
   
-  // Open extend dialog for an asset
-  const openExtendDialog = (asset: Asset) => {
-    setAssetToExtend(asset);
+  // Get subscription status badge
+  const getSubscriptionStatusBadge = (asset: Asset) => {
+    if (!asset.subscription) return null;
     
-    // Default to extending by the original duration
-    if (asset.subscription) {
-      const startDate = new Date(asset.subscription.startDate);
-      const currentEndDate = new Date(asset.subscription.endDate);
-      let newEnd;
-      
-      if (asset.subscription.type === "MENSAL") {
-        newEnd = addMonths(currentEndDate, 1);
-      } else if (asset.subscription.type === "ANUAL") {
-        newEnd = addYears(currentEndDate, 1);
-      } else {
-        // For custom, extend by the same duration as original
-        const originalDuration = currentEndDate.getTime() - startDate.getTime();
-        newEnd = new Date(currentEndDate.getTime() + originalDuration);
-      }
-      
-      setNewEndDate(format(newEnd, "yyyy-MM-dd"));
-    }
+    const endDate = new Date(asset.subscription.endDate);
+    const now = new Date();
+    const thirtyDaysFromNow = addDays(now, 30);
     
-    setShowExtendDialog(true);
-  };
-  
-  // Format date display
-  const formatDateDisplay = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "dd/MM/yyyy");
-    } catch (error) {
-      return "Data inválida";
+    if (isBefore(endDate, now)) {
+      return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">Expirada</span>;
+    } else if (isBefore(endDate, thirtyDaysFromNow)) {
+      return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Expira em breve</span>;
+    } else {
+      return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Ativa</span>;
     }
   };
-  
-  // Get time remaining or time elapsed
-  const getTimeDistance = (dateString: string, expired = false) => {
-    try {
-      const date = new Date(dateString);
-      return formatDistanceToNow(date, { 
-        addSuffix: true,
-        locale: ptBR
-      });
-    } catch (error) {
-      return "Data inválida";
-    }
-  };
-  
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Gerenciamento de Assinaturas</h1>
-          <p className="text-gray-500">Controle e monitore assinaturas e aluguéis de ativos</p>
+          <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Assinaturas</h1>
+          <p className="text-muted-foreground">
+            Monitore e gerencie as assinaturas de ativos dos clientes
+          </p>
         </div>
         
-        {selectedAssets.length > 0 && (
-          <Button 
-            variant="destructive" 
-            onClick={handleReturnToStock}
-            className="flex items-center"
-          >
-            <ArrowDownToLine className="h-4 w-4 mr-2" />
-            Retornar {selectedAssets.length} ativo(s) ao estoque
-          </Button>
-        )}
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Buscar por cliente, ativo ou evento..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex gap-2">
+          {selectedAssets.length > 0 && (
+            <Button 
+              onClick={handleBulkReturnToStock}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <PackageOpen className="h-4 w-4" />
+              Retornar ao Estoque ({selectedAssets.length})
+            </Button>
+          )}
         </div>
       </div>
       
       <Card>
         <CardHeader className="pb-3">
-          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4">
-              <TabsTrigger value="all" className="flex items-center">
-                <CalendarClock className="h-4 w-4 mr-2" />
-                Todas ({subscriptionAssets.length})
-              </TabsTrigger>
-              <TabsTrigger value="active" className="flex items-center">
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Ativas ({activeSubscriptions.length})
-              </TabsTrigger>
-              <TabsTrigger value="ending-soon" className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
-                A Vencer
-              </TabsTrigger>
-              <TabsTrigger value="expired" className="flex items-center">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                Expiradas ({expiredSubscriptions.length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <CardTitle>Filtros</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox 
-                    checked={displayedAssets.length > 0 && selectedAssets.length === displayedAssets.length} 
-                    onCheckedChange={toggleSelectAll} 
-                  />
-                </TableHead>
-                <TableHead>Ativo</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Período</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayedAssets.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    Nenhuma assinatura encontrada.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                displayedAssets.map((asset) => {
-                  const client = asset.clientId ? getClientById(asset.clientId) : null;
-                  const subscription = asset.subscription;
-                  
-                  // Determine if this subscription is ending soon (within 30 days)
-                  const endDate = new Date(subscription?.endDate || "");
-                  const thirtyDaysFromNow = addDays(new Date(), 30);
-                  const isEndingSoon = !subscription?.isExpired && 
-                                      isBefore(endDate, thirtyDaysFromNow) && 
-                                      isAfter(endDate, new Date());
-                  
-                  return (
-                    <TableRow key={asset.id}>
-                      <TableCell>
-                        <Checkbox 
-                          checked={selectedAssets.includes(asset.id)} 
-                          onCheckedChange={() => toggleSelectAsset(asset.id)} 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {asset.type === "CHIP" ? 
-                            `CHIP: ${(asset as any).phoneNumber}` : 
-                            `ROTEADOR: ${(asset as any).model}`
-                          }
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ID: {asset.id.substring(0, 8)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {client ? (
-                          <div>
-                            <div className="font-medium">{client.name}</div>
-                            <div className="text-xs text-gray-500">
-                              {client.documentType}: {client.document}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{subscription?.type}</div>
-                        {subscription?.event && (
-                          <div className="text-xs text-gray-500">
-                            Evento: {subscription.event}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {formatDateDisplay(subscription?.startDate || "")} a {formatDateDisplay(subscription?.endDate || "")}
-                        </div>
-                        <div className={`text-xs ${subscription?.isExpired ? "text-red-500" : isEndingSoon ? "text-amber-500" : "text-gray-500"}`}>
-                          {subscription?.isExpired 
-                            ? `Expirou ${getTimeDistance(subscription.endDate, true)}`
-                            : `Expira ${getTimeDistance(subscription?.endDate || "")}`
-                          }
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${subscription?.isExpired 
-                            ? "bg-red-100 text-red-800" 
-                            : isEndingSoon
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-green-100 text-green-800"
-                          }`}>
-                          {subscription?.isExpired 
-                            ? "Expirado" 
-                            : isEndingSoon
-                              ? "A Vencer"
-                              : "Ativo"
-                          }
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openExtendDialog(asset)}
-                          >
-                            <RefreshCw className="h-4 w-4 mr-1" /> Renovar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleSelectAsset(asset.id)}
-                          >
-                            <PackageOpen className="h-4 w-4 mr-1" /> Retornar
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+        <CardContent>
+          <div className="relative max-w-md">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Buscar por cliente ou ativo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
         </CardContent>
       </Card>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-4">
+          <TabsTrigger value="all">
+            Todas ({subscriptionAssets.length})
+          </TabsTrigger>
+          <TabsTrigger value="active">
+            Ativas ({activeSubscriptions.length})
+          </TabsTrigger>
+          <TabsTrigger value="ending-soon">
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              Vencendo
+            </div>
+          </TabsTrigger>
+          <TabsTrigger value="expired">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              Expiradas ({expiredSubscriptions.length})
+            </div>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value={activeTab} className="mt-6">
+          <Card>
+            <CardContent className="pt-6">
+              {displayedAssets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50px]">
+                          <Checkbox
+                            checked={selectedAssets.length === displayedAssets.length}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Ativo</TableHead>
+                        <TableHead>Tipo de Assinatura</TableHead>
+                        <TableHead>Data de Início</TableHead>
+                        <TableHead>Data de Vencimento</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {displayedAssets.map((asset) => {
+                        const client = getClientById(asset.clientId!);
+                        return (
+                          <TableRow key={asset.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedAssets.includes(asset.id)}
+                                onCheckedChange={(checked) => 
+                                  handleAssetSelection(asset.id, checked as boolean)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{client?.nome}</div>
+                                <div className="text-sm text-gray-500">{client?.cnpj}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{asset.id}</div>
+                                <div className="text-sm text-gray-500">{asset.type}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {asset.subscription?.type || "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {asset.subscription?.startDate ? 
+                                format(new Date(asset.subscription.startDate), "dd/MM/yyyy", { locale: ptBR }) : 
+                                "N/A"
+                              }
+                            </TableCell>
+                            <TableCell>
+                              {asset.subscription?.endDate ? (
+                                <div>
+                                  <div>{format(new Date(asset.subscription.endDate), "dd/MM/yyyy", { locale: ptBR })}</div>
+                                  <div className="text-xs text-gray-500">
+                                    {formatDistanceToNow(new Date(asset.subscription.endDate), { 
+                                      addSuffix: true, 
+                                      locale: ptBR 
+                                    })}
+                                  </div>
+                                </div>
+                              ) : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {getSubscriptionStatusBadge(asset)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleExtendSubscription(asset)}
+                                >
+                                  <CalendarClock className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => returnAssetsToStock([asset.id])}
+                                >
+                                  <PackageOpen className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <CheckCircle2 className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-center text-gray-500">
+                    {activeTab === "expired" 
+                      ? "Nenhuma assinatura expirada encontrada."
+                      : "Nenhuma assinatura encontrada com os filtros atuais."
+                    }
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       
       {/* Extend Subscription Dialog */}
       <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Renovar Assinatura</DialogTitle>
+            <DialogTitle>Estender Assinatura</DialogTitle>
             <DialogDescription>
-              Defina uma nova data de término para estender esta assinatura.
+              Defina uma nova data de vencimento para a assinatura do ativo{" "}
+              {assetToExtend?.id}
+              {assetToExtend?.clientId && (
+                <span> do cliente {getClientById(assetToExtend.clientId)?.nome}</span>
+              )}
             </DialogDescription>
           </DialogHeader>
           
-          {assetToExtend && assetToExtend.subscription && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Ativo</h4>
-                  <p className="text-sm">
-                    {assetToExtend.type === "CHIP" 
-                      ? `CHIP: ${(assetToExtend as any).phoneNumber}` 
-                      : `ROTEADOR: ${(assetToExtend as any).model}`
-                    }
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Cliente</h4>
-                  <p className="text-sm">
-                    {assetToExtend.clientId 
-                      ? getClientById(assetToExtend.clientId)?.name 
-                      : "—"
-                    }
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Tipo de Assinatura</h4>
-                  <p className="text-sm">{assetToExtend.subscription.type}</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Data Atual de Término</h4>
-                  <p className="text-sm">{formatDateDisplay(assetToExtend.subscription.endDate)}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Nova Data de Término</h4>
-                <Input
-                  type="date"
-                  value={newEndDate}
-                  onChange={(e) => setNewEndDate(e.target.value)}
-                  min={format(new Date(), "yyyy-MM-dd")}
-                />
-              </div>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Nova Data de Vencimento</label>
+              <Input
+                type="date"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
             </div>
-          )}
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const date = addMonths(new Date(), 1);
+                  setNewEndDate(date.toISOString().split('T')[0]);
+                }}
+              >
+                +1 Mês
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const date = addMonths(new Date(), 3);
+                  setNewEndDate(date.toISOString().split('T')[0]);
+                }}
+              >
+                +3 Meses
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const date = addYears(new Date(), 1);
+                  setNewEndDate(date.toISOString().split('T')[0]);
+                }}
+              >
+                +1 Ano
+              </Button>
+            </div>
+          </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExtendDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowExtendDialog(false)}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleExtendSubscription}>
-              <RefreshCw className="h-4 w-4 mr-2" /> Confirmar Renovação
+            <Button 
+              onClick={handleConfirmExtendSubscription}
+              disabled={!newEndDate}
+            >
+              Confirmar Extensão
             </Button>
           </DialogFooter>
         </DialogContent>
