@@ -6,8 +6,8 @@ import { formatPhoneNumber, getAssetIdentifier } from "@/utils/formatters";
 
 /**
  * Custom hook for fetching and processing dashboard assets data
- * Fixed: Consultas Redundantes, Filtro não Memoizado, Error Handling
- * Solução: Consolidar consultas, usar useMemo para memoização, adicionar verificações de segurança
+ * Fixed: Consultas Redundantes, Filtro não Memoizado, Error Handling, Type Safety
+ * Solução: Consolidar consultas, usar useMemo para memoização, adicionar verificações de segurança e tipos
  */
 export function useDashboardAssets() {
   // Fetch problem assets with error handling
@@ -77,7 +77,9 @@ export function useDashboardAssets() {
           identifier: getAssetIdentifier(asset),
           type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
           status: 'ALUGADO',
-          additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` : undefined
+          additionalInfo: asset.type === 'CHIP' && 'line_number' in asset && asset.line_number 
+            ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` 
+            : undefined
         }));
       } catch (error) {
         console.error('Error fetching on-lease assets:', error);
@@ -99,7 +101,9 @@ export function useDashboardAssets() {
           identifier: getAssetIdentifier(asset),
           type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
           status: 'ASSINATURA',
-          additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` : undefined
+          additionalInfo: asset.type === 'CHIP' && 'line_number' in asset && asset.line_number 
+            ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` 
+            : undefined
         }));
       } catch (error) {
         console.error('Error fetching on-subscription assets:', error);
