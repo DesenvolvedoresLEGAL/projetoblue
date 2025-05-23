@@ -2,246 +2,343 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
-import { AssetFormValues } from "@/schemas/assetSchemas";
-import { useNavigate } from "react-router-dom";
-import { assetService } from "@/services/api/asset";
-import type { AssetCreateParams, AssetUpdateParams } from "@/services/api/asset";
+import { Asset, AssetStatus, AssetType } from "@/types/asset";
 
-// Type for asset insert data
-interface AssetInsertData {
-  solution_id: number;
-  status_id: number;
-  manufacturer_id?: number;
+// Types for asset operations
+interface CreateAssetData {
+  type: AssetType;
+  statusId?: number;
+  notes?: string;
+  // CHIP specific fields
   iccid?: string;
-  line_number?: number;
-  plan_id?: number;
-  serial_number?: string;
+  phoneNumber?: string;
+  carrier?: string;
+  // ROUTER specific fields
+  uniqueId?: string;
+  brand?: string;
   model?: string;
+  ssid?: string;
+  password?: string;
+  serialNumber?: string;
   radio?: string;
+  // Database fields
+  manufacturer_id?: number;
+  plan_id?: number;
   admin_user?: string;
   admin_pass?: string;
-  notes?: string;
 }
 
-// Hook for creating a new asset
-export const useCreateAsset = () => {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+interface UpdateAssetData {
+  statusId?: number;
+  notes?: string;
+  // Common updatable fields
+  iccid?: string;
+  phoneNumber?: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  radio?: string;
+  manufacturer_id?: number;
+  plan_id?: number;
+  admin_user?: string;
+  admin_pass?: string;
+}
 
-  const createAssetMutation = useMutation({
-    mutationFn: async (formData: AssetFormValues) => {
-      // Prepare the data for insertion based on solution type
-      const data: AssetInsertData = {
-        solution_id: formData.solution_id,
-        status_id: formData.status_id || 1, // Default to Available (1)
-        manufacturer_id: formData.manufacturer_id,
-        notes: formData.notes
-      };
+interface AssetFilters {
+  type?: AssetType;
+  status?: AssetStatus;
+  search?: string;
+  statusId?: number;
+  manufacturerId?: number;
+}
 
-      // Add fields specific to solution type
-      if (formData.solution_id === 1) { // CHIP
-        data.iccid = formData.iccid;
-        data.line_number = formData.line_number 
-          ? parseInt(formData.line_number.toString(), 10) 
-          : undefined;
-        data.plan_id = formData.plan_id;
-      } else if (formData.solution_id === 2) { // ROUTER/EQUIPMENT
-        data.serial_number = formData.serial_number;
-        data.model = formData.model;
-        data.radio = formData.radio;
-        data.admin_user = formData.admin_user;
-        data.admin_pass = formData.admin_pass;
-      }
-
-      // Insert the asset
-      const { data: insertedData, error } = await supabase
-        .from('assets')
-        .insert(data)
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error("Error creating asset:", error);
-        throw new Error(`Failed to create asset: ${error.message}`);
-      }
-
-      return insertedData;
-    },
-    onSuccess: () => {
-      // Invalidate assets queries to refetch the data
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success("Asset created successfully");
-      navigate("/assets/inventory"); // Redirect to inventory
-    },
-    onError: (error: Error) => {
-      console.error("Asset creation error:", error);
-      toast.error(error.message);
-    }
-  });
-
-  return createAssetMutation;
-};
-
-// Simplified query key structure to prevent deep type instantiation
-export const useCheckAssetExists = (identifier: string, field: string) => {
-  return useQuery({
-    queryKey: ['asset-exists', identifier, field] as const,
-    queryFn: async () => {
-      if (!identifier || identifier.trim() === '') {
-        return { exists: false, data: null };
-      }
-
-      const { data, error, count } = await supabase
-        .from('assets')
-        .select('*', { count: 'estimated' })
-        .eq(field, identifier)
-        .is('deleted_at', null)
-        .limit(1);
-
-      if (error) {
-        throw new Error(`Error checking if asset exists: ${error.message}`);
-      }
-
-      return { exists: (count || 0) > 0, data: data?.[0] || null };
-    },
-    enabled: !!identifier && identifier.trim() !== '',
-  });
-};
-
-// Hook for fetching manufacturers
-export const useManufacturers = () => {
-  return useQuery({
-    queryKey: ['manufacturers'] as const,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('manufacturers')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// Hook for fetching asset solutions
-export const useAssetSolutions = () => {
-  return useQuery({
-    queryKey: ['asset-solutions'] as const,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_solutions')
-        .select('*')
-        .order('solution', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook for fetching status records
-export const useStatusRecords = () => {
-  return useQuery({
-    queryKey: ['status-records'] as const,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_status')
-        .select('*')
-        .order('status', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook for fetching plans
-export const usePlans = () => {
-  return useQuery({
-    queryKey: ['plans'] as const,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select('id, nome')
-        .order('nome', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
+/**
+ * Modern asset management hook providing CRUD operations and data fetching
+ * Uses React Query for efficient caching and state management
+ */
 export function useAssetManagement() {
   const queryClient = useQueryClient();
 
-  // Simplified query key structure to prevent deep type instantiation
+  // Core query key factory for consistent cache management
+  const assetKeys = {
+    all: ['assets'] as const,
+    lists: () => [...assetKeys.all, 'list'] as const,
+    list: (filters: AssetFilters) => [...assetKeys.lists(), filters] as const,
+    details: () => [...assetKeys.all, 'detail'] as const,
+    detail: (id: string) => [...assetKeys.details(), id] as const,
+  };
+
+  /**
+   * Fetch all assets with optional filtering
+   */
+  const useAssets = (filters: AssetFilters = {}) => {
+    return useQuery({
+      queryKey: assetKeys.list(filters),
+      queryFn: async () => {
+        let query = supabase
+          .from('assets')
+          .select(`
+            uuid, serial_number, model, iccid, solution_id, status_id, 
+            line_number, radio, manufacturer_id, created_at, updated_at,
+            manufacturers(id, name),
+            asset_status(id, status),
+            asset_solutions(id, solution)
+          `)
+          .is('deleted_at', null);
+
+        // Apply filters
+        if (filters.statusId) {
+          query = query.eq('status_id', filters.statusId);
+        }
+        
+        if (filters.manufacturerId) {
+          query = query.eq('manufacturer_id', filters.manufacturerId);
+        }
+
+        if (filters.search) {
+          const searchTerm = `%${filters.search}%`;
+          query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm}`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching assets:', error);
+          throw new Error(error.message);
+        }
+
+        // Transform database records to Asset type
+        return (data || []).map(mapDbToAsset);
+      },
+    });
+  };
+
+  /**
+   * Fetch single asset by ID
+   */
+  const useAsset = (id: string) => {
+    return useQuery({
+      queryKey: assetKeys.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('assets')
+          .select(`
+            uuid, serial_number, model, iccid, solution_id, status_id,
+            line_number, radio, manufacturer_id, created_at, updated_at,
+            manufacturers(id, name),
+            asset_status(id, status),
+            asset_solutions(id, solution)
+          `)
+          .eq('uuid', id)
+          .is('deleted_at', null)
+          .single();
+
+        if (error) {
+          console.error(`Error fetching asset ${id}:`, error);
+          throw new Error(error.message);
+        }
+
+        return mapDbToAsset(data);
+      },
+      enabled: !!id,
+    });
+  };
+
+  /**
+   * Create new asset mutation
+   */
   const createAsset = useMutation({
-    mutationFn: (data: AssetCreateParams) => assetService.createAsset(data),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
-    },
-    onError: (error) => {
-      console.error('Error creating asset:', error);
-      toast.error('Erro ao criar ativo');
+    mutationFn: async (assetData: CreateAssetData) => {
+      const dbData = {
+        solution_id: assetData.type === 'CHIP' ? 11 : 2,
+        status_id: assetData.statusId || 1,
+        model: assetData.model,
+        serial_number: assetData.serialNumber,
+        iccid: assetData.iccid,
+        line_number: assetData.phoneNumber ? parseInt(assetData.phoneNumber, 10) : null,
+        manufacturer_id: assetData.manufacturer_id,
+        plan_id: assetData.plan_id,
+        radio: assetData.radio,
+        admin_user: assetData.admin_user || 'admin',
+        admin_pass: assetData.admin_pass || '',
+      };
+
+      const { data, error } = await supabase
+        .from('assets')
+        .insert(dbData)
+        .select('uuid')
+        .single();
+
+      if (error) {
+        console.error('Error creating asset:', error);
+        throw new Error(error.message);
+      }
+
+      return data;
     },
     onSuccess: () => {
-      toast.success('Ativo criado com sucesso');
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      toast.success('Asset criado com sucesso');
+    },
+    onError: (error: Error) => {
+      console.error('Asset creation failed:', error);
+      toast.error(`Erro ao criar asset: ${error.message}`);
     },
   });
 
+  /**
+   * Update asset mutation
+   */
   const updateAsset = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: AssetUpdateParams }) => 
-      assetService.updateAsset(id, data),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
+    mutationFn: async ({ id, data }: { id: string; data: UpdateAssetData }) => {
+      const updateData: any = {};
+
+      // Map frontend fields to database fields
+      if (data.statusId !== undefined) updateData.status_id = data.statusId;
+      if (data.iccid !== undefined) updateData.iccid = data.iccid;
+      if (data.phoneNumber !== undefined) updateData.line_number = parseInt(data.phoneNumber, 10);
+      if (data.model !== undefined) updateData.model = data.model;
+      if (data.serialNumber !== undefined) updateData.serial_number = data.serialNumber;
+      if (data.radio !== undefined) updateData.radio = data.radio;
+      if (data.manufacturer_id !== undefined) updateData.manufacturer_id = data.manufacturer_id;
+      if (data.plan_id !== undefined) updateData.plan_id = data.plan_id;
+      if (data.admin_user !== undefined) updateData.admin_user = data.admin_user;
+      if (data.admin_pass !== undefined) updateData.admin_pass = data.admin_pass;
+
+      const { error } = await supabase
+        .from('assets')
+        .update(updateData)
+        .eq('uuid', id);
+
+      if (error) {
+        console.error(`Error updating asset ${id}:`, error);
+        throw new Error(error.message);
+      }
+
+      return { id };
     },
-    onError: (error) => {
-      console.error('Error updating asset:', error);
-      toast.error('Erro ao atualizar ativo');
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.detail(data.id) });
+      toast.success('Asset atualizado com sucesso');
     },
-    onSuccess: () => {
-      toast.success('Ativo atualizado com sucesso');
+    onError: (error: Error) => {
+      console.error('Asset update failed:', error);
+      toast.error(`Erro ao atualizar asset: ${error.message}`);
     },
   });
 
+  /**
+   * Delete asset mutation (soft delete)
+   */
   const deleteAsset = useMutation({
-    mutationFn: (id: string) => assetService.deleteAsset(id),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('assets')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('uuid', id);
+
+      if (error) {
+        console.error(`Error deleting asset ${id}:`, error);
+        throw new Error(error.message);
+      }
+
+      return { id };
     },
-    onError: (error) => {
-      console.error('Error deleting asset:', error);
-      toast.error('Erro ao excluir ativo');
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.removeQueries({ queryKey: assetKeys.detail(data.id) });
+      toast.success('Asset excluído com sucesso');
     },
-    onSuccess: () => {
-      toast.success('Ativo excluído com sucesso');
+    onError: (error: Error) => {
+      console.error('Asset deletion failed:', error);
+      toast.error(`Erro ao excluir asset: ${error.message}`);
     },
   });
 
+  /**
+   * Update asset status mutation
+   */
   const updateAssetStatus = useMutation({
-    mutationFn: ({ id, statusId }: { id: string; statusId: number }) =>
-      assetService.updateAssetStatus(id, statusId),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
+    mutationFn: async ({ id, statusId }: { id: string; statusId: number }) => {
+      const { error } = await supabase
+        .from('assets')
+        .update({ status_id: statusId })
+        .eq('uuid', id);
+
+      if (error) {
+        console.error(`Error updating asset status ${id}:`, error);
+        throw new Error(error.message);
+      }
+
+      return { id, statusId };
     },
-    onError: (error) => {
-      console.error('Error updating asset status:', error);
-      toast.error('Erro ao atualizar status do ativo');
-    },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.detail(data.id) });
       toast.success('Status atualizado com sucesso');
+    },
+    onError: (error: Error) => {
+      console.error('Status update failed:', error);
+      toast.error(`Erro ao atualizar status: ${error.message}`);
     },
   });
 
   return {
+    // Query hooks
+    useAssets,
+    useAsset,
+    
+    // Mutation hooks
     createAsset,
     updateAsset,
     deleteAsset,
     updateAssetStatus,
+    
+    // Query keys for external cache management
+    assetKeys,
   };
+}
+
+/**
+ * Transform database record to frontend Asset type
+ */
+function mapDbToAsset(dbAsset: any): Asset {
+  const baseAsset = {
+    id: dbAsset.uuid,
+    registrationDate: dbAsset.created_at,
+    status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
+    statusId: dbAsset.status_id,
+    notes: dbAsset.notes,
+    solucao: dbAsset.asset_solutions?.solution,
+    marca: dbAsset.manufacturers?.name,
+    modelo: dbAsset.model,
+    serial_number: dbAsset.serial_number,
+    radio: dbAsset.radio,
+  };
+
+  if (dbAsset.solution_id === 11) {
+    // CHIP asset
+    return {
+      ...baseAsset,
+      type: "CHIP",
+      iccid: dbAsset.iccid || '',
+      phoneNumber: dbAsset.line_number?.toString() || '',
+      carrier: "Unknown",
+    };
+  } else {
+    // ROUTER asset
+    return {
+      ...baseAsset,
+      type: "ROTEADOR",
+      uniqueId: dbAsset.uuid,
+      brand: dbAsset.manufacturers?.name || '',
+      model: dbAsset.model || '',
+      ssid: '',
+      password: '',
+      serialNumber: dbAsset.serial_number || '',
+      adminUser: dbAsset.admin_user,
+      adminPassword: dbAsset.admin_pass,
+    };
+  }
 }
