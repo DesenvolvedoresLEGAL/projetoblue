@@ -12,20 +12,28 @@ import AssetStatusBadge from './AssetStatusBadge';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
 import AssetActions from './AssetActions';
 import { capitalize } from '@/utils/stringUtils';
+import { formatPhoneNumber } from '@/utils/formatters';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
   onAssetUpdated: () => void;
   onAssetDeleted: () => void;
+  currentPage: number;
+  pageSize: number;
 }
 
-const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProps) => {
+const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, pageSize }: AssetsTableProps) => {
+  // Calculate row number based on pagination
+  const getRowNumber = (index: number): number => {
+    return (currentPage - 1) * pageSize + index + 1;
+  };
+
   return (
     <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Identificador</TableHead>
+            <TableHead>Nº</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead>Detalhes</TableHead>
             <TableHead>Status</TableHead>
@@ -37,10 +45,10 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
         </TableHeader>
         <TableBody>
           {assets && assets.length > 0 ? (
-            assets.map((asset) => (
+            assets.map((asset, index) => (
               <TableRow key={asset.uuid}>
                 <TableCell className="font-medium">
-                  {asset.uuid.substring(0, 8)}
+                  {getRowNumber(index)}
                 </TableCell>
                 <TableCell>{asset.solucao.name}</TableCell>
                 <TableCell>
@@ -55,9 +63,9 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted }: AssetsTableProp
                 </TableCell>
                 <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
                 <TableCell>{asset.model ? capitalize(asset.model) : 'N/A'}</TableCell>
-                <TableCell>{asset.solucao.name != "CHIP" ?
-                    `ETIQUETA: ${asset.radio}` :
-                    `NÚMERO: ${asset.line_number}`}</TableCell>
+                <TableCell>{asset.solucao.id === 11 ?
+                    `NÚMERO: ${asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}` :
+                    `ETIQUETA: ${asset.radio || 'N/A'}`}</TableCell>
                 <TableCell className="text-right">
                   <AssetActions 
                     asset={asset} 

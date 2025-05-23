@@ -9,6 +9,7 @@ import { formatRelativeTime } from '@/utils/dashboardUtils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
+import { getAssetIdentifier } from '@/utils/assetUtils';
 
 interface FilteredAssetsTableProps {
   assets: any[];
@@ -18,14 +19,6 @@ interface FilteredAssetsTableProps {
 
 export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAssetsTableProps) {
   const hasFilters = Object.keys(filters).length > 0;
-  
-  // Helper function to get asset identifier (radio, serial number, or ICCID)
-  const getAssetIdentifier = (asset: any) => {
-    if (asset.radio) return asset.radio;
-    if (asset.serial_number) return asset.serial_number;
-    if (asset.iccid) return asset.iccid;
-    return asset.uuid.substring(0, 8) + '...';
-  };
   
   // Helper function to get asset type label
   const getAssetTypeLabel = (asset: any) => {
@@ -90,9 +83,11 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assets.map((asset) => (
+                {assets.map((asset, index) => (
                   <TableRow key={asset.uuid}>
-                    <TableCell className="font-medium">{getAssetIdentifier(asset)}</TableCell>
+                    <TableCell className="font-medium">
+                      {asset.solution_id === 11 ? asset.line_number || 'N/A' : asset.radio || 'N/A'}
+                    </TableCell>
                     <TableCell>{getAssetTypeLabel(asset)}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(asset.status?.status)}>

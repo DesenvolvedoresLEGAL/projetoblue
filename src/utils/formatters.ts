@@ -74,17 +74,23 @@ export const capitalize = (str: string): string => {
  * Get appropriate asset identifier
  * Problem: Duplicidade de Identificadores
  * Solução: Exibir o identificador de forma consistente
+ * 
+ * Updated: agora usando line_number para CHIPs e radio para outros equipamentos
  */
 export const getAssetIdentifier = (asset: any): string => {
   if (!asset) return 'N/A';
   
-  // For chips, prefer ICCID
-  if (asset.type === "CHIP" && asset.iccid) {
-    return asset.iccid;
+  // Para CHIPs, usar o número da linha como identificador
+  if ((asset.solution_id === 11 || asset.type === 'CHIP' || asset.solucao === 'CHIP') && asset.line_number) {
+    return String(asset.line_number);
   }
   
-  // For other assets, use radio, serial_number or uuid
-  return asset.radio || 
-         asset.serial_number || 
+  // Para outros equipamentos, usar o campo radio
+  if (asset.radio) {
+    return asset.radio;
+  }
+  
+  // Fallbacks em ordem de prioridade
+  return asset.serial_number || 
          (asset.uuid ? asset.uuid.substring(0, 8) : 'N/A');
 };

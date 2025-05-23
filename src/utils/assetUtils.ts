@@ -9,18 +9,19 @@ export const SOLUTION_IDS = {
 
 /**
  * Gets a human-readable identifier for an asset, with consistent fallback pattern
+ * Updated: agora usando line_number para CHIPs e radio para outros equipamentos
  */
 export const getAssetIdentifier = (asset: any): string => {
   if (!asset) return 'N/A';
   
-  // For chips
+  // Para CHIPs
   if (asset.solution_id === SOLUTION_IDS.CHIP || 
       asset.type === 'CHIP' || 
       asset.solucao === 'CHIP') {
-    return asset.line_number || asset.iccid || 'N/A';
+    return asset.line_number ? String(asset.line_number) : (asset.iccid || 'N/A');
   }
   
-  // For routers/equipment
+  // Para routers/equipamentos
   return asset.radio || asset.serial_number || 'N/A';
 };
 

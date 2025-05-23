@@ -11,10 +11,13 @@ export const handleAssetError = (error: any, message: string): void => {
 
 // Helper function to map database asset to Asset type
 export const mapAssetFromDb = (dbAsset: any): Asset => {
+  // Determine asset type based on solution_id
+  const isChip = dbAsset.solution_id === 11;
+  
   const baseAsset = {
     id: dbAsset.uuid,
     uuid: dbAsset.uuid,
-    type: dbAsset.solution_id === 11 ? "CHIP" as const : "ROTEADOR" as const,
+    type: isChip ? "CHIP" as const : "ROTEADOR" as const,
     registrationDate: dbAsset.created_at,
     status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
     statusId: dbAsset.status_id,
@@ -37,12 +40,12 @@ export const mapAssetFromDb = (dbAsset: any): Asset => {
     deleted_at: dbAsset.deleted_at,
   };
 
-  if (dbAsset.solution_id === 11) {
+  if (isChip) {
     // CHIP asset
     return {
       ...baseAsset,
       type: "CHIP",
-      iccid: dbAsset.iccid,
+      iccid: dbAsset.iccid || '',
       phoneNumber: dbAsset.line_number?.toString() || "",
       carrier: "Unknown",
       line_number: dbAsset.line_number,

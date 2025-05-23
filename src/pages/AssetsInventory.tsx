@@ -98,6 +98,8 @@ const AssetsInventory = () => {
           assets={assetsData.assets} 
           onAssetUpdated={handleAssetUpdated}
           onAssetDeleted={handleAssetDeleted}
+          currentPage={currentPage}
+          pageSize={ASSETS_PER_PAGE}
         />
       )}
       
