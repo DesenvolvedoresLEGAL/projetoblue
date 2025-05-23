@@ -17,7 +17,7 @@ export const getAssets = async (params?: AssetListParams): Promise<{ data: Asset
       .from('assets')
       .select(`
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, dias_alugada, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -25,38 +25,26 @@ export const getAssets = async (params?: AssetListParams): Promise<{ data: Asset
       .is('deleted_at', null);
 
     // Apply filters based on params
-    if (params?.type) {
-      query = query.eq('solution_id', params.type === "CHIP" ? 11 : 1);
+    if (params?.typeId) {
+      query = query.eq('solution_id', params.typeId);
     }
-    if (params?.status) {
-      // Convert status string to number if needed
-      const statusId = typeof params.status === 'string' ? 1 : params.status;
-      query = query.eq('status_id', statusId);
-    }
-    if (params?.clientId) {
-      query = query.eq('client_id', params.clientId);
+    if (params?.statusId) {
+      query = query.eq('status_id', params.statusId);
     }
 
     // Implement search functionality
-    if (params?.searchTerm) {
-      const searchTerm = `%${params.searchTerm}%`;
+    if (params?.search) {
+      const searchTerm = `%${params.search}%`;
       query = query.or(
         `iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm}`
       );
     }
 
-    // Handle unassigned assets filter
-    if (params?.unassigned === 'true') {
-      query = query.is('client_id', null);
-    }
-
-    // Sorting
-    if (params?.sortBy) {
-      const isAscending = params.sortOrder === 'asc';
-      query = query.order(params.sortBy, { ascending: isAscending });
-    } else {
-      // Default sorting by created_at in descending order
+    // Sorting - simplified to prevent type instantiation issues
+    if (params?.sortOrder === 'desc') {
       query = query.order('created_at', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: true });
     }
 
     // Pagination
@@ -251,7 +239,7 @@ export const getAssetsByMultipleStatus = async (statusIds: number[]): Promise<As
       .from('assets')
       .select(`
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, dias_alugada, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -275,9 +263,96 @@ export const getAssetsByMultipleStatus = async (statusIds: number[]): Promise<As
 
 export const assetQueries = {
   getAssets,
-  getAssetById,
-  getAssetsByStatus,
-  getAssetsByType,
+  getAssetById: async (id: string): Promise<Asset | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
+          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+          manufacturers(id, name),
+          asset_status(id, status),
+          asset_solutions(id, solution)
+        `)
+        .eq('uuid', id)
+        .is('deleted_at', null)
+        .single();
+
+      if (error) {
+        console.error(`Error fetching asset with ID ${id}:`, error);
+        throw error;
+      }
+
+      if (!data) {
+        console.log(`Asset with ID ${id} not found.`);
+        return null;
+      }
+
+      const asset = mapAssetFromDb(data);
+      return asset;
+    } catch (error) {
+      console.error(`Error in getAssetById for ID ${id}:`, error);
+      return null;
+    }
+  },
+  getAssetsByStatus: async (statusId: number): Promise<Asset[]> => {
+    try {
+      console.log(`Fetching assets with status ID: ${statusId}`);
+
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
+          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+          manufacturers(id, name),
+          asset_status(id, status),
+          asset_solutions(id, solution)
+        `)
+        .eq('status_id', statusId)
+        .is('deleted_at', null);
+
+      if (error) {
+        console.error(`Error fetching assets with status ID ${statusId}:`, error);
+        throw error;
+      }
+
+      const assets = data.map(mapAssetFromDb);
+      console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
+      return assets;
+    } catch (error) {
+      console.error(`Error in getAssetsByStatus for status ID ${statusId}:`, error);
+      return [];
+    }
+  },
+  getAssetsByType: async (typeId: number): Promise<Asset[]> => {
+    try {
+      console.log(`Fetching assets with type ID: ${typeId}`);
+
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
+          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+          manufacturers(id, name),
+          asset_status(id, status),
+          asset_solutions(id, solution)
+        `)
+        .eq('solution_id', typeId)
+        .is('deleted_at', null);
+
+      if (error) {
+        console.error(`Error fetching assets with type ID ${typeId}:`, error);
+        throw error;
+      }
+
+      const assets = data.map(mapAssetFromDb);
+      console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
+      return assets;
+    } catch (error) {
+      console.error(`Error in getAssetsByType for type ID ${typeId}:`, error);
+      return [];
+    }
+  },
   getAssetsByMultipleStatus,
   listProblemAssets,
   statusByType,

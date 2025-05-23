@@ -1,9 +1,11 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { AssetFormValues } from "@/schemas/assetSchemas";
 import { useNavigate } from "react-router-dom";
-import { assetService, AssetCreateParams, AssetUpdateParams } from "@/services/api/asset";
+import { assetService } from "@/services/api/asset";
+import type { AssetCreateParams, AssetUpdateParams } from "@/services/api/asset";
 
 // Type for asset insert data
 interface AssetInsertData {
@@ -80,10 +82,10 @@ export const useCreateAsset = () => {
   return createAssetMutation;
 };
 
-// Fix: Use direct array literals for query keys to prevent deep type instantiation
+// Simplified query key structure to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    queryKey: ['assets-exists', identifier, field],
+    queryKey: ['asset-exists', identifier, field] as const,
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };
@@ -109,7 +111,7 @@ export const useCheckAssetExists = (identifier: string, field: string) => {
 // Hook for fetching manufacturers
 export const useManufacturers = () => {
   return useQuery({
-    queryKey: ['manufacturers'],
+    queryKey: ['manufacturers'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('manufacturers')
@@ -126,7 +128,7 @@ export const useManufacturers = () => {
 // Hook for fetching asset solutions
 export const useAssetSolutions = () => {
   return useQuery({
-    queryKey: ['assetSolutions'],
+    queryKey: ['asset-solutions'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_solutions')
@@ -143,7 +145,7 @@ export const useAssetSolutions = () => {
 // Hook for fetching status records
 export const useStatusRecords = () => {
   return useQuery({
-    queryKey: ['statusRecords'],
+    queryKey: ['status-records'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_status')
@@ -160,7 +162,7 @@ export const useStatusRecords = () => {
 // Hook for fetching plans
 export const usePlans = () => {
   return useQuery({
-    queryKey: ['plans'],
+    queryKey: ['plans'] as const,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('plans')
@@ -177,13 +179,11 @@ export const usePlans = () => {
 export function useAssetManagement() {
   const queryClient = useQueryClient();
 
-  // Fix for "Type instantiation is excessively deep and possibly infinite"
-  // Problem: Deep type instantiation causing build error
-  // Solução: Simplificar a estrutura de query keys
+  // Simplified query key structure to prevent deep type instantiation
   const createAsset = useMutation({
     mutationFn: (data: AssetCreateParams) => assetService.createAsset(data),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
     },
     onError: (error) => {
       console.error('Error creating asset:', error);
@@ -198,7 +198,7 @@ export function useAssetManagement() {
     mutationFn: ({ id, data }: { id: string; data: AssetUpdateParams }) => 
       assetService.updateAsset(id, data),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
     },
     onError: (error) => {
       console.error('Error updating asset:', error);
@@ -212,7 +212,7 @@ export function useAssetManagement() {
   const deleteAsset = useMutation({
     mutationFn: (id: string) => assetService.deleteAsset(id),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
     },
     onError: (error) => {
       console.error('Error deleting asset:', error);
@@ -227,7 +227,7 @@ export function useAssetManagement() {
     mutationFn: ({ id, statusId }: { id: string; statusId: number }) =>
       assetService.updateAssetStatus(id, statusId),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] as const });
     },
     onError: (error) => {
       console.error('Error updating asset status:', error);

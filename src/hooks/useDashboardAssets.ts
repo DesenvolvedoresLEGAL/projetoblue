@@ -16,31 +16,38 @@ export function useDashboardAssets() {
     queryFn: () => assetService.listProblemAssets(),
   });
 
-  // Fetch assets statistics
+  // Fetch assets statistics - using raw database results instead of mapped Assets
   const assetsStats = useQuery({
     queryKey: ['dashboard', 'assets-stats'],
     queryFn: async () => {
-      // This would typically call a backend endpoint that returns aggregated stats
+      // Call the raw database query to get unmapped results
       const assetsResult = await assetService.getAssets();
       const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
       
-      // Calculate stats
+      // Work with raw database results that have solution_id and status_id
+      const rawAssets = assets.map((asset: any) => ({
+        solution_id: asset.solution_id || (asset as any).solution_id,
+        status_id: asset.statusId || (asset as any).status_id,
+        type: asset.type
+      }));
+      
+      // Calculate stats using solution_id from database
       const chips = {
-        total: assets.filter(a => a.solution_id === 11).length,
-        available: assets.filter(a => a.solution_id === 11 && a.status_id === 1).length,
-        unavailable: assets.filter(a => a.solution_id === 11 && a.status_id !== 1).length
+        total: rawAssets.filter((a: any) => a.solution_id === 11 || a.type === 'CHIP').length,
+        available: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && (a.status_id === 1)).length,
+        unavailable: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && (a.status_id !== 1)).length
       };
       
       const speedys = {
-        total: assets.filter(a => a.solution_id === 1).length,
-        available: assets.filter(a => a.solution_id === 1 && a.status_id === 1).length,
-        unavailable: assets.filter(a => a.solution_id === 1 && a.status_id !== 1).length
+        total: rawAssets.filter((a: any) => a.solution_id === 1).length,
+        available: rawAssets.filter((a: any) => a.solution_id === 1 && (a.status_id === 1)).length,
+        unavailable: rawAssets.filter((a: any) => a.solution_id === 1 && (a.status_id !== 1)).length
       };
       
       const equipment = {
-        total: assets.filter(a => a.solution_id !== 11 && a.solution_id !== 1).length,
-        available: assets.filter(a => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id === 1).length,
-        unavailable: assets.filter(a => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id !== 1).length
+        total: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1).length,
+        available: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && (a.status_id === 1)).length,
+        unavailable: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && (a.status_id !== 1)).length
       };
       
       return { chips, speedys, equipment };
@@ -53,11 +60,11 @@ export function useDashboardAssets() {
     queryFn: async () => {
       const assets = await assetService.getAssetsByStatus(2); // Status ID for 'ALUGADO'
       return assets.map(asset => ({
-        id: asset.uuid,
+        id: asset.id,
         identifier: getAssetIdentifier(asset),
-        type: asset.solucao?.solution || 'Desconhecido',
+        type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
         status: 'ALUGADO',
-        additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(asset.line_number)}` : undefined
+        additionalInfo: (asset as any).num_linha ? `Linha: ${formatPhoneNumber((asset as any).num_linha)}` : undefined
       }));
     }
   });
@@ -68,11 +75,11 @@ export function useDashboardAssets() {
     queryFn: async () => {
       const assets = await assetService.getAssetsByStatus(3); // Status ID for 'ASSINATURA'
       return assets.map(asset => ({
-        id: asset.uuid,
+        id: asset.id,
         identifier: getAssetIdentifier(asset),
-        type: asset.solucao?.solution || 'Desconhecido',
+        type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
         status: 'ASSINATURA',
-        additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(asset.line_number)}` : undefined
+        additionalInfo: (asset as any).num_linha ? `Linha: ${formatPhoneNumber((asset as any).num_linha)}` : undefined
       }));
     }
   });
@@ -95,10 +102,10 @@ export function useDashboardAssets() {
       const assetsResult = await assetService.getAssets({ limit: 5, sortOrder: 'desc' });
       const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
       return assets.map(asset => ({
-        id: asset.uuid,
-        assetType: asset.solucao?.solution || 'Desconhecido',
+        id: asset.id,
+        assetType: asset.type || 'Desconhecido',
         name: getAssetIdentifier(asset),
-        date: new Date(asset.created_at).toLocaleDateString('pt-BR'),
+        date: new Date(asset.registrationDate).toLocaleDateString('pt-BR'),
         description: 'CRIADO no sistema',
         old_status: '',
         new_status: ''
