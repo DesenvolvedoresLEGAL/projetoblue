@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { Asset, AssetStatus, AssetType } from "@/types/asset";
+import { referenceDataService } from "@/services/api/referenceDataService";
 
 // Types for asset operations
 interface CreateAssetData {
@@ -26,6 +27,8 @@ interface CreateAssetData {
   plan_id?: number;
   admin_user?: string;
   admin_pass?: string;
+  solution_id?: number;
+  line_number?: number | null;
 }
 
 interface UpdateAssetData {
@@ -63,7 +66,7 @@ export function useAssetManagement() {
   const assetKeys = {
     all: ['assets'] as const,
     lists: () => [...assetKeys.all, 'list'] as const,
-    list: (filters: AssetFilters) => [...assetKeys.lists(), filters] as const,
+    list: (filters: AssetFilters) => [...assetKeys.lists(), { ...filters }] as const,
     details: () => [...assetKeys.all, 'detail'] as const,
     detail: (id: string) => [...assetKeys.details(), id] as const,
   };
@@ -150,12 +153,12 @@ export function useAssetManagement() {
   const createAsset = useMutation({
     mutationFn: async (assetData: CreateAssetData) => {
       const dbData = {
-        solution_id: assetData.type === 'CHIP' ? 11 : 2,
+        solution_id: assetData.solution_id || (assetData.type === 'CHIP' ? 11 : 2),
         status_id: assetData.statusId || 1,
         model: assetData.model,
         serial_number: assetData.serialNumber,
         iccid: assetData.iccid,
-        line_number: assetData.phoneNumber ? parseInt(assetData.phoneNumber, 10) : null,
+        line_number: assetData.phoneNumber ? parseInt(assetData.phoneNumber, 10) : assetData.line_number,
         manufacturer_id: assetData.manufacturer_id,
         plan_id: assetData.plan_id,
         radio: assetData.radio,
@@ -301,6 +304,70 @@ export function useAssetManagement() {
 }
 
 /**
+ * Hook for creating assets with convenience wrapper around useMutation
+ */
+export function useCreateAsset() {
+  const { createAsset } = useAssetManagement();
+  return createAsset;
+}
+
+/**
+ * Hook to fetch all available manufacturers
+ */
+export function useManufacturers() {
+  return useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      return await referenceDataService.getManufacturers();
+    }
+  });
+}
+
+/**
+ * Hook to fetch all available asset solutions (types)
+ */
+export function useAssetSolutions() {
+  return useQuery({
+    queryKey: ['assetSolutions'],
+    queryFn: async () => {
+      return await referenceDataService.getAssetSolutions();
+    }
+  });
+}
+
+/**
+ * Hook to fetch all available asset status options
+ */
+export function useStatusRecords() {
+  return useQuery({
+    queryKey: ['statusRecords'],
+    queryFn: async () => {
+      return await referenceDataService.getStatusRecords();
+    }
+  });
+}
+
+/**
+ * Hook to fetch all available data plans
+ */
+export function usePlans() {
+  return useQuery({
+    queryKey: ['plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('plans').select('*').is('deleted_at', null);
+      
+      if (error) {
+        console.error("Error fetching plans:", error);
+        toast.error("Failed to fetch plans");
+        return [];
+      }
+      
+      return data || [];
+    }
+  });
+}
+
+/**
  * Transform database record to frontend Asset type
  */
 function mapDbToAsset(dbAsset: any): Asset {
@@ -342,3 +409,6 @@ function mapDbToAsset(dbAsset: any): Asset {
     };
   }
 }
+
+// Export the main hook and utility hooks
+export default useAssetManagement;
