@@ -56,7 +56,7 @@ export function StaticNavigation({
           <span>Gestão</span>
         </NavLink>
         
-        <NavLink to="/topology/view" className={({
+        {/* <NavLink to="/topology/view" className={({
         isActive
       }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
           <Network className="h-4 w-4" />
@@ -68,10 +68,10 @@ export function StaticNavigation({
       }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
           <Scan className="h-4 w-4" />
           <span>Descoberta</span>
-        </NavLink>
+        </NavLink> */}
       </div>
 
-      {/* BITS™ Section - Conditionally rendered for 'cliente' role (previously 'afiliado') */}
+      {/* BITS™ Section - Conditionally rendered for 'cliente' role (previously 'afiliado')
       {profile?.role === 'cliente' && <div className="flex flex-col space-y-2">
           <div className="px-3 mb-1">
             <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS™</h3>
@@ -114,9 +114,9 @@ export function StaticNavigation({
             <HelpCircle className="h-4 w-4" />
             <span>Ajuda & Suporte</span>
           </NavLink>
-        </div>}
+        </div>} */}
 
-      {/* Admin Section - Unchanged */}
+      {/* Admin Section - Unchanged
       <div className="flex flex-col space-y-2">
         <div className="px-3 mb-1">
           <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Admin</h3>
@@ -183,6 +183,6 @@ export function StaticNavigation({
           <ShieldCheck className="h-4 w-4" />
           <span>SSO & MFA</span>
         </NavLink>
-      </div>
+      </div> */}
     </div>;
 }
