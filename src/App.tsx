@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,7 @@ import { Layout } from "@/components/layout/Layout";
 import { DataUsageProvider } from "@/context/DataUsageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthRoute } from "@/components/auth/AuthRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Pages
 import Home from "./pages/Home";
@@ -78,7 +78,12 @@ const App = () => (
                       <Layout />
                     </AuthRoute>
                   }>
-                    <Route index element={<Home />} />
+                    {/* Wrap the main dashboard route with ErrorBoundary */}
+                    <Route index element={
+                      <ErrorBoundary>
+                        <Home />
+                      </ErrorBoundary>
+                    } />
                     
                     {/* Dashboard routes - Redirect to Home for consistent experience */}
                     <Route path="dashboard" element={<Dashboard />} />

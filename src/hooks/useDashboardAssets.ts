@@ -6,129 +6,168 @@ import { formatPhoneNumber, getAssetIdentifier } from "@/utils/formatters";
 
 /**
  * Custom hook for fetching and processing dashboard assets data
- * Problem: Consultas Redundantes, Filtro não Memoizado
- * Solução: Consolidar consultas e usar useMemo para memoização
+ * Fixed: Consultas Redundantes, Filtro não Memoizado, Error Handling
+ * Solução: Consolidar consultas, usar useMemo para memoização, adicionar verificações de segurança
  */
 export function useDashboardAssets() {
-  // Fetch problem assets
+  // Fetch problem assets with error handling
   const problemAssets = useQuery({
     queryKey: ['dashboard', 'problem-assets'],
     queryFn: () => assetService.listProblemAssets(),
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Fetch assets statistics - using raw database results instead of mapped Assets
+  // Fetch assets statistics with safe data handling
   const assetsStats = useQuery({
     queryKey: ['dashboard', 'assets-stats'],
     queryFn: async () => {
-      // Call the raw database query to get unmapped results
-      const assetsResult = await assetService.getAssets();
-      const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
-      
-      // Work with raw database results that have solution_id and status_id
-      const rawAssets = assets.map((asset: any) => ({
-        solution_id: asset.solution_id || (asset as any).solution_id,
-        status_id: asset.statusId || (asset as any).status_id,
-        type: asset.type
-      }));
-      
-      // Calculate stats using solution_id from database
-      const chips = {
-        total: rawAssets.filter((a: any) => a.solution_id === 11 || a.type === 'CHIP').length,
-        available: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && (a.status_id === 1)).length,
-        unavailable: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && (a.status_id !== 1)).length
-      };
-      
-      const speedys = {
-        total: rawAssets.filter((a: any) => a.solution_id === 1).length,
-        available: rawAssets.filter((a: any) => a.solution_id === 1 && (a.status_id === 1)).length,
-        unavailable: rawAssets.filter((a: any) => a.solution_id === 1 && (a.status_id !== 1)).length
-      };
-      
-      const equipment = {
-        total: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1).length,
-        available: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && (a.status_id === 1)).length,
-        unavailable: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && (a.status_id !== 1)).length
-      };
-      
-      return { chips, speedys, equipment };
-    }
+      try {
+        const assetsResult = await assetService.getAssets();
+        const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
+        
+        // Work with safe data mapping
+        const rawAssets = assets.map((asset: any) => ({
+          solution_id: asset.solution_id || asset.solutionId || 0,
+          status_id: asset.status_id || asset.statusId || 0,
+          type: asset.type || 'UNKNOWN'
+        }));
+        
+        // Calculate stats safely
+        const chips = {
+          total: rawAssets.filter((a: any) => a.solution_id === 11 || a.type === 'CHIP').length,
+          available: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id === 1).length,
+          unavailable: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id !== 1).length
+        };
+        
+        const speedys = {
+          total: rawAssets.filter((a: any) => a.solution_id === 1).length,
+          available: rawAssets.filter((a: any) => a.solution_id === 1 && a.status_id === 1).length,
+          unavailable: rawAssets.filter((a: any) => a.solution_id === 1 && a.status_id !== 1).length
+        };
+        
+        const equipment = {
+          total: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1).length,
+          available: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id === 1).length,
+          unavailable: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id !== 1).length
+        };
+        
+        return { chips, speedys, equipment };
+      } catch (error) {
+        console.error('Error calculating assets stats:', error);
+        return { 
+          chips: { total: 0, available: 0, unavailable: 0 }, 
+          speedys: { total: 0, available: 0, unavailable: 0 }, 
+          equipment: { total: 0, available: 0, unavailable: 0 } 
+        };
+      }
+    },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Fetch on-lease assets
+  // Fetch on-lease assets with safe error handling
   const onLeaseAssets = useQuery({
     queryKey: ['dashboard', 'on-lease-assets'],
     queryFn: async () => {
-      const assets = await assetService.getAssetsByStatus(2); // Status ID for 'ALUGADO'
-      return assets.map(asset => ({
-        id: asset.id,
-        identifier: getAssetIdentifier(asset),
-        type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
-        status: 'ALUGADO',
-        additionalInfo: (asset as any).num_linha ? `Linha: ${formatPhoneNumber((asset as any).num_linha)}` : undefined
-      }));
-    }
+      try {
+        const assets = await assetService.getAssetsByStatus(2);
+        return (assets || []).map(asset => ({
+          id: asset.id || asset.uuid || 'unknown',
+          identifier: getAssetIdentifier(asset),
+          type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
+          status: 'ALUGADO',
+          additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` : undefined
+        }));
+      } catch (error) {
+        console.error('Error fetching on-lease assets:', error);
+        return [];
+      }
+    },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Fetch on-subscription assets
+  // Fetch on-subscription assets with safe error handling
   const onSubscriptionAssets = useQuery({
     queryKey: ['dashboard', 'on-subscription-assets'],
     queryFn: async () => {
-      const assets = await assetService.getAssetsByStatus(3); // Status ID for 'ASSINATURA'
-      return assets.map(asset => ({
-        id: asset.id,
-        identifier: getAssetIdentifier(asset),
-        type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
-        status: 'ASSINATURA',
-        additionalInfo: (asset as any).num_linha ? `Linha: ${formatPhoneNumber((asset as any).num_linha)}` : undefined
-      }));
-    }
+      try {
+        const assets = await assetService.getAssetsByStatus(3);
+        return (assets || []).map(asset => ({
+          id: asset.id || asset.uuid || 'unknown',
+          identifier: getAssetIdentifier(asset),
+          type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
+          status: 'ASSINATURA',
+          additionalInfo: asset.line_number ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` : undefined
+        }));
+      } catch (error) {
+        console.error('Error fetching on-subscription assets:', error);
+        return [];
+      }
+    },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Fetch status distribution
+  // Fetch status distribution with safe error handling
   const statusDistribution = useQuery({
     queryKey: ['dashboard', 'status-distribution'],
     queryFn: async () => {
-      // Ideally this should be a single API call to get aggregated data
-      const result = await assetService.statusByType();
-      return result || [];
-    }
+      try {
+        const result = await assetService.statusByType();
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.error('Error fetching status distribution:', error);
+        return [];
+      }
+    },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Fetch recent alerts
+  // Fetch recent alerts with safe error handling
   const recentAlerts = useQuery({
     queryKey: ['dashboard', 'recent-alerts'],
     queryFn: async () => {
-      // This would typically call a backend endpoint
-      const assetsResult = await assetService.getAssets({ limit: 5, sortOrder: 'desc' });
-      const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
-      return assets.map(asset => ({
-        id: asset.id,
-        assetType: asset.type || 'Desconhecido',
-        name: getAssetIdentifier(asset),
-        date: new Date(asset.registrationDate).toLocaleDateString('pt-BR'),
-        description: 'CRIADO no sistema',
-        old_status: '',
-        new_status: ''
-      }));
-    }
+      try {
+        const assetsResult = await assetService.getAssets({ limit: 5, sortOrder: 'desc' });
+        const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
+        return assets.map(asset => ({
+          id: asset.id || asset.uuid || 'unknown',
+          assetType: asset.type || 'Desconhecido',
+          name: getAssetIdentifier(asset),
+          date: asset.registrationDate ? new Date(asset.registrationDate).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+          description: 'CRIADO no sistema',
+          old_status: '',
+          new_status: ''
+        }));
+      } catch (error) {
+        console.error('Error fetching recent alerts:', error);
+        return [];
+      }
+    },
+    retry: 2,
+    staleTime: 30000,
   });
 
-  // Memoized problem assets by type
+  // Memoized problem assets by type with safe data handling
   const memoizedProblemAssets = useMemo(() => {
-    if (problemAssets.data) {
-      return problemAssets.data.map(asset => ({
-        id: asset.uuid, // Add the required id field
-        uuid: asset.uuid,
-        identifier: getAssetIdentifier(asset),
-        type: asset.solution_id === 11 ? 'CHIP' : 
-              asset.solution_id === 1 ? 'SPEEDY 5G' : 'EQUIPAMENTO',
-        status: 'PROBLEMA'
-      }));
+    if (!problemAssets.data || !Array.isArray(problemAssets.data)) {
+      return [];
     }
-    return [];
+    
+    return problemAssets.data.map(asset => ({
+      id: asset.uuid || asset.id || 'unknown',
+      uuid: asset.uuid || asset.id || 'unknown',
+      identifier: getAssetIdentifier(asset),
+      type: asset.solution_id === 11 ? 'CHIP' : 
+            asset.solution_id === 1 ? 'SPEEDY 5G' : 'EQUIPAMENTO',
+      status: 'PROBLEMA'
+    }));
   }, [problemAssets.data]);
 
-  // Memoized filtered problem assets by type
+  // Memoized filtered problem assets by type with safe filtering
   const chipProblems = useMemo(() => 
     memoizedProblemAssets.filter(a => a.type === "CHIP"),
     [memoizedProblemAssets]
@@ -145,16 +184,18 @@ export function useDashboardAssets() {
   );
 
   return {
-    // Raw queries
+    // Raw queries with safe defaults
     problemAssets: {
       data: memoizedProblemAssets,
       isLoading: problemAssets.isLoading,
       error: problemAssets.error
     },
     assetsStats: {
-      data: assetsStats.data || { chips: { total: 0, available: 0, unavailable: 0 }, 
-                                speedys: { total: 0, available: 0, unavailable: 0 }, 
-                                equipment: { total: 0, available: 0, unavailable: 0 } },
+      data: assetsStats.data || { 
+        chips: { total: 0, available: 0, unavailable: 0 }, 
+        speedys: { total: 0, available: 0, unavailable: 0 }, 
+        equipment: { total: 0, available: 0, unavailable: 0 } 
+      },
       isLoading: assetsStats.isLoading,
       error: assetsStats.error
     },
