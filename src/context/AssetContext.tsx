@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
@@ -66,7 +65,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
     const found = statusRecords.find(s => s.id === statusId);
     if (found) {
-      switch (found.nome.toLowerCase()) {
+      switch (found.status.toLowerCase()) {
         case 'disponivel': return "DISPONÍVEL";
         case 'alugado': return "ALUGADO";
         case 'assinatura': return "ASSINATURA";
@@ -91,7 +90,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       "extraviado": 'extraviado'
     };
     
-    const found = statusRecords.find(s => s.nome.toLowerCase() === statusMap[status].toLowerCase());
+    const found = statusRecords.find(s => s.status.toLowerCase() === statusMap[status].toLowerCase());
     return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
   };
 
@@ -124,16 +123,15 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Map clients data to our format
         const mappedClients: Client[] = clientsData.map(client => ({
           id: client.uuid,
-          name: client.nome,
-          document: client.cnpj,
-          documentType: client.cnpj.length === 11 ? "CPF" : "CNPJ",
-          contact: client.contato?.toString() || "",
+          uuid: client.uuid,
+          nome: client.nome,
+          cnpj: client.cnpj,
           email: client.email || "",
-          address: "",
-          city: "",
-          state: "",
-          zipCode: "",
-          assets: []
+          contato: client.contato,
+          assets: [],
+          created_at: client.created_at,
+          updated_at: client.updated_at,
+          deleted_at: client.deleted_at
         }));
         
         setClients(mappedClients);
@@ -390,8 +388,10 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // History-related functions
   const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
     const newEntry: AssetHistoryEntry = {
-      id: Date.now().toString(),
+      id: Date.now(),
       timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...entry
     };
     
@@ -428,7 +428,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const getAssetHistory = (assetId: string): AssetHistoryEntry[] => {
-    return history.filter(entry => entry.assetIds.includes(assetId))
+    return history.filter(entry => entry.assetIds?.includes(assetId))
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
   

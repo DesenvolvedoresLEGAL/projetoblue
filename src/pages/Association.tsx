@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -19,7 +18,7 @@ const Association = () => {
   const [assetId, setAssetId] = useState<string>('');
   const [clientId, setClientId] = useState<string>('');
   const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(undefined);
-  const [selectedClient, setSelectedClient] = useState<{ id: string, name: string } | undefined>(undefined);
+  const [selectedClient, setSelectedClient] = useState<{ id: string, nome: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -30,7 +29,7 @@ const Association = () => {
   useEffect(() => {
     // Find the client when the clientId changes
     const client = clients.find(client => client.id === clientId);
-    setSelectedClient(client ? { id: client.id, name: client.name } : undefined);
+    setSelectedClient(client ? { id: client.id, nome: client.nome } : undefined);
   }, [clientId, clients]);
 
   const handleAssociate = async () => {
@@ -51,10 +50,10 @@ const Association = () => {
       if (selectedAsset && selectedClient) {
         addHistoryEntry({
           operationType: "ASSOCIATION",
-          description: `Ativo associado ao cliente ${selectedClient.name}`,
+          description: `Ativo associado ao cliente ${selectedClient.nome}`,
           assetIds: [assetId],
           clientId: clientId,
-          clientName: selectedClient.name,
+          clientName: selectedClient.nome,
           assets: [{
             id: assetId,
             type: selectedAsset.type,
@@ -62,7 +61,9 @@ const Association = () => {
               ? (selectedAsset as ChipAsset).iccid 
               : (selectedAsset as RouterAsset).uniqueId
           }],
-          comments: `Ativo associado ao cliente ${selectedClient.name}`
+          comments: `Ativo associado ao cliente ${selectedClient.nome}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
       }
       
@@ -93,10 +94,10 @@ const Association = () => {
       if (selectedAsset && selectedClient) {
         addHistoryEntry({
           operationType: "DISASSOCIATION",
-          description: `Ativo removido do cliente ${selectedClient.name}`,
+          description: `Ativo removido do cliente ${selectedClient.nome}`,
           assetIds: [assetId],
           clientId: clientId,
-          clientName: selectedClient.name,
+          clientName: selectedClient.nome,
           assets: [{
             id: assetId,
             type: selectedAsset.type,
@@ -104,7 +105,9 @@ const Association = () => {
               ? (selectedAsset as ChipAsset).iccid 
               : (selectedAsset as RouterAsset).uniqueId
           }],
-          comments: `Ativo removido do cliente ${selectedClient.name}`
+          comments: `Ativo removido do cliente ${selectedClient.nome}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
       }
       
@@ -155,7 +158,7 @@ const Association = () => {
             />
             {selectedClient && (
               <div className="text-sm text-muted-foreground">
-                Cliente selecionado: {selectedClient.name}
+                Cliente selecionado: {selectedClient.nome}
               </div>
             )}
           </div>
@@ -201,7 +204,7 @@ const Association = () => {
             />
             {selectedClient && (
               <div className="text-sm text-muted-foreground">
-                Cliente selecionado: {selectedClient.name}
+                Cliente selecionado: {selectedClient.nome}
               </div>
             )}
           </div>

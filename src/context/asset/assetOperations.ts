@@ -33,7 +33,7 @@ export const returnAssetsToStock = (
               if (c.id === asset.clientId) {
                 return {
                   ...c,
-                  assets: c.assets.filter(id => id !== asset.id)
+                  assets: c.assets?.filter(id => id !== asset.id) || []
                 };
               }
               return c;
@@ -46,7 +46,7 @@ export const returnAssetsToStock = (
             
           addHistoryEntry({
             clientId: asset.clientId,
-            clientName: client.name,
+            clientName: client.nome,
             assetIds: [asset.id],
             assets: [{
               id: asset.id,
@@ -55,11 +55,13 @@ export const returnAssetsToStock = (
             }],
             operationType: isSameStatus(asset.status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
             event: "Retorno ao estoque",
-            comments: `Ativo ${assetIdentifier} retornado ao estoque`
+            comments: `Ativo ${assetIdentifier} retornado ao estoque`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
           
           if (asset.type === "ROTEADOR") {
-            toast.error(`⚠️ O roteador saiu do cliente ${client.name} e retornou ao estoque. Altere o SSID e a senha.`);
+            toast.error(`⚠️ O roteador saiu do cliente ${client.nome} e retornou ao estoque. Altere o SSID e a senha.`);
           }
         }
       }
@@ -126,9 +128,9 @@ export const associateAssetToClient = (
       } : undefined
     });
     
-    if (!client.assets.includes(assetId)) {
+    if (!client.assets?.includes(assetId)) {
       updateClient(clientId, {
-        assets: [...client.assets, assetId]
+        assets: [...(client.assets || []), assetId]
       });
     }
     
@@ -138,7 +140,7 @@ export const associateAssetToClient = (
       
     addHistoryEntry({
       clientId,
-      clientName: client.name,
+      clientName: client.nome,
       assetIds: [assetId],
       assets: [{
         id: assetId,
@@ -146,7 +148,9 @@ export const associateAssetToClient = (
         identifier: assetIdentifier
       }],
       operationType: isSameStatus(status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
-      comments: `Ativo ${assetIdentifier} associado ao cliente ${client.name}`
+      comments: `Ativo ${assetIdentifier} associado ao cliente ${client.nome}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
     
     toast.success("Ativo vinculado ao cliente com sucesso!");
@@ -170,7 +174,7 @@ export const removeAssetFromClient = (
     
     if (asset.type === "ROTEADOR") {
       needsPasswordChange = true;
-      toast.error(`⚠️ O roteador saiu do cliente ${client.name} e retornou ao estoque. Altere o SSID e a senha.`);
+      toast.error(`⚠️ O roteador saiu do cliente ${client.nome} e retornou ao estoque. Altere o SSID e a senha.`);
     }
     
     updateAsset(assetId, { 
@@ -181,7 +185,7 @@ export const removeAssetFromClient = (
     });
     
     updateClient(clientId, {
-      assets: client.assets.filter(id => id !== assetId)
+      assets: client.assets?.filter(id => id !== assetId) || []
     });
     
     const assetIdentifier = asset.type === "CHIP" 
@@ -190,7 +194,7 @@ export const removeAssetFromClient = (
       
     addHistoryEntry({
       clientId,
-      clientName: client.name,
+      clientName: client.nome,
       assetIds: [assetId],
       assets: [{
         id: assetId,
@@ -199,7 +203,9 @@ export const removeAssetFromClient = (
       }],
       operationType: isSameStatus(asset.status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
       event: "Retorno ao estoque",
-      comments: `Ativo ${assetIdentifier} removido do cliente ${client.name}`
+      comments: `Ativo ${assetIdentifier} removido do cliente ${client.nome}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
     
     toast.success("Ativo desvinculado do cliente com sucesso!");
@@ -233,7 +239,7 @@ export const extendSubscription = (
         
       addHistoryEntry({
         clientId: asset.clientId,
-        clientName: client.name,
+        clientName: client.nome,
         assetIds: [asset.id],
         assets: [{
           id: asset.id,
@@ -242,7 +248,9 @@ export const extendSubscription = (
         }],
         operationType: "ASSINATURA",
         event: "Extensão de assinatura",
-        comments: `Assinatura do ativo ${assetIdentifier} estendida até ${new Date(newEndDate).toLocaleDateString('pt-BR')}`
+        comments: `Assinatura do ativo ${assetIdentifier} estendida até ${new Date(newEndDate).toLocaleDateString('pt-BR')}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     }
     

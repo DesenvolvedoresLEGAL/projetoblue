@@ -104,8 +104,8 @@ const InventoryFilters = ({
             <SelectContent>
               <SelectItem value="all">Todos os Status</SelectItem>
               {statusRecords.map((status) => (
-                <SelectItem key={status.id} value={mapStatusToFilter(status.nome)}>
-                  {status.nome}
+                <SelectItem key={status.id} value={mapStatusToFilter(status.status)}>
+                  {status.status}
                 </SelectItem>
               ))}
             </SelectContent>

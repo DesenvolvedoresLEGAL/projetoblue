@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -85,7 +84,7 @@ const AssetRow = ({
   };
 
   const handleStatusUpdate = async (status: AssetStatus, statusId: number) => {
-    const statusName = statusRecords.find(s => s.id === statusId)?.nome || status;
+    const statusName = statusRecords.find(s => s.id === statusId)?.status || status;
     
     setSelectedStatus({
       id: statusId,

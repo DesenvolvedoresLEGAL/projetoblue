@@ -74,7 +74,7 @@ export default function ClientDetailsDialog({
               Detalhes do Cliente
             </DialogTitle>
             <DialogDescription>
-              {client.name}
+              {client.nome}
             </DialogDescription>
           </DialogHeader>
           
@@ -91,15 +91,15 @@ export default function ClientDetailsDialog({
                   <h3 className="text-sm font-semibold">Informações Gerais</h3>
                   <div className="grid grid-cols-2 gap-y-2 text-sm">
                     <div className="text-gray-500">Nome:</div>
-                    <div>{client.name}</div>
+                    <div>{client.nome}</div>
                     
-                    <div className="text-gray-500">Documento:</div>
-                    <div>{client.documentType}: {client.document}</div>
+                    <div className="text-gray-500">CNPJ:</div>
+                    <div>{client.cnpj}</div>
                     
                     <div className="text-gray-500">Contato:</div>
                     <div className="flex items-center gap-1">
                       <Phone className="h-3 w-3 text-gray-500" />
-                      {client.contact}
+                      {client.contato}
                     </div>
                     
                     <div className="text-gray-500">Email:</div>
@@ -114,18 +114,18 @@ export default function ClientDetailsDialog({
                   <h3 className="text-sm font-semibold">Endereço</h3>
                   <div className="grid grid-cols-2 gap-y-2 text-sm">
                     <div className="text-gray-500">Logradouro:</div>
-                    <div>{client.address || "-"}</div>
+                    <div>-</div>
                     
                     <div className="text-gray-500">Cidade:</div>
-                    <div>{client.city || "-"}</div>
+                    <div>-</div>
                     
                     <div className="text-gray-500">Estado:</div>
-                    <div>{client.state || "-"}</div>
+                    <div>-</div>
                     
                     <div className="text-gray-500">CEP:</div>
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-gray-500" />
-                      {client.zipCode || "-"}
+                      -
                     </div>
                   </div>
                 </div>

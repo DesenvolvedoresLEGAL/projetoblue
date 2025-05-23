@@ -31,12 +31,12 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
   const { updateAsset } = useAssets();
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<{id: number, nome: string} | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<{id: number, status: string} | null>(null);
   
   const handleStatusSelect = (statusId: number, statusName: string) => {
     if (asset.statusId === statusId) return;
     
-    setSelectedStatus({ id: statusId, nome: statusName });
+    setSelectedStatus({ id: statusId, status: statusName });
     setConfirmDialogOpen(true);
   };
   
@@ -46,10 +46,10 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
     setIsLoading(true);
     try {
       await updateAsset(asset.id, { 
-        status: selectedStatus.nome as any, 
+        status: selectedStatus.status as any, 
         statusId: selectedStatus.id 
       });
-      toast.success(`Status alterado para ${selectedStatus.nome}`);
+      toast.success(`Status alterado para ${selectedStatus.status}`);
     } catch (error) {
       toast.error("Erro ao atualizar o status do ativo");
       console.error("Error updating asset status:", error);
@@ -78,7 +78,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
             ) : (
               <>
                 <span>
-                  {currentStatus?.nome || "Atualizar Status"}
+                  {currentStatus?.status || "Atualizar Status"}
                 </span>
                 <ChevronDown className="ml-2 h-4 w-4" />
               </>
@@ -89,10 +89,10 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
           {statusRecords.map((status) => (
             <DropdownMenuItem
               key={status.id}
-              onClick={() => handleStatusSelect(status.id, status.nome)}
+              onClick={() => handleStatusSelect(status.id, status.status)}
               className={`flex justify-between ${isCurrentStatus(status.id) ? 'bg-muted' : ''}`}
             >
-              {status.nome}
+              {status.status}
               {isCurrentStatus(status.id) && <Check className="h-4 w-4" />}
             </DropdownMenuItem>
           ))}
@@ -104,8 +104,8 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar alteração de status</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja alterar o status do ativo para "{selectedStatus?.nome}"?
-              {(selectedStatus?.nome === "Bloqueado" || selectedStatus?.nome === "BLOQUEADO") && (
+              Tem certeza que deseja alterar o status do ativo para "{selectedStatus?.status}"?
+              {(selectedStatus?.status === "Bloqueado" || selectedStatus?.status === "BLOQUEADO") && (
                 <p className="mt-2 text-red-500 font-semibold">
                   Atenção: Bloquear um ativo pode afetar os serviços relacionados.
                 </p>
@@ -117,7 +117,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
             <AlertDialogAction 
               onClick={handleConfirmStatusChange}
               disabled={isLoading}
-              className={selectedStatus?.nome === "Bloqueado" || selectedStatus?.nome === "BLOQUEADO" ? "bg-red-500 hover:bg-red-600" : ""}
+              className={selectedStatus?.status === "Bloqueado" || selectedStatus?.status === "BLOQUEADO" ? "bg-red-500 hover:bg-red-600" : ""}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

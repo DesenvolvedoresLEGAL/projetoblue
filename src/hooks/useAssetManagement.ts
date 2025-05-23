@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -215,7 +216,7 @@ export function useAssetManagement() {
       // Map frontend fields to database fields
       if (data.statusId !== undefined) updateData.status_id = data.statusId;
       if (data.iccid !== undefined) updateData.iccid = data.iccid;
-      if (data.line_number !== undefined) updateData.line_number = parseInt(data.line_number, 10);
+      if (data.line_number !== undefined) updateData.line_number = data.line_number;
       if (data.model !== undefined) updateData.model = data.model;
       if (data.serial_number !== undefined) updateData.serial_number = data.serial_number;
       if (data.radio !== undefined) updateData.radio = data.radio;
@@ -389,6 +390,7 @@ export function usePlans() {
 function mapDbToAsset(dbAsset: any): Asset {
   const baseAsset = {
     id: dbAsset.uuid,
+    uuid: dbAsset.uuid,
     registrationDate: dbAsset.created_at,
     status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
     statusId: dbAsset.status_id,
