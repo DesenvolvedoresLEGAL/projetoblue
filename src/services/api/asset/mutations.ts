@@ -11,23 +11,23 @@ export const assetMutations = {
   async createAsset(assetData: AssetCreateParams): Promise<Asset | null> {
     try {
       // Determine solution_id based on asset type
-      const solutionId = assetData.type === 'CHIP' ? 1 : 2; // Assuming 1=CHIP, 2=ROUTER
+      const solutionId = assetData.type === 'CHIP' ? 11 : 2; // Updated to match database
       
       // Prepare data for insertion
       const insertData: any = {
-        solution_id: solutionId,
-        status_id: assetData.statusId || 1, // Default to 'Disponível'
+        solution_id: assetData.solution_id || solutionId,
+        status_id: assetData.status_id || 1, // Default to 'Disponível'
         model: assetData.type === 'ROTEADOR' ? assetData.model : null,
-        serial_number: assetData.type === 'ROTEADOR' ? assetData.serialNumber : null,
-        password: assetData.type === 'ROTEADOR' ? assetData.password : null,
+        serial_number: assetData.type === 'ROTEADOR' ? assetData.serial_number : null,
+        admin_pass: assetData.type === 'ROTEADOR' ? assetData.admin_pass : null,
         iccid: assetData.type === 'CHIP' ? assetData.iccid : null,
-        line_number: assetData.type === 'CHIP' && assetData.phoneNumber ? 
-          parseInt(assetData.phoneNumber, 10) || null : null,
+        line_number: assetData.type === 'CHIP' && assetData.line_number ? 
+          assetData.line_number : null,
         manufacturer_id: assetData.manufacturer_id,
         plan_id: assetData.plan_id,
         radio: assetData.radio,
         admin_user: assetData.admin_user || 'admin',
-        admin_pass: assetData.admin_pass || ''
+        rented_days: assetData.rented_days || 0
       };
       
       // Insert the new asset
@@ -57,20 +57,9 @@ export const assetMutations = {
       const updateData: any = {};
       
       // Common fields
-      if (assetData.statusId !== undefined) {
-        console.log('Setting status_id to:', assetData.statusId);
-        updateData.status_id = assetData.statusId;
-      } else if (assetData.status) {
-        // Convert status string to ID
-        const statusMap: Record<string, number> = {
-          'DISPONÍVEL': 1,
-          'ALUGADO': 2,
-          'ASSINATURA': 3,
-          'SEM DADOS': 4,
-          'BLOQUEADO': 5,
-          'MANUTENÇÃO': 6
-        };
-        updateData.status_id = statusMap[assetData.status] || 1;
+      if (assetData.status_id !== undefined) {
+        console.log('Setting status_id to:', assetData.status_id);
+        updateData.status_id = assetData.status_id;
       }
       
       // Manufacturer
@@ -82,14 +71,10 @@ export const assetMutations = {
       // CHIP specific fields
       if (assetData.iccid !== undefined) updateData.iccid = assetData.iccid;
       if (assetData.line_number !== undefined) updateData.line_number = assetData.line_number;
-      if (assetData.phoneNumber !== undefined && assetData.line_number === undefined) {
-        updateData.line_number = parseInt(assetData.phoneNumber, 10) || null;
-      }
       if (assetData.plan_id !== undefined) updateData.plan_id = assetData.plan_id;
       
       // Router specific fields
       if (assetData.model !== undefined) updateData.model = assetData.model;
-      if (assetData.serialNumber !== undefined) updateData.serial_number = assetData.serialNumber;
       if (assetData.serial_number !== undefined) updateData.serial_number = assetData.serial_number;
       
       // Radio field - only for non-CHIP assets

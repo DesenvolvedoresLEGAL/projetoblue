@@ -13,6 +13,7 @@ export const handleAssetError = (error: any, message: string): void => {
 export const mapAssetFromDb = (dbAsset: any): Asset => {
   const baseAsset = {
     id: dbAsset.uuid,
+    uuid: dbAsset.uuid,
     type: dbAsset.solution_id === 11 ? "CHIP" as const : "ROTEADOR" as const,
     registrationDate: dbAsset.created_at,
     status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
@@ -25,6 +26,15 @@ export const mapAssetFromDb = (dbAsset: any): Asset => {
     serial_number: dbAsset.serial_number,
     dias_alugada: dbAsset.rented_days,
     radio: dbAsset.radio,
+    solution_id: dbAsset.solution_id,
+    manufacturer_id: dbAsset.manufacturer_id,
+    plan_id: dbAsset.plan_id,
+    rented_days: dbAsset.rented_days,
+    admin_user: dbAsset.admin_user,
+    admin_pass: dbAsset.admin_pass,
+    created_at: dbAsset.created_at,
+    updated_at: dbAsset.updated_at,
+    deleted_at: dbAsset.deleted_at,
   };
 
   if (dbAsset.solution_id === 11) {
@@ -35,7 +45,7 @@ export const mapAssetFromDb = (dbAsset: any): Asset => {
       iccid: dbAsset.iccid,
       phoneNumber: dbAsset.line_number?.toString() || "",
       carrier: "Unknown",
-      num_linha: dbAsset.line_number,
+      line_number: dbAsset.line_number,
     };
   } else {
     // ROUTER asset  

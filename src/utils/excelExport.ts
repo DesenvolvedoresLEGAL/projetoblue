@@ -1,77 +1,66 @@
 
 import * as XLSX from 'xlsx';
-import { Asset, Client } from '@/types/asset';
-import { toast } from './toast';
+import { Asset, Client, ChipAsset, RouterAsset } from '@/types/asset';
 
-interface ExportData {
+interface ExcelExportData {
   assets: Asset[];
   clients: Client[];
 }
 
-export const exportToExcel = ({ assets, clients }: ExportData) => {
-  try {
-    const workbook = XLSX.utils.book_new();
+export const exportToExcel = ({ assets, clients }: ExcelExportData) => {
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  
+  // Assets worksheet
+  const assetsData = assets.map(asset => {
+    const baseData = {
+      'ID': asset.id,
+      'Tipo': asset.type,
+      'Status': asset.status,
+      'Data de Registro': new Date(asset.registrationDate).toLocaleDateString('pt-BR'),
+      'Observações': asset.notes || ''
+    };
     
-    // Assets worksheet
-    const assetsForExport = assets.map(asset => {
-      const baseAsset = {
-        ID: asset.id,
-        Tipo: asset.type === 'CHIP' ? 'Chip' : 'Roteador',
-        Status: asset.status,
-        'Data de Registro': asset.registrationDate,
-        'Cliente ID': asset.clientId || 'N/A',
-        Observações: asset.notes || '',
+    if (asset.type === 'CHIP') {
+      const chip = asset as ChipAsset;
+      return {
+        ...baseData,
+        'ICCID': chip.iccid,
+        'Número': chip.phoneNumber,
+        'Operadora': chip.carrier
       };
-      
-      if (asset.type === 'CHIP') {
-        return {
-          ...baseAsset,
-          ICCID: asset.iccid,
-          'Número de Telefone': asset.phoneNumber,
-          Operadora: asset.carrier,
-        };
-      } else {
-        return {
-          ...baseAsset,
-          'ID Único': asset.uniqueId,
-          Marca: asset.brand,
-          Modelo: asset.model,
-          SSID: asset.ssid,
-          Senha: asset.password,
-        };
-      }
-    });
-    
-    // Clients worksheet
-    const clientsForExport = clients.map(client => ({
-      ID: client.id,
-      Nome: client.name,
-      Documento: client.document,
-      'Tipo de Documento': client.documentType,
-      Contato: client.contact,
-      Email: client.email,
-      Endereço: client.address,
-      Cidade: client.city,
-      Estado: client.state,
-      CEP: client.zipCode,
-      'Quantidade de Ativos': client.assets.length,
-    }));
-    
-    // Create worksheets
-    const assetsWorksheet = XLSX.utils.json_to_sheet(assetsForExport);
-    const clientsWorksheet = XLSX.utils.json_to_sheet(clientsForExport);
-    
-    // Add worksheets to workbook
-    XLSX.utils.book_append_sheet(workbook, assetsWorksheet, 'Ativos');
-    XLSX.utils.book_append_sheet(workbook, clientsWorksheet, 'Clientes');
-    
-    // Generate excel file and trigger download
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    XLSX.writeFile(workbook, `telecom-inventory-${timestamp}.xlsx`);
-    
-    toast.success('Relatório exportado com sucesso!');
-  } catch (error) {
-    console.error('Error exporting to Excel:', error);
-    toast.error('Erro ao exportar relatório. Tente novamente.');
-  }
+    } else {
+      const router = asset as RouterAsset;
+      return {
+        ...baseData,
+        'Marca': router.brand,
+        'Modelo': router.model,
+        'SSID': router.ssid,
+        'Número de Série': router.serialNumber
+      };
+    }
+  });
+  
+  const assetsWorksheet = XLSX.utils.json_to_sheet(assetsData);
+  XLSX.utils.book_append_sheet(workbook, assetsWorksheet, 'Ativos');
+  
+  // Clients worksheet
+  const clientsData = clients.map(client => ({
+    'ID': client.id,
+    'Nome': client.nome,
+    'CNPJ': client.cnpj,
+    'Contato': client.contato,
+    'Email': client.email || '',
+    'Endereço': '-', // Not available in current schema
+    'Cidade': '-', // Not available in current schema
+    'Estado': '-', // Not available in current schema
+    'CEP': '-' // Not available in current schema
+  }));
+  
+  const clientsWorksheet = XLSX.utils.json_to_sheet(clientsData);
+  XLSX.utils.book_append_sheet(workbook, clientsWorksheet, 'Clientes');
+  
+  // Download file
+  const fileName = `inventario_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
 };

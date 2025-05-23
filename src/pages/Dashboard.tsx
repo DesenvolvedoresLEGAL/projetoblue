@@ -1,4 +1,3 @@
-
 import { useAssets } from "@/context/useAssets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -223,7 +222,7 @@ const Dashboard = () => {
                             {asset.type === "CHIP" ? `CHIP: ${(asset as any).phoneNumber}` : `ROTEADOR: ${(asset as any).model}`}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {client?.name || "Cliente não encontrado"}
+                            {client?.nome || "Cliente não encontrado"}
                           </p>
                         </div>
                       </div>

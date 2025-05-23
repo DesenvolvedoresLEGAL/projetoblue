@@ -1,3 +1,4 @@
+
 import { useAssets } from "@/context/useAssets";
 import { AssetStatus, RouterAsset } from "@/types/asset";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -157,7 +158,7 @@ export default function Monitoring() {
                                 }
                               </TableCell>
                               <TableCell>
-                                {client ? client.name : "—"}
+                                {client ? client.nome : "—"}
                               </TableCell>
                               <TableCell>{new Date(asset.registrationDate).toLocaleDateString()}</TableCell>
                             </TableRow>

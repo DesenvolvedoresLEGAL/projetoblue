@@ -92,7 +92,7 @@ export default function RegisterAsset() {
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
-      solution_id: 1,
+      solution_id: 11, // Default to CHIP
       status_id: 1,
       manufacturer_id: undefined,
       iccid: "",
@@ -133,6 +133,7 @@ export default function RegisterAsset() {
     const createData = {
       ...formData,
       type: formData.solution_id === 11 ? 'CHIP' as const : 'ROTEADOR' as const,
+      solution_id: formData.solution_id, // Ensure this is required
       // Ensure line_number is number or undefined
       line_number: formData.line_number ? Number(formData.line_number) : undefined
     };
@@ -158,7 +159,7 @@ export default function RegisterAsset() {
   
   const statusOptions = statuses.map(item => ({
     value: item.id,
-    label: item.nome // Use 'nome' instead of 'status'
+    label: item.status
   }));
   
   const planOptions = plans.map(item => ({

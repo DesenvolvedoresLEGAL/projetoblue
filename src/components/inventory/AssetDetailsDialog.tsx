@@ -189,7 +189,7 @@ export default function AssetDetailsDialog({
                       <div className="text-gray-500">Cliente:</div>
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3 text-gray-500" />
-                        {client.name}
+                        {client.nome}
                       </div>
                     </>
                   )}
