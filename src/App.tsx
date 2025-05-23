@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,8 @@ import Dashboard from "./pages/Dashboard";
 import RegisterAsset from "./pages/RegisterAsset";
 import AssetsDashboard from "./pages/AssetsDashboard";
 import AssetsInventory from "./pages/AssetsInventory";
+import AssetsManagement from "./pages/AssetsManagement";
+import AssetAssociation from "./pages/AssetAssociation";
 import Clients from "./pages/Clients";
 import Association from "./pages/Association";
 import Subscriptions from "./pages/Subscriptions";
@@ -90,10 +93,11 @@ const App = () => (
                     
                     {/* Assets module routes */}
                     <Route path="assets">
-                      <Route index element={<Navigate to="/assets/dashboard" replace />} />
+                      <Route index element={<AssetsManagement />} />
                       <Route path="dashboard" element={<AssetsDashboard />} />
                       <Route path="inventory" element={<AssetsInventory />} />
                       <Route path="register" element={<RegisterAsset />} />
+                      <Route path="association" element={<AssetAssociation />} />
                     </Route>
                     
                     {/* Topology module routes */}
@@ -120,13 +124,13 @@ const App = () => (
                     
                     {/* Direct shortcuts */}
                     <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
-                    <Route path="link-asset" element={<Association />} />
+                    <Route path="link-asset" element={<Navigate to="/assets/association" replace />} />
                     
                     {/* Legacy routes for backward compatibility */}
                     <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
                     <Route path="/clients" element={<Clients />} />
                     <Route path="/suppliers" element={<Suppliers />} />
-                    <Route path="/association" element={<Association />} />
+                    <Route path="/association" element={<Navigate to="/assets/association" replace />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/monitoring" element={<Monitoring />} />
                     <Route path="/history" element={<History />} />
