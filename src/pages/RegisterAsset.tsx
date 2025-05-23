@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -130,10 +129,12 @@ export default function RegisterAsset() {
       return;
     }
     
-    // Add the required 'type' field based on solution_id
+    // Prepare data with correct types for database
     const createData = {
       ...formData,
-      type: formData.solution_id === 11 ? 'CHIP' as const : 'ROTEADOR' as const
+      type: formData.solution_id === 11 ? 'CHIP' as const : 'ROTEADOR' as const,
+      // Ensure line_number is number or undefined
+      line_number: formData.line_number ? Number(formData.line_number) : undefined
     };
     
     createAssetMutation.mutate(createData);
@@ -279,7 +280,8 @@ export default function RegisterAsset() {
                               value={field.value || ""}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                field.onChange(value === "" ? undefined : parseInt(value));
+                                // Convert to number or undefined
+                                field.onChange(value === "" ? undefined : Number(value));
                               }}
                             />
                           </FormControl>

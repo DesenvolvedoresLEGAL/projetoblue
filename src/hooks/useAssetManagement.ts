@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -8,43 +7,52 @@ import { referenceDataService } from "@/services/api/referenceDataService";
 // Types for asset operations
 interface CreateAssetData {
   type: AssetType;
-  statusId?: number;
-  notes?: string;
-  // CHIP specific fields
-  iccid?: string;
-  phoneNumber?: string;
-  carrier?: string;
-  // ROUTER specific fields
-  uniqueId?: string;
-  brand?: string;
-  model?: string;
-  ssid?: string;
-  password?: string;
-  serialNumber?: string;
-  radio?: string;
-  // Database fields
+  solution_id: number; // Obrigatório no banco
+  status_id?: number;
   manufacturer_id?: number;
   plan_id?: number;
+  notes?: string;
+  
+  // CHIP specific fields
+  iccid?: string;
+  line_number?: number; // Corrigido para number apenas
+  
+  // ROUTER specific fields
+  serial_number?: string;
+  model?: string;
+  radio?: string;
   admin_user?: string;
   admin_pass?: string;
-  solution_id?: number;
-  line_number?: number | null;
+  
+  // Common fields
+  rented_days?: number;
+  
+  // Campos removidos que não existem no banco:
+  // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
 }
 
 interface UpdateAssetData {
   statusId?: number;
   notes?: string;
-  // Common updatable fields
+  
+  // CHIP fields
   iccid?: string;
-  phoneNumber?: string;
-  brand?: string;
+  line_number?: number; // Corrigido para number apenas
+  
+  // ROUTER fields
+  serial_number?: string;
   model?: string;
-  serialNumber?: string;
   radio?: string;
   manufacturer_id?: number;
   plan_id?: number;
   admin_user?: string;
   admin_pass?: string;
+  
+  // Common fields
+  rented_days?: number;
+  
+  // Campos removidos que não existem no banco:
+  // phoneNumber, carrier, brand, ssid, password, serialNumber
 }
 
 interface AssetFilters {
@@ -153,17 +161,25 @@ export function useAssetManagement() {
   const createAsset = useMutation({
     mutationFn: async (assetData: CreateAssetData) => {
       const dbData = {
-        solution_id: assetData.solution_id || (assetData.type === 'CHIP' ? 11 : 2),
-        status_id: assetData.statusId || 1,
-        model: assetData.model,
-        serial_number: assetData.serialNumber,
-        iccid: assetData.iccid,
-        line_number: assetData.phoneNumber ? parseInt(assetData.phoneNumber, 10) : assetData.line_number,
+        solution_id: assetData.solution_id,
+        status_id: assetData.status_id || 1,
         manufacturer_id: assetData.manufacturer_id,
         plan_id: assetData.plan_id,
+        notes: assetData.notes,
+        
+        // CHIP fields
+        iccid: assetData.iccid,
+        line_number: assetData.line_number,
+        
+        // ROUTER fields
+        serial_number: assetData.serial_number,
+        model: assetData.model,
         radio: assetData.radio,
         admin_user: assetData.admin_user || 'admin',
         admin_pass: assetData.admin_pass || '',
+        
+        // Common fields
+        rented_days: assetData.rented_days || 0,
       };
 
       const { data, error } = await supabase
@@ -199,9 +215,9 @@ export function useAssetManagement() {
       // Map frontend fields to database fields
       if (data.statusId !== undefined) updateData.status_id = data.statusId;
       if (data.iccid !== undefined) updateData.iccid = data.iccid;
-      if (data.phoneNumber !== undefined) updateData.line_number = parseInt(data.phoneNumber, 10);
+      if (data.line_number !== undefined) updateData.line_number = parseInt(data.line_number, 10);
       if (data.model !== undefined) updateData.model = data.model;
-      if (data.serialNumber !== undefined) updateData.serial_number = data.serialNumber;
+      if (data.serial_number !== undefined) updateData.serial_number = data.serial_number;
       if (data.radio !== undefined) updateData.radio = data.radio;
       if (data.manufacturer_id !== undefined) updateData.manufacturer_id = data.manufacturer_id;
       if (data.plan_id !== undefined) updateData.plan_id = data.plan_id;
