@@ -1,11 +1,17 @@
-
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
-import { capitalize } from '@/utils/formatters';
+import { capitalize } from "@/utils/formatters";
 
 interface StatusCardItem {
   id: string;
@@ -23,7 +29,7 @@ interface StatusCardProps {
   emptyMessage?: string;
   actionLink: string;
   actionText: string;
-  variant?: 'default' | 'destructive' | 'warning';
+  variant?: "default" | "destructive" | "warning";
   icon?: React.ReactNode;
   limitItems?: number;
   showCount?: boolean;
@@ -42,7 +48,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   emptyMessage = "Nenhum item encontrado.",
   actionLink,
   actionText,
-  variant = 'default',
+  variant = "default",
   icon,
   limitItems = 5,
   showCount = true,
@@ -50,34 +56,34 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   // Apply styling based on variant
   const getCardStyles = () => {
     switch (variant) {
-      case 'destructive':
-        return 'bg-red-50 border-red-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+      case "destructive":
+        return "bg-red-50 border-red-200";
+      case "warning":
+        return "bg-yellow-50 border-yellow-200";
       default:
-        return '';
+        return "";
     }
   };
-  
+
   const getButtonVariant = () => {
     switch (variant) {
-      case 'destructive':
-        return 'destructive';
-      case 'warning':
-        return 'outline';
+      case "destructive":
+        return "destructive";
+      case "warning":
+        return "outline";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getIconColor = () => {
     switch (variant) {
-      case 'destructive':
-        return 'text-red-500';
-      case 'warning':
-        return 'text-yellow-500';
+      case "destructive":
+        return "text-red-500";
+      case "warning":
+        return "text-yellow-500";
       default:
-        return 'text-primary';
+        return "text-primary";
     }
   };
 
@@ -89,39 +95,55 @@ export const StatusCard: React.FC<StatusCardProps> = ({
     <Card className={`flex flex-col h-full ${getCardStyles()}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
             {isLoading ? (
               <Skeleton className="h-6 w-16" />
             ) : (
               <>
                 {icon}
                 <span>
-                  {showCount ? `${items.length} ` : ''}{typeof title === 'string' ? title : title}
+                  {showCount ? `${items.length} ` : ""}
+                  {typeof title === "string" ? title : title}
                 </span>
               </>
             )}
           </CardTitle>
         </div>
-        <CardDescription className={variant === 'destructive' ? 'text-red-700' : 
-                                  variant === 'warning' ? 'text-yellow-700' : ''}>
+        <CardDescription
+          className={
+            variant === "destructive"
+              ? "text-red-700"
+              : variant === "warning"
+              ? "text-yellow-700"
+              : ""
+          }
+        >
           {description}
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-2 flex-1">
         {isLoading ? (
           <div className="space-y-2">
-            {Array(3).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-5 w-full" />
-            ))}
+            {Array(3)
+              .fill(0)
+              .map((_, i) => (
+                <Skeleton key={i} className="h-5 w-full" />
+              ))}
           </div>
         ) : displayedItems.length > 0 ? (
           <ul className="space-y-1">
-            {displayedItems.map(item => (
-              <li key={item.id} className="flex items-center gap-2 text-sm font-mono border-b border-gray-100 py-1">
-                <CircleAlert className={`h-4 w-4 flex-shrink-0 ${getIconColor()}`} />
+            {displayedItems.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center gap-2 text-sm font-mono border-b border-gray-100 py-1"
+              >
+                <CircleAlert
+                  className={`h-4 w-4 flex-shrink-0 ${getIconColor()}`}
+                />
                 <span className="font-semibold">{item.identifier}</span>
                 <span className="text-xs text-muted-foreground">
-                  {item.additionalInfo || `(${capitalize(item.type)} - ${capitalize(item.status)})`}
+                  {item.additionalInfo ||
+                    `(${capitalize(item.type)} - ${capitalize(item.status)})`}
                 </span>
               </li>
             ))}

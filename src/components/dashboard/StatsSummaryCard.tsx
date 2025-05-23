@@ -37,7 +37,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-3xl font-normal">
+        <CardTitle className="text-lg font-normal">
           {title}: <span className="font-semibold">{data.total}</span>
         </CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -54,22 +54,26 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 mt-3">
-              <div className="flex items-center gap-2">
-                <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <Check className="size-3 text-white" />
-                </div>
+              <div className="flex items-center justify-center gap-2">
                 <div>
                   <p className="text-sm font-medium">Disponíveis</p>
-                  <p className="text-lg font-bold">{data.available}</p>
+                  <div className="flex flex-row gap-2 justify-center items-center w-full">
+                    <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="size-3 text-white" />
+                    </div>
+                    <p className="text-lg font-bold">{data.available}</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
-                  <X className="size-3 text-white" />
-                </div>
+              <div className="flex items-center justify-center gap-2">
                 <div>
                   <p className="text-sm font-medium">Indisponíveis</p>
-                  <p className="text-lg font-bold">{data.unavailable}</p>
+                  <div className="flex flex-row gap-2 justify-center items-center w-full">
+                    <div className="size-4 bg-gray-300 rounded-full flex items-center justify-center">
+                      <X className="size-3 text-white" />
+                    </div>
+                    <p className="text-lg font-bold">{data.unavailable}</p>
+                  </div>
                 </div>
               </div>
             </div>

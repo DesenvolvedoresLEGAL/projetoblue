@@ -76,7 +76,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Inventory Cards - Inventário Rápido */}
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-3">
           <StatsSummaryCard
             title="Total de Chips"
             data={dashboard.assetsStats.data.chips}
@@ -103,7 +103,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Top Priority Cards - Status Imediato */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-3">
           <StatusCard
             title="Chips com Problema"
             description="Ativos que necessitam de atenção imediata"
@@ -169,7 +169,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Bottom Row - Monitoring Cards */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-2">
           {/* Recent Alerts Card */}
           <RecentAlertsCard dashboard={dashboard} />
 
@@ -257,7 +257,7 @@ const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PieChartIcon className="h-5 w-5" />
@@ -267,45 +267,37 @@ const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
           Distribuição dos ativos por status
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">
-        {dashboard.statusDistribution.isLoading ? (
-          <div className="h-[250px] w-full flex items-center justify-center">
-            <Skeleton className="h-[220px] w-[220px] rounded-full" />
-          </div>
-        ) : statusChartData.length > 0 ? (
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusChartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  nameKey="name"
-                  label
-                >
-                  {statusChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value} ativos`, null]} />
-                <Legend
-                  layout="vertical"
-                  verticalAlign="middle"
-                  align="right"
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-[250px] w-full flex items-center justify-center">
-            <p className="text-muted-foreground">Sem dados disponíveis</p>
-          </div>
-        )}
+      <CardContent className=" flex flex-row pt-0 h-full items-center">
+        <div className="h-[220px] sm:h-[180px] xs:h-[120px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={statusChartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={window.innerWidth <= 640 ? 28 : 40}
+                outerRadius={window.innerWidth <= 640 ? 38 : 70}
+                fill="#8884d8"
+                paddingAngle={5}
+                dataKey="value"
+                nameKey="name"
+                label={window.innerWidth <= 768 ? false : ({ name, value }) => `${name}: ${value}`}
+                labelLine={false}
+              >
+                {statusChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => [`${value} ativos`, null]} />
+              <Legend
+                layout={window.innerWidth <= 640 ? "horizontal" : "vertical"}
+                verticalAlign={window.innerWidth <= 640 ? "bottom" : "middle"}
+                align={window.innerWidth <= 640 ? "center" : "right"}
+                iconSize={12}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
