@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -13,11 +14,13 @@ export type AssetWithRelations = {
   created_at: string;
   updated_at: string;
   manufacturer: { id?: number; name: string };
-  plano: { id?: number; nome: string }; // Note: usando 'nome' em vez de 'name'
+  plano: { id?: number; nome: string }; 
   status: { id?: number; name: string };
   solucao: { id: number; name: string };
   admin_user?: string;
   admin_pass?: string;
+  // Novo campo para indicar qual campo correspondeu à busca
+  matchedField?: string;
 };
 
 export interface UseAssetsDataParams {
@@ -103,9 +106,10 @@ export const useAssetsData = ({
         }
 
         if (searchTerm) {
-          // Search in multiple fields
+          // Busca em múltiplos campos conforme solicitado:
+          // line_number, iccid, radio, serial_number
           query = query.or(
-            `iccid.ilike.%${searchTerm}%,radio.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`
+            `line_number::text.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%,radio.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`
           );
         }
 
@@ -120,28 +124,49 @@ export const useAssetsData = ({
           throw error;
         }
 
-        // Map the response to provide consistent property names
-        const mappedAssets = data?.map(asset => ({
-          ...asset,
-          solucao: {
-            id: asset.solucao?.id || 0,
-            name: asset.solucao?.solution || 'Desconhecido'
-          },
-          status: {
-            id: asset.status?.id,
-            name: asset.status?.status || 'Desconhecido'
-          },
-          manufacturer: {
-            id: asset.manufacturer?.id,
-            name: asset.manufacturer?.name || 'Desconhecido'
-          },
-          plano: {
-            id: asset.plano?.id,
-            nome: asset.plano?.nome || 'Desconhecido' // Note: using 'nome' instead of 'name'
-          },
-          admin_user: asset.admin_user,
-          admin_pass: asset.admin_pass
-        })) || [];
+        // Map the response to provide consistent property names and 
+        // determine which field matched the search term
+        const mappedAssets = data?.map(asset => {
+          // Identificar qual campo correspondeu à busca
+          let matchedField = '';
+          if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            if (asset.line_number && String(asset.line_number).toLowerCase().includes(term)) {
+              matchedField = 'line_number';
+            } else if (asset.iccid && asset.iccid.toLowerCase().includes(term)) {
+              matchedField = 'iccid';
+            } else if (asset.radio && asset.radio.toLowerCase().includes(term)) {
+              matchedField = 'radio';
+            } else if (asset.serial_number && asset.serial_number.toLowerCase().includes(term)) {
+              matchedField = 'serial_number';
+            } else if (asset.model && asset.model.toLowerCase().includes(term)) {
+              matchedField = 'model';
+            }
+          }
+
+          return {
+            ...asset,
+            solucao: {
+              id: asset.solucao?.id || 0,
+              name: asset.solucao?.solution || 'Desconhecido'
+            },
+            status: {
+              id: asset.status?.id,
+              name: asset.status?.status || 'Desconhecido'
+            },
+            manufacturer: {
+              id: asset.manufacturer?.id,
+              name: asset.manufacturer?.name || 'Desconhecido'
+            },
+            plano: {
+              id: asset.plano?.id,
+              nome: asset.plano?.nome || 'Desconhecido'
+            },
+            admin_user: asset.admin_user,
+            admin_pass: asset.admin_pass,
+            matchedField
+          };
+        }) || [];
 
         // Get total count for pagination, excluding deleted items
         const { count: totalCount } = await supabase

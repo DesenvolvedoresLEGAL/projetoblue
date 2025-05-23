@@ -13,6 +13,7 @@ import { AssetWithRelations } from '@/hooks/useAssetsData';
 import AssetActions from './AssetActions';
 import { capitalize } from '@/utils/stringUtils';
 import { formatPhoneNumber } from '@/utils/formatters';
+import { Badge } from '@/components/ui/badge';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
@@ -26,6 +27,19 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
   // Calculate row number based on pagination
   const getRowNumber = (index: number): number => {
     return (currentPage - 1) * pageSize + index + 1;
+  };
+
+  // Função para destacar visualmente o campo que correspondeu à busca
+  const highlightMatchedValue = (asset: AssetWithRelations, fieldName: string) => {
+    if (asset.matchedField === fieldName) {
+      return <Badge variant="outline" className="bg-yellow-50">{fieldName === "line_number" ? asset.line_number : 
+             fieldName === "iccid" ? asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) : 
+             asset[fieldName as keyof AssetWithRelations] || 'N/A'}</Badge>;
+    }
+    
+    return fieldName === "line_number" ? asset.line_number : 
+           fieldName === "iccid" ? asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) : 
+           asset[fieldName as keyof AssetWithRelations] || 'N/A';
   };
 
   return (
@@ -54,8 +68,8 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>
                   {/* Mostrar número da linha para chips e número de série para outros */}
                   {asset.solucao.id === 11 ? 
-                    `ICCID: ${asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) || 'N/A'}` : 
-                    `Serial: ${asset.serial_number || 'N/A'}`
+                    `ICCID: ${highlightMatchedValue(asset, 'iccid')}` : 
+                    `Serial: ${highlightMatchedValue(asset, 'serial_number')}`
                   }
                 </TableCell>
                 <TableCell>

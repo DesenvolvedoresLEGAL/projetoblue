@@ -9,8 +9,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Info } from "lucide-react";
 import { useAssetSolutions } from '@/hooks/useAssetSolutions';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AssetsSearchFormProps {
   searchTerm: string;
@@ -51,8 +57,22 @@ const AssetsSearchForm = ({
           className="pl-8"
           value={inputValue}
           onChange={handleInputChange}
-          onBlur={() => setSearchTerm(inputValue)} // Só atualiza o searchTerm quando o usuário sai do campo
+          onBlur={() => setSearchTerm(inputValue)} 
         />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="absolute right-2.5 top-2.5">
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">
+                A busca abrange: número da linha, ICCID, rádio, número de série e modelo
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="flex gap-2">
         <Select value={filterType} onValueChange={(value) => handleFilterChange('type', value)}>
