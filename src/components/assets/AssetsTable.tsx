@@ -30,16 +30,39 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
   };
 
   // Função para destacar visualmente o campo que correspondeu à busca
-  const highlightMatchedValue = (asset: AssetWithRelations, fieldName: string) => {
+  const highlightMatchedValue = (asset: AssetWithRelations, fieldName: string): React.ReactNode => {
+    // Helper function to get the display value as string
+    const getDisplayValue = (asset: AssetWithRelations, fieldName: string): string => {
+      switch (fieldName) {
+        case "line_number":
+          return asset.line_number?.toString() || 'N/A';
+        case "iccid":
+          return asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) || 'N/A';
+        case "radio":
+          return asset.radio || 'N/A';
+        case "serial_number":
+          return asset.serial_number || 'N/A';
+        case "model":
+          return asset.model || 'N/A';
+        default:
+          const value = asset[fieldName as keyof AssetWithRelations];
+          // Handle object values by extracting displayable properties
+          if (typeof value === 'object' && value !== null) {
+            if ('name' in value) return value.name || 'N/A';
+            if ('nome' in value) return value.nome || 'N/A';
+            return 'N/A';
+          }
+          return value?.toString() || 'N/A';
+      }
+    };
+
+    const displayValue = getDisplayValue(asset, fieldName);
+    
     if (asset.matchedField === fieldName) {
-      return <Badge variant="outline" className="bg-yellow-50">{fieldName === "line_number" ? asset.line_number : 
-             fieldName === "iccid" ? asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) : 
-             asset[fieldName as keyof AssetWithRelations] || 'N/A'}</Badge>;
+      return <Badge variant="outline" className="bg-yellow-50">{displayValue}</Badge>;
     }
     
-    return fieldName === "line_number" ? asset.line_number : 
-           fieldName === "iccid" ? asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) : 
-           asset[fieldName as keyof AssetWithRelations] || 'N/A';
+    return displayValue;
   };
 
   return (
@@ -68,8 +91,8 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>
                   {/* Mostrar número da linha para chips e número de série para outros */}
                   {asset.solucao.id === 11 ? 
-                    `ICCID: ${highlightMatchedValue(asset, 'iccid')}` : 
-                    `Serial: ${highlightMatchedValue(asset, 'serial_number')}`
+                    <>ICCID: {highlightMatchedValue(asset, 'iccid')}</> : 
+                    <>Serial: {highlightMatchedValue(asset, 'serial_number')}</>
                   }
                 </TableCell>
                 <TableCell>
@@ -78,8 +101,8 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
                 <TableCell>{asset.model ? capitalize(asset.model) : 'N/A'}</TableCell>
                 <TableCell>{asset.solucao.id === 11 ?
-                    `NÚMERO: ${asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}` :
-                    `ETIQUETA: ${asset.radio || 'N/A'}`}</TableCell>
+                    <>NÚMERO: {asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
+                    <>ETIQUETA: {asset.radio || 'N/A'}</>}</TableCell>
                 <TableCell className="text-right">
                   <AssetActions 
                     asset={asset} 
