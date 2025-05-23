@@ -162,12 +162,14 @@ export function useDashboardAssets() {
     }
     
     return problemAssets.data.map(asset => ({
-      id: asset.uuid || asset.id || 'unknown',
-      uuid: asset.uuid || asset.id || 'unknown',
+      uuid: asset.uuid || 'unknown',
+      id: asset.id,
       identifier: getAssetIdentifier(asset),
+      radio: asset.radio,
+      line_number: asset.line_number,
       type: asset.solution_id === 11 ? 'CHIP' : 
             asset.solution_id === 1 ? 'SPEEDY 5G' : 'EQUIPAMENTO',
-      status: 'PROBLEMA'
+      status: asset.status
     }));
   }, [problemAssets.data]);
 
@@ -183,7 +185,7 @@ export function useDashboardAssets() {
   );
   
   const equipmentProblems = useMemo(() => 
-    memoizedProblemAssets.filter(a => a.type !== "CHIP" && a.type !== "SPEEDY 5G"),
+    memoizedProblemAssets.filter(a => a.type === 'EQUIPAMENTO'),
     [memoizedProblemAssets]
   );
 

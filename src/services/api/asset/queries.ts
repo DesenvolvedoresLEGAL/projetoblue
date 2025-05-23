@@ -188,17 +188,16 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
     }
 
     // Map the data to ensure it matches ProblemAsset interface
-    return (data || []).map(item => ({
-      uuid: item.uuid,
-      iccid: null,
-      radio: null,
-      line_number: 0,
-      solution_id: 1,
-      id: item.uuid,
+    return (data || []).map(asset => ({
+      uuid: asset.uuid,
+      id: null,
+      radio: asset.radio || null,
+      line_number: asset.line_number || 0,
+      solution_id: asset.solution_id,
       type: 'UNKNOWN',
-      status: 'PROBLEMA',
-      statusId: 0,
-      identifier: item.uuid?.substring(0, 8) || 'N/A'
+      status: asset.status_name,
+      statusId: asset.status_id,
+      identifier: ''
     }));
   } catch (error) {
     console.error('Error in listProblemAssets:', error);

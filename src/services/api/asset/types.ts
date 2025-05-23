@@ -68,11 +68,10 @@ export interface AssetStatusByType {
 
 export interface ProblemAsset {
   uuid: string;
-  iccid: string | null;
+  id: string;
   radio: string | null;
   line_number: number;
   solution_id: number;
-  id: string;
   type: string;
   status: string;
   statusId: number;
