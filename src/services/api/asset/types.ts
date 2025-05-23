@@ -1,6 +1,9 @@
 
 import { Asset, AssetStatus, AssetType } from "@/types/asset";
 
+// Export Asset type from main types
+export type { Asset };
+
 // Types for asset API requests
 export interface AssetListParams {
   type?: AssetType;
@@ -9,10 +12,16 @@ export interface AssetListParams {
   phoneSearch?: string;
   page?: number;
   limit?: number;
-  statusId?: number; // Added to match usage in queries.ts
-  typeId?: number;   // Added to match usage in queries.ts
-  offset?: number;   // Added to match usage in queries.ts
-  solutionId?: number; // Added for dynamic solution filtering
+  statusId?: number;
+  typeId?: number;
+  offset?: number;
+  solutionId?: number;
+  // Add missing properties
+  clientId?: string;
+  searchTerm?: string;
+  unassigned?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface AssetCreateParams {
@@ -76,7 +85,7 @@ export interface AssetUpdateParams {
 export interface AssetStatusByType {
   type: string;
   status: string;
-  count: number;  // Changed from 'total' to 'count' to match the SQL function's return value
+  count: number;
 }
 
 // Define a specific type for problem assets from the database
@@ -98,6 +107,5 @@ export interface ProblemAsset {
   createdAt?: string;
   admin_user?: string;
   admin_pass?: string;
-  // serial_number was missing, let's add it
   serial_number?: string;
 }

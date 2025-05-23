@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { AssetFormValues } from "@/schemas/assetSchemas";
 import { useNavigate } from "react-router-dom";
+import { assetService, AssetCreateParams, AssetUpdateParams } from "@/services/api/asset";
 
 // Type for asset insert data
 interface AssetInsertData {
@@ -82,7 +83,7 @@ export const useCreateAsset = () => {
 // Fix: Use direct array literals for query keys to prevent deep type instantiation
 export const useCheckAssetExists = (identifier: string, field: string) => {
   return useQuery({
-    queryKey: ['assets', 'exists', identifier, field],
+    queryKey: ['assets-exists', identifier, field],
     queryFn: async () => {
       if (!identifier || identifier.trim() === '') {
         return { exists: false, data: null };

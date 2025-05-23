@@ -21,7 +21,8 @@ export function useDashboardAssets() {
     queryKey: ['dashboard', 'assets-stats'],
     queryFn: async () => {
       // This would typically call a backend endpoint that returns aggregated stats
-      const assets = await assetService.getAssets();
+      const assetsResult = await assetService.getAssets();
+      const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
       
       // Calculate stats
       const chips = {
@@ -91,8 +92,9 @@ export function useDashboardAssets() {
     queryKey: ['dashboard', 'recent-alerts'],
     queryFn: async () => {
       // This would typically call a backend endpoint
-      const { data } = await assetService.getAssets({ limit: 5, sortBy: 'created_at', sortOrder: 'desc' });
-      return data?.map(asset => ({
+      const assetsResult = await assetService.getAssets({ limit: 5, sortOrder: 'desc' });
+      const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
+      return assets.map(asset => ({
         id: asset.uuid,
         assetType: asset.solucao?.solution || 'Desconhecido',
         name: getAssetIdentifier(asset),
@@ -100,7 +102,7 @@ export function useDashboardAssets() {
         description: 'CRIADO no sistema',
         old_status: '',
         new_status: ''
-      })) || [];
+      }));
     }
   });
 
@@ -108,6 +110,7 @@ export function useDashboardAssets() {
   const memoizedProblemAssets = useMemo(() => {
     if (problemAssets.data) {
       return problemAssets.data.map(asset => ({
+        id: asset.uuid, // Add the required id field
         uuid: asset.uuid,
         identifier: getAssetIdentifier(asset),
         type: asset.solution_id === 11 ? 'CHIP' : 

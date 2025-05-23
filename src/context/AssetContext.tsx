@@ -104,7 +104,9 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       try {
         // Fetch assets from the API
-        const assetsData = await assetService.getAssets();
+        const assetsResult = await assetService.getAssets();
+        // Extract just the data array from the result
+        const assetsData = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
         setAssets(assetsData);
         
         // Fetch clients from the database

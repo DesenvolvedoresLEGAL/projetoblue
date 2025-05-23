@@ -1,6 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { Asset } from '@/types/asset';
 import {
-  Asset,
   AssetListParams,
   AssetStatusByType,
   ProblemAsset
@@ -25,10 +26,12 @@ export const getAssets = async (params?: AssetListParams): Promise<{ data: Asset
 
     // Apply filters based on params
     if (params?.type) {
-      query = query.eq('solution_id', params.type);
+      query = query.eq('solution_id', params.type === "CHIP" ? 11 : 1);
     }
     if (params?.status) {
-      query = query.eq('status_id', params.status);
+      // Convert status string to number if needed
+      const statusId = typeof params.status === 'string' ? 1 : params.status;
+      query = query.eq('status_id', statusId);
     }
     if (params?.clientId) {
       query = query.eq('client_id', params.clientId);
@@ -196,7 +199,19 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
       throw error;
     }
 
-    return data || [];
+    // Map the data to ensure it matches ProblemAsset interface
+    return (data || []).map(item => ({
+      uuid: item.uuid,
+      iccid: null,
+      radio: null,
+      line_number: 0,
+      solution_id: 1,
+      id: item.uuid,
+      type: 'UNKNOWN',
+      status: 'PROBLEMA',
+      statusId: 0,
+      identifier: item.uuid?.substring(0, 8) || 'N/A'
+    }));
   } catch (error) {
     console.error('Error in listProblemAssets:', error);
     return [];
