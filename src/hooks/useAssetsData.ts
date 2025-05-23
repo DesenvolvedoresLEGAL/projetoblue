@@ -38,6 +38,44 @@ export interface AssetsDataResponse {
   totalPages: number;
 }
 
+// Função para sanitizar o termo de busca
+const sanitizeSearchTerm = (term: string): string => {
+  if (!term || typeof term !== 'string') return '';
+  
+  // Remove caracteres especiais que podem quebrar a query
+  // Mantém apenas letras, números, espaços e alguns caracteres comuns
+  return term
+    .trim()
+    .replace(/[^\w\s\-._@]/g, '') // Remove caracteres especiais perigosos
+    .substring(0, 50); // Limita o tamanho máximo
+};
+
+// Função para detectar qual campo correspondeu à busca
+const detectMatchedField = (asset: any, searchTerm: string): string => {
+  if (!searchTerm) return '';
+  
+  const term = searchTerm.toLowerCase();
+  
+  // Verifica cada campo em ordem de prioridade
+  if (asset.line_number && String(asset.line_number).toLowerCase().includes(term)) {
+    return 'line_number';
+  }
+  if (asset.iccid && asset.iccid.toLowerCase().includes(term)) {
+    return 'iccid';
+  }
+  if (asset.radio && asset.radio.toLowerCase().includes(term)) {
+    return 'radio';
+  }
+  if (asset.serial_number && asset.serial_number.toLowerCase().includes(term)) {
+    return 'serial_number';
+  }
+  if (asset.model && asset.model.toLowerCase().includes(term)) {
+    return 'model';
+  }
+  
+  return '';
+};
+
 export const useAssetsData = ({
   searchTerm = '',
   filterType = 'all',
@@ -50,6 +88,8 @@ export const useAssetsData = ({
     queryKey: ['assets', 'inventory', filterType, filterStatus, searchTerm, currentPage],
     queryFn: async (): Promise<AssetsDataResponse> => {
       try {
+        console.log('Iniciando busca de assets com termo:', searchTerm);
+        
         let query = supabase
           .from('assets')
           .select(`
@@ -105,45 +145,45 @@ export const useAssetsData = ({
           }
         }
 
+        // Implementação corrigida da busca multi-campo
         if (searchTerm) {
-          // Busca em múltiplos campos conforme solicitado:
-          // line_number, iccid, radio, serial_number
-          query = query.or(
-            `line_number::text.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%,radio.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`
-          );
+          const sanitizedTerm = sanitizeSearchTerm(searchTerm);
+          
+          if (sanitizedTerm.length >= 1) { // Permite busca com pelo menos 1 caractere
+            console.log('Aplicando busca multi-campo com termo sanitizado:', sanitizedTerm);
+            
+            // Correção: usar múltiplas condições .or() em vez de concatenação problemática
+            // Aplica busca em cada campo individualmente com operador OR
+            query = query.or(
+              `line_number::text.ilike.%${sanitizedTerm}%,` +
+              `iccid.ilike.%${sanitizedTerm}%,` +
+              `radio.ilike.%${sanitizedTerm}%,` +
+              `serial_number.ilike.%${sanitizedTerm}%,` +
+              `model.ilike.%${sanitizedTerm}%`
+            );
+          }
         }
 
         // Add pagination
         const startIndex = (currentPage - 1) * pageSize;
         query = query.range(startIndex, startIndex + pageSize - 1);
 
+        console.log('Executando query Supabase...');
         const { data, error, count } = await query;
 
         if (error) {
+          console.error('Erro na query Supabase:', error);
           toast.error(`Erro ao carregar ativos: ${error.message}`);
           throw error;
         }
 
+        console.log(`Query executada com sucesso. Retornados ${data?.length || 0} assets`);
+
         // Map the response to provide consistent property names and 
         // determine which field matched the search term
         const mappedAssets = data?.map(asset => {
-          // Identificar qual campo correspondeu à busca
-          let matchedField = '';
-          if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            if (asset.line_number && String(asset.line_number).toLowerCase().includes(term)) {
-              matchedField = 'line_number';
-            } else if (asset.iccid && asset.iccid.toLowerCase().includes(term)) {
-              matchedField = 'iccid';
-            } else if (asset.radio && asset.radio.toLowerCase().includes(term)) {
-              matchedField = 'radio';
-            } else if (asset.serial_number && asset.serial_number.toLowerCase().includes(term)) {
-              matchedField = 'serial_number';
-            } else if (asset.model && asset.model.toLowerCase().includes(term)) {
-              matchedField = 'model';
-            }
-          }
-
+          const matchedField = detectMatchedField(asset, searchTerm);
+          
           return {
             ...asset,
             solucao: {
@@ -169,10 +209,46 @@ export const useAssetsData = ({
         }) || [];
 
         // Get total count for pagination, excluding deleted items
-        const { count: totalCount } = await supabase
+        let countQuery = supabase
           .from('assets')
           .select('uuid', { count: 'exact', head: true })
           .is('deleted_at', null);
+
+        // Apply same filters to count query
+        if (filterType !== 'all') {
+          if (!isNaN(Number(filterType))) {
+            countQuery = countQuery.eq('solution_id', Number(filterType));
+          }
+        }
+
+        if (filterStatus !== 'all') {
+          const { data: statusData } = await supabase
+            .from('asset_status')
+            .select('id')
+            .ilike('status', filterStatus)
+            .single();
+
+          if (statusData) {
+            countQuery = countQuery.eq('status_id', statusData.id);
+          }
+        }
+
+        if (searchTerm) {
+          const sanitizedTerm = sanitizeSearchTerm(searchTerm);
+          if (sanitizedTerm.length >= 1) {
+            countQuery = countQuery.or(
+              `line_number::text.ilike.%${sanitizedTerm}%,` +
+              `iccid.ilike.%${sanitizedTerm}%,` +
+              `radio.ilike.%${sanitizedTerm}%,` +
+              `serial_number.ilike.%${sanitizedTerm}%,` +
+              `model.ilike.%${sanitizedTerm}%`
+            );
+          }
+        }
+
+        const { count: totalCount } = await countQuery;
+
+        console.log(`Total de assets encontrados: ${totalCount || 0}`);
 
         return {
           assets: mappedAssets,
@@ -180,12 +256,38 @@ export const useAssetsData = ({
           totalPages: Math.ceil((totalCount || 0) / pageSize)
         };
       } catch (err) {
-        console.error('Erro ao buscar ativos:', err);
+        console.error('Erro detalhado ao buscar ativos:', err);
+        
+        // Tratamento robusto de diferentes tipos de erro
+        if (err instanceof Error) {
+          if (err.message.includes('failed to parse logic tree')) {
+            toast.error('Erro na sintaxe de busca. Tente um termo mais simples.');
+          } else if (err.message.includes('timeout')) {
+            toast.error('Busca demorou muito para responder. Tente novamente.');
+          } else {
+            toast.error(`Erro ao buscar ativos: ${err.message}`);
+          }
+        } else {
+          toast.error('Erro desconhecido ao buscar ativos. Tente novamente.');
+        }
+        
         throw new Error('Falha ao buscar ativos. Por favor, tente novamente.');
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
-    enabled: enabled, // Agora controlamos quando a query é executada
+    enabled: enabled,
+    retry: (failureCount, error) => {
+      // Implementa retry inteligente
+      if (failureCount >= 2) return false;
+      
+      // Não faz retry para erros de sintaxe
+      if (error instanceof Error && error.message.includes('failed to parse logic tree')) {
+        return false;
+      }
+      
+      return true;
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 

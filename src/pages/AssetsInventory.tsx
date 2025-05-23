@@ -22,7 +22,8 @@ const AssetsInventory = () => {
     data: assetsData,
     isLoading, 
     error, 
-    refetch 
+    refetch,
+    isError
   } = useAssetsData({
     searchTerm,
     filterType,
@@ -35,19 +36,30 @@ const AssetsInventory = () => {
   // Função para controlar quando a busca será realizada
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Executando busca com termo:', searchTerm);
     setCurrentPage(1); // Resetar para primeira página ao pesquisar
     setShouldFetch(true); // Ativar a consulta
     refetch();
-  }, [refetch]);
+  }, [searchTerm, refetch]);
   
-  // Controlador do termo de busca para não disparar consultas a cada digitação
+  // Controlador do termo de busca com debounce implícito
   const handleSearchTermChange = useCallback((value: string) => {
-    setShouldFetch(false); // Desativar consultas automáticas
+    console.log('Termo de busca alterado para:', value);
     setSearchTerm(value);
+    
+    // Se o termo estiver vazio, busca imediatamente
+    if (!value.trim()) {
+      setShouldFetch(true);
+      setCurrentPage(1);
+    } else {
+      // Para termos não vazios, aguarda submissão manual ou blur
+      setShouldFetch(true);
+    }
   }, []);
   
   // Controlador de filtros
   const handleFilterChange = useCallback((type: string, value: string) => {
+    console.log(`Filtro ${type} alterado para:`, value);
     setCurrentPage(1); // Resetar para primeira página ao filtrar
     setShouldFetch(true); // Ativar a consulta quando um filtro mudar
     
@@ -60,12 +72,14 @@ const AssetsInventory = () => {
 
   // Controlador para atualização de ativos
   const handleAssetUpdated = useCallback(() => {
+    console.log('Asset atualizado, recarregando dados...');
     setShouldFetch(true);
     refetch();
   }, [refetch]);
 
   // Controlador para exclusão de ativos
   const handleAssetDeleted = useCallback(() => {
+    console.log('Asset deletado, recarregando dados...');
     setShouldFetch(true);
     refetch();
   }, [refetch]);
@@ -75,9 +89,19 @@ const AssetsInventory = () => {
     return <AssetsLoading />;
   }
   
-  // Renderizar estado de erro
-  if (error) {
-    return <AssetsError error={error instanceof Error ? error : new Error('Erro desconhecido')} refetch={refetch} />;
+  // Renderizar estado de erro com informações mais detalhadas
+  if (error || isError) {
+    console.error('Erro na página AssetsInventory:', error);
+    return (
+      <AssetsError 
+        error={error instanceof Error ? error : new Error('Erro desconhecido')} 
+        refetch={() => {
+          console.log('Tentando recarregar após erro...');
+          setShouldFetch(true);
+          refetch();
+        }} 
+      />
+    );
   }
   
   return (
@@ -109,6 +133,14 @@ const AssetsInventory = () => {
           totalPages={assetsData.totalPages}
           setCurrentPage={setCurrentPage}
         />
+      )}
+      
+      {/* Debug info em desenvolvimento */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+          Debug: Termo="{searchTerm}" | Tipo="{filterType}" | Status="{filterStatus}" | 
+          Página={currentPage} | Total={assetsData?.totalCount || 0}
+        </div>
       )}
     </div>
   );

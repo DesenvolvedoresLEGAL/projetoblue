@@ -37,28 +37,86 @@ const AssetsSearchForm = ({
 }: AssetsSearchFormProps) => {
   const { data: assetSolutions = [] } = useAssetSolutions();
   const [inputValue, setInputValue] = useState(searchTerm);
+  const [inputError, setInputError] = useState('');
   
   // Inicializar o inputValue com o searchTerm ao montar o componente
   useEffect(() => {
     setInputValue(searchTerm);
   }, [searchTerm]);
   
-  // Função para lidar com mudanças no input sem atualizar searchTerm imediatamente
+  // Função para validar entrada e detectar caracteres problemáticos
+  const validateInput = (value: string): string => {
+    if (!value) return '';
+    
+    // Lista de caracteres que podem causar problemas na query
+    const problematicChars = /[(){}[\]\\^$.*+?|<>]/g;
+    
+    if (problematicChars.test(value)) {
+      return 'Evite usar caracteres especiais como parênteses, chaves ou símbolos';
+    }
+    
+    if (value.length > 50) {
+      return 'Termo de busca muito longo. Máximo 50 caracteres';
+    }
+    
+    return '';
+  };
+  
+  // Função para lidar com mudanças no input com validação
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    const value = e.target.value;
+    setInputValue(value);
+    
+    // Valida entrada em tempo real
+    const error = validateInput(value);
+    setInputError(error);
+    
+    // Só atualiza searchTerm se não houver erro
+    if (!error) {
+      setSearchTerm(value);
+    }
+  };
+
+  // Função melhorada para submissão do formulário
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Valida antes de submeter
+    const error = validateInput(inputValue);
+    if (error) {
+      setInputError(error);
+      return;
+    }
+    
+    setInputError('');
+    setSearchTerm(inputValue);
+    handleSearch(e);
   };
 
   return (
-    <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+    <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4">
       <div className="relative flex-1">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar ativos..."
-          className="pl-8"
+          placeholder="Buscar por número, ICCID, rádio ou serial..."
+          className={`pl-8 ${inputError ? 'border-red-500' : ''}`}
           value={inputValue}
           onChange={handleInputChange}
-          onBlur={() => setSearchTerm(inputValue)} 
+          onBlur={() => {
+            // Aplica a busca quando o campo perde o foco, se não houver erro
+            if (!inputError && inputValue !== searchTerm) {
+              setSearchTerm(inputValue);
+            }
+          }}
         />
+        
+        {/* Mostra erro de validação se houver */}
+        {inputError && (
+          <div className="absolute top-full left-0 mt-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 z-10">
+            {inputError}
+          </div>
+        )}
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -67,8 +125,12 @@ const AssetsSearchForm = ({
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p className="text-xs">
-                A busca abrange: número da linha, ICCID, rádio, número de série e modelo
+              <p className="text-xs max-w-xs">
+                A busca funciona em: número da linha, ICCID, rádio, número de série e modelo.
+                <br />
+                <span className="text-muted-foreground">
+                  Evite caracteres especiais para melhores resultados.
+                </span>
               </p>
             </TooltipContent>
           </Tooltip>
@@ -106,7 +168,13 @@ const AssetsSearchForm = ({
           </SelectContent>
         </Select>
         
-        <Button type="submit">Buscar</Button>
+        <Button 
+          type="submit" 
+          disabled={!!inputError}
+          className={inputError ? 'opacity-50 cursor-not-allowed' : ''}
+        >
+          Buscar
+        </Button>
       </div>
     </form>
   );
