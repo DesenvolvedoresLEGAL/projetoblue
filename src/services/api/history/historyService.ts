@@ -1,5 +1,4 @@
 
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -36,11 +35,13 @@ export interface AssetLogWithRelations {
 /**
  * Busca logs de assets com dados relacionados usando JOINs
  * Query otimizada para carregar status anterior/posterior, associações, assets e clientes
+ * Agora com foreign keys nomeadas para evitar ambiguidade
  */
 export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
   try {
     console.log('Buscando logs de assets com relações...');
     
+    // Query atualizada com foreign keys específicas para evitar ambiguidade
     const { data, error } = await supabase
       .from('asset_logs')
       .select(`
@@ -51,9 +52,9 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         status_before_id,
         status_after_id,
         assoc_id,
-        status_before:asset_status!status_before_id(status),
-        status_after:asset_status!status_after_id(status),
-        association:asset_client_assoc!assoc_id(
+        fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
+        fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
+        fk_asset_logs_association:asset_client_assoc!fk_asset_logs_association(
           asset:assets!asset_id(
             uuid,
             serial_number,
@@ -72,14 +73,39 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       .limit(100); // Limita a 100 registros mais recentes para performance
 
     if (error) {
-      console.error('Erro ao buscar logs de assets:', error);
-      throw error;
+      console.error('Erro detalhado ao buscar logs de assets:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Falha ao carregar histórico: ${error.message}`);
     }
 
-    console.log(`Carregados ${data?.length || 0} logs de assets`);
-    return data || [];
+    if (!data || data.length === 0) {
+      console.warn('Nenhum log encontrado na base de dados');
+      return [];
+    }
+
+    // Mapear os dados para a interface esperada
+    const mappedData = data.map((log: any) => ({
+      id: log.id,
+      date: log.date,
+      event: log.event,
+      details: log.details,
+      status_before_id: log.status_before_id,
+      status_after_id: log.status_after_id,
+      assoc_id: log.assoc_id,
+      status_before: log.fk_asset_logs_status_before,
+      status_after: log.fk_asset_logs_status_after,
+      association: log.fk_asset_logs_association
+    }));
+
+    console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
+    return mappedData;
   } catch (error) {
     console.error('Erro no serviço de logs:', error);
+    // Retorna array vazio em caso de erro para evitar quebra da UI
     return [];
   }
 };
@@ -124,9 +150,6 @@ export const formatLogDetails = (details: any): string => {
   }
 };
 
-/**
- * Formata evento para exibição em português
- */
 export const formatEventName = (event: string): string => {
   const eventTranslations: Record<string, string> = {
     'INSERT': 'Criação',

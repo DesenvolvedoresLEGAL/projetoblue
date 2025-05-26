@@ -1,10 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { historyService, AssetLogWithRelations } from "@/services/api/history/historyService";
+import { toast } from "sonner";
 
 /**
  * Hook para gerenciar dados do histórico de assets
  * Utiliza React Query para cache e estado dos logs com relações
+ * Agora com melhor tratamento de erros após correção das foreign keys
  */
 export function useAssetHistory() {
   const {
@@ -14,9 +16,21 @@ export function useAssetHistory() {
     refetch
   } = useQuery({
     queryKey: ['asset-history-logs'],
-    queryFn: historyService.getAssetLogsWithRelations,
+    queryFn: async () => {
+      console.log('useAssetHistory: Iniciando fetch dos logs...');
+      try {
+        const result = await historyService.getAssetLogsWithRelations();
+        console.log('useAssetHistory: Fetch concluído:', result);
+        return result;
+      } catch (error) {
+        console.error('useAssetHistory: Erro no fetch:', error);
+        toast.error(`Erro ao carregar histórico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        throw error;
+      }
+    },
     staleTime: 30000, // 30 segundos de cache
     retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   /**
@@ -35,16 +49,10 @@ export function useAssetHistory() {
     return asset.uuid?.substring(0, 8) || 'Asset não identificado';
   };
 
-  /**
-   * Obtém nome do cliente a partir dos dados do log
-   */
   const getClientName = (log: AssetLogWithRelations): string => {
     return log.association?.client?.nome || 'Cliente não identificado';
   };
 
-  /**
-   * Formata data para exibição em português brasileiro
-   */
   const formatDate = (dateString: string): string => {
     try {
       return new Date(dateString).toLocaleString('pt-BR', {
@@ -60,9 +68,6 @@ export function useAssetHistory() {
     }
   };
 
-  /**
-   * Obtém status formatado (anterior/posterior)
-   */
   const getStatusDisplay = (log: AssetLogWithRelations): {
     before?: string;
     after?: string;

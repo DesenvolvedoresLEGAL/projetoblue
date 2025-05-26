@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,21 +18,26 @@ import {
   Settings, 
   AlertCircle,
   Loader2,
-  Database
+  Database,
+  RefreshCw
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
 import { AssetLogWithRelations } from "@/services/api/history/historyService";
+import { toast } from "sonner";
 
 /**
  * Página de Histórico de Alterações
  * Exibe logs reais do Supabase com dados relacionados via JOINs
  * Interface 100% em português com dados legíveis
+ * Agora com melhor tratamento de erros e foreign keys corrigidas
  */
 export default function History() {
   const {
     historyLogs,
     isLoading,
     error,
+    refetch,
     getAssetIdentifier,
     getClientName,
     formatDate,
@@ -44,6 +48,13 @@ export default function History() {
 
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
+
+  // Log para debug
+  React.useEffect(() => {
+    console.log('History component - historyLogs:', historyLogs);
+    console.log('History component - isLoading:', isLoading);
+    console.log('History component - error:', error);
+  }, [historyLogs, isLoading, error]);
 
   /**
    * Filtra logs baseado na busca e tipo de evento
@@ -91,6 +102,13 @@ export default function History() {
     return "outline";
   };
 
+  // Função para tentar recarregar dados
+  const handleRetry = () => {
+    console.log('Tentando recarregar dados do histórico...');
+    refetch();
+    toast.info("Recarregando dados do histórico...");
+  };
+
   // Estado de loading
   if (isLoading) {
     return (
@@ -114,7 +132,7 @@ export default function History() {
     );
   }
 
-  // Estado de erro
+  // Estado de erro melhorado
   if (error) {
     return (
       <div className="space-y-6">
@@ -130,7 +148,14 @@ export default function History() {
               <p className="text-center text-destructive mb-2">
                 Erro ao carregar o histórico de alterações
               </p>
-              <p className="text-center text-muted-foreground text-sm">
+              <p className="text-center text-muted-foreground text-sm mb-4">
+                {error instanceof Error ? error.message : 'Erro desconhecido'}
+              </p>
+              <Button onClick={handleRetry} variant="outline" className="mb-2">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar Novamente
+              </Button>
+              <p className="text-center text-muted-foreground/70 text-xs">
                 Verifique sua conexão e tente novamente.
               </p>
             </div>
@@ -186,9 +211,15 @@ export default function History() {
       {/* Card de Resultados */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Registros do Histórico ({filteredLogs.length})
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Registros do Histórico ({filteredLogs.length})
+            </div>
+            <Button onClick={handleRetry} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -283,12 +314,18 @@ export default function History() {
                   : "Nenhum registro encontrado no histórico."
                 }
               </p>
-              <p className="text-center text-muted-foreground/70 text-sm">
+              <p className="text-center text-muted-foreground/70 text-sm mb-4">
                 {search || eventFilter !== "all"
                   ? "Tente ajustar os filtros de busca."
                   : "Os registros serão criados automaticamente quando ativos forem movimentados."
                 }
               </p>
+              {!search && eventFilter === "all" && (
+                <Button onClick={handleRetry} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recarregar Dados
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

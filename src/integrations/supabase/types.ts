@@ -162,6 +162,27 @@ export type Database = {
             referencedRelation: "asset_status"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_asset_logs_association"
+            columns: ["assoc_id"]
+            isOneToOne: false
+            referencedRelation: "asset_client_assoc"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_asset_logs_status_after"
+            columns: ["status_after_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_asset_logs_status_before"
+            columns: ["status_before_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
         ]
       }
       asset_solutions: {
