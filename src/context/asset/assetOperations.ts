@@ -1,5 +1,5 @@
 
-import { ChipAsset, RouterAsset, Asset, AssetStatus, AssetType } from "@/types/asset";
+import { ChipAsset, EquipamentAsset, Asset, AssetStatus, AssetType } from "@/types/asset";
 import { AssetHistoryEntry } from "@/types/assetHistory";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/utils/toast";
@@ -42,7 +42,7 @@ export const returnAssetsToStock = (
           
           const assetIdentifier = asset.type === "CHIP" 
             ? (asset as ChipAsset).iccid 
-            : (asset as RouterAsset).uniqueId;
+            : (asset as EquipamentAsset).uniqueId;
             
           addHistoryEntry({
             clientId: asset.clientId,
@@ -136,7 +136,7 @@ export const associateAssetToClient = (
     
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 
-      : (asset as RouterAsset).uniqueId;
+      : (asset as EquipamentAsset).uniqueId;
       
     addHistoryEntry({
       clientId,
@@ -190,7 +190,7 @@ export const removeAssetFromClient = (
     
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 
-      : (asset as RouterAsset).uniqueId;
+      : (asset as EquipamentAsset).uniqueId;
       
     addHistoryEntry({
       clientId,
@@ -235,7 +235,7 @@ export const extendSubscription = (
     if (client) {
       const assetIdentifier = asset.type === "CHIP" 
         ? (asset as ChipAsset).iccid 
-        : (asset as RouterAsset).uniqueId;
+        : (asset as EquipamentAsset).uniqueId;
         
       addHistoryEntry({
         clientId: asset.clientId,

@@ -280,8 +280,8 @@ export const assetQueries = {
     try {
       const { data, error } = await supabase
         .from("manufacturers")
-        .select('*')
-        .eq('id', id)
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) {
@@ -290,12 +290,11 @@ export const assetQueries = {
       }
 
       if (!data) {
-        console.error(`Manufacturer with ID ${id} not found`)
+        console.error(`Manufacturer with ID ${id} not found`);
         return null;
       }
 
       return data;
-
     } catch (error) {
       console.log("queries.tx > assetQueries > getManufacturerById : " + error);
     }
@@ -336,9 +335,7 @@ export const assetQueries = {
   },
   getStatus: async (): Promise<Status[]> => {
     try {
-      const { data, error } = await supabase
-        .from("asset_status")
-        .select("*");
+      const { data, error } = await supabase.from("asset_status").select("*");
 
       if (error) {
         console.error("Erro fetching asset status:", error);
@@ -347,7 +344,7 @@ export const assetQueries = {
 
       console.log(data);
 
-      const status = mapStatusFromDb(data)
+      const status = mapStatusFromDb(data);
 
       return status;
     } catch (error) {

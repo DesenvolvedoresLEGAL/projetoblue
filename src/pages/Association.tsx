@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAssets } from "@/context/useAssets";
-import { Asset, ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { toast } from "sonner";
 
 const Association = () => {
@@ -60,7 +60,7 @@ const Association = () => {
             type: selectedAsset.type,
             identifier: selectedAsset.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
-              : (selectedAsset as RouterAsset).uniqueId
+              : (selectedAsset as EquipamentAsset).uniqueId
           }],
           comments: `Ativo associado ao cliente ${selectedClient.nome}`,
           created_at: new Date().toISOString(),
@@ -104,7 +104,7 @@ const Association = () => {
             type: selectedAsset.type,
             identifier: selectedAsset.type === 'CHIP' 
               ? (selectedAsset as ChipAsset).iccid 
-              : (selectedAsset as RouterAsset).uniqueId
+              : (selectedAsset as EquipamentAsset).uniqueId
           }],
           comments: `Ativo removido do cliente ${selectedClient.nome}`,
           created_at: new Date().toISOString(),
@@ -144,7 +144,7 @@ const Association = () => {
               <div className="text-sm text-muted-foreground">
                 Ativo selecionado: {selectedAsset.type === 'CHIP' 
                   ? (selectedAsset as ChipAsset).iccid 
-                  : (selectedAsset as RouterAsset).uniqueId}
+                  : (selectedAsset as EquipamentAsset).uniqueId}
               </div>
             )}
           </div>
@@ -190,7 +190,7 @@ const Association = () => {
               <div className="text-sm text-muted-foreground">
                 Ativo selecionado: {selectedAsset.type === 'CHIP' 
                   ? (selectedAsset as ChipAsset).iccid 
-                  : (selectedAsset as RouterAsset).uniqueId}
+                  : (selectedAsset as EquipamentAsset).uniqueId}
               </div>
             )}
           </div>

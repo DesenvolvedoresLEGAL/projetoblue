@@ -1,6 +1,6 @@
 
 import { useAssets } from "@/context/useAssets";
-import { Asset, ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
 import { 
   Dialog,
@@ -60,7 +60,7 @@ export default function AssetDetailsDialog({
   
   const isChip = asset.type === "CHIP";
   const chip = isChip ? asset as ChipAsset : null;
-  const router = !isChip ? asset as RouterAsset : null;
+  const router = !isChip ? asset as EquipamentAsset : null;
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { Asset, AssetType, ChipAsset, RouterAsset, AssetStatus, StatusRecord } from '@/types/asset';
+import { Asset, AssetType, ChipAsset, EquipamentAsset, AssetStatus, StatusRecord } from '@/types/asset';
 import * as assetActions from './assetActions';
 import { toast } from '@/utils/toast';
 import { AssetContextType } from './AssetContextTypes';
@@ -162,7 +162,7 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createParams.phoneNumber = chipData.phoneNumber;
         createParams.carrier = chipData.carrier;
       } else if (assetData.type === "ROTEADOR") {
-        const routerData = assetData as Omit<RouterAsset, "id" | "status">;
+        const routerData = assetData as Omit<EquipamentAsset, "id" | "status">;
         createParams.brand = routerData.brand;
         createParams.model = routerData.model;
         createParams.password = routerData.password;

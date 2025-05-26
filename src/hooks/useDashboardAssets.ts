@@ -80,7 +80,7 @@ export function useDashboardAssets() {
           type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
           status: 'ALUGADO',
           additionalInfo: asset.type === 'CHIP' && 'line_number' in asset && asset.line_number 
-            ? asset.marca
+            ? `${asset.marca}`
             : asset.radio
         }));
       } catch (error) {
@@ -104,8 +104,8 @@ export function useDashboardAssets() {
           type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
           status: 'ASSINATURA',
           additionalInfo: asset.type === 'CHIP' && 'line_number' in asset && asset.line_number 
-            ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` 
-            : undefined
+            ? `${asset.marca} ${asset.updated_at}`
+            : `${asset.marca} ${asset.status}`
         }));
       } catch (error) {
         console.error('Error fetching on-subscription assets:', error);

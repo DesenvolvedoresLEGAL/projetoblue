@@ -1,6 +1,6 @@
 
 import { useAssets } from "@/context/useAssets";
-import { AssetStatus, RouterAsset } from "@/types/asset";
+import { AssetStatus, EquipamentAsset } from "@/types/asset";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,7 +39,7 @@ const monitoringStatusConfig: Partial<Record<AssetStatus, { color: string; icon:
 const monitoringStatuses: AssetStatus[] = ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"];
 
 // Function to check for routers that need SSID/password update
-const getRoutersNeedingUpdate = (assets: RouterAsset[]) => {
+const getRoutersNeedingUpdate = (assets: EquipamentAsset[]) => {
   return assets.filter(router => 
     router.status === "DISPONÍVEL" && router.needsPasswordChange === true
   );
@@ -56,7 +56,7 @@ export default function Monitoring() {
   
   // Get routers that need SSID/password update
   const routersNeedingUpdate = getRoutersNeedingUpdate(
-    assets.filter(asset => asset.type === "ROTEADOR") as RouterAsset[]
+    assets.filter(asset => asset.type === "ROTEADOR") as EquipamentAsset[]
   );
   
   return (

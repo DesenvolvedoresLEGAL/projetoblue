@@ -1,6 +1,6 @@
 
 import * as XLSX from 'xlsx';
-import { Asset, Client, ChipAsset, RouterAsset } from '@/types/asset';
+import { Asset, Client, ChipAsset, EquipamentAsset } from '@/types/asset';
 
 interface ExcelExportData {
   assets: Asset[];
@@ -30,7 +30,7 @@ export const exportToExcel = ({ assets, clients }: ExcelExportData) => {
         'Operadora': chip.carrier
       };
     } else {
-      const router = asset as RouterAsset;
+      const router = asset as EquipamentAsset;
       return {
         ...baseData,
         'Marca': router.brand,

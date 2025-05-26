@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAssets } from "@/context/useAssets";
-import { Asset, RouterAsset, Client } from "@/types/asset";
+import { Asset, EquipamentAsset, Client } from "@/types/asset";
 import {
   Card,
   CardContent,
@@ -38,7 +38,7 @@ export default function WifiAnalyzer() {
   const [activeTab, setActiveTab] = useState("all");
   
   // Get all router assets
-  const routerAssets = assets.filter((asset): asset is RouterAsset => 
+  const routerAssets = assets.filter((asset): asset is EquipamentAsset => 
     asset.type === "ROTEADOR"
   );
   
@@ -56,7 +56,7 @@ export default function WifiAnalyzer() {
   
   // Filter routers based on active tab and search term
   const getFilteredRouters = () => {
-    let filtered: RouterAsset[] = [];
+    let filtered: EquipamentAsset[] = [];
     
     switch (activeTab) {
       case "all":
@@ -95,7 +95,7 @@ export default function WifiAnalyzer() {
   const filteredRouters = getFilteredRouters();
   
   // Simulate WiFi analysis for a router
-  const runWifiAnalysis = async (router: RouterAsset) => {
+  const runWifiAnalysis = async (router: EquipamentAsset) => {
     // Simulate analysis delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -128,7 +128,7 @@ export default function WifiAnalyzer() {
   };
   
   // Get security status badge
-  const getSecurityStatusBadge = (router: RouterAsset) => {
+  const getSecurityStatusBadge = (router: EquipamentAsset) => {
     if (router.hasWeakPassword || router.needsPasswordChange) {
       return <Badge variant="destructive" className="flex items-center gap-1">
         <AlertTriangle className="h-3 w-3" />

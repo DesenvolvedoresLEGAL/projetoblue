@@ -1,6 +1,6 @@
 
 import { useAssets } from "@/context/useAssets";
-import { Client, Asset, ChipAsset, RouterAsset } from "@/types/asset";
+import { Client, Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
 import { 
   Dialog,
@@ -144,7 +144,7 @@ export default function ClientDetailsDialog({
                     {clientAssets.map((asset) => {
                       const isChip = asset.type === "CHIP";
                       const chip = isChip ? asset as ChipAsset : null;
-                      const router = !isChip ? asset as RouterAsset : null;
+                      const router = !isChip ? asset as EquipamentAsset : null;
                       
                       return (
                         <div 

@@ -143,7 +143,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 <span className="font-semibold">{item.type == 'CHIP' ? formatPhoneNumber(item.identifier) : item.identifier}</span>
                 <span className="text-xs text-muted-foreground">
                   {item.additionalInfo ||
-                    `(${capitalize(item.type)} - ${capitalize(item.status)})`}
+                    `(${capitalize(item.status)})`}
                 </span>
               </li>
             ))}

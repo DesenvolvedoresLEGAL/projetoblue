@@ -9,7 +9,7 @@ export type AssetStatus =
   | "MANUTENÇÃO"
   | "EXTRAVIADO";
 
-export type AssetType = "CHIP" | "ROTEADOR";
+export type AssetType = "CHIP" | "EQUIPAMENT";
 
 export type SolutionType = 
   | "SPEEDY 5G"
@@ -79,8 +79,8 @@ export interface ChipAsset extends BaseAsset {
   }
 }
 
-export interface RouterAsset extends BaseAsset {
-  type: "ROTEADOR";
+export interface EquipamentAsset extends BaseAsset {
+  type: "EQUIPAMENT";
   uniqueId: string;
   brand: string;
   model: string;
@@ -103,7 +103,7 @@ export interface RouterAsset extends BaseAsset {
   }
 }
 
-export type Asset = ChipAsset | RouterAsset;
+export type Asset = ChipAsset | EquipamentAsset;
 
 // Interface Client corrigida para alinhar com banco de dados
 export interface Client {

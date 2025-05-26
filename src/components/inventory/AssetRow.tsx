@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Asset, AssetStatus, ChipAsset, RouterAsset, StatusRecord } from "@/types/asset";
+import { Asset, AssetStatus, ChipAsset, EquipamentAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -144,7 +144,7 @@ const AssetRow = ({
         <TableCell className="font-medium">
           {asset.type === "CHIP"
             ? (asset as ChipAsset).iccid
-            : (asset as RouterAsset).uniqueId
+            : (asset as EquipamentAsset).uniqueId
           }
         </TableCell>
         
@@ -159,8 +159,8 @@ const AssetRow = ({
           ) : (
             <div>
               <div className="flex items-center gap-2">
-                {(asset as RouterAsset).brand} {(asset as RouterAsset).model}
-                {(asset as RouterAsset).hasWeakPassword && (
+                {(asset as EquipamentAsset).brand} {(asset as EquipamentAsset).model}
+                {(asset as EquipamentAsset).hasWeakPassword && (
                   <div className="flex items-center text-orange-500 text-xs">
                     <AlertTriangle className="h-4 w-4" />
                     <span className="ml-1">Senha fraca</span>
@@ -168,7 +168,7 @@ const AssetRow = ({
                 )}
               </div>
               <div className="text-xs text-gray-500">
-                SSID: {(asset as RouterAsset).ssid}
+                SSID: {(asset as EquipamentAsset).ssid}
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from "uuid";
-import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { isSameStatus } from "@/utils/assetUtils";
 
@@ -27,12 +27,12 @@ export const createAsset = (assetData: Omit<Asset, "id" | "status">) => {
       status: "DISPONÍVEL" as AssetStatus,
     } as ChipAsset;
   } else {
-    const routerData = assetData as Omit<RouterAsset, "id" | "status">;
+    const routerData = assetData as Omit<EquipamentAsset, "id" | "status">;
     newAsset = {
       ...routerData,
       id: uuidv4(),
       status: "DISPONÍVEL" as AssetStatus,
-    } as RouterAsset;
+    } as EquipamentAsset;
   }
   
   return newAsset;
@@ -50,7 +50,7 @@ export const updateAssetInList = (assets: Asset[], id: string, assetData: Partia
         if (assetData.type && assetData.type !== "ROTEADOR") {
           return asset; // Prevent changing the asset type
         }
-        return { ...asset, ...assetData } as RouterAsset;
+        return { ...asset, ...assetData } as EquipamentAsset;
       }
       return asset;
     }

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { Download, Filter, MoreHorizontal, Pencil, Search, Smartphone, Wifi, AlertTriangle } from "lucide-react";
 import EditAssetDialog from "@/components/inventory/EditAssetDialog";
 import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
@@ -82,7 +82,7 @@ const Inventory = () => {
           chip.carrier.toLowerCase().includes(searchLower)
         );
       } else {
-        const router = asset as RouterAsset;
+        const router = asset as EquipamentAsset;
         return (
           router.uniqueId.toLowerCase().includes(searchLower) ||
           router.brand.toLowerCase().includes(searchLower) ||
@@ -130,7 +130,7 @@ const Inventory = () => {
         row.push(chip.carrier);
         row.push("");
       } else {
-        const router = asset as RouterAsset;
+        const router = asset as EquipamentAsset;
         row.push(router.uniqueId);
         row.push(router.brand);
         row.push(router.model);
@@ -302,7 +302,7 @@ const Inventory = () => {
                       <TableCell className="font-medium">
                         {asset.type === "CHIP"
                           ? (asset as ChipAsset).iccid
-                          : (asset as RouterAsset).uniqueId
+                          : (asset as EquipamentAsset).uniqueId
                         }
                       </TableCell>
                       <TableCell>
@@ -316,8 +316,8 @@ const Inventory = () => {
                         ) : (
                           <div>
                             <div className="flex items-center gap-2">
-                              {(asset as RouterAsset).brand} {(asset as RouterAsset).model}
-                              {(asset as RouterAsset).hasWeakPassword && (
+                              {(asset as EquipamentAsset).brand} {(asset as EquipamentAsset).model}
+                              {(asset as EquipamentAsset).hasWeakPassword && (
                                 <div className="flex items-center text-orange-500 text-xs">
                                   <AlertTriangle className="h-4 w-4" />
                                   <span className="ml-1">Senha fraca</span>
@@ -325,7 +325,7 @@ const Inventory = () => {
                               )}
                             </div>
                             <div className="text-xs text-gray-500">
-                              SSID: {(asset as RouterAsset).ssid}
+                              SSID: {(asset as EquipamentAsset).ssid}
                             </div>
                           </div>
                         )}

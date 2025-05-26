@@ -1,5 +1,5 @@
 
-import { Asset, AssetStatus, AssetType, ChipAsset, RouterAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus
@@ -107,7 +107,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
       adminUser: dbAsset.admin_user,
       adminPassword: dbAsset.admin_pass,
       imei: dbAsset.imei
-    } as RouterAsset;
+    } as EquipamentAsset;
   }
 };
 
