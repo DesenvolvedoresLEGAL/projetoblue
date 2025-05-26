@@ -60,7 +60,7 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
       }
 
       // Verificar se já foi selecionado
-      if (selectedAssets.some(asset => asset.id === data.uuid)) {
+      if (selectedAssets.some(asset => asset.uuid === data.uuid)) {
         toast.error('Este ativo já foi selecionado');
         return;
       }

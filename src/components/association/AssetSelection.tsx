@@ -78,13 +78,13 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             <div className="space-y-4">
               <h4 className="font-medium">Ativos Selecionados ({selectedAssets.length})</h4>
               {selectedAssets.map((asset) => (
-                <div key={asset.id} className="border rounded-lg p-4 space-y-4">
+                <div key={asset.uuid} className="border rounded-lg p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium flex items-center gap-2">
                         {asset.type === 'CHIP' ? '📱' : '📡'} 
                         {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} 
-                        {asset.solucao && `- ${asset.solucao}`}
+                        {asset.solucao && ` - ${asset.solucao}`}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
@@ -93,7 +93,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onAssetRemoved(asset.id)}
+                      onClick={() => onAssetRemoved(asset.uuid)}
                       className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -103,7 +103,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
                   {/* Formulário de configuração do ativo */}
                   <AssetConfigurationForm
                     asset={asset}
-                    onUpdate={(updates) => handleAssetUpdate(asset.id, updates)}
+                    onUpdate={(updates) => handleAssetUpdate(asset.uuid, updates)}
                   />
                 </div>
               ))}

@@ -83,7 +83,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         const { error: updateError } = await supabase
           .from('assets')
           .update(updateData)
-          .eq('uuid', asset.id);
+          .eq('uuid', asset.uuid);
 
         if (updateError) {
           console.error('Error updating asset:', updateError);
@@ -94,8 +94,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
 
         // Criar associação
         const associationData = {
-          asset_id: asset.id,
-          client_id: client.id,
+          asset_id: asset.uuid,
+          client_id: client.uuid,
           entry_date: currentDate,
           association_id: asset.statusId === 3 ? 2 : 1, // 2 = assinatura, 1 = aluguel
           plan_id: asset.plan_id || 1, // Default plan
@@ -171,7 +171,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
             </h3>
             <div className="space-y-3">
               {assets.map((asset) => (
-                <div key={asset.id} className="border rounded-lg p-4">
+                <div key={asset.uuid} className="border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     {asset.type === 'CHIP' ? '📱' : '📡'}
                     <span className="font-medium">

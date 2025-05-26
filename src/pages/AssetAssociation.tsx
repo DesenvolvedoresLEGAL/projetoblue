@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ClientSelection } from '@/components/association/ClientSelection';
 import { AssetSelection } from '@/components/association/AssetSelection';
 import { AssociationSummary } from '@/components/association/AssociationSummary';
-import { Client, Asset } from '@/types/asset';
+import { Client, Asset, AssetType } from '@/types/asset';
 import { toast } from 'sonner';
 
 export interface SelectedAsset extends Asset {
@@ -18,6 +18,18 @@ export interface SelectedAsset extends Asset {
   ssid?: string;
   password?: string;
   notes?: string;
+  // Campos necessários que estão na base Asset
+  type: AssetType;
+  statusId?: number;
+  manufacturer_id?: number;
+  solution_id?: number;
+  serial_number?: string;
+  radio?: string;
+  admin_user?: string;
+  admin_pass?: string;
+  rented_days?: number;
+  iccid?: string;
+  solucao?: string;
 }
 
 interface AssociationFormData {
@@ -52,7 +64,7 @@ const AssetAssociation = () => {
   const handleAssetRemoved = (assetId: string) => {
     setFormData(prev => ({
       ...prev,
-      assets: prev.assets.filter(asset => asset.id !== assetId)
+      assets: prev.assets.filter(asset => asset.uuid !== assetId)
     }));
   };
 
@@ -60,7 +72,7 @@ const AssetAssociation = () => {
     setFormData(prev => ({
       ...prev,
       assets: prev.assets.map(asset => 
-        asset.id === assetId ? { ...asset, ...updatedAsset } : asset
+        asset.uuid === assetId ? { ...asset, ...updatedAsset } : asset
       )
     }));
   };
