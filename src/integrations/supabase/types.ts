@@ -1094,9 +1094,29 @@ export type Database = {
       }
       v_problem_assets: {
         Row: {
+          line_number: number | null
+          radio: string | null
+          solution_id: number | null
+          status_id: number | null
+          status_name: string | null
           uuid: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_assets_solutions"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "asset_solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_status"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {

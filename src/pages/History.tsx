@@ -1,7 +1,5 @@
 
-import { useState } from "react";
-import { useAssets } from "@/context/useAssets";
-import { AssetHistoryEntry } from "@/types/assetHistory";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,148 +12,282 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Smartphone, Wifi, Calendar, Search, User2 } from "lucide-react";
-import { formatDate } from "@/utils/formatDate";
+import { 
+  Calendar, 
+  Search, 
+  User2, 
+  Settings, 
+  AlertCircle,
+  Loader2,
+  Database
+} from "lucide-react";
+import { useAssetHistory } from "@/hooks/useAssetHistory";
+import { AssetLogWithRelations } from "@/services/api/history/historyService";
 
+/**
+ * Página de Histórico de Alterações
+ * Exibe logs reais do Supabase com dados relacionados via JOINs
+ * Interface 100% em português com dados legíveis
+ */
 export default function History() {
-  const { history } = useAssets();
-  const [search, setSearch] = useState("");
-  const [tab, setTab] = useState("all");
+  const {
+    historyLogs,
+    isLoading,
+    error,
+    getAssetIdentifier,
+    getClientName,
+    formatDate,
+    getStatusDisplay,
+    formatLogDetails,
+    formatEventName
+  } = useAssetHistory();
 
-  const filteredHistory = history.filter((entry) => {
-    // Filter by search term
+  const [search, setSearch] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
+
+  /**
+   * Filtra logs baseado na busca e tipo de evento
+   */
+  const filteredLogs = historyLogs.filter((log) => {
+    // Filtro por busca (cliente, asset, evento)
     if (search) {
       const searchLower = search.toLowerCase();
-      const matchesClient = entry.clientName.toLowerCase().includes(searchLower);
-      const matchesAsset = entry.assets.some(
-        asset => asset.identifier.toLowerCase().includes(searchLower)
-      );
-      const matchesEvent = entry.event?.toLowerCase().includes(searchLower);
-      const matchesComment = entry.comments?.toLowerCase().includes(searchLower);
+      const clientName = getClientName(log).toLowerCase();
+      const assetId = getAssetIdentifier(log).toLowerCase();
+      const event = formatEventName(log.event).toLowerCase();
+      const details = formatLogDetails(log.details).toLowerCase();
       
-      if (!(matchesClient || matchesAsset || matchesEvent || matchesComment)) {
+      if (!(clientName.includes(searchLower) || 
+            assetId.includes(searchLower) || 
+            event.includes(searchLower) ||
+            details.includes(searchLower))) {
         return false;
       }
     }
     
-    // Filter by tab type
-    if (tab === "rental" && entry.operationType !== "ALUGUEL") {
-      return false;
-    }
-    if (tab === "subscription" && entry.operationType !== "ASSINATURA") {
-      return false;
+    // Filtro por tipo de evento
+    if (eventFilter !== "all") {
+      if (eventFilter === "status" && !log.event.includes("STATUS")) {
+        return false;
+      }
+      if (eventFilter === "association" && !log.event.includes("INSERT") && !log.event.includes("UPDATE")) {
+        return false;
+      }
+      if (eventFilter === "creation" && !log.event.includes("CRIADO") && !log.event.includes("INSERT")) {
+        return false;
+      }
     }
     
     return true;
-  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  });
 
-  const getOperationBadgeStyle = (type: string) => {
-    return type === "ASSINATURA" ? "bg-telecom-500" : "bg-blue-500";
+  /**
+   * Determina variante do badge baseado no tipo de evento
+   */
+  const getEventBadgeVariant = (event: string): "default" | "secondary" | "destructive" | "outline" => {
+    if (event.includes('CRIADO') || event.includes('INSERT')) return "default";
+    if (event.includes('STATUS')) return "secondary";
+    if (event.includes('DELETE')) return "destructive";
+    return "outline";
   };
+
+  // Estado de loading
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
+          <p className="text-muted-foreground">Carregando histórico de movimentações...</p>
+        </div>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-10">
+              <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+              <p className="text-center text-muted-foreground">
+                Carregando dados do histórico...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Estado de erro
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
+          <p className="text-muted-foreground">Erro ao carregar histórico</p>
+        </div>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-10">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <p className="text-center text-destructive mb-2">
+                Erro ao carregar o histórico de alterações
+              </p>
+              <p className="text-center text-muted-foreground text-sm">
+                Verifique sua conexão e tente novamente.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Histórico</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
         <p className="text-muted-foreground">
-          Histórico de movimentações de ativos
+          Histórico completo de movimentações e alterações de ativos
         </p>
       </div>
       
+      {/* Card de Filtros */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>Filtros</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros e Busca
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Campo de busca */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por cliente, ativo, evento..."
+                placeholder="Buscar por cliente, ativo, evento ou detalhes..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8"
               />
             </div>
             
-            <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <TabsList className="grid grid-cols-3 w-full">
+            {/* Filtro por tipo de evento */}
+            <Tabs value={eventFilter} onValueChange={setEventFilter} className="w-full">
+              <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="all">Todos</TabsTrigger>
-                <TabsTrigger value="rental">Aluguel</TabsTrigger>
-                <TabsTrigger value="subscription">Assinatura</TabsTrigger>
+                <TabsTrigger value="creation">Criação</TabsTrigger>
+                <TabsTrigger value="status">Status</TabsTrigger>
+                <TabsTrigger value="association">Associação</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
         </CardContent>
       </Card>
       
+      {/* Card de Resultados */}
       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Registros do Histórico ({filteredLogs.length})
+          </CardTitle>
+        </CardHeader>
         <CardContent className="pt-6">
-          {filteredHistory.length > 0 ? (
+          {filteredLogs.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Data e Hora</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Ativos</TableHead>
-                    <TableHead>Tipo</TableHead>
                     <TableHead>Evento</TableHead>
+                    <TableHead>Ativo</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Detalhes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredHistory.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDate(entry.timestamp)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User2 className="h-4 w-4 text-gray-500" />
-                          <span>{entry.clientName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col space-y-1">
-                          {entry.assets.map((asset) => (
-                            <div key={asset.id} className="flex items-center gap-2">
-                              {asset.type === "CHIP" ? (
-                                <Smartphone className="h-4 w-4 text-gray-500" />
-                              ) : (
-                                <Wifi className="h-4 w-4 text-gray-500" />
+                  {filteredLogs.map((log) => {
+                    const statusDisplay = getStatusDisplay(log);
+                    
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {formatDate(log.date)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Badge variant={getEventBadgeVariant(log.event)}>
+                            {formatEventName(log.event)}
+                          </Badge>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Settings className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-mono text-sm">
+                              {getAssetIdentifier(log)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User2 className="h-4 w-4 text-muted-foreground" />
+                            <span>{getClientName(log)}</span>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          {statusDisplay.before || statusDisplay.after ? (
+                            <div className="space-y-1">
+                              {statusDisplay.before && (
+                                <div className="text-xs text-muted-foreground">
+                                  De: <span className="font-medium">{statusDisplay.before}</span>
+                                </div>
                               )}
-                              <span>{asset.identifier}</span>
+                              {statusDisplay.after && (
+                                <div className="text-xs">
+                                  Para: <span className="font-medium">{statusDisplay.after}</span>
+                                </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getOperationBadgeStyle(entry.operationType)}>
-                          {entry.operationType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {entry.event || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-xs truncate">
-                          {entry.comments || "-"}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="max-w-xs">
+                            <p className="text-sm truncate" title={formatLogDetails(log.details)}>
+                              {formatLogDetails(log.details)}
+                            </p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-10">
-              <Calendar className="h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-center text-gray-500 mb-2">
-                Nenhum registro encontrado no histórico.
+              <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
+              <p className="text-center text-muted-foreground mb-2">
+                {search || eventFilter !== "all" 
+                  ? "Nenhum registro encontrado com os filtros aplicados." 
+                  : "Nenhum registro encontrado no histórico."
+                }
               </p>
-              <p className="text-center text-gray-400 text-sm">
-                Os registros serão criados automaticamente quando ativos forem alugados ou assinados.
+              <p className="text-center text-muted-foreground/70 text-sm">
+                {search || eventFilter !== "all"
+                  ? "Tente ajustar os filtros de busca."
+                  : "Os registros serão criados automaticamente quando ativos forem movimentados."
+                }
               </p>
             </div>
           )}
@@ -163,4 +295,4 @@ export default function History() {
       </Card>
     </div>
   );
-};
+}
