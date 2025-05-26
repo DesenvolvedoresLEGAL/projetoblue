@@ -1,4 +1,5 @@
 
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -50,10 +51,10 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         status_before_id,
         status_after_id,
         assoc_id,
-        status_before:status_before_id(status),
-        status_after:status_after_id(status),
-        association:assoc_id(
-          asset:asset_id(
+        status_before:asset_status!status_before_id(status),
+        status_after:asset_status!status_after_id(status),
+        association:asset_client_assoc!assoc_id(
+          asset:assets!asset_id(
             uuid,
             serial_number,
             model,
@@ -61,7 +62,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
             radio,
             line_number
           ),
-          client:client_id(
+          client:clients!client_id(
             uuid,
             nome
           )

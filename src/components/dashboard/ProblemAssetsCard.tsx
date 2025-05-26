@@ -65,7 +65,7 @@ export const ProblemAssetsCard: React.FC = () => {
                 <CircleAlert className="h-4 w-4 text-red-500" />
                 <span className="font-mono">
                   {asset.solution_id === 11 
-                    ? asset.iccid || 'N/A'
+                    ? asset.radio || 'N/A'
                     : asset.radio || 'N/A'}
                 </span>
                 <span className="text-xs text-muted-foreground">
