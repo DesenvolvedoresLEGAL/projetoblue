@@ -215,9 +215,9 @@ const RecentAlertsCard = ({ dashboard }: { dashboard: any }) => (
                 </span>
               </div>
               <p className="text-muted-foreground">
-                {alert.description?.includes('CRIADO')
+                {alert.description?.includes('CRIADO') ||  alert.description?.includes('DELETE')
                   ? alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()
-                  : `${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status} para ${alert.new_status}`}
+                  :`${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status} para ${alert.new_status}`}
               </p>
             </li>
           ))}
@@ -268,7 +268,7 @@ const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className=" flex flex-row pt-0 h-full items-center">
-        <div className="h-[220px] sm:h-[180px] xs:h-[120px] w-full">
+        <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

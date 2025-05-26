@@ -37,16 +37,16 @@ export function useAssetHistory() {
    * Obtém identificador do asset a partir dos dados do log
    */
   const getAssetIdentifier = (log: AssetLogWithRelations): string => {
-    const asset = log.association?.asset;
-    if (!asset) return 'Asset não identificado';
+    const assetWAssoc = log.association?.asset;
+    if (!assetWAssoc) {
+      const asset = log.details;
+      return asset.solution_id == 11 ? asset?.line_number : asset?.radio;
+    }
+
+    if (assetWAssoc.radio) return assetWAssoc.radio;
+    if (assetWAssoc.line_number) return `${assetWAssoc.line_number}`;
     
-    // Prioriza serial_number, depois ICCID, depois rádio
-    if (asset.serial_number) return asset.serial_number;
-    if (asset.iccid) return asset.iccid;
-    if (asset.radio) return asset.radio;
-    if (asset.line_number) return `Linha ${asset.line_number}`;
-    
-    return asset.uuid?.substring(0, 8) || 'Asset não identificado';
+    return assetWAssoc.uuid?.substring(0, 8) || 'Asset não identificado';
   };
 
   const getClientName = (log: AssetLogWithRelations): string => {

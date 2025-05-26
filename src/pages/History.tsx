@@ -81,7 +81,10 @@ export default function History() {
       if (eventFilter === "status" && !log.event.includes("STATUS")) {
         return false;
       }
-      if (eventFilter === "association" && !log.event.includes("INSERT") && !log.event.includes("UPDATE")) {
+      if (eventFilter === "association" && !log.event.includes("ASSOCIATION")) {
+        return false;
+      }
+      if (eventFilter === "update" && !log.event.includes("UPDATE")) {
         return false;
       }
       if (eventFilter === "creation" && !log.event.includes("CRIADO") && !log.event.includes("INSERT")) {
@@ -197,11 +200,12 @@ export default function History() {
             
             {/* Filtro por tipo de evento */}
             <Tabs value={eventFilter} onValueChange={setEventFilter} className="w-full">
-              <TabsList className="grid grid-cols-4 w-full">
+              <TabsList className="grid grid-cols-5 w-full">
                 <TabsTrigger value="all">Todos</TabsTrigger>
                 <TabsTrigger value="creation">Criação</TabsTrigger>
                 <TabsTrigger value="status">Status</TabsTrigger>
                 <TabsTrigger value="association">Associação</TabsTrigger>
+                <TabsTrigger value="update">Atualização</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -293,7 +297,7 @@ export default function History() {
                         </TableCell>
                         
                         <TableCell>
-                          <div className="max-w-xs">
+                          <div className="max-w-xl">
                             <p className="text-sm truncate" title={formatLogDetails(log.details)}>
                               {formatLogDetails(log.details)}
                             </p>

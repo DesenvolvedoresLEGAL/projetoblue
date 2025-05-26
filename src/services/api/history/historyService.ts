@@ -9,7 +9,7 @@ export interface AssetLogWithRelations {
   id: number;
   date: string;
   event: string;
-  details: any; // jsonb field
+  details: JSON; // jsonb field
   status_before_id?: number;
   status_after_id?: number;
   assoc_id?: number;
@@ -127,20 +127,16 @@ export const formatLogDetails = (details: any): string => {
       formattedParts.push(parsedDetails.event_description);
     }
     
-    if (parsedDetails.asset_id) {
-      formattedParts.push(`Ativo: ${parsedDetails.asset_id}`);
-    }
-    
     if (parsedDetails.line_number) {
-      formattedParts.push(`Linha: ${parsedDetails.line_number}`);
+      formattedParts.push(`${parsedDetails.line_number}`);
     }
     
     if (parsedDetails.radio) {
-      formattedParts.push(`Rádio: ${parsedDetails.radio}`);
+      formattedParts.push(`${parsedDetails.radio}`);
     }
     
     if (parsedDetails.solution) {
-      formattedParts.push(`Solução: ${parsedDetails.solution}`);
+      formattedParts.push(`${parsedDetails.solution}`);
     }
     
     return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Detalhes do sistema';

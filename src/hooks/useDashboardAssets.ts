@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { assetService } from "@/services/api/asset";
 import { formatPhoneNumber, getAssetIdentifier } from "@/utils/formatters";
+import { Status } from "@/types/asset";
 
 /**
  * Custom hook for fetching and processing dashboard assets data
@@ -135,16 +136,18 @@ export function useDashboardAssets() {
     queryKey: ['dashboard', 'recent-alerts'],
     queryFn: async () => {
       try {
-        const assetsResult = await assetService.getAssets({ limit: 5, sortOrder: 'desc' });
-        const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
-        return assets.map(asset => ({
-          id: asset.id || asset.uuid || 'unknown',
-          assetType: asset.type || 'Desconhecido',
-          name: getAssetIdentifier(asset),
-          date: asset.registrationDate ? new Date(asset.registrationDate).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
-          description: 'CRIADO no sistema',
-          old_status: '',
-          new_status: ''
+        const assetStatus = await assetService.getStatus();
+        const assetsResult = await assetService.getAssetLogs({ limit: 5});
+        const assetLogs = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
+        return assetLogs.map(log => ({
+          id: log.id || 'unknown',
+          assetType: log.details.solution_id == 11 ? "CHIP" :
+          log.details.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
+          name: log.details.radio || log.details.line_number || [],
+          date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+          description: log.event.replace('_', ' '),
+          old_status: assetStatus.filter(s => s.id === log.status_before_id),
+          new_status: (parseInt(log.status_after_id))
         }));
       } catch (error) {
         console.error('Error fetching recent alerts:', error);

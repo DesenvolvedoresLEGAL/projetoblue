@@ -20,6 +20,8 @@ export { PROBLEM_STATUS_IDS };
 export const assetService = {
   // Queries
   getAssets: assetQueries.getAssets,
+  getAssetLogs: assetQueries.getAssetLogs,
+  getStatus: assetQueries.getStatus,
   getAssetById: assetQueries.getAssetById,
   getAssetsByStatus: assetQueries.getAssetsByStatus,
   getAssetsByType: assetQueries.getAssetsByType,

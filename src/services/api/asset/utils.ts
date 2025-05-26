@@ -1,13 +1,33 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
-import { Asset } from "@/types/asset";
+import { Asset, AssetLog, AssetStatus, Status } from "@/types/asset";
 
 // Helper function to handle API errors
 export const handleAssetError = (error: any, message: string): void => {
   console.error(`${message}:`, error);
   toast.error(message);
 };
+
+export const mapAssetLogFromDb = (dbAssetLog: any): AssetLog => {
+  return {
+    id: dbAssetLog.id,
+    assoc_id: dbAssetLog.assoc_id,
+    date: dbAssetLog.date,
+    event: dbAssetLog.event,
+    details: dbAssetLog.details,
+    status_before_id: dbAssetLog.status_before_id,
+    status_after_id: dbAssetLog.status_after_id
+  }
+}
+
+export const mapStatusFromDb = (dbAssetLog: any): Status => {
+  return {
+    id: dbAssetLog.id,
+    status: dbAssetLog.id,
+    association_id: dbAssetLog.association_id
+  }
+}
 
 // Helper function to map database asset to Asset type
 export const mapAssetFromDb = (dbAsset: any): Asset => {

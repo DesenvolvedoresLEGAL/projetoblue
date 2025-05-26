@@ -1,3 +1,4 @@
+import { Json } from "@/integrations/supabase/types";
 
 export type AssetStatus = 
   | "DISPONÍVEL" 
@@ -6,7 +7,7 @@ export type AssetStatus =
   | "SEM DADOS" 
   | "BLOQUEADO" 
   | "MANUTENÇÃO"
-  | "extraviado";
+  | "EXTRAVIADO";
 
 export type AssetType = "CHIP" | "ROTEADOR";
 
@@ -118,6 +119,22 @@ export interface Client {
   deleted_at?: string;
   // Campos removidos que não existem no banco:
   // name, document, documentType, contact, address, city, state, zipCode
+}
+
+export interface Status {
+  id: number;
+  status: string;
+  association_id: number;
+}
+
+export interface AssetLog {
+  id: number;
+  assoc_id: string;
+  date: string;
+  event: string;
+  details: Json;
+  status_before_id: number;
+  status_after_id: number;
 }
 
 // Nova interface para asset_client_assoc (faltava na aplicação)
