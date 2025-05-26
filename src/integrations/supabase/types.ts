@@ -18,11 +18,11 @@ export type Database = {
           deleted_at: string | null
           entry_date: string
           exit_date: string | null
-          gb: number
+          gb: number | null
           id: number
           notes: string | null
           pass: string | null
-          plan_id: number
+          plan_id: number | null
           ssid: string | null
           updated_at: string
         }
@@ -34,11 +34,11 @@ export type Database = {
           deleted_at?: string | null
           entry_date: string
           exit_date?: string | null
-          gb?: number
+          gb?: number | null
           id?: number
           notes?: string | null
           pass?: string | null
-          plan_id: number
+          plan_id?: number | null
           ssid?: string | null
           updated_at?: string
         }
@@ -50,11 +50,11 @@ export type Database = {
           deleted_at?: string | null
           entry_date?: string
           exit_date?: string | null
-          gb?: number
+          gb?: number | null
           id?: number
           notes?: string | null
           pass?: string | null
-          plan_id?: number
+          plan_id?: number | null
           ssid?: string | null
           updated_at?: string
         }
