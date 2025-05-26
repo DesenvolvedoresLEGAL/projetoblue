@@ -89,9 +89,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor={`line_number_${asset.uuid}`}>Número da Linha *</Label>
+          <Label htmlFor={`line_number_${asset.id}`}>Número da Linha *</Label>
           <Input
-            id={`line_number_${asset.uuid}`}
+            id={`line_number_${asset.id}`}
             value={asset.line_number || ''}
             onChange={(e) => onUpdate({ line_number: e.target.value })}
             placeholder="11999999999"
@@ -99,7 +99,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`manufacturer_${asset.uuid}`}>Operadora</Label>
+          <Label htmlFor={`manufacturer_${asset.id}`}>Operadora</Label>
           <Select
             value={asset.manufacturer_id?.toString() || ''}
             onValueChange={(value) => onUpdate({ manufacturer_id: parseInt(value) })}
@@ -118,7 +118,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`status_${asset.uuid}`}>Status</Label>
+          <Label htmlFor={`status_${asset.id}`}>Status</Label>
           <Select
             value={asset.statusId?.toString() || '2'}
             onValueChange={(value) => onUpdate({ statusId: parseInt(value) })}
@@ -137,7 +137,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`plan_${asset.uuid}`}>Plano</Label>
+          <Label htmlFor={`plan_${asset.id}`}>Plano</Label>
           <Select
             value={asset.plan_id?.toString() || ''}
             onValueChange={(value) => onUpdate({ plan_id: parseInt(value) })}
@@ -156,9 +156,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`gb_${asset.uuid}`}>Quantidade de GB</Label>
+          <Label htmlFor={`gb_${asset.id}`}>Quantidade de GB</Label>
           <Input
-            id={`gb_${asset.uuid}`}
+            id={`gb_${asset.id}`}
             type="number"
             value={asset.gb || ''}
             onChange={(e) => onUpdate({ gb: parseInt(e.target.value) || 0 })}
@@ -167,9 +167,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor={`notes_${asset.uuid}`}>Observações</Label>
+          <Label htmlFor={`notes_${asset.id}`}>Observações</Label>
           <Textarea
-            id={`notes_${asset.uuid}`}
+            id={`notes_${asset.id}`}
             value={asset.notes || ''}
             onChange={(e) => onUpdate({ notes: e.target.value })}
             placeholder="Informações adicionais sobre o equipamento associado..."
@@ -184,9 +184,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
-        <Label htmlFor={`serial_${asset.uuid}`}>Número de Série *</Label>
+        <Label htmlFor={`serial_${asset.id}`}>Número de Série *</Label>
         <Input
-          id={`serial_${asset.uuid}`}
+          id={`serial_${asset.id}`}
           value={asset.serial_number || ''}
           onChange={(e) => onUpdate({ serial_number: e.target.value })}
           placeholder="Digite o número de série"
@@ -195,9 +195,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`model_${asset.uuid}`}>Modelo *</Label>
+        <Label htmlFor={`model_${asset.id}`}>Modelo *</Label>
         <Input
-          id={`model_${asset.uuid}`}
+          id={`model_${asset.id}`}
           value={asset.model || ''}
           onChange={(e) => onUpdate({ model: e.target.value })}
           placeholder="Digite o modelo"
@@ -205,9 +205,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`rented_days_${asset.uuid}`}>Dias de Aluguel *</Label>
+        <Label htmlFor={`rented_days_${asset.id}`}>Dias de Aluguel *</Label>
         <Input
-          id={`rented_days_${asset.uuid}`}
+          id={`rented_days_${asset.id}`}
           type="number"
           value={asset.rented_days || ''}
           onChange={(e) => onUpdate({ rented_days: parseInt(e.target.value) || 0 })}
@@ -216,9 +216,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`radio_${asset.uuid}`}>Rádio *</Label>
+        <Label htmlFor={`radio_${asset.id}`}>Rádio *</Label>
         <Input
-          id={`radio_${asset.uuid}`}
+          id={`radio_${asset.id}`}
           value={asset.radio || ''}
           onChange={(e) => onUpdate({ radio: e.target.value })}
           placeholder="Número do rádio"
@@ -227,7 +227,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`status_${asset.uuid}`}>Status</Label>
+        <Label htmlFor={`status_${asset.id}`}>Status</Label>
         <Select
           value={asset.statusId?.toString() || '2'}
           onValueChange={(value) => onUpdate({ statusId: parseInt(value) })}
@@ -246,7 +246,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`manufacturer_${asset.uuid}`}>Fabricante</Label>
+        <Label htmlFor={`manufacturer_${asset.id}`}>Fabricante</Label>
         <Select
           value={asset.manufacturer_id?.toString() || ''}
           onValueChange={(value) => onUpdate({ manufacturer_id: parseInt(value) })}
@@ -265,7 +265,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`solution_${asset.uuid}`}>Solução</Label>
+        <Label htmlFor={`solution_${asset.id}`}>Solução</Label>
         <Select
           value={asset.solution_id?.toString() || ''}
           onValueChange={(value) => onUpdate({ solution_id: parseInt(value) })}
@@ -284,9 +284,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`admin_user_${asset.uuid}`}>Usuário Admin</Label>
+        <Label htmlFor={`admin_user_${asset.id}`}>Usuário Admin</Label>
         <Input
-          id={`admin_user_${asset.uuid}`}
+          id={`admin_user_${asset.id}`}
           value={asset.admin_user || 'admin'}
           onChange={(e) => onUpdate({ admin_user: e.target.value })}
           placeholder="admin"
@@ -294,9 +294,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`admin_pass_${asset.uuid}`}>Senha Admin</Label>
+        <Label htmlFor={`admin_pass_${asset.id}`}>Senha Admin</Label>
         <Input
-          id={`admin_pass_${asset.uuid}`}
+          id={`admin_pass_${asset.id}`}
           value={asset.admin_pass || ''}
           onChange={(e) => onUpdate({ admin_pass: e.target.value })}
           placeholder="Digite a senha"
@@ -304,9 +304,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`ssid_${asset.uuid}`}>SSID</Label>
+        <Label htmlFor={`ssid_${asset.id}`}>SSID</Label>
         <Input
-          id={`ssid_${asset.uuid}`}
+          id={`ssid_${asset.id}`}
           value={asset.ssid || '#WiFi.LEGAL'}
           onChange={(e) => onUpdate({ ssid: e.target.value })}
           placeholder="#WiFi.LEGAL"
@@ -314,9 +314,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`password_${asset.uuid}`}>Senha de Rede</Label>
+        <Label htmlFor={`password_${asset.id}`}>Senha de Rede</Label>
         <Input
-          id={`password_${asset.uuid}`}
+          id={`password_${asset.id}`}
           value={asset.password || '123legal'}
           onChange={(e) => onUpdate({ password: e.target.value })}
           placeholder="123legal"
@@ -324,9 +324,9 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       </div>
 
       <div className="space-y-2 md:col-span-2">
-        <Label htmlFor={`notes_${asset.uuid}`}>Observações</Label>
+        <Label htmlFor={`notes_${asset.id}`}>Observações</Label>
         <Textarea
-          id={`notes_${asset.uuid}`}
+          id={`notes_${asset.id}`}
           value={asset.notes || ''}
           onChange={(e) => onUpdate({ notes: e.target.value })}
           placeholder="Informações adicionais sobre o chip associado..."

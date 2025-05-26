@@ -10,26 +10,46 @@ import { AssociationSummary } from '@/components/association/AssociationSummary'
 import { Client, Asset, AssetType } from '@/types/asset';
 import { toast } from 'sonner';
 
-export interface SelectedAsset extends Asset {
-  // Campos específicos da associação
-  line_number?: string;
+// Interface específica para ativos selecionados na associação
+export interface SelectedAsset {
+  // Campos base do Asset
+  id: string;
+  uuid: string;
+  type: AssetType;
+  registrationDate: string;
+  status: string;
+  statusId?: number;
+  solucao?: string;
+  marca?: string;
+  modelo?: string;
+  
+  // Campos específicos da base de dados
+  serial_number?: string;
+  model?: string;
+  radio?: string;
+  solution_id?: number;
+  manufacturer_id?: number;
   plan_id?: number;
+  rented_days?: number;
+  admin_user?: string;
+  admin_pass?: string;
+  created_at?: string;
+  updated_at?: string;
+  iccid?: string;
+  line_number?: string;
+  
+  // Campos específicos da associação
   gb?: number;
   ssid?: string;
   password?: string;
   notes?: string;
-  // Campos necessários que estão na base Asset
-  type: AssetType;
-  statusId?: number;
-  manufacturer_id?: number;
-  solution_id?: number;
-  serial_number?: string;
-  radio?: string;
-  admin_user?: string;
-  admin_pass?: string;
-  rented_days?: number;
-  iccid?: string;
-  solucao?: string;
+  
+  // Campos herdados para compatibilidade
+  phoneNumber?: string;
+  carrier?: string;
+  uniqueId?: string;
+  brand?: string;
+  serialNumber?: string;
 }
 
 interface AssociationFormData {
