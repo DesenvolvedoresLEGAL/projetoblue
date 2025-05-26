@@ -22,6 +22,7 @@ export const assetService = {
   getAssets: assetQueries.getAssets,
   getAssetLogs: assetQueries.getAssetLogs,
   getStatus: assetQueries.getStatus,
+  getManufacturerById: assetQueries.getManufacturerById,
   getAssetById: assetQueries.getAssetById,
   getAssetsByStatus: assetQueries.getAssetsByStatus,
   getAssetsByType: assetQueries.getAssetsByType,

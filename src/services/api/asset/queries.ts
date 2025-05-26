@@ -276,6 +276,30 @@ export const getAssetsByMultipleStatus = async (
 
 export const assetQueries = {
   getAssets,
+  getManufacturerById: async (id: number): Promise<any | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("manufacturers")
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error(`Error fetching manufacturer with id ${id}`);
+        throw error;
+      }
+
+      if (!data) {
+        console.error(`Manufacturer with ID ${id} not found`)
+        return null;
+      }
+
+      return data;
+
+    } catch (error) {
+      console.log("queries.tx > assetQueries > getManufacturerById : " + error);
+    }
+  },
   getAssetById: async (id: string): Promise<Asset | null> => {
     try {
       const { data, error } = await supabase

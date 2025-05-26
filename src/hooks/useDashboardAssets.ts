@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { assetService } from "@/services/api/asset";
 import { formatPhoneNumber, getAssetIdentifier } from "@/utils/formatters";
 import { Status } from "@/types/asset";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Custom hook for fetching and processing dashboard assets data
@@ -79,8 +80,8 @@ export function useDashboardAssets() {
           type: asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO',
           status: 'ALUGADO',
           additionalInfo: asset.type === 'CHIP' && 'line_number' in asset && asset.line_number 
-            ? `Linha: ${formatPhoneNumber(String(asset.line_number))}` 
-            : undefined
+            ? asset.marca
+            : asset.radio
         }));
       } catch (error) {
         console.error('Error fetching on-lease assets:', error);

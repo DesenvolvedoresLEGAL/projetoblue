@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
-import { capitalize } from "@/utils/formatters";
+import { capitalize, formatPhoneNumber } from "@/utils/formatters";
 
 interface StatusCardItem {
   id: string;
@@ -140,7 +140,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 <CircleAlert
                   className={`h-4 w-4 flex-shrink-0 ${getIconColor()}`}
                 />
-                <span className="font-semibold">{item.identifier}</span>
+                <span className="font-semibold">{item.type == 'CHIP' ? formatPhoneNumber(item.identifier) : item.identifier}</span>
                 <span className="text-xs text-muted-foreground">
                   {item.additionalInfo ||
                     `(${capitalize(item.type)} - ${capitalize(item.status)})`}
