@@ -15,7 +15,7 @@ export interface AssetHistoryEntry {
 }
 
 export function useAssetHistory() {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['asset', 'history'],
     queryFn: async (): Promise<AssetHistoryEntry[]> => {
       try {
@@ -93,4 +93,73 @@ export function useAssetHistory() {
     staleTime: 30000,
     retry: 1
   });
+
+  // Helper functions
+  const getAssetIdentifier = (log: any): string => {
+    if (!log) return 'N/A';
+    return log.asset_name || log.asset_id || 'N/A';
+  };
+
+  const getClientName = (log: any): string => {
+    return 'Cliente não identificado';
+  };
+
+  const formatDate = (date: string): string => {
+    if (!date) return '';
+    return new Date(date).toLocaleString('pt-BR');
+  };
+
+  const getStatusDisplay = (log: any) => {
+    return {
+      before: log.old_status,
+      after: log.new_status
+    };
+  };
+
+  const formatLogDetails = (details: any): string => {
+    if (!details) return 'Nenhum detalhe disponível';
+    
+    try {
+      if (typeof details === 'string') {
+        return details;
+      }
+      
+      if (typeof details === 'object') {
+        const desc = details.event_description || details.description || 'Operação realizada';
+        return desc;
+      }
+      
+      return 'Detalhes do sistema';
+    } catch {
+      return 'Detalhes não disponíveis';
+    }
+  };
+
+  const formatEventName = (event: string): string => {
+    const eventTranslations: Record<string, string> = {
+      'INSERT': 'Criação',
+      'UPDATE': 'Atualização',
+      'DELETE': 'Remoção',
+      'STATUS_UPDATED': 'Status Atualizado',
+      'ASSET_CRIADO': 'Ativo Criado',
+      'SOFT_DELETE': 'Ativo Removido',
+      'ASSOCIATION': 'Associação',
+      'DISASSOCIATION': 'Desassociação'
+    };
+    
+    return eventTranslations[event] || event;
+  };
+
+  return {
+    historyLogs: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    getAssetIdentifier,
+    getClientName,
+    formatDate,
+    getStatusDisplay,
+    formatLogDetails,
+    formatEventName
+  };
 }

@@ -339,17 +339,17 @@ export const assetQueries = {
 
       if (error) {
         console.error("Erro fetching asset status:", error);
-        return null;
+        return [];
       }
 
       console.log(data);
 
-      const status = mapStatusFromDb(data);
+      const status = mapStatusFromDb(data || []);
 
       return status;
     } catch (error) {
       console.error("Erro fetching asset status (catch):", error);
-      return null;
+      return [];
     }
   },
 
