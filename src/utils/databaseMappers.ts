@@ -1,4 +1,3 @@
-
 import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
@@ -14,11 +13,10 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
       case 'bloqueado': return "BLOQUEADO";
       case 'em manutenção':
       case 'manutencao': return "MANUTENÇÃO";
-      case 'extraviado': return "extraviado";
+      case 'extraviado': return "EXTRAVIADO";
     }
   }
   
-  // Fallback to ID-based mapping
   switch (statusId) {
     case 1: return "DISPONÍVEL";
     case 2: return "ALUGADO";
@@ -26,6 +24,7 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
     case 4: return "SEM DADOS";
     case 5: return "BLOQUEADO";
     case 6: return "MANUTENÇÃO";
+    case 7: return "EXTRAVIADO";
     default: return "DISPONÍVEL";
   }
 };
@@ -56,7 +55,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
   const solutionName = dbAsset?.asset_solutions?.solution || dbAsset?.solucao?.solution;
   
   const isChip = dbAsset.solution_id === SOLUTION_IDS.CHIP;
-  const type = isChip ? 'CHIP' : 'ROTEADOR';
+  const type: AssetType = isChip ? 'CHIP' : 'ROTEADOR';
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
   
   const baseAsset = {
@@ -122,7 +121,7 @@ export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
     cnpj: dbClient.cnpj,
     email: dbClient.email,
     contato: dbClient.contato,
-    assets: [], // Será preenchido conforme necessário
+    assets: [],
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
     deleted_at: dbClient.deleted_at
@@ -160,7 +159,7 @@ export const mapAssetStatusToId = (status: AssetStatus): number => {
     case "SEM DADOS": return 4;
     case "BLOQUEADO": return 5;
     case "MANUTENÇÃO": return 6;
-    case "extraviado": return 7; // Assumindo ID 7 para extraviado
+    case "EXTRAVIADO": return 7;
     default: return 1;
   }
 };
@@ -169,14 +168,12 @@ export const mapAssetStatusToId = (status: AssetStatus): number => {
 export const mapFrontendToDatabase = (frontendData: any, isUpdate: boolean = false) => {
   const dbData: any = {};
   
-  // Map common fields
   if (frontendData.statusId !== undefined) dbData.status_id = frontendData.statusId;
   if (frontendData.solution_id !== undefined) dbData.solution_id = frontendData.solution_id;
   if (frontendData.manufacturer_id !== undefined) dbData.manufacturer_id = frontendData.manufacturer_id;
   if (frontendData.plan_id !== undefined) dbData.plan_id = frontendData.plan_id;
   if (frontendData.notes !== undefined) dbData.notes = frontendData.notes;
   
-  // Map asset specific fields
   if (frontendData.iccid !== undefined) dbData.iccid = frontendData.iccid;
   if (frontendData.line_number !== undefined) dbData.line_number = frontendData.line_number;
   if (frontendData.serial_number !== undefined) dbData.serial_number = frontendData.serial_number;

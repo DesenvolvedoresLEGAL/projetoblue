@@ -1,98 +1,96 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { historyService, AssetLogWithRelations } from "@/services/api/history/historyService";
-import { toast } from "sonner";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { getAssetIdentifier } from '@/utils/assetUtils';
 
-/**
- * Hook para gerenciar dados do histórico de assets
- * Utiliza React Query para cache e estado dos logs com relações
- * Agora com melhor tratamento de erros após correção das foreign keys
- */
+export interface AssetHistoryEntry {
+  id: number;
+  date: string;
+  event: string;
+  description: string;
+  asset_id?: string;
+  asset_name?: string;
+  old_status?: string;
+  new_status?: string;
+}
+
 export function useAssetHistory() {
-  const {
-    data: historyLogs,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['asset-history-logs'],
-    queryFn: async () => {
-      console.log('useAssetHistory: Iniciando fetch dos logs...');
+  return useQuery({
+    queryKey: ['asset', 'history'],
+    queryFn: async (): Promise<AssetHistoryEntry[]> => {
       try {
-        const result = await historyService.getAssetLogsWithRelations();
-        console.log('useAssetHistory: Fetch concluído:', result);
-        return result;
+        console.log('Fetching asset history...');
+        
+        const { data, error } = await supabase
+          .from('asset_logs')
+          .select('id, event, date, details')
+          .order('date', { ascending: false })
+          .limit(20);
+        
+        if (error) {
+          console.error('Error fetching asset history:', error);
+          throw error;
+        }
+        
+        console.log('Raw asset history data:', data);
+        
+        if (!data || data.length === 0) {
+          console.log('No asset history found');
+          return [];
+        }
+        
+        const processedHistory = data.map(log => {
+          let description = log.event || 'Event logged';
+          let asset_name = 'N/A';
+          let old_status = undefined;
+          let new_status = undefined;
+          let asset_id = undefined;
+          
+          // Safely parse details
+          if (log.details && typeof log.details === 'object') {
+            const details = log.details as Record<string, any>;
+            
+            if (details.description) {
+              description = details.description;
+            }
+            
+            // Handle asset identification
+            if (details.solution_id || details.line_number || details.radio) {
+              const mockAsset = {
+                solution_id: details.solution_id,
+                line_number: details.line_number,
+                radio: details.radio,
+                type: details.solution_id === 11 ? 'CHIP' : 'ROTEADOR'
+              };
+              asset_name = getAssetIdentifier(mockAsset);
+            }
+            
+            old_status = details.old_status;
+            new_status = details.new_status;
+            asset_id = details.asset_id;
+          }
+          
+          return {
+            id: log.id,
+            date: log.date,
+            event: log.event,
+            description,
+            asset_name,
+            old_status,
+            new_status,
+            asset_id
+          };
+        });
+        
+        console.log('Processed asset history:', processedHistory);
+        return processedHistory;
+        
       } catch (error) {
-        console.error('useAssetHistory: Erro no fetch:', error);
-        toast.error(`Erro ao carregar histórico: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        console.error('Error in useAssetHistory:', error);
         throw error;
       }
     },
-    staleTime: 30000, // 30 segundos de cache
-    retry: 2,
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30000,
+    retry: 1
   });
-
-  /**
-   * Obtém identificador do asset a partir dos dados do log
-   */
-  const getAssetIdentifier = (log: AssetLogWithRelations): string => {
-    const assetWAssoc = log.association?.asset;
-    if (!assetWAssoc) {
-      const asset = log.details;
-      return asset.solution_id == 11 ? asset?.line_number : asset?.radio;
-    }
-
-    if (assetWAssoc.radio) return assetWAssoc.radio;
-    if (assetWAssoc.line_number) return `${assetWAssoc.line_number}`;
-    
-    return assetWAssoc.uuid?.substring(0, 8) || 'Asset não identificado';
-  };
-
-  const getClientName = (log: AssetLogWithRelations): string => {
-    return log.association?.client?.nome || 'Cliente não identificado';
-  };
-
-  const formatDate = (dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      console.warn('Erro ao formatar data:', error);
-      return 'Data inválida';
-    }
-  };
-
-  const getStatusDisplay = (log: AssetLogWithRelations): {
-    before?: string;
-    after?: string;
-  } => {
-    return {
-      before: log.status_before?.status,
-      after: log.status_after?.status
-    };
-  };
-
-  return {
-    // Dados principais
-    historyLogs: historyLogs || [],
-    isLoading,
-    error,
-    refetch,
-    
-    // Funções auxiliares para formatação
-    getAssetIdentifier,
-    getClientName,
-    formatDate,
-    getStatusDisplay,
-    
-    // Serviços de formatação
-    formatLogDetails: historyService.formatLogDetails,
-    formatEventName: historyService.formatEventName
-  };
 }

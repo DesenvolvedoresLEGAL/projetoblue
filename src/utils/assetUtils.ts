@@ -1,47 +1,33 @@
 
 import { AssetStatus, Asset } from "@/types/asset";
 
-// Constants for asset type identification
 export const SOLUTION_IDS = {
   CHIP: 11,
   SPEEDY_5G: 1
 };
 
-/**
- * Gets a human-readable identifier for an asset, with consistent fallback pattern
- * Updated: agora usando line_number para CHIPs e radio para outros equipamentos
- */
 export const getAssetIdentifier = (asset: any): string => {
   if (!asset) return 'N/A';
   
-  // Para CHIPs
   if (asset.solution_id === SOLUTION_IDS.CHIP || 
       asset.type === 'CHIP' || 
       asset.solucao === 'CHIP') {
     return asset.line_number ? String(asset.line_number) : (asset.iccid || 'N/A');
   }
   
-  // Para routers/equipamentos
   return asset.radio || asset.serial_number || 'N/A';
 };
 
-/**
- * Gets the standardized asset type based on solution_id or other properties
- */
 export const getAssetType = (asset: any): string => {
   if (!asset) return 'Desconhecido';
   
   if (asset.solution_id === SOLUTION_IDS.CHIP) return 'CHIP';
   if (asset.solution_id === SOLUTION_IDS.SPEEDY_5G) return 'SPEEDY 5G';
   
-  // Fallback options
   return asset.type || 
          (asset.solucao?.solution || asset.solution || 'Equipamento');
 };
 
-/**
- * Normalize an asset object to have consistent property names
- */
 export const normalizeAsset = (asset: any) => {
   if (!asset) return null;
   
@@ -64,27 +50,18 @@ export const normalizeAsset = (asset: any) => {
   };
 };
 
-/**
- * Checks if two status values refer to the same status
- */
 export const isSameStatus = (status1: string | undefined, status2: string | undefined): boolean => {
   if (!status1 || !status2) return false;
   return status1.toUpperCase() === status2.toUpperCase();
 };
 
-/**
- * Type guard to check if a value is a valid AssetStatus
- */
 export const isValidAssetStatus = (status: string): status is AssetStatus => {
   const validStatuses: AssetStatus[] = [
-    "DISPONÍVEL", "ALUGADO", "ASSINATURA", "SEM DADOS", "BLOQUEADO", "MANUTENÇÃO", "extraviado"
+    "DISPONÍVEL", "ALUGADO", "ASSINATURA", "SEM DADOS", "BLOQUEADO", "MANUTENÇÃO", "EXTRAVIADO"
   ];
   return validStatuses.includes(status as AssetStatus);
 };
 
-/**
- * Get a status as AssetStatus type, with guards
- */
 export const getValidAssetStatus = (status: string): AssetStatus => {
   const normalizedStatus = status.toUpperCase();
   
@@ -95,7 +72,7 @@ export const getValidAssetStatus = (status: string): AssetStatus => {
     case "SEM DADOS": return "SEM DADOS";
     case "BLOQUEADO": return "BLOQUEADO";
     case "MANUTENÇÃO": return "MANUTENÇÃO";
-    case "EXTRAVIADO": return "extraviado";
-    default: return "DISPONÍVEL"; // Default fallback
+    case "EXTRAVIADO": return "EXTRAVIADO";
+    default: return "DISPONÍVEL";
   }
 };

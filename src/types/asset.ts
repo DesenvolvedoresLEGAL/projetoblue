@@ -9,7 +9,7 @@ export type AssetStatus =
   | "MANUTENÇÃO"
   | "EXTRAVIADO";
 
-export type AssetType = "CHIP" | "EQUIPAMENT";
+export type AssetType = "CHIP" | "ROTEADOR";
 
 export type SolutionType = 
   | "SPEEDY 5G"
@@ -37,7 +37,7 @@ export interface SubscriptionInfo {
 
 export interface BaseAsset {
   id: string;
-  uuid: string; // Adicionado para alinhar com banco de dados
+  uuid: string;
   type: AssetType;
   registrationDate: string;
   status: AssetStatus;
@@ -53,7 +53,6 @@ export interface BaseAsset {
   serial_number?: string;
   dias_alugada?: number;
   radio?: string;
-  // Campos do banco de dados
   solution_id?: number;
   manufacturer_id?: number;
   plan_id?: number;
@@ -70,7 +69,7 @@ export interface ChipAsset extends BaseAsset {
   iccid: string;
   phoneNumber: string;
   carrier: string;
-  line_number?: number; // Corrigido para number conforme banco
+  line_number?: number;
   dataUsage?: {
     download: number;
     upload: number;
@@ -80,7 +79,7 @@ export interface ChipAsset extends BaseAsset {
 }
 
 export interface EquipamentAsset extends BaseAsset {
-  type: "EQUIPAMENT";
+  type: "ROTEADOR";
   uniqueId: string;
   brand: string;
   model: string;
@@ -108,17 +107,15 @@ export type Asset = ChipAsset | EquipamentAsset;
 // Interface Client corrigida para alinhar com banco de dados
 export interface Client {
   id: string;
-  uuid: string; // Campo real do banco
-  nome: string; // Campo real do banco
-  cnpj: string; // Campo real do banco
-  email?: string; // Campo opcional do banco
-  contato: number; // Campo real do banco (bigint)
-  assets?: string[]; // Para compatibilidade com código existente
+  uuid: string;
+  nome: string;
+  cnpj: string;
+  email?: string;
+  contato: number;
+  assets?: string[];
   created_at?: string;
   updated_at?: string;
   deleted_at?: string;
-  // Campos removidos que não existem no banco:
-  // name, document, documentType, contact, address, city, state, zipCode
 }
 
 export interface Status {
@@ -158,8 +155,8 @@ export interface AssetClientAssociation {
 // Interface Plan corrigida para alinhar com banco de dados
 export interface Plan {
   id: number;
-  nome: string; // Campo real do banco
-  tamanho_gb?: number; // Campo real do banco
+  nome: string;
+  tamanho_gb?: number;
   created_at: string;
   updated_at: string;
   deleted_at?: string;
@@ -180,7 +177,7 @@ export interface Manufacturer {
 // Interface StatusRecord corrigida para alinhar com banco de dados
 export interface StatusRecord {
   id: number;
-  status: string; // Campo real do banco
+  status: string;
   association?: number;
   created_at: string;
   updated_at: string;
