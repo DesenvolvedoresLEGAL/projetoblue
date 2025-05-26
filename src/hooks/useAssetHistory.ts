@@ -12,6 +12,7 @@ export interface AssetHistoryEntry {
   asset_name?: string;
   old_status?: string;
   new_status?: string;
+  details?: any; // Add details property to match usage
 }
 
 export function useAssetHistory() {
@@ -78,7 +79,8 @@ export function useAssetHistory() {
             asset_name,
             old_status,
             new_status,
-            asset_id
+            asset_id,
+            details: log.details // Include details in return object
           };
         });
         

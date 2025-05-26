@@ -140,16 +140,21 @@ export function useDashboardAssets() {
         const assetStatus = await assetService.getStatus();
         const assetsResult = await assetService.getAssetLogs({ limit: 5});
         const assetLogs = Array.isArray(assetsResult) ? assetsResult : [];
-        return assetLogs.map(log => ({
-          id: log.id || 'unknown',
-          assetType: log.details?.solution_id == 11 ? "CHIP" :
-          log.details?.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
-          name: log.details?.radio || log.details?.line_number || [],
-          date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
-          description: log.event?.replace('_', ' ') || 'Evento',
-          old_status: assetStatus?.filter(s => s.id === log.status_before_id) || [],
-          new_status: (parseInt(log.status_after_id)) || 0
-        }));
+        return assetLogs.map(log => {
+          // Safely parse details as object
+          const details = log.details as any;
+          
+          return {
+            id: log.id || 'unknown',
+            assetType: details?.solution_id == 11 ? "CHIP" :
+            details?.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
+            name: details?.radio || details?.line_number || 'N/A',
+            date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+            description: log.event?.replace('_', ' ') || 'Evento',
+            old_status: assetStatus?.filter(s => s.id === log.status_before_id) || [],
+            new_status: log.status_after_id ? String(log.status_after_id) : '0'
+          };
+        });
       } catch (error) {
         console.error('Error fetching recent alerts:', error);
         return [];

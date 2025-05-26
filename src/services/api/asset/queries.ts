@@ -344,9 +344,9 @@ export const assetQueries = {
 
       console.log(data);
 
-      const status = mapStatusFromDb(data || []);
+      const statusArray = (data || []).map(mapStatusFromDb);
 
-      return status;
+      return statusArray;
     } catch (error) {
       console.error("Erro fetching asset status (catch):", error);
       return [];
