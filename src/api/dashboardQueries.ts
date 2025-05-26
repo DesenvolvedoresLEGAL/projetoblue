@@ -95,3 +95,35 @@ export async function fetchStatuses() {
   console.log('fetchStatuses result:', result);
   return result;
 }
+
+// NEW: Fetch aggregated data by status only (for PieChart)
+export async function fetchStatusSummary() {
+  console.log('Executing fetchStatusSummary query');
+  const result = await supabase
+    .from('assets')
+    .select(`
+      status_id,
+      asset_status!inner(status)
+    `)
+    .is('deleted_at', null);
+  
+  console.log('fetchStatusSummary result:', result);
+  return result;
+}
+
+// NEW: Fetch detailed breakdown by type and status (for tooltip)
+export async function fetchDetailedStatusBreakdown() {
+  console.log('Executing fetchDetailedStatusBreakdown query');
+  const result = await supabase
+    .from('assets')
+    .select(`
+      solution_id,
+      status_id,
+      asset_solutions!inner(solution),
+      asset_status!inner(status)
+    `)
+    .is('deleted_at', null);
+  
+  console.log('fetchDetailedStatusBreakdown result:', result);
+  return result;
+}

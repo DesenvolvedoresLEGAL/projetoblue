@@ -19,6 +19,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useDashboardAssets } from "@/hooks/useDashboardAssets";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsSummaryCard } from "@/components/dashboard/StatsSummaryCard";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -27,20 +28,27 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
  * Home dashboard component
  * Fixed: React Error #310, Data consistency, Error handling
  * Solução: Error boundaries, safe data handling, robustez melhorada
+ * 
+ * REFATORADO: PieChart agora mostra apenas status de ativos com tooltip detalhada
+ * conforme solicitado no prompt específico
  */
 const Home: React.FC = () => {
   // Use the consolidated dashboard assets hook
   const dashboard = useDashboardAssets();
+  // NEW: Use dashboard stats for PieChart data
+  const dashboardStats = useDashboardStats();
 
   // Safe loading state check
   const isLoading = dashboard.problemAssets.isLoading || 
                    dashboard.assetsStats.isLoading || 
-                   dashboard.statusDistribution.isLoading;
+                   dashboard.statusDistribution.isLoading ||
+                   dashboardStats.isLoading;
 
   // Safe error state check
   const hasError = dashboard.problemAssets.error || 
                    dashboard.assetsStats.error || 
-                   dashboard.statusDistribution.error;
+                   dashboard.statusDistribution.error ||
+                   dashboardStats.error;
 
   // Loading state for the entire dashboard
   if (isLoading) {
@@ -173,8 +181,8 @@ const Home: React.FC = () => {
           {/* Recent Alerts Card */}
           <RecentAlertsCard dashboard={dashboard} />
 
-          {/* Asset Status Distribution */}
-          <AssetStatusDistributionCard dashboard={dashboard} />
+          {/* REFATORADO: Asset Status Distribution - Agora mostra apenas por status com tooltip detalhada */}
+          <RefactoredAssetStatusDistributionCard dashboardStats={dashboardStats} />
         </div>
       </div>
     </ErrorBoundary>
@@ -239,19 +247,43 @@ const RecentAlertsCard = ({ dashboard }: { dashboard: any }) => (
   </Card>
 );
 
-// Componente separado para Asset Status Distribution
-const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
+// NOVO: Componente refatorado para Asset Status Distribution
+// Exibe apenas status no PieChart, com tooltip detalhada mostrando tipos por status
+const RefactoredAssetStatusDistributionCard = ({ dashboardStats }: { dashboardStats: any }) => {
+  // Tooltip personalizada para mostrar detalhamento por tipo dentro de cada status
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const status = payload[0].payload.status;
+      const total = payload[0].payload.total;
+      
+      // Busca todos os tipos que existem neste status
+      const typeInfo = dashboardStats.data?.detailedStatusData
+        ?.filter((item: any) => item.status === status)
+        ?.map((item: any) => `${item.type}: ${item.total}`)
+        ?.join(' | ') || 'Sem detalhes';
+      
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <div className="font-semibold text-gray-900 mb-1">
+            {status}: {total} ativos
+          </div>
+          <div className="text-sm text-gray-600">
+            {typeInfo}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   // Prepare data for pie chart (memoized to prevent unnecessary recalculations)
   const statusChartData = useMemo(() => {
-    if (!dashboard.statusDistribution.data || !Array.isArray(dashboard.statusDistribution.data)) {
+    if (!dashboardStats.data?.pieChartData || !Array.isArray(dashboardStats.data.pieChartData)) {
       return [];
     }
     
-    return dashboard.statusDistribution.data.map((item: any) => ({
-      name: item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase() : 'Desconhecido',
-      value: item.count || 0,
-    }));
-  }, [dashboard.statusDistribution.data]);
+    return dashboardStats.data.pieChartData;
+  }, [dashboardStats.data?.pieChartData]);
 
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
@@ -264,10 +296,10 @@ const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
           Ativos por Status
         </CardTitle>
         <CardDescription>
-          Distribuição dos ativos por status
+          Distribuição dos ativos por status (passe o mouse para ver detalhes por tipo)
         </CardDescription>
       </CardHeader>
-      <CardContent className=" flex flex-row pt-0 h-full items-center">
+      <CardContent className="flex flex-row pt-0 h-full items-center">
         <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -279,16 +311,16 @@ const AssetStatusDistributionCard = ({ dashboard }: { dashboard: any }) => {
                 outerRadius={window.innerWidth <= 640 ? 38 : 70}
                 fill="#8884d8"
                 paddingAngle={5}
-                dataKey="value"
-                nameKey="name"
-                label={window.innerWidth <= 768 ? false : ({ name, value }) => `${name}: ${value}`}
+                dataKey="total"
+                nameKey="status"
+                label={window.innerWidth <= 768 ? false : ({ status, total }) => `${status}: ${total}`}
                 labelLine={false}
               >
                 {statusChartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => [`${value} ativos`, null]} />
+              <Tooltip content={<CustomTooltip />} />
               <Legend
                 layout={window.innerWidth <= 640 ? "horizontal" : "vertical"}
                 verticalAlign={window.innerWidth <= 640 ? "bottom" : "middle"}

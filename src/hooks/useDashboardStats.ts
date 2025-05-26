@@ -28,6 +28,16 @@ export interface DashboardStats {
     warning: number;
     critical: number;
   };
+  // NEW: Dados para o PieChart refatorado
+  pieChartData: {
+    status: string;
+    total: number;
+  }[];
+  detailedStatusData: {
+    type: string;
+    status: string;
+    total: number;
+  }[];
 }
 
 export function useDashboardStats() {
@@ -43,13 +53,17 @@ export function useDashboardStats() {
           activeClientsResult,
           assetsWithIssuesResult,
           recentAssetsResult,
-          recentEventsResult
+          recentEventsResult,
+          statusSummaryResult,
+          detailedBreakdownResult
         ] = await Promise.all([
           dashboardQueries.fetchTotalAssets(),
           dashboardQueries.fetchActiveClients(),
           dashboardQueries.fetchAssetsWithIssues(),
           dashboardQueries.fetchRecentAssets(),
-          dashboardQueries.fetchRecentEvents()
+          dashboardQueries.fetchRecentEvents(),
+          dashboardQueries.fetchStatusSummary(),
+          dashboardQueries.fetchDetailedStatusBreakdown()
         ]);
 
         // Log query results for debugging
@@ -58,6 +72,8 @@ export function useDashboardStats() {
         console.log('Assets with issues result:', assetsWithIssuesResult);
         console.log('Recent assets result:', recentAssetsResult);
         console.log('Recent events result:', recentEventsResult);
+        console.log('Status summary result:', statusSummaryResult);
+        console.log('Detailed breakdown result:', detailedBreakdownResult);
 
         // Error handling for individual queries
         if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
@@ -65,6 +81,8 @@ export function useDashboardStats() {
         if (assetsWithIssuesResult.error) throw new Error(`Problem assets query error: ${assetsWithIssuesResult.error.message}`);
         if (recentAssetsResult.error) throw new Error(`Recent assets query error: ${recentAssetsResult.error.message}`);
         if (recentEventsResult.error) throw new Error(`Recent events query error: ${recentEventsResult.error.message}`);
+        if (statusSummaryResult.error) throw new Error(`Status summary query error: ${statusSummaryResult.error.message}`);
+        if (detailedBreakdownResult.error) throw new Error(`Detailed breakdown query error: ${detailedBreakdownResult.error.message}`);
         
         // Fetch additional data needed for mapping
         const solutionsResult = await dashboardQueries.fetchSolutions();
@@ -124,8 +142,40 @@ export function useDashboardStats() {
                       (event.details as any).asset_id : undefined
           };
         }) || [];
+
+        // NEW: Process data for PieChart (aggregated by status only)
+        const statusCounts = new Map<string, number>();
+        statusSummaryResult.data?.forEach(asset => {
+          const status = asset.asset_status?.status || 'Desconhecido';
+          statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+        });
+
+        const pieChartData = Array.from(statusCounts.entries()).map(([status, total]) => ({
+          status: status.charAt(0).toUpperCase() + status.slice(1).toLowerCase(),
+          total
+        }));
+
+        // NEW: Process detailed data for tooltip (type + status)
+        const detailedCounts = new Map<string, number>();
+        detailedBreakdownResult.data?.forEach(asset => {
+          const type = asset.asset_solutions?.solution || 'Desconhecido';
+          const status = asset.asset_status?.status || 'Desconhecido';
+          const key = `${type}|${status}`;
+          detailedCounts.set(key, (detailedCounts.get(key) || 0) + 1);
+        });
+
+        const detailedStatusData = Array.from(detailedCounts.entries()).map(([key, total]) => {
+          const [type, status] = key.split('|');
+          return {
+            type: type.charAt(0).toUpperCase() + type.slice(1).toLowerCase(),
+            status: status.charAt(0).toUpperCase() + status.slice(1).toLowerCase(),
+            total
+          };
+        });
         
         console.log('Dashboard data fetched successfully');
+        console.log('PieChart data:', pieChartData);
+        console.log('Detailed status data:', detailedStatusData);
         
         // Return data in the expected format
         return {
@@ -133,7 +183,9 @@ export function useDashboardStats() {
           activeClients: activeClientsResult.count || 0,
           assetsWithIssues: assetsWithIssuesResult.count || 0,
           recentAssets: processedRecentAssets,
-          recentEvents: processedRecentEvents
+          recentEvents: processedRecentEvents,
+          pieChartData,
+          detailedStatusData
         };
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
