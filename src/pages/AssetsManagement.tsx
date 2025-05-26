@@ -21,8 +21,8 @@ const AssetsManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
         {/* Card Registrar Ativo */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
-              onClick={() => navigate('/assets/register')}>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/assets/register')}>
           <CardHeader>
             <div className="flex items-center space-x-2">
               <PlusCircle className="h-6 w-6 text-primary" />
@@ -32,9 +32,9 @@ const AssetsManagement = () => {
               Cadastre novos chips e equipamentos no sistema
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='flex flex-col flex-1'>
             <p className="text-sm text-muted-foreground mb-4">
-              Adicione chips (cartões SIM) e equipamentos (roteadores, switches, etc.) 
+              Adicione chips (cartões SIM) e equipamentos (roteadores, switches, etc.)
               ao inventário com todas as informações necessárias.
             </p>
             <Button className="w-full" onClick={() => navigate('/assets/register')}>
@@ -44,8 +44,10 @@ const AssetsManagement = () => {
         </Card>
 
         {/* Card Associar Ativo */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate('/assets/association')}>
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/assets/association')}
+        >
           <CardHeader>
             <div className="flex items-center space-x-2">
               <LinkIcon className="h-6 w-6 text-primary" />
@@ -55,20 +57,21 @@ const AssetsManagement = () => {
               Vincule ativos existentes a clientes
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col flex-1">
             <p className="text-sm text-muted-foreground mb-4">
-              Gerencie as associações entre ativos e clientes, 
+              Gerencie as associações entre ativos e clientes,
               controlando alocações e devoluções.
-            </p>
-            <Button className="w-full" variant="outline" onClick={() => navigate('/assets/association')}>
+            </p>           
+              <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
               Gerenciar Associações
             </Button>
           </CardContent>
         </Card>
 
+
         {/* Card Histórico de Alterações - NOVO */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate('/history')}>
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/history')}>
           <CardHeader>
             <div className="flex items-center space-x-2">
               <History className="h-6 w-6 text-primary" />
@@ -78,19 +81,19 @@ const AssetsManagement = () => {
               Visualize o histórico completo de movimentações
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='flex flex-col flex-1'>
             <p className="text-sm text-muted-foreground mb-4">
-              Acompanhe todas as alterações, associações e mudanças de status 
+              Acompanhe todas as alterações, associações e mudanças de status
               dos ativos registrados no sistema.
             </p>
-            <Button className="w-full" variant="outline" onClick={() => navigate('/history')}>
+            <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
               Ver Histórico Completo
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Informações adicionais */}
+      {/* Informações adicionais
       <div className="bg-muted/50 rounded-lg p-6 max-w-6xl">
         <h3 className="font-semibold mb-2">Fluxo de Gestão de Ativos</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
@@ -107,7 +110,7 @@ const AssetsManagement = () => {
             <p>Monitore o histórico completo de movimentações e alterações dos ativos através do histórico detalhado.</p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
