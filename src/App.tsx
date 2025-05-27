@@ -94,7 +94,7 @@ const App = () => (
                     {/* Assets module routes */}
                     <Route path="assets">
                       <Route index element={<AssetsManagement />} />
-                      <Route path="dashboard" element={<AssetsDashboard />} />
+                      <Route path="dashboard" element={<Dashboard />} />
                       <Route path="inventory" element={<AssetsInventory />} />
                       <Route path="register" element={<RegisterAsset />} />
                       <Route path="association" element={<AssetAssociation />} />
