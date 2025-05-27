@@ -225,7 +225,7 @@ const RecentAlertsCard = ({ dashboard }: { dashboard: any }) => (
               <p className="text-muted-foreground">
                 {alert.description?.includes('CRIADO') ||  alert.description?.includes('DELETE')
                   ? alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()
-                  :`${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status} para ${alert.new_status}`}
+                  : `${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status?.status} para ${alert.new_status?.status}`}
               </p>
             </li>
           ))}

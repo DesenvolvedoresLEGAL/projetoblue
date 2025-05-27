@@ -143,7 +143,6 @@ export function useDashboardAssets() {
         return assetLogs.map(log => {
           // Safely parse details as object
           const details = log.details as any;
-          
           return {
             id: log.id || 'unknown',
             assetType: details?.solution_id == 11 ? "CHIP" :
@@ -151,8 +150,8 @@ export function useDashboardAssets() {
             name: details?.radio || details?.line_number || 'N/A',
             date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
             description: log.event?.replace('_', ' ') || 'Evento',
-            old_status: assetStatus?.filter(s => s.id === log.status_before_id) || [],
-            new_status: log.status_after_id ? String(log.status_after_id) : '0'
+            old_status: assetStatus?.filter(s => s.id === log.status_before_id)[0] || [],
+            new_status: assetStatus?.filter(s => s.id === log.status_after_id)[0] || []
           };
         });
       } catch (error) {

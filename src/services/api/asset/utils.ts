@@ -24,7 +24,7 @@ export const mapAssetLogFromDb = (dbAssetLog: any): AssetLog => {
 export const mapStatusFromDb = (dbAssetLog: any): Status => {
   return {
     id: dbAssetLog.id,
-    status: dbAssetLog.id,
+    status: dbAssetLog.status,
     association_id: dbAssetLog.association_id
   }
 }
