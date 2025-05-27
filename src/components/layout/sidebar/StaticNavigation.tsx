@@ -49,7 +49,7 @@ export function StaticNavigation({
           <span>Inventário</span>
         </NavLink>
         
-        <NavLink to="/assets" className={({
+        <NavLink to="/assets/management" className={({
         isActive
       }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} end onClick={isMobile ? onClose : undefined}>
           <PlusCircle className="h-4 w-4" />

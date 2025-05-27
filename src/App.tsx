@@ -95,6 +95,7 @@ const App = () => (
                     <Route path="assets">
                       <Route index element={<AssetsManagement />} />
                       <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="management" element={<AssetsManagement />} />
                       <Route path="inventory" element={<AssetsInventory />} />
                       <Route path="register" element={<RegisterAsset />} />
                       <Route path="association" element={<AssetAssociation />} />
