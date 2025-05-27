@@ -1,4 +1,5 @@
 
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -38,65 +39,47 @@ function App() {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/dashboard" element={
                     <AuthRoute>
-                      <Layout>
-                        <Dashboard />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/assets" element={
                     <AuthRoute>
-                      <Layout>
-                        <AssetsManagement />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/assets/inventory" element={
                     <AuthRoute>
-                      <Layout>
-                        <AssetsInventory />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/assets/association" element={
                     <AuthRoute>
-                      <Layout>
-                        <AssetAssociation />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/assets/associations" element={
                     <AuthRoute>
-                      <Layout>
-                        <AssetsAssociations />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/register-asset" element={
                     <AuthRoute>
-                      <Layout>
-                        <RegisterAsset />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                   <Route path="/clients" element={
                     <AuthRoute>
-                      <Layout>
-                        <Clients />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                    <Route path="/export" element={
                     <AuthRoute>
-                      <Layout>
-                        <Export />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                    <Route path="/association" element={
                     <AuthRoute>
-                      <Layout>
-                        <Association />
-                      </Layout>
+                      <Layout />
                     </AuthRoute>
                   } />
                 </Routes>
@@ -110,3 +93,4 @@ function App() {
 }
 
 export default App;
+
