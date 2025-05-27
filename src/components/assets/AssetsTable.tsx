@@ -72,7 +72,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
           <TableRow>
             <TableHead>Nº</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>Detalhes</TableHead>
+            <TableHead>ICCID / SN</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Fabricante</TableHead>
             <TableHead>Modelo</TableHead>
@@ -91,18 +91,18 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>
                   {/* Mostrar número da linha para chips e número de série para outros */}
                   {asset.solucao.id === 11 ? 
-                    <>ICCID: {highlightMatchedValue(asset, 'iccid')}</> : 
-                    <>Serial: {highlightMatchedValue(asset, 'serial_number')}</>
+                    <>{highlightMatchedValue(asset, 'iccid')}</> : 
+                    <>{highlightMatchedValue(asset, 'serial_number')}</>
                   }
                 </TableCell>
                 <TableCell>
                   <AssetStatusBadge status={capitalize(asset.status.name)} />
                 </TableCell>
-                <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
-                <TableCell>{asset.model ? capitalize(asset.model) : 'N/A'}</TableCell>
+                <TableCell>{ capitalize(asset.manufacturer.name) }</TableCell>
+                <TableCell>{ !asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model }</TableCell>
                 <TableCell>{asset.solucao.id === 11 ?
-                    <>NÚMERO: {asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
-                    <>ETIQUETA: {asset.radio || 'N/A'}</>}</TableCell>
+                    <>{asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
+                    <>{asset.radio || 'N/A'}</>}</TableCell>
                 <TableCell className="text-right">
                   <AssetActions 
                     asset={asset} 
