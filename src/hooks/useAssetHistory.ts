@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { getAssetLogsWithRelations } from '@/services/api/history/historyService';
-import { formatPhoneNumber } from '@/utils/phoneFormatter';
+import { supabase } from '@/integrations/supabase/client';
 import { getAssetIdentifier } from '@/utils/assetUtils';
 
 export interface AssetHistoryEntry {
@@ -13,66 +12,63 @@ export interface AssetHistoryEntry {
   asset_name?: string;
   old_status?: string;
   new_status?: string;
-  details?: any;
-  client_name?: string;
-  phone?: string;
+  details?: any; // Add details property to match usage
 }
 
 export function useAssetHistory() {
   const query = useQuery({
-    queryKey: ['asset', 'history', 'with-relations'],
+    queryKey: ['asset', 'history'],
     queryFn: async (): Promise<AssetHistoryEntry[]> => {
       try {
-        console.log('Fetching asset history with relations...');
+        console.log('Fetching asset history...');
         
-        const logsWithRelations = await getAssetLogsWithRelations();
+        const { data, error } = await supabase
+          .from('asset_logs')
+          .select('id, event, date, details')
+          .order('date', { ascending: false })
+          .limit(20);
         
-        if (!logsWithRelations || logsWithRelations.length === 0) {
+        if (error) {
+          console.error('Error fetching asset history:', error);
+          throw error;
+        }
+        
+        console.log('Raw asset history data:', data);
+        
+        if (!data || data.length === 0) {
           console.log('No asset history found');
           return [];
         }
         
-        const processedHistory = logsWithRelations.map(log => {
+        const processedHistory = data.map(log => {
           let description = log.event || 'Event logged';
           let asset_name = 'N/A';
-          let client_name = 'N/A';
-          let phone = 'N/A';
-          let old_status = log.status_before?.status;
-          let new_status = log.status_after?.status;
+          let old_status = undefined;
+          let new_status = undefined;
           let asset_id = undefined;
           
-          // Processar detalhes do log de forma segura
+          // Safely parse details
           if (log.details && typeof log.details === 'object') {
             const details = log.details as Record<string, any>;
             
-            if (details.event_description) {
-              description = details.event_description;
+            if (details.description) {
+              description = details.description;
             }
             
+            // Handle asset identification
+            if (details.solution_id || details.line_number || details.radio) {
+              const mockAsset = {
+                solution_id: details.solution_id,
+                line_number: details.line_number,
+                radio: details.radio,
+                type: details.solution_id === 11 ? 'CHIP' : 'ROTEADOR'
+              };
+              asset_name = getAssetIdentifier(mockAsset);
+            }
+            
+            old_status = details.old_status;
+            new_status = details.new_status;
             asset_id = details.asset_id;
-          }
-          
-          // Extrair dados do asset da associação
-          if (log.association?.asset) {
-            const asset = log.association.asset;
-            asset_name = getAssetIdentifier(asset);
-            asset_id = asset.uuid;
-          }
-          
-          // Extrair dados do cliente da associação
-          if (log.association?.client) {
-            const client = log.association.client;
-            client_name = client.nome || 'Cliente não identificado';
-            
-            // Verificar se contato existe e formatar telefone corretamente
-            if (client.contato) {
-              // Converter notação científica para string normal se necessário
-              const contactStr = typeof client.contato === 'number' 
-                ? client.contato.toString() 
-                : String(client.contato);
-              
-              phone = formatPhoneNumber(contactStr);
-            }
           }
           
           return {
@@ -84,9 +80,7 @@ export function useAssetHistory() {
             old_status,
             new_status,
             asset_id,
-            details: log.details,
-            client_name,
-            phone
+            details: log.details // Include details in return object
           };
         });
         
@@ -102,18 +96,14 @@ export function useAssetHistory() {
     retry: 1
   });
 
-  // Helper functions atualizadas
+  // Helper functions
   const getAssetIdentifier = (log: any): string => {
     if (!log) return 'N/A';
     return log.asset_name || log.asset_id || 'N/A';
   };
 
   const getClientName = (log: any): string => {
-    return log.client_name || 'Cliente não identificado';
-  };
-
-  const getClientPhone = (log: any): string => {
-    return log.phone || 'N/A';
+    return 'Cliente não identificado';
   };
 
   const formatDate = (date: string): string => {
@@ -150,7 +140,7 @@ export function useAssetHistory() {
   const formatEventName = (event: string): string => {
     const eventTranslations: Record<string, string> = {
       'INSERT': 'Criação',
-      'UPDATE': 'Atualização', 
+      'UPDATE': 'Atualização',
       'DELETE': 'Remoção',
       'STATUS_UPDATED': 'Status Atualizado',
       'ASSET_CRIADO': 'Ativo Criado',
@@ -169,7 +159,6 @@ export function useAssetHistory() {
     refetch: query.refetch,
     getAssetIdentifier,
     getClientName,
-    getClientPhone,
     formatDate,
     getStatusDisplay,
     formatLogDetails,

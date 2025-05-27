@@ -9,7 +9,7 @@ export interface AssetLogWithRelations {
   id: number;
   date: string;
   event: string;
-  details: any; // jsonb field
+  details: JSON; // jsonb field
   status_before_id?: number;
   status_after_id?: number;
   assoc_id?: number;
@@ -28,19 +28,20 @@ export interface AssetLogWithRelations {
     client?: {
       uuid: string;
       nome: string;
-      contato?: number;
     };
   };
 }
 
 /**
- * Busca logs de assets com dados relacionados usando JOINs otimizados
- * Query corrigida para carregar status anterior/posterior, associações, assets e clientes
+ * Busca logs de assets com dados relacionados usando JOINs
+ * Query otimizada para carregar status anterior/posterior, associações, assets e clientes
+ * Agora com foreign keys nomeadas para evitar ambiguidade
  */
 export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
   try {
     console.log('Buscando logs de assets com relações...');
     
+    // Query atualizada com foreign keys específicas para evitar ambiguidade
     const { data, error } = await supabase
       .from('asset_logs')
       .select(`
@@ -51,9 +52,9 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         status_before_id,
         status_after_id,
         assoc_id,
-        status_before:asset_status!status_before_id(status),
-        status_after:asset_status!status_after_id(status),
-        association:asset_client_assoc!assoc_id(
+        fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
+        fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
+        fk_asset_logs_association:asset_client_assoc!fk_asset_logs_association(
           asset:assets!asset_id(
             uuid,
             serial_number,
@@ -64,16 +65,15 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
           ),
           client:clients!client_id(
             uuid,
-            nome,
-            contato
+            nome
           )
         )
       `)
       .order('date', { ascending: false })
-      .limit(100);
+      .limit(100); // Limita a 100 registros mais recentes para performance
 
     if (error) {
-      console.error('Erro ao buscar logs de assets:', {
+      console.error('Erro detalhado ao buscar logs de assets:', {
         message: error.message,
         details: error.details,
         hint: error.hint,
@@ -96,9 +96,9 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       status_before_id: log.status_before_id,
       status_after_id: log.status_after_id,
       assoc_id: log.assoc_id,
-      status_before: log.status_before,
-      status_after: log.status_after,
-      association: log.association
+      status_before: log.fk_asset_logs_status_before,
+      status_after: log.fk_asset_logs_status_after,
+      association: log.fk_asset_logs_association
     }));
 
     console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
@@ -128,15 +128,15 @@ export const formatLogDetails = (details: any): string => {
     }
     
     if (parsedDetails.line_number) {
-      formattedParts.push(`Linha: ${parsedDetails.line_number}`);
+      formattedParts.push(`${parsedDetails.line_number}`);
     }
     
     if (parsedDetails.radio) {
-      formattedParts.push(`Rádio: ${parsedDetails.radio}`);
+      formattedParts.push(`${parsedDetails.radio}`);
     }
     
     if (parsedDetails.solution) {
-      formattedParts.push(`Solução: ${parsedDetails.solution}`);
+      formattedParts.push(`${parsedDetails.solution}`);
     }
     
     return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Detalhes do sistema';
