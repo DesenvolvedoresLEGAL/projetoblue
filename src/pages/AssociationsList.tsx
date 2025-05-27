@@ -31,9 +31,11 @@ interface Association {
 
 export default function AssociationsList() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+  const today = new Date().toISOString().split('T')[0];
+
 
   // Buscar associações com JOINs
   const { data: associationsData, isLoading, error } = useQuery({
@@ -60,11 +62,18 @@ export default function AssociationsList() {
         .is('deleted_at', null)
         .order('entry_date', { ascending: false });
 
+
+
       // Filtro por status
       if (statusFilter === 'active') {
-        query = query.is('exit_date', null);
+        // exit_date IS NULL OU exit_date > hoje
+        query = query.or(`exit_date.is.null,exit_date.gt.${today}`);
       } else if (statusFilter === 'ended') {
-        query = query.not('exit_date', 'is', null);
+        query = query
+        .not('exit_date', 'is', null)
+        .lt('exit_date', today);
+      } else if (statusFilter === 'today') {
+          query = query.eq('exit_date', today);
       }
 
       // Busca por termo
@@ -141,8 +150,23 @@ export default function AssociationsList() {
   };
 
   const getStatusBadge = (exitDate: string | null) => {
+
     if (exitDate) {
-      return <Badge variant="destructive">Encerrada</Badge>;
+
+      const today = new Date();
+      const exit = new Date(exitDate);
+
+      today.setHours(0, 0, 0, 0);
+      exit.setHours(0, 0, 0, 0);
+
+      if (exit == today) {
+        return <Badge variant='warning'>Encerra hoje</Badge>
+      }
+
+      if (exit < today) {
+        return <Badge variant="destructive">Encerrada</Badge>;
+      }
+
     }
     return <Badge variant="success">Ativa</Badge>;
   };
@@ -197,7 +221,7 @@ export default function AssociationsList() {
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'ended') => setStatusFilter(value)}>
+              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'ended' | 'today') => setStatusFilter(value)}>
                 <SelectTrigger className="w-full md:w-48">
                   <SelectValue />
                 </SelectTrigger>
@@ -205,6 +229,7 @@ export default function AssociationsList() {
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="active">Ativa</SelectItem>
                   <SelectItem value="ended">Encerrada</SelectItem>
+                  <SelectItem value="today">Encerra hoje</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -269,12 +294,12 @@ export default function AssociationsList() {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                           className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
-                      
+
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         const page = i + 1;
                         return (
@@ -289,9 +314,9 @@ export default function AssociationsList() {
                           </PaginationItem>
                         );
                       })}
-                      
+
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                           className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
@@ -310,7 +335,7 @@ export default function AssociationsList() {
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <div className="text-lg font-medium mb-2">Nenhuma associação encontrada</div>
               <div className="text-sm">
-                {searchTerm || statusFilter !== 'all' 
+                {searchTerm || statusFilter !== 'all'
                   ? 'Tente ajustar os filtros de busca'
                   : 'Não há associações cadastradas no sistema'
                 }

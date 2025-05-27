@@ -68,6 +68,30 @@ const AssetsManagement = () => {
           </CardContent>
         </Card>
 
+        {/* Card Associar Ativo */}
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/assets/associations-list')}
+        >
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <LinkIcon className="h-6 w-6 text-primary" />
+              <CardTitle>Listar associações</CardTitle>
+            </div>
+            <CardDescription>
+              Liste clientes e associações.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col flex-1">
+            <p className="text-sm text-muted-foreground mb-4">
+              Gerencie as associações entre ativos e clientes,
+              controlando alocações e devoluções.
+            </p>           
+              <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
+              Ver Lista de Associações
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Card Histórico de Alterações - NOVO */}
         <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
