@@ -135,13 +135,13 @@ const AssetsInventory = () => {
         />
       )}
       
-      {/* Debug info em desenvolvimento */}
+      {/* Debug info em desenvolvimento
       {process.env.NODE_ENV === 'development' && (
         <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
           Debug: Termo="{searchTerm}" | Tipo="{filterType}" | Status="{filterStatus}" | 
           Página={currentPage} | Total={assetsData?.totalCount || 0}
         </div>
-      )}
+      )} */}
     </div>
   );
 };
