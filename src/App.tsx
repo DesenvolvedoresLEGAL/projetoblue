@@ -1,154 +1,127 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
 import { AssetProvider } from "@/context/AssetContext";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { Layout } from "@/components/layout/Layout";
-import { DataUsageProvider } from "@/context/DataUsageContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { AuthRoute } from "@/components/auth/AuthRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-// Pages
-import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import RegisterAsset from "./pages/RegisterAsset";
-import AssetsDashboard from "./pages/AssetsDashboard";
-import AssetsInventory from "./pages/AssetsInventory";
-import AssetsManagement from "./pages/AssetsManagement";
-import AssetAssociation from "./pages/AssetAssociation";
-import Clients from "./pages/Clients";
-import Association from "./pages/Association";
-import Subscriptions from "./pages/Subscriptions";
-import Monitoring from "./pages/Monitoring";
-import History from "./pages/History";
-import DataUsage from "./pages/DataUsage";
-import WifiAnalyzer from "./pages/WifiAnalyzer";
+import AuthRoute from "@/components/auth/AuthRoute";
+import Layout from "@/components/layout/Layout";
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import NotFound from "./pages/NotFound";
-import Suppliers from "./pages/Suppliers";
-import Topology from "./pages/Topology";
-import Discovery from "./pages/Discovery";
+import Dashboard from "./pages/Dashboard";
+import AssetsManagement from "./pages/AssetsManagement";
+import AssetsInventory from "./pages/AssetsInventory";
+import AssetAssociation from "./pages/AssetAssociation";
+import AssetsAssociations from "./pages/AssetsAssociations";
+import RegisterAsset from "./pages/RegisterAsset";
+import Clients from "./pages/Clients";
+import Export from "./pages/Export";
+import Settings from "./pages/Settings";
+import HistoryPage from "./pages/HistoryPage";
+import Association from "./pages/Association";
 
-// BITS™ Pages
-import BitsDashboard from "./pages/bits/BitsDashboard";
-import BitsIndicateNow from "./pages/bits/BitsIndicateNow";
-import BitsMyReferrals from "./pages/bits/BitsMyReferrals";
-import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
-import BitsSettings from "./pages/bits/BitsSettings";
-import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
+const queryClient = new QueryClient();
 
-// Configure React Query client with global settings
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 60000, // 1 minute
-    },
-  },
-});
-
-Object.defineProperty(String.prototype, 'capitalize', {
-  value: function() {
-    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
-  },
-  enumerable: false
-});
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <AssetProvider>
-            <DataUsageProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AuthProvider>
+              <AssetProvider>
                 <Routes>
-                  {/* Public authentication routes */}
+                  <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
-                  
-                  {/* Main layout with sidebar and header - Protected routes */}
-                  <Route path="/" element={
+                  <Route path="/dashboard" element={
                     <AuthRoute>
-                      <Layout />
+                      <Layout>
+                        <Dashboard />
+                      </Layout>
                     </AuthRoute>
-                  }>
-                    {/* Wrap the main dashboard route with ErrorBoundary */}
-                    <Route index element={
-                      <ErrorBoundary>
-                        <Home />
-                      </ErrorBoundary>
-                    } />
-                    
-                    {/* Dashboard routes - Redirect to Home for consistent experience */}
-                    <Route path="dashboard" element={<Dashboard />} />
-                    
-                    {/* Assets module routes */}
-                    <Route path="assets">
-                      <Route index element={<AssetsManagement />} />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="management" element={<AssetsManagement />} />
-                      <Route path="inventory" element={<AssetsInventory />} />
-                      <Route path="register" element={<RegisterAsset />} />
-                      <Route path="association" element={<AssetAssociation />} />
-                    </Route>
-                    
-                    {/* Topology module routes */}
-                    <Route path="topology">
-                      <Route index element={<Navigate to="/topology/view" replace />} />
-                      <Route path="view" element={<Topology />} />
-                    </Route>
-                    
-                    {/* Tools module routes */}
-                    <Route path="tools">
-                      <Route index element={<Navigate to="/tools/discovery" replace />} />
-                      <Route path="discovery" element={<Discovery />} />
-                    </Route>
-                    
-                    {/* BITS™ module routes */}
-                    <Route path="bits">
-                      <Route index element={<BitsDashboard />} />
-                      <Route path="indicate" element={<BitsIndicateNow />} />
-                      <Route path="my-referrals" element={<BitsMyReferrals />} />
-                      <Route path="rewards" element={<BitsPointsAndRewards />} />
-                      <Route path="settings" element={<BitsSettings />} />
-                      <Route path="help" element={<BitsHelpAndSupport />} />
-                    </Route>
-                    
-                    {/* Direct shortcuts */}
-                    <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
-                    <Route path="link-asset" element={<Navigate to="/assets/association" replace />} />
-                    
-                    {/* Legacy routes for backward compatibility */}
-                    <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
-                    <Route path="/clients" element={<Clients />} />
-                    <Route path="/suppliers" element={<Suppliers />} />
-                    <Route path="/association" element={<Navigate to="/assets/association" replace />} />
-                    <Route path="/subscriptions" element={<Subscriptions />} />
-                    <Route path="/monitoring" element={<Monitoring />} />
-                    <Route path="/history" element={<History />} />
-                    <Route path="/data-usage" element={<DataUsage />} />
-                    <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
-                  </Route>
-                  
-                  {/* Fallback route */}
-                  <Route path="*" element={<NotFound />} />
+                  } />
+                  <Route path="/assets" element={
+                    <AuthRoute>
+                      <Layout>
+                        <AssetsManagement />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/assets/inventory" element={
+                    <AuthRoute>
+                      <Layout>
+                        <AssetsInventory />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/assets/association" element={
+                    <AuthRoute>
+                      <Layout>
+                        <AssetAssociation />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/assets/associations" element={
+                    <AuthRoute>
+                      <Layout>
+                        <AssetsAssociations />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/register-asset" element={
+                    <AuthRoute>
+                      <Layout>
+                        <RegisterAsset />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/clients" element={
+                    <AuthRoute>
+                      <Layout>
+                        <Clients />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                   <Route path="/export" element={
+                    <AuthRoute>
+                      <Layout>
+                        <Export />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                   <Route path="/settings" element={
+                    <AuthRoute>
+                      <Layout>
+                        <Settings />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                  <Route path="/history" element={
+                    <AuthRoute>
+                      <Layout>
+                        <HistoryPage />
+                      </Layout>
+                    </AuthRoute>
+                  } />
+                   <Route path="/association" element={
+                    <AuthRoute>
+                      <Layout>
+                        <Association />
+                      </Layout>
+                    </AuthRoute>
+                  } />
                 </Routes>
-              </TooltipProvider>
-            </DataUsageProvider>
-          </AssetProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+              </AssetProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
