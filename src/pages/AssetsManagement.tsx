@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
-import KpiCards from '@/components/dashboard/KpiCards';
-import AssetsChart from '@/components/dashboard/AssetsChart';
+import { KpiCards } from '@/components/dashboard/KpiCards';
+import { AssetsChart } from '@/components/dashboard/AssetsChart';
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
-  const { data: dashboardData, isLoading } = useDashboardAssets();
+  const dashboardData = useDashboardAssets();
 
-  if (isLoading) {
+  if (dashboardData.assetsStats.isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -62,7 +62,11 @@ const AssetsManagement = () => {
       </div>
 
       {/* KPIs */}
-      {dashboardData && <KpiCards data={dashboardData} />}
+      <KpiCards 
+        totalAssets={dashboardData.assetsStats.data.chips.total + dashboardData.assetsStats.data.speedys.total + dashboardData.assetsStats.data.equipment.total}
+        activeClients={0}
+        assetsWithIssues={dashboardData.problemAssets.data.length}
+      />
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -144,7 +148,7 @@ const AssetsManagement = () => {
       </div>
 
       {/* Charts */}
-      {dashboardData && <AssetsChart data={dashboardData} />}
+      <AssetsChart />
 
       {/* Additional Cards */}
       <div className="grid gap-4 md:grid-cols-2">

@@ -336,3 +336,36 @@ export const navigationModules = [
     children: []
   }
 ];
+
+export const generateBreadcrumbsFromPath = (pathname: string) => {
+  const segments = pathname.split('/').filter(Boolean);
+  const breadcrumbs = [];
+
+  // Mapeamento de rotas para labels legíveis
+  const routeLabels: Record<string, string> = {
+    'dashboard': 'Dashboard',
+    'assets': 'Gestão de Ativos',
+    'inventory': 'Inventário',
+    'association': 'Nova Associação',
+    'associations': 'Gestão de Associações',
+    'clients': 'Clientes',
+    'register-asset': 'Cadastrar Ativo',
+    'export': 'Relatórios',
+    'settings': 'Configurações',
+    'history': 'Histórico'
+  };
+
+  let currentPath = '';
+  
+  for (const segment of segments) {
+    currentPath += `/${segment}`;
+    const label = routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+    
+    breadcrumbs.push({
+      label,
+      path: currentPath
+    });
+  }
+
+  return breadcrumbs;
+};
