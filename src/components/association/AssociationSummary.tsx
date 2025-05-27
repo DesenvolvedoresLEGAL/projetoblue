@@ -2,19 +2,28 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, AlertCircle, User, Package } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CheckCircle, AlertCircle, User, Package, Calendar, Settings } from "lucide-react";
 import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ConfirmationModal } from './ConfirmationModal';
-import { formatPhoneNumber } from '@/utils/phoneFormatter';
+import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface AssociationSummaryProps {
   client: Client;
   assets: SelectedAsset[];
   onComplete: () => void;
   onBack: () => void;
+}
+
+interface AssociationConfig {
+  type: 'aluguel' | 'assinatura';
+  entryDate: string;
+  exitDate: string;
 }
 
 export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
@@ -25,6 +34,11 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showKnowWhatImDoingModal, setShowKnowWhatImDoingModal] = useState(false);
+  const [associationConfig, setAssociationConfig] = useState<AssociationConfig>({
+    type: 'aluguel',
+    entryDate: new Date().toISOString().split('T')[0],
+    exitDate: ''
+  });
 
   const validateBusinessRules = () => {
     const speedyAssets = assets.filter(asset => 
@@ -52,6 +66,20 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         return;
       }
 
+      // Validar data de entrada
+      if (!associationConfig.entryDate) {
+        toast.error('Data de entrada é obrigatória');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validar se data de saída é posterior à data de entrada
+      if (associationConfig.exitDate && associationConfig.exitDate <= associationConfig.entryDate) {
+        toast.error('Data de saída deve ser posterior à data de entrada');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validar campos obrigatórios
       for (const asset of assets) {
         if (asset.type === 'CHIP') {
@@ -69,13 +97,15 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         }
       }
 
+      // Determinar status baseado no tipo de associação
+      const statusId = associationConfig.type === 'assinatura' ? 3 : 2; // 3 = assinatura, 2 = alugado
+      const associationTypeId = associationConfig.type === 'assinatura' ? 2 : 1; // 2 = assinatura, 1 = aluguel
+
       // Criar associações
-      const currentDate = new Date().toISOString().split('T')[0];
-      
       for (const asset of assets) {
         // Atualizar ativo
         const updateData: any = {
-          status_id: asset.statusId || 2, // Default para "Alugado"
+          status_id: statusId,
         };
 
         if (asset.type === 'CHIP') {
@@ -109,8 +139,9 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         const associationData = {
           asset_id: asset.uuid,
           client_id: client.uuid,
-          entry_date: currentDate,
-          association_id: asset.statusId === 3 ? 2 : 1, // 2 = assinatura, 1 = aluguel
+          entry_date: associationConfig.entryDate,
+          exit_date: associationConfig.exitDate || null,
+          association_id: associationTypeId,
           plan_id: asset.plan_id || 1, // Default plan
           notes: asset.notes || null,
           gb: asset.gb || 0,
@@ -143,6 +174,69 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Configuração da Associação */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-blue-500" />
+            Configuração da Associação
+          </CardTitle>
+          <CardDescription>
+            Configure o tipo de associação e as datas
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Tipo de Associação */}
+            <div className="space-y-2">
+              <Label htmlFor="association-type">Tipo de Associação</Label>
+              <Select
+                value={associationConfig.type}
+                onValueChange={(value: 'aluguel' | 'assinatura') => 
+                  setAssociationConfig(prev => ({ ...prev, type: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aluguel">Aluguel</SelectItem>
+                  <SelectItem value="assinatura">Assinatura</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Data de Entrada */}
+            <div className="space-y-2">
+              <Label htmlFor="entry-date">Data de Entrada *</Label>
+              <Input
+                id="entry-date"
+                type="date"
+                value={associationConfig.entryDate}
+                onChange={(e) => 
+                  setAssociationConfig(prev => ({ ...prev, entryDate: e.target.value }))
+                }
+                required
+              />
+            </div>
+
+            {/* Data de Saída */}
+            <div className="space-y-2">
+              <Label htmlFor="exit-date">Data de Saída (opcional)</Label>
+              <Input
+                id="exit-date"
+                type="date"
+                value={associationConfig.exitDate}
+                onChange={(e) => 
+                  setAssociationConfig(prev => ({ ...prev, exitDate: e.target.value }))
+                }
+                min={associationConfig.entryDate}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -172,7 +266,38 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                 </div>
                 <div>
                   <span className="font-medium">Telefone:</span>
-                  <p className="text-muted-foreground">{formatPhoneNumber(client.contato)}</p>
+                  <p className="text-muted-foreground">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Resumo da associação */}
+          <div className="space-y-4">
+            <h3 className="font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Associação
+            </h3>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Tipo:</span>
+                  <p className="text-muted-foreground capitalize">{associationConfig.type}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Data de Entrada:</span>
+                  <p className="text-muted-foreground">
+                    {new Date(associationConfig.entryDate).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium">Data de Saída:</span>
+                  <p className="text-muted-foreground">
+                    {associationConfig.exitDate 
+                      ? new Date(associationConfig.exitDate).toLocaleDateString('pt-BR')
+                      : 'Não definida'
+                    }
+                  </p>
                 </div>
               </div>
             </div>

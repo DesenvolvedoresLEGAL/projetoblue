@@ -2,8 +2,17 @@
 export const formatPhoneNumber = (phone: string | number): string => {
   if (!phone) return '';
   
-  // Converte para string e remove todos os caracteres não numéricos
-  const cleanPhone = phone.toString().replace(/\D/g, '');
+  // Converte para string e trata notação científica
+  let phoneStr = '';
+  if (typeof phone === 'number') {
+    // Converte número para string sem notação científica
+    phoneStr = phone.toFixed(0);
+  } else {
+    phoneStr = phone.toString();
+  }
+  
+  // Remove todos os caracteres não numéricos
+  const cleanPhone = phoneStr.replace(/\D/g, '');
   
   // Se tem 11 dígitos (celular com DDD)
   if (cleanPhone.length === 11) {
@@ -32,4 +41,24 @@ export const formatPhoneNumber = (phone: string | number): string => {
 export const normalizePhoneForSearch = (phone: string): string => {
   // Remove todos os caracteres não numéricos para busca
   return phone.replace(/\D/g, '');
+};
+
+// Nova função para converter notação científica
+export const parsePhoneFromScientific = (phone: string | number): string => {
+  if (!phone) return '';
+  
+  if (typeof phone === 'number') {
+    // Converte número para string sem notação científica
+    return phone.toFixed(0);
+  }
+  
+  // Se é string mas parece notação científica (ex: "1.1999999e+10")
+  if (typeof phone === 'string' && phone.includes('e+')) {
+    const numericValue = parseFloat(phone);
+    if (!isNaN(numericValue)) {
+      return numericValue.toFixed(0);
+    }
+  }
+  
+  return phone.toString();
 };

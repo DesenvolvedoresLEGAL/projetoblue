@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Plus, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2, List } from "lucide-react";
 import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
-import { formatPhoneNumber } from '@/utils/phoneFormatter';
+import { AssetListModal } from './AssetListModal';
+import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface AssetSelectionProps {
   client: Client;
@@ -27,6 +28,8 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   onProceed
 }) => {
   const [isAddingAsset, setIsAddingAsset] = useState(false);
+  const [showEquipmentList, setShowEquipmentList] = useState(false);
+  const [showChipList, setShowChipList] = useState(false);
 
   const handleAssetFound = (asset: SelectedAsset) => {
     onAssetAdded(asset);
@@ -56,7 +59,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             </div>
             <div>
               <span className="font-medium">Telefone:</span>
-              <p className="text-muted-foreground">{formatPhoneNumber(client.contato)}</p>
+              <p className="text-muted-foreground">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</p>
             </div>
           </div>
         </CardContent>
@@ -111,7 +114,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             </div>
           )}
 
-          {/* Formulário para adicionar novo ativo */}
+          {/* Opções para adicionar novos ativos */}
           {isAddingAsset ? (
             <div className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
@@ -130,14 +133,37 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
               />
             </div>
           ) : (
-            <Button
-              variant="outline"
-              onClick={() => setIsAddingAsset(true)}
-              className="w-full flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Adicionar Ativo
-            </Button>
+            <div className="space-y-3">
+              {/* Botão para busca rápida */}
+              <Button
+                variant="outline"
+                onClick={() => setIsAddingAsset(true)}
+                className="w-full flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Buscar Ativo (Rápido)
+              </Button>
+
+              {/* Botões para visualizar listas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowEquipmentList(true)}
+                  className="flex items-center gap-2"
+                >
+                  <List className="h-4 w-4" />
+                  📡 Ver Equipamentos Disponíveis
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowChipList(true)}
+                  className="flex items-center gap-2"
+                >
+                  <List className="h-4 w-4" />
+                  📱 Ver CHIPs Disponíveis
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Botão para continuar */}
@@ -148,6 +174,23 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Modais de listagem */}
+      <AssetListModal
+        open={showEquipmentList}
+        onOpenChange={setShowEquipmentList}
+        onAssetSelected={handleAssetFound}
+        selectedAssets={selectedAssets}
+        type="equipment"
+      />
+
+      <AssetListModal
+        open={showChipList}
+        onOpenChange={setShowChipList}
+        onAssetSelected={handleAssetFound}
+        selectedAssets={selectedAssets}
+        type="chip"
+      />
     </div>
   );
 };

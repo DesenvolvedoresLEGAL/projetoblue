@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/asset';
 import { toast } from 'sonner';
 import { ClientForm } from './ClientForm';
-import { formatPhoneNumber, normalizePhoneForSearch } from '@/utils/phoneFormatter';
+import { formatPhoneNumber, normalizePhoneForSearch, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface ClientSelectionProps {
   onClientSelected: (client: Client) => void;
@@ -28,7 +28,8 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
       let query = supabase
         .from('clients')
         .select('*')
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .order('nome');
 
       if (searchTerm.trim()) {
         const term = searchTerm.trim();
@@ -51,7 +52,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         }
       }
 
-      const { data, error } = await query.order('nome');
+      const { data, error } = await query.limit(50); // Limita resultados para performance
       
       if (error) {
         console.error('Error fetching clients:', error);
@@ -117,7 +118,10 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
               Carregando clientes...
             </div>
           ) : clients.length > 0 ? (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              <div className="text-sm text-muted-foreground mb-2">
+                {clients.length} cliente(s) encontrado(s):
+              </div>
               {clients.map((client) => (
                 <div
                   key={client.id}
@@ -126,7 +130,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                 >
                   <div className="font-medium">{client.nome}</div>
                   <div className="text-sm text-muted-foreground">
-                    CNPJ: {client.cnpj} | Telefone: {formatPhoneNumber(client.contato)}
+                    CNPJ: {client.cnpj} | Telefone: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
                   </div>
                   {client.email && (
                     <div className="text-sm text-muted-foreground">
@@ -152,7 +156,10 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
           ) : (
             <div className="text-center py-8 space-y-4">
               <div className="text-muted-foreground">
-                Digite para buscar clientes ou cadastre um novo
+                Digite para buscar clientes existentes
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Você também pode visualizar todos os clientes deixando o campo vazio ou cadastrar um novo
               </div>
               <Button
                 onClick={() => setIsNewClientModalOpen(true)}
