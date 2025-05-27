@@ -7,6 +7,8 @@ import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ConfirmationModal } from './ConfirmationModal';
+import { formatPhoneNumber } from '@/utils/phoneFormatter';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -22,19 +24,30 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
   onBack
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showKnowWhatImDoingModal, setShowKnowWhatImDoingModal] = useState(false);
 
-  const handleSubmit = async () => {
+  const validateBusinessRules = () => {
+    const speedyAssets = assets.filter(asset => 
+      asset.solucao === 'SPEEDY 5G' || asset.solution_id === 1
+    );
+    const chipAssets = assets.filter(asset => asset.type === 'CHIP');
+
+    return {
+      hasSpeedyWithoutChip: speedyAssets.length > 0 && chipAssets.length === 0,
+      speedyCount: speedyAssets.length,
+      chipCount: chipAssets.length
+    };
+  };
+
+  const handleSubmit = async (forceSubmit = false) => {
     setIsSubmitting(true);
 
     try {
-      // Validar regra SPEEDY + CHIP
-      const speedyAssets = assets.filter(asset => 
-        asset.solucao === 'SPEEDY 5G' || asset.solution_id === 1
-      );
-      const chipAssets = assets.filter(asset => asset.type === 'CHIP');
+      const validation = validateBusinessRules();
 
-      if (speedyAssets.length > 0 && chipAssets.length === 0) {
-        toast.error('Equipamentos SPEEDY 5G requerem associação com CHIP');
+      // Validar regra SPEEDY + CHIP (se não forçou submissão)
+      if (!forceSubmit && validation.hasSpeedyWithoutChip) {
+        setShowKnowWhatImDoingModal(true);
         setIsSubmitting(false);
         return;
       }
@@ -126,6 +139,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
     }
   };
 
+  const validation = validateBusinessRules();
+
   return (
     <div className="space-y-6">
       <Card>
@@ -157,7 +172,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                 </div>
                 <div>
                   <span className="font-medium">Telefone:</span>
-                  <p className="text-muted-foreground">{client.contato}</p>
+                  <p className="text-muted-foreground">{formatPhoneNumber(client.contato)}</p>
                 </div>
               </div>
             </div>
@@ -184,7 +199,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                     {asset.type === 'CHIP' ? (
                       <>
                         <div>ICCID: {asset.iccid}</div>
-                        <div>Linha: {asset.line_number}</div>
+                        <div>Linha: {formatPhoneNumber(asset.line_number || '')}</div>
                         <div>GB: {asset.gb || 0}</div>
                         <div>Plano: {asset.plan_id || 'Não informado'}</div>
                       </>
@@ -212,8 +227,14 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
 
           {/* Validações */}
           <div className="space-y-2">
-            {assets.filter(a => a.solucao === 'SPEEDY 5G').length > 0 && 
-             assets.filter(a => a.type === 'CHIP').length > 0 && (
+            {validation.hasSpeedyWithoutChip && (
+              <div className="flex items-center gap-2 text-amber-600 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                Atenção: Equipamento SPEEDY 5G sem CHIP associado
+              </div>
+            )}
+            
+            {!validation.hasSpeedyWithoutChip && validation.speedyCount > 0 && validation.chipCount > 0 && (
               <div className="flex items-center gap-2 text-green-600 text-sm">
                 <CheckCircle className="h-4 w-4" />
                 Regra SPEEDY + CHIP validada
@@ -239,7 +260,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
               Voltar
             </Button>
             <Button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(false)}
               disabled={isSubmitting}
               className="flex-1"
             >
@@ -248,6 +269,18 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal "Sei o que estou fazendo" */}
+      <ConfirmationModal
+        open={showKnowWhatImDoingModal}
+        onOpenChange={setShowKnowWhatImDoingModal}
+        title="Associação sem CHIP"
+        description={`Você está associando ${validation.speedyCount} equipamento(s) SPEEDY 5G sem nenhum CHIP. Esta configuração pode não funcionar adequadamente. Tem certeza que deseja continuar?`}
+        confirmText="Sei o que estou fazendo"
+        cancelText="Cancelar"
+        variant="destructive"
+        onConfirm={() => handleSubmit(true)}
+      />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/asset';
 import { toast } from 'sonner';
 import { ClientForm } from './ClientForm';
+import { formatPhoneNumber, normalizePhoneForSearch } from '@/utils/phoneFormatter';
 
 interface ClientSelectionProps {
   onClientSelected: (client: Client) => void;
@@ -19,9 +20,8 @@ interface ClientSelectionProps {
 export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelected }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Buscar clientes
+  // Buscar clientes com busca aprimorada
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients', searchTerm],
     queryFn: async () => {
@@ -31,8 +31,24 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         .is('deleted_at', null);
 
       if (searchTerm.trim()) {
-        const term = `%${searchTerm.trim()}%`;
-        query = query.or(`nome.ilike.${term},cnpj.ilike.${term},contato::text.ilike.${term}`);
+        const term = searchTerm.trim();
+        const normalizedPhone = normalizePhoneForSearch(term);
+        
+        // Busca por nome (case-insensitive), CNPJ ou telefone
+        if (normalizedPhone && normalizedPhone.length >= 2) {
+          // Se o termo contém apenas números, busca também por telefone
+          query = query.or(
+            `nome.ilike.%${term}%,` +
+            `cnpj.ilike.%${term}%,` +
+            `contato::text.ilike.%${normalizedPhone}%`
+          );
+        } else {
+          // Busca apenas por nome e CNPJ se não for numérico
+          query = query.or(
+            `nome.ilike.%${term}%,` +
+            `cnpj.ilike.%${term}%`
+          );
+        }
       }
 
       const { data, error } = await query.order('nome');
@@ -67,8 +83,6 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
     toast.success('Cliente cadastrado com sucesso!');
   };
 
-  const filteredClients = clients;
-
   return (
     <Card>
       <CardHeader>
@@ -102,9 +116,9 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
             <div className="text-center py-8 text-muted-foreground">
               Carregando clientes...
             </div>
-          ) : filteredClients.length > 0 ? (
+          ) : clients.length > 0 ? (
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredClients.map((client) => (
+              {clients.map((client) => (
                 <div
                   key={client.id}
                   className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors"
@@ -112,7 +126,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                 >
                   <div className="font-medium">{client.nome}</div>
                   <div className="text-sm text-muted-foreground">
-                    CNPJ: {client.cnpj} | Telefone: {client.contato}
+                    CNPJ: {client.cnpj} | Telefone: {formatPhoneNumber(client.contato)}
                   </div>
                   {client.email && (
                     <div className="text-sm text-muted-foreground">

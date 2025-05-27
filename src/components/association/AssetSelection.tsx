@@ -7,6 +7,7 @@ import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
+import { formatPhoneNumber } from '@/utils/phoneFormatter';
 
 interface AssetSelectionProps {
   client: Client;
@@ -55,7 +56,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             </div>
             <div>
               <span className="font-medium">Telefone:</span>
-              <p className="text-muted-foreground">{client.contato}</p>
+              <p className="text-muted-foreground">{formatPhoneNumber(client.contato)}</p>
             </div>
           </div>
         </CardContent>

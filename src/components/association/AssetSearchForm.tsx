@@ -39,19 +39,27 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
           asset_status(id, status),
           asset_solutions(id, solution)
         `)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .eq('status_id', 1); // Apenas ativos disponíveis
 
+      // Filtro por tipo e campo específico
       if (searchType === 'chip') {
-        query = query.eq('iccid', searchValue.trim());
+        // Para CHIP: busca por ICCID (parcial - começa com) e solution_id = 11
+        query = query
+          .eq('solution_id', 11)
+          .ilike('iccid', `${searchValue.trim()}%`);
       } else {
-        query = query.eq('radio', searchValue.trim());
+        // Para equipamento: busca por rádio (exato) e solution_id != 11
+        query = query
+          .neq('solution_id', 11)
+          .eq('radio', searchValue.trim());
       }
 
       const { data, error } = await query.single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-          toast.error(`${searchType === 'chip' ? 'CHIP' : 'Equipamento'} não encontrado`);
+          toast.error(`${searchType === 'chip' ? 'CHIP' : 'Equipamento'} não encontrado ou não disponível`);
         } else {
           console.error('Search error:', error);
           toast.error('Erro ao buscar ativo');
@@ -65,9 +73,16 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
         return;
       }
 
-      // Verificar se está disponível
-      if (data.status_id !== 1) { // Assumindo que 1 = Disponível
-        toast.error('Este ativo não está disponível para associação');
+      // Verificar se o ativo está associado atualmente
+      const { data: associationCheck } = await supabase
+        .from('asset_client_assoc')
+        .select('id')
+        .eq('asset_id', data.uuid)
+        .is('exit_date', null)
+        .limit(1);
+
+      if (associationCheck && associationCheck.length > 0) {
+        toast.error('Este ativo já está associado a outro cliente');
         return;
       }
 
@@ -93,8 +108,8 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
         carrier: 'Unknown',
         uniqueId: data.uuid,
         brand: data.manufacturers?.name || '',
-        ssid: '',
-        password: '',
+        ssid: '#WiFi.LEGAL',
+        password: '123legal',
         serialNumber: data.serial_number || ''
       };
 
@@ -150,7 +165,7 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder={
               searchType === 'chip' 
-                ? 'Digite o ICCID...' 
+                ? 'Digite o ICCID (busca parcial)...' 
                 : 'Digite o número do rádio...'
             }
             disabled={isSearching}
@@ -172,7 +187,8 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
 
       {searchType === 'chip' && (
         <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded">
-          <strong>Nota:</strong> CHIPs só podem ser associados junto com equipamentos SPEEDY 5G.
+          <strong>Nota:</strong> CHIPs são recomendados para equipamentos SPEEDY 5G. 
+          A busca por ICCID permite correspondência parcial (começa com).
         </div>
       )}
     </div>
