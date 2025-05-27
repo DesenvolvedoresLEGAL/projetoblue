@@ -299,7 +299,7 @@ const RefactoredAssetStatusDistributionCard = ({ dashboardStats }: { dashboardSt
           Distribuição dos ativos por status (passe o mouse para ver detalhes por tipo)
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-row pt-0 h-[300px] sm:h-[220px] xs:h-[180px] items-center">
+      <CardContent className="flex p-[1rem] flex-row pt-0 h-full items-center">
         <div className="h-full w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -307,13 +307,13 @@ const RefactoredAssetStatusDistributionCard = ({ dashboardStats }: { dashboardSt
                 data={statusChartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={window.innerWidth <= 768 ? 28 : 40}
-                outerRadius={window.innerWidth <= 768 ? 38 : 70}
+                innerRadius={window.innerWidth <= 640 ? 28 : 40}
+                outerRadius={window.innerWidth <= 640 ? 38 : 70}
                 fill="#8884d8"
                 paddingAngle={5}
                 dataKey="total"
                 nameKey="status"
-                label={window.innerWidth <= 768 ? false : ({ status, total }) => `${status}: ${total}`}
+                label={window.innerWidth <= 640 ? false : ({ status, total }) => `${status}: ${total}`}
                 labelLine={false}
               >
                 {statusChartData.map((entry, index) => (
@@ -322,9 +322,9 @@ const RefactoredAssetStatusDistributionCard = ({ dashboardStats }: { dashboardSt
               </Pie>
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                layout={window.innerWidth <= 768 ? "horizontal" : "vertical"}
-                verticalAlign={window.innerWidth <= 768 ? "bottom" : "middle"}
-                align={window.innerWidth <= 768 ? "center" : "right"}
+                layout={window.innerWidth <= 640 ? "horizontal" : "vertical"}
+                verticalAlign={window.innerWidth <= 640 ? "bottom" : "middle"}
+                align={window.innerWidth <= 640 ? "center" : "right"}
                 iconSize={12}
               />
             </PieChart>
