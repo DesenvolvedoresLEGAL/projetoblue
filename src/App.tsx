@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import AssetsDashboard from "./pages/AssetsDashboard";
 import AssetsInventory from "./pages/AssetsInventory";
 import AssetsManagement from "./pages/AssetsManagement";
 import AssetAssociation from "./pages/AssetAssociation";
+import AssociationsList from "./pages/AssociationsList";
 import Clients from "./pages/Clients";
 import Association from "./pages/Association";
 import Subscriptions from "./pages/Subscriptions";
@@ -99,6 +99,7 @@ const App = () => (
                       <Route path="inventory" element={<AssetsInventory />} />
                       <Route path="register" element={<RegisterAsset />} />
                       <Route path="association" element={<AssetAssociation />} />
+                      <Route path="associations-list" element={<AssociationsList />} />
                     </Route>
                     
                     {/* Topology module routes */}
