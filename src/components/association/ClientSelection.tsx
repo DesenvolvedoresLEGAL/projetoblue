@@ -21,7 +21,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  // Buscar clientes com busca aprimorada
+  // Buscar clientes com busca aprimorada por nome, CNPJ e telefone
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients', searchTerm],
     queryFn: async () => {
@@ -52,10 +52,10 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         }
       }
 
-      const { data, error } = await query.limit(50); // Limita resultados para performance
+      const { data, error } = await query.limit(50);
       
       if (error) {
-        console.error('Error fetching clients:', error);
+        console.error('Erro ao buscar clientes:', error);
         throw error;
       }
 
@@ -76,12 +76,13 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
 
   const handleClientSelect = (client: Client) => {
     onClientSelected(client);
+    toast.success(`Cliente ${client.nome} selecionado com sucesso!`);
   };
 
   const handleNewClientCreated = (newClient: Client) => {
     setIsNewClientModalOpen(false);
     onClientSelected(newClient);
-    toast.success('Cliente cadastrado com sucesso!');
+    toast.success('Cliente cadastrado e selecionado com sucesso!');
   };
 
   return (
@@ -96,7 +97,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Campo de busca */}
+        {/* Campo de busca aprimorado */}
         <div className="space-y-2">
           <Label htmlFor="search">Buscar Cliente</Label>
           <div className="relative">
@@ -109,9 +110,12 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
               className="pl-10"
             />
           </div>
+          <div className="text-xs text-muted-foreground">
+            Exemplos: "João Silva", "12.345.678/0001-90", "(11) 99999-9999"
+          </div>
         </div>
 
-        {/* Lista de clientes */}
+        {/* Lista de clientes com melhor visualização */}
         <div className="space-y-2">
           {isLoadingClients ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -125,12 +129,15 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
               {clients.map((client) => (
                 <div
                   key={client.id}
-                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
                   onClick={() => handleClientSelect(client)}
                 >
-                  <div className="font-medium">{client.nome}</div>
+                  <div className="font-medium text-primary">{client.nome}</div>
                   <div className="text-sm text-muted-foreground">
-                    CNPJ: {client.cnpj} | Telefone: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
+                    CNPJ: {client.cnpj}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Telefone: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
                   </div>
                   {client.email && (
                     <div className="text-sm text-muted-foreground">
@@ -159,7 +166,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                 Digite para buscar clientes existentes
               </div>
               <div className="text-sm text-muted-foreground">
-                Você também pode visualizar todos os clientes deixando o campo vazio ou cadastrar um novo
+                Busca por nome, CNPJ ou telefone
               </div>
               <Button
                 onClick={() => setIsNewClientModalOpen(true)}

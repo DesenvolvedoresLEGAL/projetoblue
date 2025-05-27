@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ConfirmationModal } from './ConfirmationModal';
 import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
+import { useQuery } from '@tanstack/react-query';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -39,6 +40,43 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
     entryDate: new Date().toISOString().split('T')[0],
     exitDate: ''
   });
+
+  // Buscar dados de referência para exibir nomes legíveis
+  const { data: referenceData } = useQuery({
+    queryKey: ['reference-data'],
+    queryFn: async () => {
+      const [plansResponse, manufacturersResponse, solutionsResponse, statusResponse] = await Promise.all([
+        supabase.from('plans').select('id, nome').is('deleted_at', null),
+        supabase.from('manufacturers').select('id, name').is('deleted_at', null),
+        supabase.from('asset_solutions').select('id, solution').is('deleted_at', null),
+        supabase.from('asset_status').select('id, status').is('deleted_at', null)
+      ]);
+
+      return {
+        plans: plansResponse.data || [],
+        manufacturers: manufacturersResponse.data || [],
+        solutions: solutionsResponse.data || [],
+        status: statusResponse.data || []
+      };
+    }
+  });
+
+  const getReadableName = (type: 'plan' | 'manufacturer' | 'solution' | 'status', id?: number) => {
+    if (!referenceData || !id) return 'Não informado';
+    
+    switch (type) {
+      case 'plan':
+        return referenceData.plans.find(p => p.id === id)?.nome || 'Plano não encontrado';
+      case 'manufacturer':
+        return referenceData.manufacturers.find(m => m.id === id)?.name || 'Fabricante não encontrado';
+      case 'solution':
+        return referenceData.solutions.find(s => s.id === id)?.solution || 'Solução não encontrada';
+      case 'status':
+        return referenceData.status.find(s => s.id === id)?.status || 'Status não encontrado';
+      default:
+        return 'Não informado';
+    }
+  };
 
   const validateBusinessRules = () => {
     const speedyAssets = assets.filter(asset => 
@@ -129,7 +167,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           .eq('uuid', asset.uuid);
 
         if (updateError) {
-          console.error('Error updating asset:', updateError);
+          console.error('Erro ao atualizar ativo:', updateError);
           toast.error(`Erro ao atualizar ativo ${asset.type === 'CHIP' ? asset.iccid : asset.radio}`);
           setIsSubmitting(false);
           return;
@@ -154,16 +192,17 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           .insert(associationData);
 
         if (assocError) {
-          console.error('Error creating association:', assocError);
+          console.error('Erro ao criar associação:', assocError);
           toast.error(`Erro ao criar associação para ${asset.type === 'CHIP' ? asset.iccid : asset.radio}`);
           setIsSubmitting(false);
           return;
         }
       }
 
+      toast.success(`Associação criada com sucesso! ${assets.length} ativo(s) associado(s) ao cliente ${client.nome}.`);
       onComplete();
     } catch (error) {
-      console.error('Error in association submission:', error);
+      console.error('Erro na criação da associação:', error);
       toast.error('Erro inesperado ao criar associações');
     } finally {
       setIsSubmitting(false);
@@ -189,7 +228,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Tipo de Associação */}
             <div className="space-y-2">
-              <Label htmlFor="association-type">Tipo de Associação</Label>
+              <Label htmlFor="association-type">Tipo de Associação *</Label>
               <Select
                 value={associationConfig.type}
                 onValueChange={(value: 'aluguel' | 'assinatura') => 
@@ -303,7 +342,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
             </div>
           </div>
 
-          {/* Resumo dos ativos */}
+          {/* Resumo dos ativos com nomes legíveis */}
           <div className="space-y-4">
             <h3 className="font-medium flex items-center gap-2">
               <Package className="h-4 w-4" />
@@ -326,7 +365,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                         <div>ICCID: {asset.iccid}</div>
                         <div>Linha: {formatPhoneNumber(asset.line_number || '')}</div>
                         <div>GB: {asset.gb || 0}</div>
-                        <div>Plano: {asset.plan_id || 'Não informado'}</div>
+                        <div>Plano: {getReadableName('plan', asset.plan_id)}</div>
+                        <div>Fabricante: {getReadableName('manufacturer', asset.manufacturer_id)}</div>
                       </>
                     ) : (
                       <>
@@ -336,6 +376,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                         <div>Dias Aluguel: {asset.rented_days || 0}</div>
                         <div>SSID: {asset.ssid || '#WiFi.LEGAL'}</div>
                         <div>Senha: {asset.password || '123legal'}</div>
+                        <div>Fabricante: {getReadableName('manufacturer', asset.manufacturer_id)}</div>
+                        <div>Solução: {getReadableName('solution', asset.solution_id)}</div>
                       </>
                     )}
                   </div>
@@ -353,21 +395,21 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           {/* Validações */}
           <div className="space-y-2">
             {validation.hasSpeedyWithoutChip && (
-              <div className="flex items-center gap-2 text-amber-600 text-sm">
+              <div className="flex items-center gap-2 text-amber-600 text-sm bg-amber-50 p-3 rounded border-l-4 border-amber-400">
                 <AlertCircle className="h-4 w-4" />
                 Atenção: Equipamento SPEEDY 5G sem CHIP associado
               </div>
             )}
             
             {!validation.hasSpeedyWithoutChip && validation.speedyCount > 0 && validation.chipCount > 0 && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded border-l-4 border-green-400">
                 <CheckCircle className="h-4 w-4" />
                 Regra SPEEDY + CHIP validada
               </div>
             )}
             
             {assets.length > 0 && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded border-l-4 border-green-400">
                 <CheckCircle className="h-4 w-4" />
                 {assets.length} ativo(s) selecionado(s)
               </div>

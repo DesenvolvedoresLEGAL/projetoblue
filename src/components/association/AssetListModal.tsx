@@ -4,11 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Search, Package, Smartphone } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
+import { toast } from 'sonner';
+import { Search, Package } from "lucide-react";
 
 interface AssetListModalProps {
   open: boolean;
@@ -27,6 +27,7 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Buscar ativos disponíveis
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ['available-assets', type, searchTerm],
     queryFn: async () => {
@@ -40,15 +41,16 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
           asset_solutions(id, solution)
         `)
         .is('deleted_at', null)
-        .eq('status_id', 1); // Apenas ativos disponíveis
+        .eq('status_id', 1); // Apenas disponíveis
 
+      // Filtrar por tipo
       if (type === 'chip') {
-        query = query.eq('solution_id', 11); // CHIPs
+        query = query.eq('solution_id', 11);
         if (searchTerm.trim()) {
           query = query.ilike('iccid', `%${searchTerm.trim()}%`);
         }
       } else {
-        query = query.neq('solution_id', 11); // Equipamentos (não CHIPs)
+        query = query.neq('solution_id', 11);
         if (searchTerm.trim()) {
           query = query.or(
             `radio.ilike.%${searchTerm.trim()}%,` +
@@ -58,18 +60,25 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
         }
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
+      // Verificar quais ativos já estão associados
+      const { data: associatedAssets } = await supabase
+        .from('asset_client_assoc')
+        .select('asset_id')
+        .is('exit_date', null);
+
+      const associatedIds = associatedAssets?.map(a => a.asset_id) || [];
+
+      const { data, error } = await query
+        .not('uuid', 'in', `(${associatedIds.join(',')})`)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
-        console.error('Error fetching assets:', error);
+        console.error('Erro ao buscar ativos:', error);
         throw error;
       }
 
-      // Filtrar ativos já selecionados
-      const alreadySelected = selectedAssets.map(a => a.uuid);
-      const availableAssets = data?.filter(asset => !alreadySelected.includes(asset.uuid)) || [];
-
-      return availableAssets.map(asset => ({
+      return data.map(asset => ({
         id: asset.uuid,
         uuid: asset.uuid,
         type: asset.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
@@ -99,103 +108,112 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
   });
 
   const handleAssetSelect = (asset: SelectedAsset) => {
+    // Verificar se já foi selecionado
+    if (selectedAssets.some(selected => selected.uuid === asset.uuid)) {
+      toast.error('Este ativo já foi selecionado');
+      return;
+    }
+
     onAssetSelected(asset);
     onOpenChange(false);
-    setSearchTerm('');
+    toast.success(`${type === 'chip' ? 'CHIP' : 'Equipamento'} adicionado com sucesso!`);
   };
+
+  const filteredAssets = assets.filter(asset => 
+    !selectedAssets.some(selected => selected.uuid === asset.uuid)
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {type === 'chip' ? <Smartphone className="h-5 w-5" /> : <Package className="h-5 w-5" />}
-            Selecionar {type === 'chip' ? 'CHIP' : 'Equipamento'}
+            <Package className="h-5 w-5" />
+            {type === 'chip' ? '📱 CHIPs Disponíveis' : '📡 Equipamentos Disponíveis'}
           </DialogTitle>
           <DialogDescription>
-            {type === 'chip' 
-              ? 'Escolha um CHIP disponível para associar'
-              : 'Escolha um equipamento disponível para associar'
-            }
+            Selecione {type === 'chip' ? 'um CHIP' : 'um equipamento'} da lista abaixo
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          {/* Campo de busca */}
-          <div className="space-y-2">
-            <Label htmlFor="asset-search">
-              {type === 'chip' ? 'Buscar por ICCID' : 'Buscar por Rádio, Serial ou Modelo'}
-            </Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                id="asset-search"
-                placeholder={type === 'chip' ? 'Digite o ICCID...' : 'Digite rádio, serial ou modelo...'}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {/* Campo de busca */}
+        <div className="space-y-2">
+          <Label htmlFor="modal-search">
+            Buscar {type === 'chip' ? 'por ICCID' : 'por rádio, serial ou modelo'}
+          </Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              id="modal-search"
+              placeholder={type === 'chip' ? 'Digite ICCID...' : 'Digite rádio, serial ou modelo...'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Lista de ativos */}
+        <div className="flex-1 overflow-y-auto max-h-96 space-y-2">
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Carregando ativos...
             </div>
-          </div>
-
-          {/* Lista de ativos */}
-          <div className="flex-1 overflow-y-auto">
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando ativos...
+          ) : filteredAssets.length > 0 ? (
+            <>
+              <div className="text-sm text-muted-foreground mb-2">
+                {filteredAssets.length} {type === 'chip' ? 'CHIP(s)' : 'equipamento(s)'} disponível(eis):
               </div>
-            ) : assets.length > 0 ? (
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground mb-2">
-                  {assets.length} {type === 'chip' ? 'CHIP(s)' : 'equipamento(s)'} disponível(is):
-                </div>
-                {assets.map((asset) => (
-                  <div
-                    key={asset.uuid}
-                    className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => handleAssetSelect(asset)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium flex items-center gap-2">
+              {filteredAssets.map((asset) => (
+                <div
+                  key={asset.uuid}
+                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
+                  onClick={() => handleAssetSelect(asset)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-primary flex items-center gap-2">
                         {type === 'chip' ? '📱' : '📡'} 
-                        {asset.solucao}
+                        {asset.solucao || 'Sem solução'}
+                        {asset.marca && ` - ${asset.marca}`}
                       </div>
-                      <Badge variant="secondary">{asset.status}</Badge>
+                      <div className="text-sm text-muted-foreground">
+                        {type === 'chip' ? (
+                          <>
+                            <div>ICCID: {asset.iccid}</div>
+                            {asset.line_number && <div>Linha: {asset.line_number}</div>}
+                          </>
+                        ) : (
+                          <>
+                            <div>Rádio: {asset.radio}</div>
+                            <div>Serial: {asset.serial_number}</div>
+                            <div>Modelo: {asset.model}</div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                      {type === 'chip' ? (
-                        <>
-                          <div>ICCID: {asset.iccid}</div>
-                          <div>Linha: {asset.line_number || 'Não informada'}</div>
-                        </>
-                      ) : (
-                        <>
-                          <div>Rádio: {asset.radio || 'Não informado'}</div>
-                          <div>Serial: {asset.serial_number || 'Não informado'}</div>
-                          <div>Modelo: {asset.model || 'Não informado'}</div>
-                          <div>Fabricante: {asset.marca || 'Não informado'}</div>
-                        </>
-                      )}
-                    </div>
+                    <Button size="sm" variant="outline">
+                      Selecionar
+                    </Button>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchTerm.trim() 
-                  ? `Nenhum ${type === 'chip' ? 'CHIP' : 'equipamento'} encontrado para "${searchTerm}"`
-                  : `Nenhum ${type === 'chip' ? 'CHIP' : 'equipamento'} disponível`
-                }
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </>
+          ) : searchTerm.trim() ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum {type === 'chip' ? 'CHIP' : 'equipamento'} encontrado para "{searchTerm}"
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum {type === 'chip' ? 'CHIP' : 'equipamento'} disponível no momento
+            </div>
+          )}
+        </div>
 
-          <div className="flex justify-end pt-4 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-          </div>
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fechar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

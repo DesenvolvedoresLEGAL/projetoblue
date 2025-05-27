@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SelectedAsset } from '@/pages/AssetAssociation';
@@ -61,7 +60,7 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
         if (error.code === 'PGRST116') {
           toast.error(`${searchType === 'chip' ? 'CHIP' : 'Equipamento'} não encontrado ou não disponível`);
         } else {
-          console.error('Search error:', error);
+          console.error('Erro na busca:', error);
           toast.error('Erro ao buscar ativo');
         }
         return;
@@ -118,7 +117,7 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
       toast.success(`${searchType === 'chip' ? 'CHIP' : 'Equipamento'} encontrado e adicionado!`);
 
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('Erro na busca:', error);
       toast.error('Erro inesperado ao buscar ativo');
     } finally {
       setIsSearching(false);
@@ -127,30 +126,33 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Seletor de tipo */}
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant={searchType === 'equipment' ? 'default' : 'outline'}
-          onClick={() => {
-            setSearchType('equipment');
-            setSearchValue('');
-          }}
-          className="flex-1"
-        >
-          📡 Equipamento (por Rádio)
-        </Button>
-        <Button
-          type="button"
-          variant={searchType === 'chip' ? 'default' : 'outline'}
-          onClick={() => {
-            setSearchType('chip');
-            setSearchValue('');
-          }}
-          className="flex-1"
-        >
-          📱 CHIP (por ICCID)
-        </Button>
+      {/* Seletor de tipo melhorado */}
+      <div className="space-y-2">
+        <Label>Tipo de Ativo</Label>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={searchType === 'equipment' ? 'default' : 'outline'}
+            onClick={() => {
+              setSearchType('equipment');
+              setSearchValue('');
+            }}
+            className="flex-1"
+          >
+            📡 Equipamento
+          </Button>
+          <Button
+            type="button"
+            variant={searchType === 'chip' ? 'default' : 'outline'}
+            onClick={() => {
+              setSearchType('chip');
+              setSearchValue('');
+            }}
+            className="flex-1"
+          >
+            📱 CHIP
+          </Button>
+        </div>
       </div>
 
       {/* Campo de busca */}
@@ -183,11 +185,17 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
             {isSearching ? 'Buscando...' : 'Buscar'}
           </Button>
         </div>
+        <div className="text-xs text-muted-foreground">
+          {searchType === 'chip' 
+            ? 'Exemplo: 8955041...' 
+            : 'Exemplo: 1001, 2045'
+          }
+        </div>
       </div>
 
       {searchType === 'chip' && (
-        <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded">
-          <strong>Nota:</strong> CHIPs são recomendados para equipamentos SPEEDY 5G. 
+        <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+          <strong>💡 Dica:</strong> CHIPs são obrigatórios para equipamentos SPEEDY 5G. 
           A busca por ICCID permite correspondência parcial (começa com).
         </div>
       )}
