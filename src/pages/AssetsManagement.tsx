@@ -1,199 +1,116 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Package, 
-  Plus, 
-  BarChart3, 
-  Search, 
-  FileText, 
-  Users,
-  Database,
-  UserCheck,
-  Share2
-} from "lucide-react";
-import { useNavigate } from 'react-router-dom';
-import { useDashboardAssets } from '@/hooks/useDashboardAssets';
-import { KpiCards } from '@/components/dashboard/KpiCards';
-import { AssetsChart } from '@/components/dashboard/AssetsChart';
+import { PlusCircle, LinkIcon, History } from "lucide-react";
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
-  const dashboardData = useDashboardAssets();
-
-  if (dashboardData.assetsStats.isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Gestão de Ativos</h1>
-            <p className="text-muted-foreground">
-              Dashboard principal para gerenciamento de ativos
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse space-y-3">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-8 bg-muted rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gestão de Ativos</h1>
-          <p className="text-muted-foreground">
-            Dashboard principal para gerenciamento de ativos
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight mb-1">
+          Gestão de Ativos
+        </h1>
+        <p className="text-muted-foreground">
+          Gerencie o cadastro, associação e histórico de ativos
+        </p>
       </div>
 
-      {/* KPIs */}
-      <KpiCards 
-        totalAssets={dashboardData.assetsStats.data.chips.total + dashboardData.assetsStats.data.speedys.total + dashboardData.assetsStats.data.equipment.total}
-        activeClients={0}
-        assetsWithIssues={dashboardData.problemAssets.data.length}
-      />
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/assets/inventory')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inventário</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
+        {/* Card Registrar Ativo */}
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/assets/register')}>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <PlusCircle className="h-6 w-6 text-primary" />
+              <CardTitle>Registrar Ativo</CardTitle>
+            </div>
+            <CardDescription>
+              Cadastre novos chips e equipamentos no sistema
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Visualizar e gerenciar todos os ativos
+          <CardContent className='flex flex-col flex-1'>
+            <p className="text-sm text-muted-foreground mb-4">
+              Adicione chips (cartões SIM) e equipamentos (roteadores, switches, etc.)
+              ao inventário com todas as informações necessárias.
             </p>
-            <Button size="sm" className="w-full mt-3" onClick={(e) => {
-              e.stopPropagation();
-              navigate('/assets/inventory');
-            }}>
-              <Search className="h-4 w-4 mr-2" />
-              Acessar Inventário
+            <Button className="w-full" onClick={() => navigate('/assets/register')}>
+              Registrar Novo Ativo
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/assets/association')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nova Associação</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+        {/* Card Associar Ativo */}
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/assets/association')}
+        >
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <LinkIcon className="h-6 w-6 text-primary" />
+              <CardTitle>Associar Ativo</CardTitle>
+            </div>
+            <CardDescription>
+              Vincule ativos existentes a clientes
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Associar ativos a clientes
-            </p>
-            <Button size="sm" className="w-full mt-3" onClick={(e) => {
-              e.stopPropagation();
-              navigate('/assets/association');
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Associação
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/assets/associations')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gestão de Associações</CardTitle>
-            <Share2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Gerenciar associações existentes
-            </p>
-            <Button size="sm" className="w-full mt-3" onClick={(e) => {
-              e.stopPropagation();
-              navigate('/assets/associations');
-            }}>
-              <BarChart3 className="h-4 w-4 mr-2" />
+          <CardContent className="flex flex-col flex-1">
+            <p className="text-sm text-muted-foreground mb-4">
+              Gerencie as associações entre ativos e clientes,
+              controlando alocações e devoluções.
+            </p>           
+              <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
               Gerenciar Associações
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/register-asset')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cadastrar Ativo</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
+
+        {/* Card Histórico de Alterações - NOVO */}
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
+          onClick={() => navigate('/history')}>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <History className="h-6 w-6 text-primary" />
+              <CardTitle>Histórico de Alterações</CardTitle>
+            </div>
+            <CardDescription>
+              Visualize o histórico completo de movimentações
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Adicionar novos ativos ao sistema
+          <CardContent className='flex flex-col flex-1'>
+            <p className="text-sm text-muted-foreground mb-4">
+              Acompanhe todas as alterações, associações e mudanças de status
+              dos ativos registrados no sistema.
             </p>
-            <Button size="sm" className="w-full mt-3" onClick={(e) => {
-              e.stopPropagation();
-              navigate('/register-asset');
-            }}>
-              <Package className="h-4 w-4 mr-2" />
-              Cadastrar Novo
+            <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
+              Ver Histórico Completo
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
-      <AssetsChart />
-
-      {/* Additional Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Gestão de Clientes
-            </CardTitle>
-            <CardDescription>
-              Gerencie os clientes e suas associações
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/clients')}
-              className="w-full"
-            >
-              Acessar Clientes
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Relatórios
-            </CardTitle>
-            <CardDescription>
-              Gere relatórios e exporte dados
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/export')}
-              className="w-full"
-            >
-              Gerar Relatórios
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Informações adicionais
+      <div className="bg-muted/50 rounded-lg p-6 max-w-6xl">
+        <h3 className="font-semibold mb-2">Fluxo de Gestão de Ativos</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+          <div>
+            <h4 className="font-medium text-foreground mb-1">1. Registrar</h4>
+            <p>Cadastre novos ativos (chips ou equipamentos) no sistema com todas as informações técnicas necessárias.</p>
+          </div>
+          <div>
+            <h4 className="font-medium text-foreground mb-1">2. Associar</h4>
+            <p>Vincule os ativos cadastrados aos clientes conforme necessário para controle de alocação.</p>
+          </div>
+          <div>
+            <h4 className="font-medium text-foreground mb-1">3. Acompanhar</h4>
+            <p>Monitore o histórico completo de movimentações e alterações dos ativos através do histórico detalhado.</p>
+          </div>
+        </div>
+      </div> */}
     </div>
   );
 };

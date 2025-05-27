@@ -1,55 +1,17 @@
 
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { ModularSidebar } from "./ModularSidebar";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Import page components
-import Dashboard from "@/pages/Dashboard";
-import AssetsManagement from "@/pages/AssetsManagement";
-import AssetsInventory from "@/pages/AssetsInventory";
-import AssetAssociation from "@/pages/AssetAssociation";
-import AssetsAssociations from "@/pages/AssetsAssociations";
-import RegisterAsset from "@/pages/RegisterAsset";
-import Clients from "@/pages/Clients";
-import Export from "@/pages/Export";
-import Association from "@/pages/Association";
-
 export function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const location = useLocation();
 
   const toggleMobileSidebar = () => {
     setMobileOpen((prev) => !prev);
-  };
-
-  // Route to component mapping
-  const getPageComponent = () => {
-    switch (location.pathname) {
-      case '/dashboard':
-        return <Dashboard />;
-      case '/assets':
-        return <AssetsManagement />;
-      case '/assets/inventory':
-        return <AssetsInventory />;
-      case '/assets/association':
-        return <AssetAssociation />;
-      case '/assets/associations':
-        return <AssetsAssociations />;
-      case '/register-asset':
-        return <RegisterAsset />;
-      case '/clients':
-        return <Clients />;
-      case '/export':
-        return <Export />;
-      case '/association':
-        return <Association />;
-      default:
-        return <Dashboard />;
-    }
   };
 
   return (
@@ -102,7 +64,7 @@ export function Layout() {
           aria-label="Main content"
         >
           <div className="container mx-auto py-6 px-4 min-h-[calc(100vh-144px)]">
-            {getPageComponent()}
+            <Outlet />
           </div>
           
           {/* Footer - fixed at bottom of content area */}

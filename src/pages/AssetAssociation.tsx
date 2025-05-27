@@ -136,7 +136,6 @@ const AssetAssociation = () => {
     });
     
     toast.success('Associação criada com sucesso!');
-    // Redirecionar para a página de gestão de associações
     navigate('/assets/associations');
   };
 
