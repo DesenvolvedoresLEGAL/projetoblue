@@ -1,4 +1,6 @@
+
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +21,8 @@ import {
   AlertCircle,
   Loader2,
   Database,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
@@ -33,6 +36,7 @@ import { toast } from "sonner";
  * Agora com melhor tratamento de erros e foreign keys corrigidas
  */
 export default function History() {
+  const navigate = useNavigate();
   const {
     historyLogs,
     isLoading,
@@ -170,11 +174,23 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
-        <p className="text-muted-foreground">
-          Histórico completo de movimentações e alterações de ativos
-        </p>
+      {/* Header com botão voltar */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-700 hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
+          <p className="text-muted-foreground">
+            Histórico completo de movimentações e alterações de ativos
+          </p>
+        </div>
       </div>
       
       {/* Card de Filtros */}

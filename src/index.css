@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,12 +20,12 @@
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 215.4 16.3% 40%; /* Melhorado de 46.9% para 40% - contraste adequado */
 
     --accent: 249 93% 37%; /* LEGAL accent color */
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 70% 50%; /* Melhorado de 84.2% 60.2% para melhor contraste */
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
@@ -62,12 +61,12 @@
     --secondary-foreground: 210 40% 98%;
 
     --muted: 240 24% 16%;  /* LEGAL dark muted */
-    --muted-foreground: 210 30% 80%;
+    --muted-foreground: 210 30% 75%; /* Melhorado de 80% para 75% - melhor contraste */
 
     --accent: 249 93% 37%; /* LEGAL accent color */
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 45%; /* Melhorado para melhor contraste */
     --destructive-foreground: 210 40% 98%;
 
     --border: 240 24% 16%;  /* LEGAL dark border */
@@ -133,6 +132,16 @@
   
   .glass {
     @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 rounded-xl;
+  }
+
+  /* Melhorias de contraste para placeholders */
+  .placeholder-improved::placeholder {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  /* Ícones com melhor contraste */
+  .icon-improved {
+    @apply text-gray-600 dark:text-gray-400;
   }
 }
 
