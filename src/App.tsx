@@ -98,8 +98,9 @@ const App = () => (
                       <Route path="management" element={<AssetsManagement />} />
                       <Route path="inventory" element={<AssetsInventory />} />
                       <Route path="register" element={<RegisterAsset />} />
-                      <Route path="association" element={<AssetAssociation />} />
+                      <Route path="associations" element={<AssetAssociation />} />
                       <Route path="associations-list" element={<AssociationsList />} />
+                    <Route path="/history" element={<History />} />
                     </Route>
                     
                     {/* Topology module routes */}
@@ -135,7 +136,6 @@ const App = () => (
                     <Route path="/association" element={<Navigate to="/assets/association" replace />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/monitoring" element={<Monitoring />} />
-                    <Route path="/history" element={<History />} />
                     <Route path="/data-usage" element={<DataUsage />} />
                     <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
                   </Route>
