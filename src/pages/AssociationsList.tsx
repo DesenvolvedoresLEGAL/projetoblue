@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,8 @@ import { ptBR } from 'date-fns/locale';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
+import { filterMultiField } from "@/utils/multiFieldFilter";
 
 interface Association {
   id: number;
@@ -35,7 +36,7 @@ interface Association {
 }
 
 export default function AssociationsList() {
-  const [searchInput, setSearchInput] = useState(''); // Input do usuário
+  const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -55,19 +56,19 @@ export default function AssociationsList() {
   const [editingAssociation, setEditingAssociation] = useState<Association | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  // Debounce para o termo de busca
+  // Debounce para o termo de busca e detecção de tipo
   const debouncedSearchTerm = useDebounce(searchInput.trim(), 500);
+  const searchType = useSearchTypeDetection(debouncedSearchTerm);
   
-  const itemsPerPage = 15;
+  const itemsPerPage = 100; // Aumentado para melhor eficiência do filtro frontend
   const today = new Date().toISOString().split('T')[0];
 
   // Função para formatar datas corrigindo o problema de timezone
   const formatDateCorrect = (dateString: string | null) => {
     if (!dateString) return '-';
     try {
-      // Criar data diretamente a partir da string YYYY-MM-DD sem conversão de timezone
       const [year, month, day] = dateString.split('-').map(Number);
-      const date = new Date(year, month - 1, day); // month é 0-indexado
+      const date = new Date(year, month - 1, day);
       return format(date, 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return dateString;
@@ -78,17 +79,14 @@ export default function AssociationsList() {
   useEffect(() => {
     let error = null;
 
-    // Validar período de entrada
     if (entryDateFrom && entryDateTo && entryDateFrom > entryDateTo) {
       error = 'A data inicial de entrada não pode ser maior que a data final';
     }
 
-    // Validar período de saída
     if (exitDateFrom && exitDateTo && exitDateFrom > exitDateTo) {
       error = 'A data inicial de saída não pode ser maior que a data final';
     }
 
-    // Validar se data de saída é anterior à data de entrada
     if (entryDateFrom && exitDateTo && exitDateTo < entryDateFrom) {
       error = 'A data de saída não pode ser anterior à data de entrada';
     }
@@ -113,15 +111,35 @@ export default function AssociationsList() {
   // Função para sanitizar termo de busca
   const sanitizeSearchTerm = (term: string) => {
     if (!term) return '';
-    // Remove caracteres especiais que podem quebrar a query
     return term.replace(/['"\\%_]/g, '').trim();
   };
 
-  // Buscar associações com JOINs e filtros aprimorados
+  // Função para aplicar filtro de busca no Supabase baseado no tipo detectado
+  const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
+    if (!term || type === 'empty') return query;
+
+    const sanitized = sanitizeSearchTerm(term);
+    if (!sanitized) return query;
+
+    switch (type) {
+      case 'id':
+        return query.eq('id', parseInt(sanitized));
+      case 'iccid':
+        return query.ilike('assets.iccid', `%${sanitized}%`);
+      case 'radio':
+        return query.ilike('assets.radio', `%${sanitized}%`);
+      case 'client_name':
+      default:
+        return query.ilike('clients.nome', `%${sanitized}%`);
+    }
+  };
+
+  // Buscar associações com lógica otimizada
   const { data: associationsData, isLoading, error } = useQuery({
     queryKey: [
-      'associations-list', 
-      debouncedSearchTerm, 
+      'associations-list-optimized', 
+      debouncedSearchTerm,
+      searchType,
       statusFilter, 
       currentPage,
       entryDateFrom?.toISOString(),
@@ -156,29 +174,24 @@ export default function AssociationsList() {
         .is('deleted_at', null)
         .order('entry_date', { ascending: false });
 
-      // Filtro por status corrigido
+      // Aplicar filtro por status
       if (statusFilter === 'active') {
-        // Ativas: exit_date IS NULL OU exit_date > hoje
         query = query.or(`exit_date.is.null,exit_date.gt.${today}`);
       } else if (statusFilter === 'ended') {
-        // Encerradas: exit_date NÃO NULO E exit_date <= hoje (corrigido para incluir hoje)
         query = query
           .not('exit_date', 'is', null)
           .lte('exit_date', today);
       } else if (statusFilter === 'today') {
-        // Encerra hoje: exit_date = hoje
         query = query.eq('exit_date', today);
       }
 
-      // Filtros por data de entrada
+      // Aplicar filtros por data
       if (entryDateFrom) {
         query = query.gte('entry_date', entryDateFrom.toISOString().split('T')[0]);
       }
       if (entryDateTo) {
         query = query.lte('entry_date', entryDateTo.toISOString().split('T')[0]);
       }
-
-      // Filtros por data de saída
       if (exitDateFrom) {
         query = query.gte('exit_date', exitDateFrom.toISOString().split('T')[0]);
       }
@@ -186,27 +199,8 @@ export default function AssociationsList() {
         query = query.lte('exit_date', exitDateTo.toISOString().split('T')[0]);
       }
 
-      // Busca por termo - CORRIGIDA
-      if (debouncedSearchTerm) {
-        const sanitizedTerm = sanitizeSearchTerm(debouncedSearchTerm);
-        
-        if (sanitizedTerm) {
-          // Verifica se é um número (para busca por ID)
-          const isNumeric = /^\d+$/.test(sanitizedTerm);
-          
-          if (isNumeric) {
-            // Busca apenas por ID se for numérico
-            query = query.eq('id', parseInt(sanitizedTerm));
-          } else {
-            // Busca textual para outros casos
-            query = query.or(
-              `clients.nome.ilike.%${sanitizedTerm}%,` +
-              `assets.iccid.ilike.%${sanitizedTerm}%,` +
-              `assets.radio.ilike.%${sanitizedTerm}%`
-            );
-          }
-        }
-      }
+      // Aplicar busca principal no Supabase
+      query = applySupabaseSearch(query, debouncedSearchTerm, searchType);
 
       // Paginação
       const startIndex = (currentPage - 1) * itemsPerPage;
@@ -244,41 +238,21 @@ export default function AssociationsList() {
     enabled: true
   });
 
-  const associations = associationsData?.data || [];
+  // Aplicar filtro multicampo no frontend se há termo de busca
+  const associations = React.useMemo(() => {
+    const rawData = associationsData?.data || [];
+    
+    // Se não há termo de busca ou o tipo de busca principal já foi aplicado no backend,
+    // ainda aplicamos o filtro multicampo para capturar outras ocorrências
+    if (debouncedSearchTerm) {
+      return filterMultiField(rawData, debouncedSearchTerm);
+    }
+    
+    return rawData;
+  }, [associationsData?.data, debouncedSearchTerm]);
+
   const totalCount = associationsData?.count || 0;
   const totalPages = Math.ceil(totalCount / itemsPerPage);
-
-  const getAssetIdentifier = (association: Association) => {
-    // Para CHIPs (solution_id = 11), mostra ICCID
-    if (association.asset_solution_id === 11 && association.asset_iccid) {
-      return association.asset_iccid;
-    }
-    // Para outros ativos, mostra rádio
-    if (association.asset_radio) {
-      return association.asset_radio;
-    }
-    return 'N/A';
-  };
-
-  const getStatusBadge = (exitDate: string | null) => {
-    if (exitDate) {
-      const today = new Date();
-      const [year, month, day] = exitDate.split('-').map(Number);
-      const exit = new Date(year, month - 1, day);
-
-      today.setHours(0, 0, 0, 0);
-      exit.setHours(0, 0, 0, 0);
-
-      if (exit.getTime() === today.getTime()) {
-        return <Badge variant='warning'>Encerra hoje</Badge>
-      }
-
-      if (exit < today) {
-        return <Badge variant="destructive">Encerrada</Badge>;
-      }
-    }
-    return <Badge variant="success">Ativa</Badge>;
-  };
 
   // Função para abrir o modal de edição
   const handleEditAssociation = (association: Association) => {
@@ -333,6 +307,13 @@ export default function AssociationsList() {
                   className="pl-10"
                 />
               </div>
+              {debouncedSearchTerm && (
+                <div className="text-xs text-muted-foreground">
+                  Tipo de busca detectado: {searchType === 'id' ? 'ID' : 
+                    searchType === 'iccid' ? 'ICCID' : 
+                    searchType === 'radio' ? 'Rádio' : 'Nome do cliente'}
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -394,7 +375,6 @@ export default function AssociationsList() {
               
               <CollapsibleContent>
                 <CardContent className="space-y-4">
-                  {/* Mensagem de erro de validação */}
                   {dateValidationError && (
                     <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md">
                       <AlertTriangle className="h-4 w-4" />
@@ -402,7 +382,6 @@ export default function AssociationsList() {
                     </div>
                   )}
 
-                  {/* Data de Início */}
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Data de Início</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -425,7 +404,6 @@ export default function AssociationsList() {
                     </div>
                   </div>
 
-                  {/* Data de Fim */}
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Data de Fim</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -557,6 +535,7 @@ export default function AssociationsList() {
 
               <div className="text-sm text-muted-foreground text-center">
                 Mostrando {associations.length} de {totalCount} associações
+                {debouncedSearchTerm && ` (filtradas por "${debouncedSearchTerm}")`}
               </div>
             </>
           ) : (
