@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Calendar, X } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,13 +35,36 @@ export default function AssociationsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Estados para filtros de data
+  const [entryDateFrom, setEntryDateFrom] = useState<Date | undefined>();
+  const [entryDateTo, setEntryDateTo] = useState<Date | undefined>();
+  const [exitDateFrom, setExitDateFrom] = useState<Date | undefined>();
+  const [exitDateTo, setExitDateTo] = useState<Date | undefined>();
+  
   const itemsPerPage = 15;
   const today = new Date().toISOString().split('T')[0];
 
+  // Função para limpar todos os filtros de data
+  const clearDateFilters = () => {
+    setEntryDateFrom(undefined);
+    setEntryDateTo(undefined);
+    setExitDateFrom(undefined);
+    setExitDateTo(undefined);
+  };
 
-  // Buscar associações com JOINs
+  // Buscar associações com JOINs e filtros aprimorados
   const { data: associationsData, isLoading, error } = useQuery({
-    queryKey: ['associations-list', searchTerm, statusFilter, currentPage],
+    queryKey: [
+      'associations-list', 
+      searchTerm, 
+      statusFilter, 
+      currentPage,
+      entryDateFrom?.toISOString(),
+      entryDateTo?.toISOString(),
+      exitDateFrom?.toISOString(),
+      exitDateTo?.toISOString()
+    ],
     queryFn: async () => {
       let query = supabase
         .from('asset_client_assoc')
@@ -62,18 +87,34 @@ export default function AssociationsList() {
         .is('deleted_at', null)
         .order('entry_date', { ascending: false });
 
-
-
-      // Filtro por status
+      // Filtro por status corrigido
       if (statusFilter === 'active') {
-        // exit_date IS NULL OU exit_date > hoje
+        // Ativas: exit_date IS NULL OU exit_date > hoje
         query = query.or(`exit_date.is.null,exit_date.gt.${today}`);
       } else if (statusFilter === 'ended') {
+        // Encerradas: exit_date NÃO NULO E exit_date < hoje
         query = query
-        .not('exit_date', 'is', null)
-        .lt('exit_date', today);
+          .not('exit_date', 'is', null)
+          .lt('exit_date', today);
       } else if (statusFilter === 'today') {
-          query = query.eq('exit_date', today);
+        // Encerra hoje: exit_date = hoje
+        query = query.eq('exit_date', today);
+      }
+
+      // Filtros por data de entrada
+      if (entryDateFrom) {
+        query = query.gte('entry_date', entryDateFrom.toISOString().split('T')[0]);
+      }
+      if (entryDateTo) {
+        query = query.lte('entry_date', entryDateTo.toISOString().split('T')[0]);
+      }
+
+      // Filtros por data de saída
+      if (exitDateFrom) {
+        query = query.gte('exit_date', exitDateFrom.toISOString().split('T')[0]);
+      }
+      if (exitDateTo) {
+        query = query.lte('exit_date', exitDateTo.toISOString().split('T')[0]);
       }
 
       // Busca por termo
@@ -150,23 +191,20 @@ export default function AssociationsList() {
   };
 
   const getStatusBadge = (exitDate: string | null) => {
-
     if (exitDate) {
-
       const today = new Date();
       const exit = new Date(exitDate);
 
       today.setHours(0, 0, 0, 0);
       exit.setHours(0, 0, 0, 0);
 
-      if (exit == today) {
+      if (exit.getTime() === today.getTime()) {
         return <Badge variant='warning'>Encerra hoje</Badge>
       }
 
       if (exit < today) {
         return <Badge variant="destructive">Encerrada</Badge>;
       }
-
     }
     return <Badge variant="success">Ativa</Badge>;
   };
@@ -204,9 +242,9 @@ export default function AssociationsList() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Filtros */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 space-y-2">
+          {/* Filtros Principais */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="search">Buscar</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -222,7 +260,7 @@ export default function AssociationsList() {
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'ended' | 'today') => setStatusFilter(value)}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,6 +272,74 @@ export default function AssociationsList() {
               </Select>
             </div>
           </div>
+
+          {/* Filtros por Data */}
+          <Card className="border-muted">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <CardTitle className="text-base">Filtros por Data</CardTitle>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearDateFilters}
+                  className="flex items-center gap-1"
+                >
+                  <X className="h-3 w-3" />
+                  Limpar
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Data de Início */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Data de Início</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">De</Label>
+                    <DatePicker
+                      date={entryDateFrom}
+                      setDate={setEntryDateFrom}
+                      placeholder="Selecionar data inicial"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Até</Label>
+                    <DatePicker
+                      date={entryDateTo}
+                      setDate={setEntryDateTo}
+                      placeholder="Selecionar data final"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Data de Fim */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Data de Fim</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">De</Label>
+                    <DatePicker
+                      date={exitDateFrom}
+                      setDate={setExitDateFrom}
+                      placeholder="Selecionar data inicial"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Até</Label>
+                    <DatePicker
+                      date={exitDateTo}
+                      setDate={setExitDateTo}
+                      placeholder="Selecionar data final"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Tabela */}
           {isLoading ? (
@@ -335,7 +441,7 @@ export default function AssociationsList() {
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <div className="text-lg font-medium mb-2">Nenhuma associação encontrada</div>
               <div className="text-sm">
-                {searchTerm || statusFilter !== 'all'
+                {searchTerm || statusFilter !== 'all' || entryDateFrom || entryDateTo || exitDateFrom || exitDateTo
                   ? 'Tente ajustar os filtros de busca'
                   : 'Não há associações cadastradas no sistema'
                 }
