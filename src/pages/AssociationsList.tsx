@@ -18,6 +18,7 @@ import { EditAssociationDialog } from "@/components/associations/EditAssociation
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
 import { filterMultiField } from "@/utils/multiFieldFilter";
+import { getAssetIdentifier } from "@/utils/formatters";
 
 interface Association {
   id: number;
@@ -34,6 +35,25 @@ interface Association {
   asset_solution_id: number;
   asset_solution_name: string;
 }
+
+// Helper function to get status badge for associations
+const getStatusBadge = (exitDate: string | null) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  if (!exitDate) {
+    return <Badge className="bg-green-500">Ativa</Badge>;
+  }
+  
+  if (exitDate === today) {
+    return <Badge variant="warning">Encerra hoje</Badge>;
+  }
+  
+  if (exitDate < today) {
+    return <Badge variant="outline">Encerrada</Badge>;
+  }
+  
+  return <Badge className="bg-green-500">Ativa</Badge>;
+};
 
 export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
