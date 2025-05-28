@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { assetService } from "@/services/api/asset";
@@ -145,8 +146,8 @@ export function useDashboardAssets() {
             // Safely parse details as object
             const details = log.details as any;
             
-            // Ensure we have a valid date - use the date field or fall back to created_at
-            const logDate = log.date || log.created_at || new Date().toISOString();
+            // Use only the date field with proper fallback - don't access created_at
+            const logDate = log.date || new Date().toISOString();
             
             return {
               id: log.id || 'unknown',
