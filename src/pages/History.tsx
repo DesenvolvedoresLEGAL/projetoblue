@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,27 +25,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
-import { AssetLogWithRelations } from "@/services/api/history/historyService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-/**
- * Página de Histórico de Alterações
- * Exibe logs reais do Supabase com dados relacionados via JOINs
- * Interface 100% em português com dados legíveis
- * Agora com melhor tratamento de erros e foreign keys corrigidas
- */
 export default function History() {
   const {
     historyLogs,
     isLoading,
     error,
     refetch,
-    getAssetIdentifier,
-    getClientName,
     formatDate,
-    getStatusDisplay,
-    formatLogDetails,
     formatEventName
   } = useAssetHistory();
 
@@ -52,29 +42,20 @@ export default function History() {
   const [eventFilter, setEventFilter] = useState("all");
   const navigate = useNavigate();
 
-  // Log para debug
-  React.useEffect(() => {
-    console.log('History component - historyLogs:', historyLogs);
-    console.log('History component - isLoading:', isLoading);
-    console.log('History component - error:', error);
-  }, [historyLogs, isLoading, error]);
-
-  /**
-   * Filtra logs baseado na busca e tipo de evento
-   */
+  // Filtros usando os dados já processados
   const filteredLogs = historyLogs.filter((log) => {
-    // Filtro por busca (cliente, asset, evento)
+    // Filtro por busca usando os dados já processados
     if (search) {
       const searchLower = search.toLowerCase();
-      const clientName = getClientName(log).toLowerCase();
-      const assetId = getAssetIdentifier(log).toLowerCase();
+      const clientName = (log.client_name || 'Cliente não identificado').toLowerCase();
+      const assetName = (log.asset_name || 'N/A').toLowerCase();
       const event = formatEventName(log.event).toLowerCase();
-      const details = formatLogDetails(log.details).toLowerCase();
+      const description = (log.description || '').toLowerCase();
 
       if (!(clientName.includes(searchLower) ||
-        assetId.includes(searchLower) ||
+        assetName.includes(searchLower) ||
         event.includes(searchLower) ||
-        details.includes(searchLower))) {
+        description.includes(searchLower))) {
         return false;
       }
     }
@@ -98,9 +79,6 @@ export default function History() {
     return true;
   });
 
-  /**
-   * Determina variante do badge baseado no tipo de evento
-   */
   const getEventBadgeVariant = (event: string): "default" | "secondary" | "destructive" | "outline" => {
     if (event.includes('CRIADO') || event.includes('INSERT')) return "default";
     if (event.includes('STATUS')) return "secondary";
@@ -108,14 +86,12 @@ export default function History() {
     return "outline";
   };
 
-  // Função para tentar recarregar dados
   const handleRetry = () => {
     console.log('Tentando recarregar dados do histórico...');
     refetch();
     toast.info("Recarregando dados do histórico...");
   };
 
-  // Estado de loading
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -138,7 +114,6 @@ export default function History() {
     );
   }
 
-  // Estado de erro melhorado
   if (error) {
     return (
       <div className="space-y-6">
@@ -255,71 +230,67 @@ export default function History() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLogs.map((log) => {
-                    const statusDisplay = getStatusDisplay(log);
+                  {filteredLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            {formatDate(log.date)}
+                          </span>
+                        </div>
+                      </TableCell>
 
-                    return (
-                      <TableRow key={log.id}>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">
-                              {formatDate(log.date)}
-                            </span>
+                      <TableCell>
+                        <Badge variant={getEventBadgeVariant(log.event)}>
+                          {formatEventName(log.event)}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-mono text-sm">
+                            {log.asset_name || 'N/A'}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <User2 className="h-4 w-4 text-muted-foreground" />
+                          <span>{log.client_name || 'Cliente não identificado'}</span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        {log.old_status || log.new_status ? (
+                          <div className="space-y-1">
+                            {log.old_status && (
+                              <div className="text-xs text-muted-foreground">
+                                De: <span className="font-medium">{log.old_status}</span>
+                              </div>
+                            )}
+                            {log.new_status && (
+                              <div className="text-xs">
+                                Para: <span className="font-medium">{log.new_status}</span>
+                              </div>
+                            )}
                           </div>
-                        </TableCell>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
 
-                        <TableCell>
-                          <Badge variant={getEventBadgeVariant(log.event)}>
-                            {formatEventName(log.event)}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Settings className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-mono text-sm">
-                              {getAssetIdentifier(log)}
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <User2 className="h-4 w-4 text-muted-foreground" />
-                            <span>{getClientName(log)}</span>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          {statusDisplay.before || statusDisplay.after ? (
-                            <div className="space-y-1">
-                              {statusDisplay.before && (
-                                <div className="text-xs text-muted-foreground">
-                                  De: <span className="font-medium">{statusDisplay.before}</span>
-                                </div>
-                              )}
-                              {statusDisplay.after && (
-                                <div className="text-xs">
-                                  Para: <span className="font-medium">{statusDisplay.after}</span>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="max-w-xl">
-                            <p className="text-sm truncate" title={formatLogDetails(log.details)}>
-                              {formatLogDetails(log.details)}
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                      <TableCell>
+                        <div className="max-w-xl">
+                          <p className="text-sm truncate" title={log.description}>
+                            {log.description || 'Nenhum detalhe disponível'}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
