@@ -1,96 +1,90 @@
-
-/**
- * Utility functions for formatting data in a consistent way
- */
-
-/**
- * Format a phone number to Brazilian format
- * Problem: Números exibidos sem máscara brasileira.
- * Solução: Formatar números como "(XX) XXXXX-XXXX" ou "(XX) XXXX-XXXX"
- */
-export const formatPhoneNumber = (phone: string | number | undefined): string => {
-  if (!phone) return 'N/A';
-  const phoneStr = String(phone).replace(/\D/g, '');
-  if (phoneStr.length === 11) {
-    return `(${phoneStr.substring(0, 2)}) ${phoneStr.substring(2, 7)}-${phoneStr.substring(7)}`;
-  } else if (phoneStr.length === 10) {
-    return `(${phoneStr.substring(0, 2)}) ${phoneStr.substring(2, 6)}-${phoneStr.substring(6)}`;
+// Função para formatar número de telefone
+export const formatPhoneNumber = (phoneNumberString: string): string => {
+  const cleaned = ('' + phoneNumberString).replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+  if (match) {
+    return '(' + match[1] + ') ' + match[2] + '-' + match[3];
   }
-  return phoneStr;
+  return phoneNumberString;
 };
 
-/**
- * Format a date consistently
- * Problem: Formatação inconsistente, .toLocaleString().replace(',', '').
- * Solução: Centralizar formatação de datas
- */
-interface DateFormatOptions {
-  showTime?: boolean;
-  shortMonth?: boolean;
-}
-
-export const formatDate = (date: string | Date | undefined, options: DateFormatOptions = {}): string => {
-  if (!date) return 'N/A';
-  
-  try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (isNaN(dateObj.getTime())) return 'N/A';
-    
-    const { showTime = false, shortMonth = false } = options;
-    
-    if (showTime) {
-      return dateObj.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-    
-    return dateObj.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: shortMonth ? 'short' : '2-digit',
-      year: 'numeric'
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'N/A';
+// Função para formatar CNPJ
+export const formatCNPJ = (cnpj: string): string => {
+  const cleaned = ('' + cnpj).replace(/\D/g, '');
+  const match = cleaned.match(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/);
+  if (match) {
+    return match[1] + '.' + match[2] + '.' + match[3] + '/' + match[4] + '-' + match[5];
   }
+  return cnpj;
 };
 
-/**
- * Capitalize a string consistently
- * Problem: Uso disperso/inconsistente de .capitalize().
- * Solução: Criar helper capitalize(str) universal
- */
-export const capitalize = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+// Função para obter o nome do arquivo a partir do caminho
+export const getFileNameFromPath = (path: string): string => {
+  return path.split('/').pop() || 'Arquivo';
 };
 
-/**
- * Get appropriate asset identifier
- * Problem: Duplicidade de Identificadores
- * Solução: Exibir o identificador de forma consistente
- * 
- * Updated: agora usando line_number para CHIPs e radio para outros equipamentos
- */
+// Função para formatar a data
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR');
+};
+
+// Função para formatar a data e hora
+export const formatDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleString('pt-BR');
+};
+
+// Função para converter bytes em formato legível (KB, MB, GB, TB)
+export const formatBytes = (bytes: number, decimals = 2): string => {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+// Função para obter a diferença em dias entre duas datas
+export const getDaysDifference = (startDate: string, endDate: string): number => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diff = end.getTime() - start.getTime();
+  return Math.ceil(diff / (1000 * 3600 * 24));
+};
+
+// Função para verificar se uma data é válida
+export const isValidDate = (dateString: string): boolean => {
+  return !isNaN(new Date(dateString).getTime());
+};
+
+// Função para obter identificador do ativo
 export const getAssetIdentifier = (asset: any): string => {
-  if (!asset) return 'N/A';
-  
-  // Para CHIPs, usar o número da linha como identificador
-  if ((asset.solution_id === 11 || asset.type === 'CHIP' || asset.solucao === 'CHIP') && asset.line_number) {
-    return String(asset.line_number);
+  if (asset.iccid) {
+    return asset.iccid;
   }
-  
-  // Para outros equipamentos, usar o campo radio
   if (asset.radio) {
-    return asset.radio;
+    return asset.radio
+  }
+  return asset.id;
+};
+
+// Função melhorada para obter identificador do ativo
+export const getAssetIdentifier = (asset: any): string => {
+  // Verificar se é um objeto de associação (tem asset_solution_name)
+  if (asset.asset_solution_name) {
+    if (asset.asset_solution_name?.toUpperCase() === "CHIP" || asset.asset_solution_id === 11) {
+      return asset.asset_line_number?.toString() || asset.asset_iccid || "N/A";
+    }
+    return asset.asset_radio || "N/A";
   }
   
-  // Fallbacks em ordem de prioridade
-  return asset.serial_number || 
-         (asset.uuid ? asset.uuid.substring(0, 8) : 'N/A');
+  // Lógica original para objetos de ativo direto
+  if (asset.solucao?.toUpperCase() === "CHIP" || asset.solution_id === 11) {
+    return asset.line_number?.toString() || asset.iccid || "N/A";
+  }
+  return asset.radio || "N/A";
 };

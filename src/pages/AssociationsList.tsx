@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +5,13 @@ import { ArrowLeft, Users } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
-import { AssociationsTable } from "@/components/associations/AssociationsTable";
+import { AssociationsGroupedTable } from "@/components/associations/AssociationsGroupedTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from "sonner";
 
 interface Association {
   id: number;
@@ -25,6 +25,7 @@ interface Association {
   client_name: string;
   asset_iccid: string | null;
   asset_radio: string | null;
+  asset_line_number: number | null;
   asset_solution_id: number;
   asset_solution_name: string;
 }
@@ -51,11 +52,26 @@ const filterMultiField = (
     // Busca em rádio
     if (association.asset_radio?.toLowerCase().includes(term)) return true;
     
+    // Busca em linha
+    if (association.asset_line_number?.toString().includes(term)) return true;
+    
     // Busca em nome da solução
     if (association.asset_solution_name.toLowerCase().includes(term)) return true;
     
     return false;
   });
+};
+
+// Função para agrupar associações por cliente
+const groupAssociationsByClient = (associations: Association[]) => {
+  return associations.reduce((acc, association) => {
+    const clientName = association.client_name || 'Cliente não identificado';
+    if (!acc[clientName]) {
+      acc[clientName] = [];
+    }
+    acc[clientName].push(association);
+    return acc;
+  }, {} as Record<string, Association[]>);
 };
 
 export default function AssociationsList() {
@@ -86,6 +102,31 @@ export default function AssociationsList() {
   
   const itemsPerPage = 100; // Aumentado para melhor eficiência do filtro frontend
   const today = new Date().toISOString().split('T')[0];
+
+  // Função para encerrar associação
+  const handleEndAssociation = async (associationId: number) => {
+    try {
+      const { error } = await supabase
+        .from('asset_client_assoc')
+        .update({ 
+          exit_date: new Date().toISOString().split('T')[0],
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', associationId);
+
+      if (error) {
+        console.error('Erro ao encerrar associação:', error);
+        toast.error('Erro ao encerrar associação');
+        return;
+      }
+
+      toast.success('Associação encerrada com sucesso');
+      // A query será revalidada automaticamente devido ao queryKey
+    } catch (error) {
+      console.error('Erro ao encerrar associação:', error);
+      toast.error('Erro ao encerrar associação');
+    }
+  };
 
   // Validação automática de datas
   useEffect(() => {
@@ -146,7 +187,7 @@ export default function AssociationsList() {
     }
   };
 
-  // Buscar associações com lógica otimizada
+  // Buscar associações com query melhorada
   const { data: associationsData, isLoading, error } = useQuery({
     queryKey: [
       'associations-list-optimized', 
@@ -179,6 +220,7 @@ export default function AssociationsList() {
           assets!inner(
             iccid,
             radio,
+            line_number,
             solution_id,
             asset_solutions(solution)
           )
@@ -226,7 +268,7 @@ export default function AssociationsList() {
         throw error;
       }
 
-      // Mapear dados para o formato esperado
+      // Mapear dados para o formato esperado com line_number incluído
       const mappedData = data.map((item: any) => ({
         id: item.id,
         asset_id: item.asset_id,
@@ -238,6 +280,7 @@ export default function AssociationsList() {
         client_name: item.clients?.nome || 'Cliente não encontrado',
         asset_iccid: item.assets?.iccid,
         asset_radio: item.assets?.radio,
+        asset_line_number: item.assets?.line_number,
         asset_solution_id: item.assets?.solution_id,
         asset_solution_name: item.assets?.asset_solutions?.solution || 'Solução não encontrada'
       }));
@@ -250,17 +293,21 @@ export default function AssociationsList() {
     enabled: true
   });
 
-  // Aplicar filtro multicampo no frontend se há termo de busca
-  const associations = React.useMemo(() => {
+  // Aplicar filtro multicampo no frontend e agrupar por cliente
+  const { groupedAssociations, totalAssociations } = React.useMemo(() => {
     const rawData = associationsData?.data || [];
     
-    // Se não há termo de busca ou o tipo de busca principal já foi aplicado no backend,
-    // ainda aplicamos o filtro multicampo para capturar outras ocorrências
-    if (debouncedSearchTerm) {
-      return filterMultiField(rawData, debouncedSearchTerm);
-    }
+    // Aplicar filtro multicampo
+    const filteredData = debouncedSearchTerm ? 
+      filterMultiField(rawData, debouncedSearchTerm) : rawData;
     
-    return rawData;
+    // Agrupar por cliente
+    const grouped = groupAssociationsByClient(filteredData);
+    
+    return {
+      groupedAssociations: grouped,
+      totalAssociations: filteredData.length
+    };
   }, [associationsData?.data, debouncedSearchTerm]);
 
   const totalCount = associationsData?.count || 0;
@@ -297,21 +344,21 @@ export default function AssociationsList() {
       <Card className='border-none bg-none-1 shadow-none'>
         <CardHeader className='flex flex-row gap-4 items-center'>
           <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(`/assets`)}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/assets`)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
           <div className="flex flex-col">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               Lista de Associações
             </CardTitle>
             <CardDescription>
-              Consulte todas as associações entre ativos e clientes
+              Consulte todas as associações entre ativos e clientes, agrupadas por cliente
             </CardDescription>
           </div>
         </CardHeader>
@@ -338,19 +385,20 @@ export default function AssociationsList() {
             clearDateFilters={clearDateFilters}
           />
 
-          {/* Tabela */}
+          {/* Tabela Agrupada */}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Carregando associações...
             </div>
-          ) : associations.length > 0 ? (
-            <AssociationsTable
-              associations={associations}
+          ) : Object.keys(groupedAssociations).length > 0 ? (
+            <AssociationsGroupedTable
+              groupedAssociations={groupedAssociations}
               totalCount={totalCount}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
               onEditAssociation={handleEditAssociation}
+              onEndAssociation={handleEndAssociation}
               debouncedSearchTerm={debouncedSearchTerm}
             />
           ) : (
