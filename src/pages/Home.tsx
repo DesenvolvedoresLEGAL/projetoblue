@@ -50,6 +50,45 @@ const Home: React.FC = () => {
                    dashboard.statusDistribution.error ||
                    dashboardStats.error;
 
+  // Processing lease and subscription assets by type
+  const leaseAssetsByType = useMemo(() => {
+    if (!dashboard.onLeaseAssets.data || dashboard.onLeaseAssets.isLoading) {
+      return { chips: 0, speedys: 0, equipments: 0, total: 0 };
+    }
+
+    const chips = dashboard.onLeaseAssets.data.filter(asset => asset.solution_id === 11).length;
+    const speedys = dashboard.onLeaseAssets.data.filter(asset => asset.solution_id === 1).length;
+    const equipments = dashboard.onLeaseAssets.data.filter(asset => 
+      asset.solution_id !== 11 && asset.solution_id !== 1
+    ).length;
+
+    return {
+      chips,
+      speedys,
+      equipments,
+      total: chips + speedys + equipments
+    };
+  }, [dashboard.onLeaseAssets.data, dashboard.onLeaseAssets.isLoading]);
+
+  const subscriptionAssetsByType = useMemo(() => {
+    if (!dashboard.onSubscriptionAssets.data || dashboard.onSubscriptionAssets.isLoading) {
+      return { chips: 0, speedys: 0, equipments: 0, total: 0 };
+    }
+
+    const chips = dashboard.onSubscriptionAssets.data.filter(asset => asset.solution_id === 11).length;
+    const speedys = dashboard.onSubscriptionAssets.data.filter(asset => asset.solution_id === 1).length;
+    const equipments = dashboard.onSubscriptionAssets.data.filter(asset => 
+      asset.solution_id !== 11 && asset.solution_id !== 1
+    ).length;
+
+    return {
+      chips,
+      speedys,
+      equipments,
+      total: chips + speedys + equipments
+    };
+  }, [dashboard.onSubscriptionAssets.data, dashboard.onSubscriptionAssets.isLoading]);
+
   // Loading state for the entire dashboard
   if (isLoading) {
     return (
@@ -149,30 +188,16 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Lease & Subscription Cards */}
+        {/* REFATORADO: Lease & Subscription Cards com subdivisão por tipo */}
         <div className="grid md:grid-cols-2 gap-4">
-          <StatusCard
-            title="Ativos em locação"
-            description="Ativos atualmente em locação"
-            items={dashboard.onLeaseAssets.data}
+          <LeaseAssetsCard 
+            leaseAssetsByType={leaseAssetsByType}
             isLoading={dashboard.onLeaseAssets.isLoading}
-            actionLink="/assets/inventory?status=on-lease"
-            actionText="Ver todos em locação"
-            variant="warning"
-            icon={<AlertTriangle className="h-6 w-6 text-yellow-600" />}
-            emptyMessage="Nenhum ativo em locação detectado."
           />
           
-          <StatusCard
-            title="Ativos em assinatura"
-            description="Ativos atualmente em assinatura"
-            items={dashboard.onSubscriptionAssets.data}
+          <SubscriptionAssetsCard 
+            subscriptionAssetsByType={subscriptionAssetsByType}
             isLoading={dashboard.onSubscriptionAssets.isLoading}
-            actionLink="/assets/inventory?status=on-subscription"
-            actionText="Ver todos em assinatura"
-            variant="warning"
-            icon={<AlertTriangle className="h-6 w-6 text-yellow-600" />}
-            emptyMessage="Nenhum ativo em assinatura detectado."
           />
         </div>
 
@@ -188,6 +213,138 @@ const Home: React.FC = () => {
     </ErrorBoundary>
   );
 };
+
+// NOVO: Componente separado para Ativos em Locação com subdivisão por tipo
+const LeaseAssetsCard = ({ leaseAssetsByType, isLoading }: { 
+  leaseAssetsByType: { chips: number; speedys: number; equipments: number; total: number }, 
+  isLoading: boolean 
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+        Ativos em Locação
+      </CardTitle>
+      <CardDescription>
+        Ativos atualmente em locação, subdivididos por tipo
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      {isLoading ? (
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+      ) : leaseAssetsByType.total > 0 ? (
+        <div className="space-y-3">
+          <div className="text-2xl font-bold text-yellow-600">
+            Total: {leaseAssetsByType.total}
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">CHIPS:</span>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
+                {leaseAssetsByType.chips}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">SPEEDY 5G:</span>
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                {leaseAssetsByType.speedys}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">EQUIPAMENTOS:</span>
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                {leaseAssetsByType.equipments}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8">
+          <AlertTriangle className="h-10 w-10 text-muted-foreground/30 mb-2" />
+          <p className="text-muted-foreground">Nenhum ativo em locação detectado.</p>
+        </div>
+      )}
+    </CardContent>
+    <CardFooter>
+      <Link to="/assets/inventory?status=on-lease" className="w-full">
+        <Button variant="outline" size="sm" className="w-full">
+          Ver todos em locação
+        </Button>
+      </Link>
+    </CardFooter>
+  </Card>
+);
+
+// NOVO: Componente separado para Ativos em Assinatura com subdivisão por tipo
+const SubscriptionAssetsCard = ({ subscriptionAssetsByType, isLoading }: { 
+  subscriptionAssetsByType: { chips: number; speedys: number; equipments: number; total: number }, 
+  isLoading: boolean 
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+        Ativos em Assinatura
+      </CardTitle>
+      <CardDescription>
+        Ativos atualmente em assinatura, subdivididos por tipo
+      </CardDescription>
+    </CardHeader>
+    <CardContent>
+      {isLoading ? (
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+      ) : subscriptionAssetsByType.total > 0 ? (
+        <div className="space-y-3">
+          <div className="text-2xl font-bold text-yellow-600">
+            Total: {subscriptionAssetsByType.total}
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">CHIPS:</span>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
+                {subscriptionAssetsByType.chips}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">SPEEDY 5G:</span>
+              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-semibold">
+                {subscriptionAssetsByType.speedys}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">EQUIPAMENTOS:</span>
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                {subscriptionAssetsByType.equipments}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8">
+          <AlertTriangle className="h-10 w-10 text-muted-foreground/30 mb-2" />
+          <p className="text-muted-foreground">Nenhum ativo em assinatura detectado.</p>
+        </div>
+      )}
+    </CardContent>
+    <CardFooter>
+      <Link to="/assets/inventory?status=on-subscription" className="w-full">
+        <Button variant="outline" size="sm" className="w-full">
+          Ver todos em assinatura
+        </Button>
+      </Link>
+    </CardFooter>
+  </Card>
+);
 
 // Componente separado para Recent Alerts
 const RecentAlertsCard = ({ dashboard }: { dashboard: any }) => (
