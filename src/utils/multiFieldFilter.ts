@@ -5,6 +5,13 @@ interface FilterableAssociation {
   asset_iccid: string | null;
   asset_radio: string | null;
   asset_solution_name: string;
+  asset_id: string;
+  client_id: string;
+  entry_date: string;
+  exit_date: string | null;
+  association_id: number;
+  created_at: string;
+  asset_solution_id: number;
 }
 
 export const filterMultiField = (

@@ -10,7 +10,6 @@ import { AssociationsTable } from "@/components/associations/AssociationsTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
-import { filterMultiField } from "@/utils/multiFieldFilter";
 
 interface Association {
   id: number;
@@ -27,6 +26,35 @@ interface Association {
   asset_solution_id: number;
   asset_solution_name: string;
 }
+
+// Função para filtro multicampo que funciona com a interface Association
+const filterMultiField = (
+  associations: Association[],
+  searchTerm: string
+): Association[] => {
+  if (!searchTerm.trim()) return associations;
+  
+  const term = searchTerm.toLowerCase();
+  
+  return associations.filter(association => {
+    // Busca em ID
+    if (association.id.toString().includes(term)) return true;
+    
+    // Busca em nome do cliente
+    if (association.client_name.toLowerCase().includes(term)) return true;
+    
+    // Busca em ICCID
+    if (association.asset_iccid?.toLowerCase().includes(term)) return true;
+    
+    // Busca em rádio
+    if (association.asset_radio?.toLowerCase().includes(term)) return true;
+    
+    // Busca em nome da solução
+    if (association.asset_solution_name.toLowerCase().includes(term)) return true;
+    
+    return false;
+  });
+};
 
 export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
@@ -84,9 +112,9 @@ export default function AssociationsList() {
     setDateValidationError(null);
   };
 
-  // Função para verificar se há filtros de data ativos
-  const hasActiveDateFilters = () => {
-    return entryDateFrom || entryDateTo || exitDateFrom || exitDateTo;
+  // Função para verificar se há filtros de data ativos - CORRIGIDA para retornar boolean
+  const hasActiveDateFilters = (): boolean => {
+    return !!(entryDateFrom || entryDateTo || exitDateFrom || exitDateTo);
   };
 
   // Função para sanitizar termo de busca
