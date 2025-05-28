@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Smartphone } from "lucide-react";
-import { RegisterChipForm } from "@/components/inventory/forms/ChipForm";
-import { RegisterRouterForm } from "@/components/inventory/forms/RouterForm";
+import ChipForm from "@/components/inventory/forms/ChipForm";
+import RouterForm from "@/components/inventory/forms/RouterForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const RegisterAsset = () => {
@@ -55,11 +55,11 @@ const RegisterAsset = () => {
             </TabsList>
             
             <TabsContent value="chip" className="mt-6">
-              <RegisterChipForm />
+              <ChipForm />
             </TabsContent>
             
             <TabsContent value="equipment" className="mt-6">
-              <RegisterRouterForm />
+              <RouterForm />
             </TabsContent>
           </Tabs>
         </CardContent>
