@@ -1,6 +1,7 @@
 
 import { assetQueries } from './queries';
 import { assetMutations } from './mutations';
+import { associationQueries } from './associationQueries';
 import { AssetListParams, AssetCreateParams, AssetUpdateParams, AssetStatusByType, ProblemAsset } from './types';
 import { PROBLEM_STATUS_IDS } from './constants';
 
@@ -29,6 +30,9 @@ export const assetService = {
   getAssetsByMultipleStatus: assetQueries.getAssetsByMultipleStatus,
   listProblemAssets: assetQueries.listProblemAssets,
   statusByType: assetQueries.statusByType,
+
+  // Association queries
+  checkActiveAssociations: associationQueries.checkActiveAssociations,
 
   // Mutations
   createAsset: assetMutations.createAsset,

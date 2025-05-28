@@ -31,6 +31,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
 
   useEffect(() => {
     if (asset) {
+      console.log('Asset loaded in form:', asset);
       setFormData({
         model: asset.model || '',
         serial_number: asset.serial_number || '',
@@ -49,25 +50,26 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(`Form field changed: ${name} = ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleStatusChange = (value: string) => {
-    const statusId = parseInt(value);
-    console.log(`Setting status_id to: ${statusId}`);
-    setFormData(prev => ({ ...prev, status_id: statusId }));
+    const status_id = parseInt(value);
+    console.log(`Setting status_id to: ${status_id}`);
+    setFormData(prev => ({ ...prev, status_id }));
   };
 
   const handleManufacturerChange = (value: string) => {
-    const manufacturerId = parseInt(value);
-    console.log(`Setting manufacturer_id to: ${manufacturerId}`);
-    setFormData(prev => ({ ...prev, manufacturer_id: manufacturerId }));
+    const manufacturer_id = parseInt(value);
+    console.log(`Setting manufacturer_id to: ${manufacturer_id}`);
+    setFormData(prev => ({ ...prev, manufacturer_id }));
   };
 
   const handlePlanChange = (value: string) => {
-    const planId = parseInt(value);
-    console.log(`Setting plan_id to: ${planId}`);
-    setFormData(prev => ({ ...prev, plan_id: planId }));
+    const plan_id = parseInt(value);
+    console.log(`Setting plan_id to: ${plan_id}`);
+    setFormData(prev => ({ ...prev, plan_id }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,7 +83,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     try {
       // Prepare data to update based on the asset type
       const dataToUpdate: any = {
-        statusId: formData.status_id,
+        status_id: formData.status_id,
         manufacturer_id: formData.manufacturer_id
       };
       

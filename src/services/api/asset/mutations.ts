@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Asset } from "@/types/asset";
 import { toast } from "@/utils/toast";
@@ -53,7 +54,7 @@ export const assetMutations = {
     try {
       console.log('updateAsset received:', id, assetData);
       
-      // Prepare update data
+      // Prepare update data with corrected field names
       const updateData: any = {};
       
       // Common fields
