@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import AssetStatusBadge from './AssetStatusBadge';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
@@ -57,11 +57,11 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
     };
 
     const displayValue = getDisplayValue(asset, fieldName);
-    
+
     if (asset.matchedField === fieldName) {
       return <Badge variant="outline" className="bg-yellow-50">{displayValue}</Badge>;
     }
-    
+
     return displayValue;
   };
 
@@ -90,23 +90,24 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>{asset.solucao.name}</TableCell>
                 <TableCell>
                   {/* Mostrar número da linha para chips e número de série para outros */}
-                  {asset.solucao.id === 11 ? 
-                    <>{highlightMatchedValue(asset, 'iccid')}</> : 
+                  {asset.solucao.id === 11 ?
+                    <>...{highlightMatchedValue(asset, 'iccid')}</> :
                     <>{highlightMatchedValue(asset, 'serial_number')}</>
                   }
                 </TableCell>
                 <TableCell>
                   <AssetStatusBadge status={capitalize(asset.status.name)} />
                 </TableCell>
-                <TableCell>{ capitalize(asset.manufacturer.name) }</TableCell>
-                <TableCell>{ !asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model }</TableCell>
+                <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
+                <TableCell>{!asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model}</TableCell>
                 <TableCell>{asset.solucao.id === 11 ?
-                    <>{asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
-                    <>{asset.radio || 'N/A'}</>}</TableCell>
+                  <>{asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
+                  <>{asset.radio || 'N/A'}</>}
+                </TableCell>
                 <TableCell className="text-right">
-                  <AssetActions 
-                    asset={asset} 
-                    onAssetUpdated={onAssetUpdated} 
+                  <AssetActions
+                    asset={asset}
+                    onAssetUpdated={onAssetUpdated}
                     onAssetDeleted={onAssetDeleted}
                   />
                 </TableCell>
