@@ -89,24 +89,42 @@ const Dashboard = () => {
       // Converter formato dos assets para compatibilidade com exportação
       const assetsForExport = assets.map(asset => ({
         id: asset.uuid,
+        uuid: asset.uuid,
         type: asset.solution_id === 11 ? "CHIP" : "ROTEADOR",
         status: asset.status?.status || "DESCONHECIDO",
-        phoneNumber: asset.line_number,
-        iccid: asset.iccid,
-        radio: asset.radio,
-        serialNumber: asset.serial_number,
-        model: asset.model,
-        registrationDate: new Date().toISOString()
+        phoneNumber: asset.line_number?.toString() || '',
+        iccid: asset.iccid || '',
+        radio: asset.radio || '',
+        serialNumber: asset.serial_number || '',
+        model: asset.model || '',
+        registrationDate: new Date().toISOString(),
+        // Adicionar propriedades obrigatórias baseadas no tipo
+        ...(asset.solution_id === 11 ? {
+          // Para CHIPs
+          carrier: 'Unknown',
+          line_number: asset.line_number
+        } : {
+          // Para Equipamentos
+          uniqueId: asset.uuid,
+          brand: '',
+          ssid: '',
+          password: ''
+        })
       }));
 
       exportToExcel({
         assets: assetsForExport,
         clients: clients.map(client => ({
           id: client.uuid,
+          uuid: client.uuid,
           nome: client.nome,
           cnpj: client.cnpj,
-          email: client.email,
-          contato: client.contato.toString()
+          email: client.email || '',
+          contato: client.contato,
+          assets: [],
+          created_at: client.created_at,
+          updated_at: client.updated_at,
+          deleted_at: client.deleted_at
         }))
       });
     }

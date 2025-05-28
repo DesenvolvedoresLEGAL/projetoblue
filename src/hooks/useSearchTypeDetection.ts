@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 
-export type SearchType = 'iccid' | 'radio' | 'client_name' | 'empty';
+export type SearchType = 'id' | 'iccid' | 'radio' | 'client_name' | 'empty';
 
 export const useSearchTypeDetection = (searchTerm: string): SearchType => {
   return useMemo(() => {
@@ -9,9 +9,9 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
     
     if (!trimmed) return 'empty';
     
-    // Detecta se é um numérico
-    if (/^\d+$/.test(trimmed)) {
-      return 'iccid';
+    // Detecta se é um ID numérico simples
+    if (/^\d{1,10}$/.test(trimmed)) {
+      return 'id';
     }
     
     // Detecta se é ICCID (padrão: 19-20 dígitos)
