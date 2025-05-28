@@ -7,20 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface ChipEditFormProps {
   formData: {
     iccid?: string;
-    line_number?: number;
+    line_number?: string;
     plan_id?: number;
   };
-  handleChange: (field: string, value: any) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handlePlanChange: (value: string) => void;
   plans: { id: number; nome: string }[];
 }
 
 const ChipEditForm = ({ formData, handleChange, handlePlanChange, plans }: ChipEditFormProps) => {
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    handleChange(name, type === 'number' ? Number(value) : value);
-  };
-
   return (
     <>
       <div className="space-y-2">
@@ -29,7 +24,7 @@ const ChipEditForm = ({ formData, handleChange, handlePlanChange, plans }: ChipE
           id="iccid"
           name="iccid"
           value={formData.iccid || ''}
-          onChange={handleInputChange}
+          onChange={handleChange}
         />
       </div>
 
@@ -39,7 +34,7 @@ const ChipEditForm = ({ formData, handleChange, handlePlanChange, plans }: ChipE
           id="line_number"
           name="line_number"
           value={formData.line_number || ''}
-          onChange={handleInputChange}
+          onChange={handleChange}
           type="number"
         />
       </div>

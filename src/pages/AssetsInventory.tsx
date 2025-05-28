@@ -70,28 +70,18 @@ const AssetsInventory = () => {
     }
   }, []);
 
-  // Controlador para atualização de ativos - com logs detalhados
+  // Controlador para atualização de ativos
   const handleAssetUpdated = useCallback(() => {
-    console.log('🔄 Asset atualizado, recarregando dados...');
+    console.log('Asset atualizado, recarregando dados...');
     setShouldFetch(true);
-    // Força uma nova busca invalidando o cache
-    refetch().then(() => {
-      console.log('✅ Dados recarregados após atualização do asset');
-    }).catch((err) => {
-      console.error('❌ Erro ao recarregar dados após atualização:', err);
-    });
+    refetch();
   }, [refetch]);
 
-  // Controlador para exclusão de ativos - com logs detalhados
+  // Controlador para exclusão de ativos
   const handleAssetDeleted = useCallback(() => {
-    console.log('🗑️ Asset deletado, recarregando dados...');
+    console.log('Asset deletado, recarregando dados...');
     setShouldFetch(true);
-    // Força uma nova busca invalidando o cache
-    refetch().then(() => {
-      console.log('✅ Dados recarregados após exclusão do asset');
-    }).catch((err) => {
-      console.error('❌ Erro ao recarregar dados após exclusão:', err);
-    });
+    refetch();
   }, [refetch]);
   
   // Renderizar estado de carregamento
@@ -144,6 +134,14 @@ const AssetsInventory = () => {
           setCurrentPage={setCurrentPage}
         />
       )}
+      
+      {/* Debug info em desenvolvimento
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+          Debug: Termo="{searchTerm}" | Tipo="{filterType}" | Status="{filterStatus}" | 
+          Página={currentPage} | Total={assetsData?.totalCount || 0}
+        </div>
+      )} */}
     </div>
   );
 };

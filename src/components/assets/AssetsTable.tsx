@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Table, 
   TableBody, 
@@ -8,246 +8,120 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Edit, Trash2, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { AssetWithRelations } from '@/hooks/useAssetsData';
-import EditAssetDialog from './EditAssetDialog';
-import DeleteAssetDialog from './DeleteAssetDialog';
-import AssetDetailsDialog from './AssetDetailsDialog';
 import AssetStatusBadge from './AssetStatusBadge';
+import { AssetWithRelations } from '@/hooks/useAssetsData';
+import AssetActions from './AssetActions';
+import { capitalize } from '@/utils/stringUtils';
+import { formatPhoneNumber } from '@/utils/formatters';
+import { Badge } from '@/components/ui/badge';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
   onAssetUpdated: () => void;
   onAssetDeleted: () => void;
-  currentPage?: number;
-  pageSize?: number;
+  currentPage: number;
+  pageSize: number;
 }
 
-const AssetsTable = ({ 
-  assets, 
-  onAssetUpdated, 
-  onAssetDeleted,
-  currentPage = 1,
-  pageSize = 10 
-}: AssetsTableProps) => {
-  const [selectedAsset, setSelectedAsset] = useState<AssetWithRelations | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-
-  // Função para abrir modal de edição
-  const handleEditAsset = (asset: AssetWithRelations) => {
-    console.log('🖋️ Abrindo modal de edição para asset:', asset.uuid);
-    setSelectedAsset(asset);
-    setIsEditDialogOpen(true);
+const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, pageSize }: AssetsTableProps) => {
+  // Calculate row number based on pagination
+  const getRowNumber = (index: number): number => {
+    return (currentPage - 1) * pageSize + index + 1;
   };
 
-  // Função para abrir modal de deleção
-  const handleDeleteAsset = (asset: AssetWithRelations) => {
-    console.log('🗑️ Abrindo modal de deleção para asset:', asset.uuid);
-    setSelectedAsset(asset);
-    setIsDeleteDialogOpen(true);
-  };
+  // Função para destacar visualmente o campo que correspondeu à busca
+  const highlightMatchedValue = (asset: AssetWithRelations, fieldName: string): React.ReactNode => {
+    // Helper function to get the display value as string
+    const getDisplayValue = (asset: AssetWithRelations, fieldName: string): string => {
+      switch (fieldName) {
+        case "line_number":
+          return asset.line_number?.toString() || 'N/A';
+        case "iccid":
+          return asset.iccid?.substring(asset.iccid.length - 5, asset.iccid.length) || 'N/A';
+        case "radio":
+          return asset.radio || 'N/A';
+        case "serial_number":
+          return asset.serial_number || 'N/A';
+        case "model":
+          return asset.model || 'N/A';
+        default:
+          const value = asset[fieldName as keyof AssetWithRelations];
+          // Handle object values by extracting displayable properties
+          if (typeof value === 'object' && value !== null) {
+            if ('name' in value) return value.name || 'N/A';
+            if ('nome' in value) return value.nome || 'N/A';
+            return 'N/A';
+          }
+          return value?.toString() || 'N/A';
+      }
+    };
 
-  // Função para abrir modal de detalhes
-  const handleViewDetails = (asset: AssetWithRelations) => {
-    console.log('👁️ Abrindo detalhes para asset:', asset.uuid);
-    setSelectedAsset(asset);
-    setIsDetailsDialogOpen(true);
-  };
-
-  // Função para fechar modals e limpar seleção
-  const handleCloseModals = () => {
-    console.log('🚪 Fechando modals e limpando seleção');
-    setSelectedAsset(null);
-    setIsEditDialogOpen(false);
-    setIsDeleteDialogOpen(false);
-    setIsDetailsDialogOpen(false);
-  };
-
-  // Callback para quando asset é atualizado com sucesso
-  const handleAssetUpdatedSuccess = () => {
-    console.log('✅ Asset atualizado com sucesso, fechando modal e atualizando lista');
-    handleCloseModals();
-    onAssetUpdated();
-  };
-
-  // Callback para quando asset é deletado com sucesso
-  const handleAssetDeletedSuccess = () => {
-    console.log('✅ Asset deletado com sucesso, fechando modal e atualizando lista');
-    handleCloseModals();
-    onAssetDeleted();
-  };
-
-  // Função para renderizar o identificador do asset
-  const renderAssetIdentifier = (asset: AssetWithRelations) => {
-    if (asset.solucao?.id === 11) {
-      // Para CHIPs, mostrar últimos 5 dígitos do ICCID
-      return asset.iccid ? `...${asset.iccid.slice(-5)}` : 'N/A';
-    } else {
-      // Para outros assets, mostrar rádio ou serial number
-      return asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
+    const displayValue = getDisplayValue(asset, fieldName);
+    
+    if (asset.matchedField === fieldName) {
+      return <Badge variant="outline" className="bg-yellow-50">{displayValue}</Badge>;
     }
+    
+    return displayValue;
   };
-
-  // Função para renderizar detalhes específicos do asset
-  const renderAssetDetails = (asset: AssetWithRelations) => {
-    if (asset.solucao?.id === 11) {
-      // CHIP details
-      return (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">{asset.solucao.name}</div>
-          <div className="text-xs text-muted-foreground">
-            {asset.manufacturer?.name || 'Operadora N/A'}
-          </div>
-          {asset.line_number && (
-            <div className="text-xs text-muted-foreground">
-              Tel: {asset.line_number}
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      // Device details
-      return (
-        <div className="space-y-1">
-          <div className="text-sm font-medium">{asset.solucao?.name || 'Dispositivo'}</div>
-          <div className="text-xs text-muted-foreground">
-            {asset.manufacturer?.name || 'Fabricante N/A'}
-          </div>
-          {asset.model && (
-            <div className="text-xs text-muted-foreground">
-              Modelo: {asset.model}
-            </div>
-          )}
-        </div>
-      );
-    }
-  };
-
-  if (!assets || assets.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-10">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-2">Nenhum ativo encontrado</p>
-            <p className="text-sm text-muted-foreground">
-              Ajuste os filtros ou adicione novos ativos
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <>
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Tipo</TableHead>
-                  <TableHead>Identificador</TableHead>
-                  <TableHead>Detalhes</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead className="text-right w-[80px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assets.map((asset) => (
-                  <TableRow key={asset.uuid} className="hover:bg-muted/50">
-                    <TableCell>
-                      <Badge variant="outline">
-                        {asset.solucao?.name || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell className="font-medium">
-                      {renderAssetIdentifier(asset)}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {renderAssetDetails(asset)}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <AssetStatusBadge status={asset.status?.name || 'Desconhecido'} />
-                    </TableCell>
-                    
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(asset.created_at).toLocaleDateString('pt-BR')}
-                    </TableCell>
-                    
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Abrir menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={() => handleViewDetails(asset)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditAsset(asset)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteAsset(asset)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modal de Edição */}
-      <EditAssetDialog
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseModals}
-        asset={selectedAsset}
-        onAssetUpdated={handleAssetUpdatedSuccess}
-      />
-
-      {/* Modal de Deleção */}
-      <DeleteAssetDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={handleCloseModals}
-        asset={selectedAsset}
-        onAssetDeleted={handleAssetDeletedSuccess}
-      />
-
-      {/* Modal de Detalhes */}
-      <AssetDetailsDialog
-        isOpen={isDetailsDialogOpen}
-        onClose={handleCloseModals}
-        asset={selectedAsset}
-      />
-    </>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nº</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>ICCID / SN</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Fabricante</TableHead>
+            <TableHead>Modelo</TableHead>
+            <TableHead>Radio/Número</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {assets && assets.length > 0 ? (
+            assets.map((asset, index) => (
+              <TableRow key={asset.uuid}>
+                <TableCell className="font-medium">
+                  {getRowNumber(index)}
+                </TableCell>
+                <TableCell>{asset.solucao.name}</TableCell>
+                <TableCell>
+                  {/* Mostrar número da linha para chips e número de série para outros */}
+                  {asset.solucao.id === 11 ? 
+                    <>{highlightMatchedValue(asset, 'iccid')}</> : 
+                    <>{highlightMatchedValue(asset, 'serial_number')}</>
+                  }
+                </TableCell>
+                <TableCell>
+                  <AssetStatusBadge status={capitalize(asset.status.name)} />
+                </TableCell>
+                <TableCell>{ capitalize(asset.manufacturer.name) }</TableCell>
+                <TableCell>{ !asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model }</TableCell>
+                <TableCell>{asset.solucao.id === 11 ?
+                    <>{asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
+                    <>{asset.radio || 'N/A'}</>}</TableCell>
+                <TableCell className="text-right">
+                  <AssetActions 
+                    asset={asset} 
+                    onAssetUpdated={onAssetUpdated} 
+                    onAssetDeleted={onAssetDeleted}
+                  />
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-4">
+                Nenhum ativo encontrado com os filtros atuais.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
