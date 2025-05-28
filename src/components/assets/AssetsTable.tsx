@@ -11,8 +11,8 @@ import {
 import AssetStatusBadge from './AssetStatusBadge';
 import { AssetWithRelations } from '@/hooks/useAssetsData';
 import AssetActions from './AssetActions';
-import { capitalize } from '@/utils/stringUtils';
 import { formatPhoneNumber } from '@/utils/formatters';
+import { capitalize } from '@/utils/stringUtils';
 import { Badge } from '@/components/ui/badge';
 
 interface AssetsTableProps {
@@ -101,7 +101,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
                 <TableCell>{!asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model}</TableCell>
                 <TableCell>{asset.solucao.id === 11 ?
-                  <>{asset.line_number ? formatPhoneNumber(asset.line_number) : 'N/A'}</> :
+                  <>{asset.line_number ? formatPhoneNumber(asset.line_number.toString()) : 'N/A'}</> :
                   <>{asset.radio || 'N/A'}</>}
                 </TableCell>
                 <TableCell className="text-right">

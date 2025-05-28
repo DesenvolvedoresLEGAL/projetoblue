@@ -15,6 +15,7 @@ interface Association {
   client_name: string;
   asset_iccid: string | null;
   asset_radio: string | null;
+  asset_line_number: number | null;
   asset_solution_id: number;
   asset_solution_name: string;
 }
@@ -26,6 +27,7 @@ interface AssociationsTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onEditAssociation: (association: Association) => void;
+  onEndAssociation: (associationId: number) => void;
   debouncedSearchTerm: string;
 }
 
@@ -36,6 +38,7 @@ export const AssociationsTable: React.FC<AssociationsTableProps> = ({
   totalPages,
   onPageChange,
   onEditAssociation,
+  onEndAssociation,
   debouncedSearchTerm
 }) => {
   return (
@@ -50,7 +53,7 @@ export const AssociationsTable: React.FC<AssociationsTableProps> = ({
               <TableHead>Data de Início</TableHead>
               <TableHead>Data de Fim</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
+              <TableHead className="w-[150px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,6 +62,7 @@ export const AssociationsTable: React.FC<AssociationsTableProps> = ({
                 key={association.id}
                 association={association}
                 onEdit={onEditAssociation}
+                onEndAssociation={onEndAssociation}
               />
             ))}
           </TableBody>

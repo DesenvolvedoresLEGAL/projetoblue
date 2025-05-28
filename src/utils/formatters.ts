@@ -1,3 +1,4 @@
+
 // Função para formatar número de telefone
 export const formatPhoneNumber = (phoneNumberString: string): string => {
   const cleaned = ('' + phoneNumberString).replace(/\D/g, '');
@@ -61,15 +62,10 @@ export const isValidDate = (dateString: string): boolean => {
   return !isNaN(new Date(dateString).getTime());
 };
 
-// Função para obter identificador do ativo
-export const getAssetIdentifier = (asset: any): string => {
-  if (asset.iccid) {
-    return asset.iccid;
-  }
-  if (asset.radio) {
-    return asset.radio
-  }
-  return asset.id;
+// Função para capitalizar primeira letra de uma string
+export const capitalize = (str: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
 // Função melhorada para obter identificador do ativo

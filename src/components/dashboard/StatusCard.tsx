@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
-import { capitalize, formatPhoneNumber } from "@/utils/formatters";
+import { formatPhoneNumber } from "@/utils/formatters";
+import { capitalize } from "@/utils/stringUtils";
 
 interface StatusCardItem {
   id: string;
