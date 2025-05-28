@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Users, Calendar, X } from "lucide-react";
+import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Association {
   id: number;
@@ -42,8 +43,49 @@ export default function AssociationsList() {
   const [exitDateFrom, setExitDateFrom] = useState<Date | undefined>();
   const [exitDateTo, setExitDateTo] = useState<Date | undefined>();
   
+  // Estado para controlar a visibilidade dos filtros de data
+  const [showDateFilters, setShowDateFilters] = useState(false);
+  
+  // Estados para validação de datas
+  const [dateValidationError, setDateValidationError] = useState<string | null>(null);
+  
   const itemsPerPage = 15;
   const today = new Date().toISOString().split('T')[0];
+
+  // Função para formatar datas corrigindo o problema de timezone
+  const formatDateCorrect = (dateString: string | null) => {
+    if (!dateString) return '-';
+    try {
+      // Criar data diretamente a partir da string YYYY-MM-DD sem conversão de timezone
+      const [year, month, day] = dateString.split('-').map(Number);
+      const date = new Date(year, month - 1, day); // month é 0-indexado
+      return format(date, 'dd/MM/yyyy', { locale: ptBR });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Validação automática de datas
+  useEffect(() => {
+    let error = null;
+
+    // Validar período de entrada
+    if (entryDateFrom && entryDateTo && entryDateFrom > entryDateTo) {
+      error = 'A data inicial de entrada não pode ser maior que a data final';
+    }
+
+    // Validar período de saída
+    if (exitDateFrom && exitDateTo && exitDateFrom > exitDateTo) {
+      error = 'A data inicial de saída não pode ser maior que a data final';
+    }
+
+    // Validar se data de saída é anterior à data de entrada
+    if (entryDateFrom && exitDateTo && exitDateTo < entryDateFrom) {
+      error = 'A data de saída não pode ser anterior à data de entrada';
+    }
+
+    setDateValidationError(error);
+  }, [entryDateFrom, entryDateTo, exitDateFrom, exitDateTo]);
 
   // Função para limpar todos os filtros de data
   const clearDateFilters = () => {
@@ -51,6 +93,12 @@ export default function AssociationsList() {
     setEntryDateTo(undefined);
     setExitDateFrom(undefined);
     setExitDateTo(undefined);
+    setDateValidationError(null);
+  };
+
+  // Função para verificar se há filtros de data ativos
+  const hasActiveDateFilters = () => {
+    return entryDateFrom || entryDateTo || exitDateFrom || exitDateTo;
   };
 
   // Buscar associações com JOINs e filtros aprimorados
@@ -66,6 +114,11 @@ export default function AssociationsList() {
       exitDateTo?.toISOString()
     ],
     queryFn: async () => {
+      // Não executar query se há erro de validação de datas
+      if (dateValidationError) {
+        return { data: [], count: 0 };
+      }
+
       let query = supabase
         .from('asset_client_assoc')
         .select(`
@@ -92,10 +145,10 @@ export default function AssociationsList() {
         // Ativas: exit_date IS NULL OU exit_date > hoje
         query = query.or(`exit_date.is.null,exit_date.gt.${today}`);
       } else if (statusFilter === 'ended') {
-        // Encerradas: exit_date NÃO NULO E exit_date < hoje
+        // Encerradas: exit_date NÃO NULO E exit_date <= hoje (corrigido para incluir hoje)
         query = query
           .not('exit_date', 'is', null)
-          .lt('exit_date', today);
+          .lte('exit_date', today);
       } else if (statusFilter === 'today') {
         // Encerra hoje: exit_date = hoje
         query = query.eq('exit_date', today);
@@ -169,15 +222,6 @@ export default function AssociationsList() {
   const totalCount = associationsData?.count || 0;
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-';
-    try {
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
-    } catch {
-      return dateString;
-    }
-  };
-
   const getAssetIdentifier = (association: Association) => {
     // Para CHIPs (solution_id = 11), mostra ICCID
     if (association.asset_solution_id === 11 && association.asset_iccid) {
@@ -193,7 +237,8 @@ export default function AssociationsList() {
   const getStatusBadge = (exitDate: string | null) => {
     if (exitDate) {
       const today = new Date();
-      const exit = new Date(exitDate);
+      const [year, month, day] = exitDate.split('-').map(Number);
+      const exit = new Date(year, month - 1, day);
 
       today.setHours(0, 0, 0, 0);
       exit.setHours(0, 0, 0, 0);
@@ -273,72 +318,106 @@ export default function AssociationsList() {
             </div>
           </div>
 
-          {/* Filtros por Data */}
+          {/* Filtros por Data - Colapsável */}
           <Card className="border-muted">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <CardTitle className="text-base">Filtros por Data</CardTitle>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearDateFilters}
-                  className="flex items-center gap-1"
-                >
-                  <X className="h-3 w-3" />
-                  Limpar
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Data de Início */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Data de Início</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">De</Label>
-                    <DatePicker
-                      date={entryDateFrom}
-                      setDate={setEntryDateFrom}
-                      placeholder="Selecionar data inicial"
-                    />
+            <Collapsible open={showDateFilters} onOpenChange={setShowDateFilters}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <CardTitle className="text-base">
+                        Filtrar por Data
+                        {hasActiveDateFilters() && (
+                          <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
+                            Ativo
+                          </span>
+                        )}
+                      </CardTitle>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {hasActiveDateFilters() && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearDateFilters();
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Limpar
+                        </Button>
+                      )}
+                      {showDateFilters ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Até</Label>
-                    <DatePicker
-                      date={entryDateTo}
-                      setDate={setEntryDateTo}
-                      placeholder="Selecionar data final"
-                    />
-                  </div>
-                </div>
-              </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  {/* Mensagem de erro de validação */}
+                  {dateValidationError && (
+                    <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm">{dateValidationError}</span>
+                    </div>
+                  )}
 
-              {/* Data de Fim */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Data de Fim</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">De</Label>
-                    <DatePicker
-                      date={exitDateFrom}
-                      setDate={setExitDateFrom}
-                      placeholder="Selecionar data inicial"
-                    />
+                  {/* Data de Início */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Data de Início</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">De</Label>
+                        <DatePicker
+                          date={entryDateFrom}
+                          setDate={setEntryDateFrom}
+                          placeholder="Selecionar data inicial"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Até</Label>
+                        <DatePicker
+                          date={entryDateTo}
+                          setDate={setEntryDateTo}
+                          placeholder="Selecionar data final"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Até</Label>
-                    <DatePicker
-                      date={exitDateTo}
-                      setDate={setExitDateTo}
-                      placeholder="Selecionar data final"
-                    />
+
+                  {/* Data de Fim */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Data de Fim</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">De</Label>
+                        <DatePicker
+                          date={exitDateFrom}
+                          setDate={setExitDateFrom}
+                          placeholder="Selecionar data inicial"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Até</Label>
+                        <DatePicker
+                          date={exitDateTo}
+                          setDate={setExitDateTo}
+                          placeholder="Selecionar data final"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           {/* Tabela */}
@@ -380,10 +459,10 @@ export default function AssociationsList() {
                           {association.client_name}
                         </TableCell>
                         <TableCell>
-                          {formatDate(association.entry_date)}
+                          {formatDateCorrect(association.entry_date)}
                         </TableCell>
                         <TableCell>
-                          {formatDate(association.exit_date)}
+                          {formatDateCorrect(association.exit_date)}
                         </TableCell>
                         <TableCell>
                           {getStatusBadge(association.exit_date)}
@@ -441,8 +520,8 @@ export default function AssociationsList() {
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <div className="text-lg font-medium mb-2">Nenhuma associação encontrada</div>
               <div className="text-sm">
-                {searchTerm || statusFilter !== 'all' || entryDateFrom || entryDateTo || exitDateFrom || exitDateTo
-                  ? 'Tente ajustar os filtros de busca'
+                {searchTerm || statusFilter !== 'all' || hasActiveDateFilters() || dateValidationError
+                  ? 'Tente ajustar os filtros de busca ou corrigir as datas inválidas'
                   : 'Não há associações cadastradas no sistema'
                 }
               </div>
