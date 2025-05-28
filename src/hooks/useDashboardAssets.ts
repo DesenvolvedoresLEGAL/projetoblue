@@ -145,8 +145,8 @@ export function useDashboardAssets() {
             // Safely parse details as object
             const details = log.details as any;
             
-            // Ensure we have a valid date - don't format here, keep as timestamp
-            const logDate = log.date ? log.date : log.created_at || new Date().toISOString();
+            // Ensure we have a valid date - use the date field or fall back to created_at
+            const logDate = log.date || log.created_at || new Date().toISOString();
             
             return {
               id: log.id || 'unknown',
