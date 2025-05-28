@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { assetService } from "@/services/api/asset";
@@ -132,28 +131,41 @@ export function useDashboardAssets() {
     staleTime: 30000,
   });
 
-  // Fetch recent alerts with safe error handling
+  // Fetch recent alerts with improved date handling and deduplication
   const recentAlerts = useQuery({
     queryKey: ['dashboard', 'recent-alerts'],
     queryFn: async () => {
       try {
         const assetStatus = await assetService.getStatus();
-        const assetsResult = await assetService.getAssetLogs({ limit: 5});
+        const assetsResult = await assetService.getAssetLogs({ limit: 20}); // Fetch more to better deduplicate
         const assetLogs = Array.isArray(assetsResult) ? assetsResult : [];
-        return assetLogs.map(log => {
-          // Safely parse details as object
-          const details = log.details as any;
-          return {
-            id: log.id || 'unknown',
-            assetType: details?.solution_id == 11 ? "CHIP" :
-            details?.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
-            name: details?.radio || details?.line_number || 'N/A',
-            date: log.date ? new Date(log.date).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
-            description: log.event?.replace('_', ' ') || 'Evento',
-            old_status: assetStatus?.filter(s => s.id === log.status_before_id)[0] || [],
-            new_status: assetStatus?.filter(s => s.id === log.status_after_id)[0] || []
-          };
-        });
+        
+        return assetLogs
+          .map(log => {
+            // Safely parse details as object
+            const details = log.details as any;
+            
+            // Ensure we have a valid date - don't format here, keep as timestamp
+            const logDate = log.date ? log.date : log.created_at || new Date().toISOString();
+            
+            return {
+              id: log.id || 'unknown',
+              assetType: details?.solution_id == 11 ? "CHIP" :
+                        details?.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
+              name: details?.radio || details?.line_number || details?.asset_id?.substring(0, 8) || 'N/A',
+              date: logDate, // Keep as original timestamp - formatting will be done in component
+              description: log.event?.replace('_', ' ') || 'Evento',
+              old_status: assetStatus?.filter(s => s.id === log.status_before_id)[0] || null,
+              new_status: assetStatus?.filter(s => s.id === log.status_after_id)[0] || null,
+              event: log.event,
+              details: details, // Pass full details for better deduplication
+              asset_id: details?.asset_id,
+              client_id: details?.client_id,
+              timestamp: new Date(logDate).getTime() // Add timestamp for sorting
+            };
+          })
+          .filter(log => log.date && !isNaN(new Date(log.date).getTime())) // Filter out invalid dates
+          .sort((a, b) => b.timestamp - a.timestamp); // Sort by most recent first
       } catch (error) {
         console.error('Error fetching recent alerts:', error);
         return [];

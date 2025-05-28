@@ -7,10 +7,10 @@ import { Link } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { 
   formatBrazilianDateTime, 
-  generateStandardMessage, 
-  mapEventType, 
+  improveEventMessage, 
   removeDuplicateEvents,
-  getAssetTypeBadgeColor
+  getAssetTypeBadgeColor,
+  isValidEvent
 } from "@/utils/eventFormatters";
 
 interface StandardizedRecentAlertsCardProps {
@@ -40,29 +40,16 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
           </div>
         ) : (dashboard.recentAlerts.data?.length ?? 0) > 0 ? (
           <ul className="space-y-3">
-            {removeDuplicateEvents(dashboard.recentAlerts.data)
+            {removeDuplicateEvents(dashboard.recentAlerts.data.filter(isValidEvent))
               .slice(0, 5)
               .map((alert: any) => {
-                const standardizedEvent = {
-                  id: alert.id,
-                  type: mapEventType(alert.description),
-                  assetType: alert.assetType,
-                  assetName: alert.name,
-                  description: alert.description,
-                  date: alert.date,
-                  status: {
-                    from: alert.old_status?.status,
-                    to: alert.new_status?.status
-                  }
-                };
-
                 return (
-                  <li key={`${alert.id}-${alert.date}`} className="bg-muted/50 p-3 rounded-lg">
+                  <li key={`${alert.id}-${alert.timestamp || alert.date}`} className="bg-muted/50 p-3 rounded-lg">
                     <div className="space-y-2">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <p className="text-sm font-medium leading-relaxed">
-                            {generateStandardMessage(standardizedEvent)}
+                            {improveEventMessage(alert)}
                           </p>
                         </div>
                         <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">
@@ -78,6 +65,12 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
                         {alert.new_status?.status && (
                           <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                             {alert.new_status.status}
+                          </span>
+                        )}
+                        
+                        {alert.event && (
+                          <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                            {alert.event.replace('_', ' ')}
                           </span>
                         )}
                       </div>
