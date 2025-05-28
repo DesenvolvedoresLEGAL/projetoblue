@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAssetsData } from '@/hooks/useAssetsData';
 import AssetsHeader from '@/components/assets/AssetsHeader';
 import AssetsSearchForm from '@/components/assets/AssetsSearchForm';
@@ -16,6 +17,8 @@ const AssetsInventory = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
+  
+  const queryClient = useQueryClient();
   
   // Utilizando o hook personalizado para buscar dados dos ativos com controle de refetch
   const { 
@@ -70,19 +73,30 @@ const AssetsInventory = () => {
     }
   }, []);
 
-  // Controlador para atualização de ativos
+  // Controlador para atualização de ativos - CORRIGIDO
   const handleAssetUpdated = useCallback(() => {
-    console.log('Asset atualizado, recarregando dados...');
+    console.log('Asset atualizado, invalidando cache e recarregando dados...');
+    
+    // Invalidar todas as queries relacionadas a assets
+    queryClient.invalidateQueries({ queryKey: ['assets'] });
+    queryClient.invalidateQueries({ queryKey: ['assets-data'] });
+    
+    // Forçar refetch específico
     setShouldFetch(true);
     refetch();
-  }, [refetch]);
+  }, [queryClient, refetch]);
 
   // Controlador para exclusão de ativos
   const handleAssetDeleted = useCallback(() => {
-    console.log('Asset deletado, recarregando dados...');
+    console.log('Asset deletado, invalidando cache e recarregando dados...');
+    
+    // Invalidar todas as queries relacionadas a assets
+    queryClient.invalidateQueries({ queryKey: ['assets'] });
+    queryClient.invalidateQueries({ queryKey: ['assets-data'] });
+    
     setShouldFetch(true);
     refetch();
-  }, [refetch]);
+  }, [queryClient, refetch]);
   
   // Renderizar estado de carregamento
   if (isLoading) {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface Association {
   id: number;
@@ -33,7 +35,7 @@ interface Association {
 }
 
 export default function AssociationsList() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // Input do usuário
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -52,6 +54,9 @@ export default function AssociationsList() {
   // Estados para o modal de edição
   const [editingAssociation, setEditingAssociation] = useState<Association | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Debounce para o termo de busca
+  const debouncedSearchTerm = useDebounce(searchInput.trim(), 500);
   
   const itemsPerPage = 15;
   const today = new Date().toISOString().split('T')[0];
@@ -105,11 +110,18 @@ export default function AssociationsList() {
     return entryDateFrom || entryDateTo || exitDateFrom || exitDateTo;
   };
 
+  // Função para sanitizar termo de busca
+  const sanitizeSearchTerm = (term: string) => {
+    if (!term) return '';
+    // Remove caracteres especiais que podem quebrar a query
+    return term.replace(/['"\\%_]/g, '').trim();
+  };
+
   // Buscar associações com JOINs e filtros aprimorados
   const { data: associationsData, isLoading, error } = useQuery({
     queryKey: [
       'associations-list', 
-      searchTerm, 
+      debouncedSearchTerm, 
       statusFilter, 
       currentPage,
       entryDateFrom?.toISOString(),
@@ -174,16 +186,26 @@ export default function AssociationsList() {
         query = query.lte('exit_date', exitDateTo.toISOString().split('T')[0]);
       }
 
-      // Busca por termo
-      if (searchTerm.trim()) {
-        const term = searchTerm.trim();
-        // Busca por ID da associação, nome do cliente, ICCID ou rádio
-        query = query.or(
-          `id.eq.${term},` +
-          `clients.nome.ilike.%${term}%,` +
-          `assets.iccid.ilike.%${term}%,` +
-          `assets.radio.ilike.%${term}%`
-        );
+      // Busca por termo - CORRIGIDA
+      if (debouncedSearchTerm) {
+        const sanitizedTerm = sanitizeSearchTerm(debouncedSearchTerm);
+        
+        if (sanitizedTerm) {
+          // Verifica se é um número (para busca por ID)
+          const isNumeric = /^\d+$/.test(sanitizedTerm);
+          
+          if (isNumeric) {
+            // Busca apenas por ID se for numérico
+            query = query.eq('id', parseInt(sanitizedTerm));
+          } else {
+            // Busca textual para outros casos
+            query = query.or(
+              `clients.nome.ilike.%${sanitizedTerm}%,` +
+              `assets.iccid.ilike.%${sanitizedTerm}%,` +
+              `assets.radio.ilike.%${sanitizedTerm}%`
+            );
+          }
+        }
       }
 
       // Paginação
@@ -306,8 +328,8 @@ export default function AssociationsList() {
                 <Input
                   id="search"
                   placeholder="ID, nome do cliente, ICCID ou rádio..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -542,7 +564,7 @@ export default function AssociationsList() {
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <div className="text-lg font-medium mb-2">Nenhuma associação encontrada</div>
               <div className="text-sm">
-                {searchTerm || statusFilter !== 'all' || hasActiveDateFilters() || dateValidationError
+                {debouncedSearchTerm || statusFilter !== 'all' || hasActiveDateFilters() || dateValidationError
                   ? 'Tente ajustar os filtros de busca ou corrigir as datas inválidas'
                   : 'Não há associações cadastradas no sistema'
                 }
