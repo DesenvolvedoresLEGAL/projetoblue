@@ -15,15 +15,15 @@ export const AssetStatusBadge = ({ status }: AssetStatusBadgeProps) => {
   
   // Now we can safely compare strings using our helper function
   if (isSameStatus(status, "DISPONÍVEL")) {
-    return <Badge className="bg-green-500">Disponível</Badge>;
+    return <Badge>Disponível</Badge>;
   }
   
-  if (isSameStatus(status, "ALUGADO")) {
-    return <Badge variant="outline">Alugado</Badge>;
+  if (isSameStatus(status, "EM LOCAÇÃO")) {
+    return <Badge variant="warning">Em locação</Badge>;
   }
   
-  if (isSameStatus(status, "ASSINATURA")) {
-    return <Badge variant="secondary">Assinatura</Badge>;
+  if (isSameStatus(status, "EM ASSINATURA")) {
+    return <Badge variant='warning'>Em assinatura</Badge>;
   }
   
   if (isSameStatus(status, "SEM DADOS")) {
@@ -34,8 +34,8 @@ export const AssetStatusBadge = ({ status }: AssetStatusBadgeProps) => {
     return <Badge variant="destructive">Bloqueado</Badge>;
   }
   
-  if (isSameStatus(status, "MANUTENÇÃO")) {
-    return <Badge variant="warning">Manutenção</Badge>;
+  if (isSameStatus(status, "EM MANUTENÇÃO")) {
+    return <Badge variant="destructive">Em manutenção</Badge>;
   }
   
   return <Badge variant="secondary">{status}</Badge>;

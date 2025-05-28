@@ -11,20 +11,22 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Calendar, 
-  Search, 
-  User2, 
-  Settings, 
+import {
+  Calendar,
+  Search,
+  User2,
+  Settings,
   AlertCircle,
   Loader2,
   Database,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
 import { AssetLogWithRelations } from "@/services/api/history/historyService";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Página de Histórico de Alterações
@@ -48,6 +50,7 @@ export default function History() {
 
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
+  const navigate = useNavigate();
 
   // Log para debug
   React.useEffect(() => {
@@ -67,15 +70,15 @@ export default function History() {
       const assetId = getAssetIdentifier(log).toLowerCase();
       const event = formatEventName(log.event).toLowerCase();
       const details = formatLogDetails(log.details).toLowerCase();
-      
-      if (!(clientName.includes(searchLower) || 
-            assetId.includes(searchLower) || 
-            event.includes(searchLower) ||
-            details.includes(searchLower))) {
+
+      if (!(clientName.includes(searchLower) ||
+        assetId.includes(searchLower) ||
+        event.includes(searchLower) ||
+        details.includes(searchLower))) {
         return false;
       }
     }
-    
+
     // Filtro por tipo de evento
     if (eventFilter !== "all") {
       if (eventFilter === "status" && !log.event.includes("STATUS")) {
@@ -91,7 +94,7 @@ export default function History() {
         return false;
       }
     }
-    
+
     return true;
   });
 
@@ -120,7 +123,7 @@ export default function History() {
           <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
           <p className="text-muted-foreground">Carregando histórico de movimentações...</p>
         </div>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center justify-center py-10">
@@ -143,7 +146,7 @@ export default function History() {
           <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
           <p className="text-muted-foreground">Erro ao carregar histórico</p>
         </div>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center justify-center py-10">
@@ -170,13 +173,24 @@ export default function History() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
-        <p className="text-muted-foreground">
-          Histórico completo de movimentações e alterações de ativos
-        </p>
+      <div className="flex flex-row gap-4 items-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/assets`)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold tracking-tight">Histórico de Alterações</h1>
+          <p className="text-muted-foreground">
+            Histórico completo de movimentações e alterações de ativos
+          </p>
+        </div>
       </div>
-      
+
       {/* Card de Filtros */}
       <Card>
         <CardHeader className="pb-3">
@@ -197,7 +211,7 @@ export default function History() {
                 className="pl-8"
               />
             </div>
-            
+
             {/* Filtro por tipo de evento */}
             <Tabs value={eventFilter} onValueChange={setEventFilter} className="w-full">
               <TabsList className="grid grid-cols-5 w-full">
@@ -211,7 +225,7 @@ export default function History() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Card de Resultados */}
       <Card>
         <CardHeader>
@@ -243,7 +257,7 @@ export default function History() {
                 <TableBody>
                   {filteredLogs.map((log) => {
                     const statusDisplay = getStatusDisplay(log);
-                    
+
                     return (
                       <TableRow key={log.id}>
                         <TableCell className="whitespace-nowrap">
@@ -254,13 +268,13 @@ export default function History() {
                             </span>
                           </div>
                         </TableCell>
-                        
+
                         <TableCell>
                           <Badge variant={getEventBadgeVariant(log.event)}>
                             {formatEventName(log.event)}
                           </Badge>
                         </TableCell>
-                        
+
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Settings className="h-4 w-4 text-muted-foreground" />
@@ -269,14 +283,14 @@ export default function History() {
                             </span>
                           </div>
                         </TableCell>
-                        
+
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <User2 className="h-4 w-4 text-muted-foreground" />
                             <span>{getClientName(log)}</span>
                           </div>
                         </TableCell>
-                        
+
                         <TableCell>
                           {statusDisplay.before || statusDisplay.after ? (
                             <div className="space-y-1">
@@ -295,7 +309,7 @@ export default function History() {
                             <span className="text-muted-foreground text-sm">-</span>
                           )}
                         </TableCell>
-                        
+
                         <TableCell>
                           <div className="max-w-xl">
                             <p className="text-sm truncate" title={formatLogDetails(log.details)}>
@@ -313,8 +327,8 @@ export default function History() {
             <div className="flex flex-col items-center justify-center py-10">
               <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <p className="text-center text-muted-foreground mb-2">
-                {search || eventFilter !== "all" 
-                  ? "Nenhum registro encontrado com os filtros aplicados." 
+                {search || eventFilter !== "all"
+                  ? "Nenhum registro encontrado com os filtros aplicados."
                   : "Nenhum registro encontrado no histórico."
                 }
               </p>

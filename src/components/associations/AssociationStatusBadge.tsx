@@ -18,7 +18,7 @@ export const AssociationStatusBadge: React.FC<AssociationStatusBadgeProps> = ({ 
   }
   
   if (exitDate < today) {
-    return <Badge variant="outline">Encerrada</Badge>;
+    return <Badge variant="destructive">Encerrada</Badge>;
   }
   
   return <Badge className="bg-green-500">Ativa</Badge>;

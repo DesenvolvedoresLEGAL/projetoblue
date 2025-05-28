@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
@@ -10,6 +10,8 @@ import { AssociationsTable } from "@/components/associations/AssociationsTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface Association {
   id: number;
@@ -60,6 +62,7 @@ export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
   
   // Estados para filtros de data
   const [entryDateFrom, setEntryDateFrom] = useState<Date | undefined>();
@@ -291,15 +294,26 @@ export default function AssociationsList() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Lista de Associações
-          </CardTitle>
-          <CardDescription>
-            Consulte todas as associações entre ativos e clientes
-          </CardDescription>
+      <Card className='border-none bg-none-1 shadow-none'>
+        <CardHeader className='flex flex-row gap-4 items-center'>
+          <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/assets`)}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+          <div className="flex flex-col">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Lista de Associações
+            </CardTitle>
+            <CardDescription>
+              Consulte todas as associações entre ativos e clientes
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <AssociationsFilters

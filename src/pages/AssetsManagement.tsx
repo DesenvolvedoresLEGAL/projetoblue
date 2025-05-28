@@ -46,7 +46,7 @@ const AssetsManagement = () => {
         {/* Card Associar Ativo */}
         <Card
           className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
-          onClick={() => navigate('/assets/association')}
+          onClick={() => navigate('/assets/associations')}
         >
           <CardHeader>
             <div className="flex items-center space-x-2">

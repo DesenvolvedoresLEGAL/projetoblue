@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
-import { 
+import {
   useCreateAsset,
   useManufacturers,
   useAssetSolutions,
   useStatusRecords
 } from "@/hooks/useAssetManagement";
+import { useNavigate } from "react-router-dom";
 
 // Esquemas de validação separados para CHIPS e EQUIPAMENTOS
 const chipSchema = z.object({
@@ -52,25 +53,27 @@ export default function RegisterAsset() {
   const [assetType, setAssetType] = useState<'CHIP' | 'EQUIPAMENTO'>('CHIP');
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
   const [allowWeakPassword, setAllowWeakPassword] = useState(false);
-  
+
+  const navigate = useNavigate();
+
   // Hooks para buscar dados de referência
   const { data: manufacturers = [], isLoading: isManufacturersLoading } = useManufacturers();
   const { data: solutions = [], isLoading: isSolutionsLoading } = useAssetSolutions();
   const { data: statuses = [], isLoading: isStatusesLoading } = useStatusRecords();
-  
+
   const isReferenceDataLoading = isManufacturersLoading || isSolutionsLoading || isStatusesLoading;
-  
+
   // Separar operadoras (para chips) e fabricantes (para equipamentos)
-  const operators = manufacturers.filter(m => 
+  const operators = manufacturers.filter(m =>
     m.description && m.description.toLowerCase().includes('operadora')
   );
-  const equipmentManufacturers = manufacturers.filter(m => 
+  const equipmentManufacturers = manufacturers.filter(m =>
     !m.description || !m.description.toLowerCase().includes('operadora')
   );
-  
+
   // Filtrar soluções excluindo CHIP (id = 11) para equipamentos
   const equipmentSolutions = solutions.filter(s => s.id !== 11);
-  
+
   // Forms separados para cada tipo
   const chipForm = useForm<ChipFormValues>({
     resolver: zodResolver(chipSchema),
@@ -96,17 +99,17 @@ export default function RegisterAsset() {
       admin_pass: ""
     }
   });
-  
+
   const createAssetMutation = useCreateAsset();
   const equipmentPassword = equipmentForm.watch("admin_pass");
-  
+
   // Função para verificar força da senha
   const handlePasswordChange = (value: string) => {
     const strength = checkPasswordStrength(value);
     setPasswordStrength(strength);
     equipmentForm.setValue("admin_pass", value);
   };
-  
+
   // Submissão do formulário de CHIP
   const onSubmitChip = (formData: ChipFormValues) => {
     const createData = {
@@ -118,11 +121,11 @@ export default function RegisterAsset() {
       manufacturer_id: formData.manufacturer_id,
       status_id: formData.status_id,
     };
-    
+
     console.log('Cadastrando CHIP:', createData);
     createAssetMutation.mutate(createData);
   };
-  
+
   // Submissão do formulário de EQUIPAMENTO
   const onSubmitEquipment = (formData: EquipmentFormValues) => {
     // Verificar força da senha
@@ -133,7 +136,7 @@ export default function RegisterAsset() {
       });
       return;
     }
-    
+
     const createData = {
       type: 'ROTEADOR' as const,
       solution_id: formData.solution_id,
@@ -146,7 +149,7 @@ export default function RegisterAsset() {
       admin_user: formData.admin_user,
       admin_pass: formData.admin_pass,
     };
-    
+
     console.log('Cadastrando EQUIPAMENTO:', createData);
     createAssetMutation.mutate(createData);
   };
@@ -182,13 +185,24 @@ export default function RegisterAsset() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight mb-1">
-          Registrar Novo Ativo
-        </h1>
-        <p className="text-muted-foreground">
-          Cadastre chips ou equipamentos no inventário
-        </p>
+      <div className='flex flex-row gap-4 items-center'>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/assets`)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold tracking-tight mb-1">
+            Registrar Novo Ativo
+          </h1>
+          <p className="text-muted-foreground">
+            Cadastre chips ou equipamentos no inventário
+          </p>
+        </div>
       </div>
 
       <Card>
@@ -218,7 +232,7 @@ export default function RegisterAsset() {
               <Form {...chipForm}>
                 <form onSubmit={chipForm.handleSubmit(onSubmitChip)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
+
                     <FormField
                       control={chipForm.control}
                       name="line_number"
@@ -351,7 +365,7 @@ export default function RegisterAsset() {
               <Form {...equipmentForm}>
                 <form onSubmit={equipmentForm.handleSubmit(onSubmitEquipment)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
+
                     <FormField
                       control={equipmentForm.control}
                       name="serial_number"

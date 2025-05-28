@@ -130,6 +130,7 @@ const App = () => (
                     <Route path="link-asset" element={<Navigate to="/assets/association" replace />} />
                     
                     {/* Legacy routes for backward compatibility */}
+                    <Route path="/assets/association" element={<Navigate to="/assets/associations" replace />} />
                     <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
                     <Route path="/clients" element={<Clients />} />
                     <Route path="/suppliers" element={<Suppliers />} />
