@@ -293,7 +293,7 @@ export default function AssociationsList() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       <Card className='border-none bg-none-1 shadow-none'>
         <CardHeader className='flex flex-row gap-4 items-center'>
           <Button

@@ -184,7 +184,7 @@ export default function RegisterAsset() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto space-y-6">
       <div className='flex flex-row gap-4 items-center'>
           <Button
             variant="ghost"
