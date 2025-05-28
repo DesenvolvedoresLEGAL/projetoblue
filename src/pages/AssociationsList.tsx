@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle, Pencil } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 
 interface Association {
   id: number;
@@ -48,6 +48,10 @@ export default function AssociationsList() {
   
   // Estados para validação de datas
   const [dateValidationError, setDateValidationError] = useState<string | null>(null);
+  
+  // Estados para o modal de edição
+  const [editingAssociation, setEditingAssociation] = useState<Association | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const itemsPerPage = 15;
   const today = new Date().toISOString().split('T')[0];
@@ -254,6 +258,12 @@ export default function AssociationsList() {
     return <Badge variant="success">Ativa</Badge>;
   };
 
+  // Função para abrir o modal de edição
+  const handleEditAssociation = (association: Association) => {
+    setEditingAssociation(association);
+    setIsEditDialogOpen(true);
+  };
+
   if (error) {
     return (
       <div className="container mx-auto py-6">
@@ -437,6 +447,7 @@ export default function AssociationsList() {
                       <TableHead>Data de Início</TableHead>
                       <TableHead>Data de Fim</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -466,6 +477,17 @@ export default function AssociationsList() {
                         </TableCell>
                         <TableCell>
                           {getStatusBadge(association.exit_date)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditAssociation(association)}
+                            className="h-8 w-8 p-0 hover:bg-muted"
+                            title="Editar associação"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -529,6 +551,13 @@ export default function AssociationsList() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Edição */}
+      <EditAssociationDialog
+        association={editingAssociation}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
 }
