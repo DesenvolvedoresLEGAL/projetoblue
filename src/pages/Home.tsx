@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import {
   Card,
@@ -50,16 +49,18 @@ const Home: React.FC = () => {
                    dashboard.statusDistribution.error ||
                    dashboardStats.error;
 
-  // Processing lease and subscription assets by type
+  // Processing lease assets by type using the 'type' property
   const leaseAssetsByType = useMemo(() => {
     if (!dashboard.onLeaseAssets.data || dashboard.onLeaseAssets.isLoading) {
       return { chips: 0, speedys: 0, equipments: 0, total: 0 };
     }
 
-    const chips = dashboard.onLeaseAssets.data.filter(asset => asset.solution_id === 11).length;
-    const speedys = dashboard.onLeaseAssets.data.filter(asset => asset.solution_id === 1).length;
+    const chips = dashboard.onLeaseAssets.data.filter(asset => asset.type === 'CHIP').length;
+    const speedys = dashboard.onLeaseAssets.data.filter(asset => 
+      asset.type === 'EQUIPAMENTO' && asset.identifier.includes('SPEEDY')
+    ).length;
     const equipments = dashboard.onLeaseAssets.data.filter(asset => 
-      asset.solution_id !== 11 && asset.solution_id !== 1
+      asset.type === 'EQUIPAMENTO' && !asset.identifier.includes('SPEEDY')
     ).length;
 
     return {
@@ -70,15 +71,18 @@ const Home: React.FC = () => {
     };
   }, [dashboard.onLeaseAssets.data, dashboard.onLeaseAssets.isLoading]);
 
+  // Processing subscription assets by type using the 'type' property
   const subscriptionAssetsByType = useMemo(() => {
     if (!dashboard.onSubscriptionAssets.data || dashboard.onSubscriptionAssets.isLoading) {
       return { chips: 0, speedys: 0, equipments: 0, total: 0 };
     }
 
-    const chips = dashboard.onSubscriptionAssets.data.filter(asset => asset.solution_id === 11).length;
-    const speedys = dashboard.onSubscriptionAssets.data.filter(asset => asset.solution_id === 1).length;
+    const chips = dashboard.onSubscriptionAssets.data.filter(asset => asset.type === 'CHIP').length;
+    const speedys = dashboard.onSubscriptionAssets.data.filter(asset => 
+      asset.type === 'EQUIPAMENTO' && asset.identifier.includes('SPEEDY')
+    ).length;
     const equipments = dashboard.onSubscriptionAssets.data.filter(asset => 
-      asset.solution_id !== 11 && asset.solution_id !== 1
+      asset.type === 'EQUIPAMENTO' && !asset.identifier.includes('SPEEDY')
     ).length;
 
     return {
