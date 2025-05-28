@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -96,15 +95,13 @@ const App = () => (
                     <Route path="assets">
                       <Route index element={<AssetsManagement />} />
                       <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="management" element={<AssetsManagement />} />
                       <Route path="inventory" element={<AssetsInventory />} />
+                      <Route path="management" element={<AssetsManagement />} />
                       <Route path="register" element={<RegisterAsset />} />
                       <Route path="associations" element={<AssetAssociation />} />
                       <Route path="associations-list" element={<AssociationsList />} />
+                      <Route path="history" element={<History />} />
                     </Route>
-                    
-                    {/* History route - moved to top level */}
-                    <Route path="history" element={<History />} />
                     
                     {/* Topology module routes */}
                     <Route path="topology">

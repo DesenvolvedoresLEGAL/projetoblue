@@ -62,7 +62,7 @@ const AssetsManagement = () => {
               Gerencie as associações entre ativos e clientes,
               controlando alocações e devoluções.
             </p>           
-              <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
+              <Button className="mt-auto w-full" onClick={() => navigate('/assets/history')}>
               Gerenciar Associações
             </Button>
           </CardContent>
@@ -87,7 +87,7 @@ const AssetsManagement = () => {
               Gerencie as associações entre ativos e clientes,
               controlando alocações e devoluções.
             </p>           
-              <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
+              <Button className="mt-auto w-full" onClick={() => navigate('/assets/history')}>
               Ver Lista de Associações
             </Button>
           </CardContent>
@@ -95,7 +95,7 @@ const AssetsManagement = () => {
 
         {/* Card Histórico de Alterações - NOVO */}
         <Card className="hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full"
-          onClick={() => navigate('/history')}>
+          onClick={() => navigate('/assets/history')}>
           <CardHeader>
             <div className="flex items-center space-x-2">
               <History className="h-6 w-6 text-primary" />
@@ -110,7 +110,7 @@ const AssetsManagement = () => {
               Acompanhe todas as alterações, associações e mudanças de status
               dos ativos registrados no sistema.
             </p>
-            <Button className="mt-auto w-full" onClick={() => navigate('/history')}>
+            <Button className="mt-auto w-full" onClick={() => navigate('/assets/history')}>
               Ver Histórico Completo
             </Button>
           </CardContent>

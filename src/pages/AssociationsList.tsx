@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle, ArrowLeft } from "lucide-react";
+import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -33,7 +33,6 @@ interface Association {
 }
 
 export default function AssociationsList() {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -279,27 +278,13 @@ export default function AssociationsList() {
     <div className="container mx-auto py-6 space-y-6">
       <Card>
         <CardHeader>
-          {/* Header com botão voltar */}
-          <div className="flex items-center gap-4 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/assets')}
-              className="flex items-center gap-2 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para Gestão
-            </Button>
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Lista de Associações
-              </CardTitle>
-              <CardDescription>
-                Consulte todas as associações entre ativos e clientes
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Lista de Associações
+          </CardTitle>
+          <CardDescription>
+            Consulte todas as associações entre ativos e clientes
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Filtros Principais */}
