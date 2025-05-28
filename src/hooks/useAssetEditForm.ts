@@ -95,19 +95,19 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     }));
   };
 
-  const handleStatusChange = (statusId: number) => {
+  const handleStatusChange = (statusId: string) => {
     console.log('🏷️ Alterando status para:', statusId);
-    handleChange('status_id', statusId);
+    handleChange('status_id', Number(statusId));
   };
 
-  const handleManufacturerChange = (manufacturerId: number) => {
+  const handleManufacturerChange = (manufacturerId: string) => {
     console.log('🏭 Alterando fabricante para:', manufacturerId);
-    handleChange('manufacturer_id', manufacturerId);
+    handleChange('manufacturer_id', Number(manufacturerId));
   };
 
-  const handlePlanChange = (planId: number) => {
+  const handlePlanChange = (planId: string) => {
     console.log('📋 Alterando plano para:', planId);
-    handleChange('plan_id', planId);
+    handleChange('plan_id', Number(planId));
   };
 
   // Submit do formulário

@@ -8,14 +8,19 @@ interface DeviceEditFormProps {
     model?: string;
     serial_number?: string;
     radio?: string;
-    rented_days?: string;
+    rented_days?: number;
     admin_user?: string;
     admin_pass?: string;
   };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleChange: (field: string, value: any) => void;
 }
 
 const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type } = e.target;
+    handleChange(name, type === 'number' ? Number(value) : value);
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -24,7 +29,7 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           id="model"
           name="model"
           value={formData.model || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
         />
       </div>
 
@@ -34,7 +39,7 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           id="serial_number"
           name="serial_number"
           value={formData.serial_number || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
         />
       </div>
 
@@ -44,7 +49,7 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           id="radio"
           name="radio"
           value={formData.radio || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
         />
       </div>
       
@@ -54,8 +59,8 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           id="rented_days"
           name="rented_days"
           type="number"
-          value={formData.rented_days || '0'}
-          onChange={handleChange}
+          value={formData.rented_days || 0}
+          onChange={handleInputChange}
         />
       </div>
       
@@ -65,7 +70,7 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           id="admin_user"
           name="admin_user"
           value={formData.admin_user || 'admin'}
-          onChange={handleChange}
+          onChange={handleInputChange}
         />
       </div>
       
@@ -76,7 +81,7 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           name="admin_pass"
           type="password"
           value={formData.admin_pass || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
           placeholder="Digite para alterar a senha"
         />
       </div>
