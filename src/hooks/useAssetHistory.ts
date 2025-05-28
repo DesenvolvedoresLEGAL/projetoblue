@@ -12,7 +12,8 @@ export interface AssetHistoryEntry {
   asset_name?: string;
   old_status?: string;
   new_status?: string;
-  details?: any; // Add details property to match usage
+  details?: any;
+  client_name?: string;
 }
 
 export function useAssetHistory() {
@@ -43,6 +44,7 @@ export function useAssetHistory() {
         const processedHistory = data.map(log => {
           let description = log.event || 'Event logged';
           let asset_name = 'N/A';
+          let client_name = 'Cliente não identificado';
           let old_status = undefined;
           let new_status = undefined;
           let asset_id = undefined;
@@ -55,15 +57,32 @@ export function useAssetHistory() {
               description = details.description;
             }
             
-            // Handle asset identification
+            // Extract client name from details
+            if (details.client_name && details.client_name.trim() !== '') {
+              client_name = details.client_name;
+            }
+            
+            // Handle asset identification - CORRIGIDO
             if (details.solution_id || details.line_number || details.radio) {
-              const mockAsset = {
-                solution_id: details.solution_id,
-                line_number: details.line_number,
-                radio: details.radio,
-                type: details.solution_id === 11 ? 'CHIP' : 'ROTEADOR'
-              };
-              asset_name = getAssetIdentifier(mockAsset);
+              // Para CHIP (solution_id = 11), usar line_number
+              if (details.solution_id === 11 && details.line_number) {
+                // Converter notação científica para número normal
+                const lineNumber = typeof details.line_number === 'string' 
+                  ? parseFloat(details.line_number).toString()
+                  : details.line_number.toString();
+                asset_name = lineNumber;
+              } 
+              // Para outros tipos, usar radio
+              else if (details.radio) {
+                asset_name = details.radio;
+              }
+              // Fallback para line_number se radio não estiver disponível
+              else if (details.line_number) {
+                const lineNumber = typeof details.line_number === 'string' 
+                  ? parseFloat(details.line_number).toString()
+                  : details.line_number.toString();
+                asset_name = lineNumber;
+              }
             }
             
             old_status = details.old_status;
@@ -71,20 +90,29 @@ export function useAssetHistory() {
             asset_id = details.asset_id;
           }
           
+          console.log('Processed log entry:', {
+            id: log.id,
+            event: log.event,
+            asset_name,
+            client_name,
+            details: log.details
+          });
+          
           return {
             id: log.id,
             date: log.date,
             event: log.event,
             description,
             asset_name,
+            client_name,
             old_status,
             new_status,
             asset_id,
-            details: log.details // Include details in return object
+            details: log.details
           };
         });
         
-        console.log('Processed asset history:', processedHistory);
+        console.log('Final processed asset history:', processedHistory);
         return processedHistory;
         
       } catch (error) {
@@ -96,13 +124,49 @@ export function useAssetHistory() {
     retry: 1
   });
 
-  // Helper functions
+  // Helper functions - CORRIGIDAS
   const getAssetIdentifier = (log: any): string => {
-    if (!log) return 'N/A';
-    return log.asset_name || log.asset_id || 'N/A';
+    if (!log || !log.details) return 'N/A';
+    
+    const details = log.details;
+    
+    // Para CHIP (solution_id = 11), usar line_number
+    if (details.solution_id === 11 && details.line_number) {
+      const lineNumber = typeof details.line_number === 'string' 
+        ? parseFloat(details.line_number).toString()
+        : details.line_number.toString();
+      return lineNumber;
+    }
+    
+    // Para outros tipos, usar radio
+    if (details.radio) {
+      return details.radio;
+    }
+    
+    // Fallback para line_number
+    if (details.line_number) {
+      const lineNumber = typeof details.line_number === 'string' 
+        ? parseFloat(details.line_number).toString()
+        : details.line_number.toString();
+      return lineNumber;
+    }
+    
+    return log.asset_name || 'N/A';
   };
 
   const getClientName = (log: any): string => {
+    if (!log) return 'Cliente não identificado';
+    
+    // Primeiro, tentar pegar do campo processado
+    if (log.client_name && log.client_name !== 'Cliente não identificado') {
+      return log.client_name;
+    }
+    
+    // Depois, tentar extrair dos details
+    if (log.details && log.details.client_name && log.details.client_name.trim() !== '') {
+      return log.details.client_name;
+    }
+    
     return 'Cliente não identificado';
   };
 
