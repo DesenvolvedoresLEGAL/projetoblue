@@ -9,6 +9,7 @@ import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, C
 import { exportToExcel } from "@/utils/excelExport";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -87,30 +88,60 @@ const Dashboard = () => {
   const handleExportToExcel = () => {
     if (assets && clients) {
       // Converter formato dos assets para compatibilidade com exportação
-      const assetsForExport = assets.map(asset => ({
-        id: asset.uuid,
-        uuid: asset.uuid,
-        type: asset.solution_id === 11 ? "CHIP" : "ROTEADOR",
-        status: asset.status?.status || "DESCONHECIDO",
-        phoneNumber: asset.line_number?.toString() || '',
-        iccid: asset.iccid || '',
-        radio: asset.radio || '',
-        serialNumber: asset.serial_number || '',
-        model: asset.model || '',
-        registrationDate: new Date().toISOString(),
-        // Adicionar propriedades obrigatórias baseadas no tipo
-        ...(asset.solution_id === 11 ? {
+      const assetsForExport: Asset[] = assets.map(asset => {
+        const baseAsset = {
+          id: asset.uuid,
+          uuid: asset.uuid,
+          status: asset.status?.status || "DISPONÍVEL" as const,
+          statusId: asset.status_id,
+          registrationDate: new Date().toISOString(),
+          notes: undefined,
+          lastSeen: undefined,
+          isOnline: undefined,
+          solucao: undefined,
+          marca: undefined,
+          modelo: asset.model || undefined,
+          serial_number: asset.serial_number || undefined,
+          dias_alugada: undefined,
+          radio: asset.radio || undefined,
+          solution_id: asset.solution_id,
+          manufacturer_id: undefined,
+          plan_id: undefined,
+          rented_days: undefined,
+          admin_user: undefined,
+          admin_pass: undefined,
+          created_at: undefined,
+          updated_at: undefined,
+          deleted_at: undefined
+        };
+
+        if (asset.solution_id === 11) {
           // Para CHIPs
-          carrier: 'Unknown',
-          line_number: asset.line_number
-        } : {
+          return {
+            ...baseAsset,
+            type: "CHIP" as const,
+            iccid: asset.iccid || '',
+            phoneNumber: asset.line_number?.toString() || '',
+            carrier: 'Unknown',
+            line_number: asset.line_number
+          } as ChipAsset;
+        } else {
           // Para Equipamentos
-          uniqueId: asset.uuid,
-          brand: '',
-          ssid: '',
-          password: ''
-        })
-      }));
+          return {
+            ...baseAsset,
+            type: "ROTEADOR" as const,
+            uniqueId: asset.uuid,
+            brand: '',
+            model: asset.model || '',
+            ssid: '',
+            password: '',
+            serialNumber: asset.serial_number || '',
+            adminUser: undefined,
+            adminPassword: undefined,
+            imei: undefined
+          } as EquipamentAsset;
+        }
+      });
 
       exportToExcel({
         assets: assetsForExport,
