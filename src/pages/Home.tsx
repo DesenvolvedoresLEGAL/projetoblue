@@ -207,8 +207,8 @@ const Home: React.FC = () => {
 
         {/* Bottom Row - Monitoring Cards */}
         <div className="grid gap-4 md:grid-cols-1 xl:grid-cols-2">
-          {/* Recent Alerts Card */}
-          <RecentAlertsCard dashboard={dashboard} />
+          {/* Recent Alerts Card - REFATORADO PARA PADRONIZAÇÃO */}
+          <StandardizedRecentAlertsCard dashboard={dashboard} />
 
           {/* REFATORADO: Asset Status Distribution - Agora mostra apenas por status com tooltip detalhada */}
           <RefactoredAssetStatusDistributionCard dashboardStats={dashboardStats} />
@@ -350,63 +350,152 @@ const SubscriptionAssetsCard = ({ subscriptionAssetsByType, isLoading }: {
   </Card>
 );
 
-// Componente separado para Recent Alerts
-const RecentAlertsCard = ({ dashboard }: { dashboard: any }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Bell className="h-5 w-5" />
-        Atividades Recentes
-      </CardTitle>
-      <CardDescription>
-        Últimos eventos e alertas registrados no sistema
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
-      {dashboard.recentAlerts.isLoading ? (
-        <div className="space-y-3">
-          {Array(4)
-            .fill(0)
-            .map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-        </div>
-      ) : (dashboard.recentAlerts.data?.length ?? 0) > 0 ? (
-        <ul className="space-y-3">
-          {dashboard.recentAlerts.data.map((alert: any) => (
-            <li key={alert.id} className="bg-muted/50 p-2 rounded-lg text-sm">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-medium">
-                  {alert.assetType} - {alert.name}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {alert.date}
-                </span>
-              </div>
-              <p className="text-muted-foreground">
-                {alert.description?.includes('CRIADO') ||  alert.description?.includes('DELETE')
-                  ? alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()
-                  : `${alert.description.charAt(0).toUpperCase() + alert.description.slice(1).toLowerCase()} de ${alert.old_status?.status} para ${alert.new_status?.status}`}
-              </p>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-8">
-          <Bell className="h-10 w-10 text-muted-foreground/30 mb-2" />
-          <p className="text-muted-foreground">Nenhum alerta recente</p>
-        </div>
-      )}
-    </CardContent>
-    <CardFooter>
-      <Link to="/history" className="w-full">
-        <Button variant="outline" size="sm" className="w-full">
-          Ver histórico completo
-        </Button>
-      </Link>
-    </CardFooter>
-  </Card>
-);
+// NOVO: Componente padronizado e auditado para Atividades Recentes
+const StandardizedRecentAlertsCard = ({ dashboard }: { dashboard: any }) => {
+  // Função para formatar data no padrão brasileiro
+  const formatBrazilianDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Data inválida';
+    }
+  };
+
+  // Função para padronizar mensagens de eventos
+  const formatEventMessage = (alert: any): string => {
+    const assetType = alert.assetType || 'Ativo';
+    const assetName = alert.name || 'N/A';
+    const eventType = alert.description || '';
+    
+    // Padronização das mensagens baseada no tipo de evento
+    if (eventType.includes('CRIADO') || eventType.includes('CREATE')) {
+      return `Cadastro: ${assetType} ${assetName} foi cadastrado no sistema`;
+    }
+    
+    if (eventType.includes('DELETE') || eventType.includes('SOFT_DELETE')) {
+      return `Remoção: ${assetType} ${assetName} foi removido do sistema`;
+    }
+    
+    if (eventType.includes('ASSOCIATION')) {
+      return `Associação: ${assetType} ${assetName} foi associado a cliente`;
+    }
+    
+    if (eventType.includes('STATUS_UPDATED') || eventType.includes('UPDATE')) {
+      const oldStatus = alert.old_status?.status;
+      const newStatus = alert.new_status?.status;
+      
+      if (oldStatus && newStatus) {
+        return `Status atualizado: ${assetType} ${assetName} mudou de "${oldStatus}" para "${newStatus}"`;
+      }
+      return `Atualização: ${assetType} ${assetName} foi atualizado`;
+    }
+    
+    // Fallback para outros tipos de evento
+    const cleanDescription = eventType.replace(/_/g, ' ').toLowerCase();
+    return `${cleanDescription.charAt(0).toUpperCase() + cleanDescription.slice(1)}: ${assetType} ${assetName}`;
+  };
+
+  // Função para remover duplicatas baseada em critérios específicos
+  const removeDuplicateEvents = (events: any[]): any[] => {
+    const uniqueEvents = new Map();
+    
+    events.forEach(event => {
+      // Chave única baseada em tipo de ativo, nome e tipo de evento
+      const uniqueKey = `${event.assetType}-${event.name}-${event.description}-${event.date}`;
+      
+      // Se não existe ou o evento atual é mais recente, mantém
+      if (!uniqueEvents.has(uniqueKey) || 
+          new Date(event.date) > new Date(uniqueEvents.get(uniqueKey).date)) {
+        uniqueEvents.set(uniqueKey, event);
+      }
+    });
+    
+    return Array.from(uniqueEvents.values());
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bell className="h-5 w-5" />
+          Atividades Recentes
+        </CardTitle>
+        <CardDescription>
+          Últimos eventos e atividades registrados no sistema
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {dashboard.recentAlerts.isLoading ? (
+          <div className="space-y-3">
+            {Array(4)
+              .fill(0)
+              .map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+          </div>
+        ) : (dashboard.recentAlerts.data?.length ?? 0) > 0 ? (
+          <ul className="space-y-3">
+            {removeDuplicateEvents(dashboard.recentAlerts.data)
+              .slice(0, 5) // Limita a 5 eventos mais recentes
+              .map((alert: any) => (
+                <li key={`${alert.id}-${alert.date}`} className="bg-muted/50 p-3 rounded-lg">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium leading-relaxed">
+                          {formatEventMessage(alert)}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground ml-2 whitespace-nowrap">
+                        {formatBrazilianDate(alert.date)}
+                      </span>
+                    </div>
+                    
+                    {/* Badge para tipo de ativo */}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        alert.assetType === 'CHIP' ? 'bg-blue-100 text-blue-800' :
+                        alert.assetType === 'SPEEDY 5G' ? 'bg-purple-100 text-purple-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {alert.assetType}
+                      </span>
+                      
+                      {/* Mostrar status atual se disponível */}
+                      {alert.new_status?.status && (
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                          {alert.new_status.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Bell className="h-10 w-10 text-muted-foreground/30 mb-2" />
+            <p className="text-muted-foreground">Nenhuma atividade recente registrada</p>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter>
+        <Link to="/history" className="w-full">
+          <Button variant="outline" size="sm" className="w-full">
+            Ver histórico completo
+          </Button>
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+};
 
 // NOVO: Componente refatorado para Asset Status Distribution
 // Exibe apenas status no PieChart, com tooltip detalhada mostrando tipos por status
