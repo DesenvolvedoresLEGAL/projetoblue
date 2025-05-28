@@ -1,24 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Users, Calendar, X, ChevronDown, ChevronUp, AlertTriangle, Pencil } from "lucide-react";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Users } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
+import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
+import { AssociationsTable } from "@/components/associations/AssociationsTable";
+import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection, SearchType } from "@/hooks/useSearchTypeDetection";
 import { filterMultiField } from "@/utils/multiFieldFilter";
-import { getAssetIdentifier } from "@/utils/formatters";
 
 interface Association {
   id: number;
@@ -35,25 +27,6 @@ interface Association {
   asset_solution_id: number;
   asset_solution_name: string;
 }
-
-// Helper function to get status badge for associations
-const getStatusBadge = (exitDate: string | null) => {
-  const today = new Date().toISOString().split('T')[0];
-  
-  if (!exitDate) {
-    return <Badge className="bg-green-500">Ativa</Badge>;
-  }
-  
-  if (exitDate === today) {
-    return <Badge variant="warning">Encerra hoje</Badge>;
-  }
-  
-  if (exitDate < today) {
-    return <Badge variant="outline">Encerrada</Badge>;
-  }
-  
-  return <Badge className="bg-green-500">Ativa</Badge>;
-};
 
 export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
@@ -82,18 +55,6 @@ export default function AssociationsList() {
   
   const itemsPerPage = 100; // Aumentado para melhor eficiência do filtro frontend
   const today = new Date().toISOString().split('T')[0];
-
-  // Função para formatar datas corrigindo o problema de timezone
-  const formatDateCorrect = (dateString: string | null) => {
-    if (!dateString) return '-';
-    try {
-      const [year, month, day] = dateString.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      return format(date, 'dd/MM/yyyy', { locale: ptBR });
-    } catch {
-      return dateString;
-    }
-  };
 
   // Validação automática de datas
   useEffect(() => {
@@ -313,142 +274,27 @@ export default function AssociationsList() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Filtros Principais */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Buscar</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  id="search"
-                  placeholder="ID, nome do cliente, ICCID ou rádio..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              {debouncedSearchTerm && (
-                <div className="text-xs text-muted-foreground">
-                  Tipo de busca detectado: {searchType === 'id' ? 'ID' : 
-                    searchType === 'iccid' ? 'ICCID' : 
-                    searchType === 'radio' ? 'Rádio' : 'Nome do cliente'}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={statusFilter} onValueChange={(value: 'all' | 'active' | 'ended' | 'today') => setStatusFilter(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="active">Ativa</SelectItem>
-                  <SelectItem value="ended">Encerrada</SelectItem>
-                  <SelectItem value="today">Encerra hoje</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Filtros por Data - Colapsável */}
-          <Card className="border-muted">
-            <Collapsible open={showDateFilters} onOpenChange={setShowDateFilters}>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <CardTitle className="text-base">
-                        Filtrar por Data
-                        {hasActiveDateFilters() && (
-                          <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                            Ativo
-                          </span>
-                        )}
-                      </CardTitle>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {hasActiveDateFilters() && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clearDateFilters();
-                          }}
-                          className="flex items-center gap-1"
-                        >
-                          <X className="h-3 w-3" />
-                          Limpar
-                        </Button>
-                      )}
-                      {showDateFilters ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              
-              <CollapsibleContent>
-                <CardContent className="space-y-4">
-                  {dateValidationError && (
-                    <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="text-sm">{dateValidationError}</span>
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Data de Início</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">De</Label>
-                        <DatePicker
-                          date={entryDateFrom}
-                          setDate={setEntryDateFrom}
-                          placeholder="Selecionar data inicial"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Até</Label>
-                        <DatePicker
-                          date={entryDateTo}
-                          setDate={setEntryDateTo}
-                          placeholder="Selecionar data final"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Data de Fim</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">De</Label>
-                        <DatePicker
-                          date={exitDateFrom}
-                          setDate={setExitDateFrom}
-                          placeholder="Selecionar data inicial"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Até</Label>
-                        <DatePicker
-                          date={exitDateTo}
-                          setDate={setExitDateTo}
-                          placeholder="Selecionar data final"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
+          <AssociationsFilters
+            searchInput={searchInput}
+            setSearchInput={setSearchInput}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            debouncedSearchTerm={debouncedSearchTerm}
+            searchType={searchType}
+            showDateFilters={showDateFilters}
+            setShowDateFilters={setShowDateFilters}
+            entryDateFrom={entryDateFrom}
+            setEntryDateFrom={setEntryDateFrom}
+            entryDateTo={entryDateTo}
+            setEntryDateTo={setEntryDateTo}
+            exitDateFrom={exitDateFrom}
+            setExitDateFrom={setExitDateFrom}
+            exitDateTo={exitDateTo}
+            setExitDateTo={setExitDateTo}
+            dateValidationError={dateValidationError}
+            hasActiveDateFilters={hasActiveDateFilters}
+            clearDateFilters={clearDateFilters}
+          />
 
           {/* Tabela */}
           {isLoading ? (
@@ -456,119 +302,22 @@ export default function AssociationsList() {
               Carregando associações...
             </div>
           ) : associations.length > 0 ? (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Ativo</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Data de Início</TableHead>
-                      <TableHead>Data de Fim</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[100px]">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {associations.map((association) => (
-                      <TableRow key={association.id}>
-                        <TableCell className="font-medium">
-                          #{association.id}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {getAssetIdentifier(association)}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {association.asset_solution_name}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {association.client_name}
-                        </TableCell>
-                        <TableCell>
-                          {formatDateCorrect(association.entry_date)}
-                        </TableCell>
-                        <TableCell>
-                          {formatDateCorrect(association.exit_date)}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(association.exit_date)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAssociation(association)}
-                            className="h-8 w-8 p-0 hover:bg-muted"
-                            title="Editar associação"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      })}
-
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                </div>
-              )}
-
-              <div className="text-sm text-muted-foreground text-center">
-                Mostrando {associations.length} de {totalCount} associações
-                {debouncedSearchTerm && ` (filtradas por "${debouncedSearchTerm}")`}
-              </div>
-            </>
+            <AssociationsTable
+              associations={associations}
+              totalCount={totalCount}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              onEditAssociation={handleEditAssociation}
+              debouncedSearchTerm={debouncedSearchTerm}
+            />
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <div className="text-lg font-medium mb-2">Nenhuma associação encontrada</div>
-              <div className="text-sm">
-                {debouncedSearchTerm || statusFilter !== 'all' || hasActiveDateFilters() || dateValidationError
-                  ? 'Tente ajustar os filtros de busca ou corrigir as datas inválidas'
-                  : 'Não há associações cadastradas no sistema'
-                }
-              </div>
-            </div>
+            <AssociationsEmpty
+              debouncedSearchTerm={debouncedSearchTerm}
+              statusFilter={statusFilter}
+              hasActiveDateFilters={hasActiveDateFilters()}
+              dateValidationError={dateValidationError}
+            />
           )}
         </CardContent>
       </Card>
