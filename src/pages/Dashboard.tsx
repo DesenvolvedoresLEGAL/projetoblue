@@ -1,56 +1,127 @@
-import { useAssets } from "@/context/useAssets";
+
+import React, { useMemo } from 'react';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, Clock, FileSpreadsheet, Calendar, ArrowRight } from "lucide-react";
+import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, Clock, FileSpreadsheet, Calendar, ArrowRight, Zap } from "lucide-react";
 import { exportToExcel } from "@/utils/excelExport";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import AssetsStatusCard from "@/components/dashboard/AssetsStatusCard"; 
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Dashboard = () => {
-  const {
-    assets,
-    clients,
-    getAssetsByType,
-    getAssetsByStatus,
-    getExpiredSubscriptions,
-    loading: assetsLoading // Fixed property name from isLoading to loading
-  } = useAssets();
-  
   const navigate = useNavigate();
   
-  // Only compute these values when assets are loaded
-  const totalChips = !assetsLoading ? getAssetsByType("CHIP").length : 0;
-  const totalRouters = !assetsLoading ? getAssetsByType("ROTEADOR").length : 0;
-  const availableChips = !assetsLoading ? getAssetsByType("CHIP").filter(chip => chip.status === "DISPONÍVEL").length : 0;
-  const availableRouters = !assetsLoading ? getAssetsByType("ROTEADOR").filter(router => router.status === "DISPONÍVEL").length : 0;
-  const problemAssets = !assetsLoading ? assets.filter(asset => ["SEM DADOS", "BLOQUEADO", "MANUTENÇÃO"].includes(asset.status)) : [];
-  const expiredSubscriptions = !assetsLoading ? getExpiredSubscriptions() : [];
-  
+  // Query para buscar todos os ativos com suas relações
+  const { data: assets, isLoading } = useQuery({
+    queryKey: ["dashboard-assets"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assets")
+        .select(`
+          uuid,
+          solution_id,
+          status_id,
+          serial_number,
+          iccid,
+          radio,
+          line_number,
+          model,
+          status:asset_status(id, status),
+          solution:asset_solutions(id, solution)
+        `)
+        .is("deleted_at", null);
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 30000,
+    refetchOnWindowFocus: false
+  });
+
+  // Query para buscar clientes (para funcionalidade de exportação)
+  const { data: clients } = useQuery({
+    queryKey: ["dashboard-clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .is("deleted_at", null);
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60000
+  });
+
+  // Processar dados dos ativos por categoria
+  const dashboardStats = useMemo(() => {
+    if (!assets) return null;
+    
+    // Separar por categorias
+    const chips = assets.filter(asset => asset.solution_id === 11);
+    const speedys = assets.filter(asset => asset.solution_id === 1);
+    const equipments = assets.filter(asset => asset.solution_id !== 11 && asset.solution_id !== 1);
+    
+    // Função para calcular métricas por categoria
+    const calculateMetrics = (categoryAssets: typeof assets) => {
+      const total = categoryAssets.length;
+      const available = categoryAssets.filter(a => a.status_id === 1).length;
+      const inUse = categoryAssets.filter(a => a.status_id === 2 || a.status_id === 3).length;
+      const problems = categoryAssets.filter(a => a.status_id && a.status_id >= 4).length;
+      const problemAssets = categoryAssets.filter(a => a.status_id && a.status_id >= 4);
+      
+      return { total, available, inUse, problems, problemAssets };
+    };
+
+    return {
+      chips: calculateMetrics(chips),
+      speedys: calculateMetrics(speedys),
+      equipments: calculateMetrics(equipments),
+      totalAssets: assets.length,
+      totalProblems: assets.filter(a => a.status_id && a.status_id >= 4).length
+    };
+  }, [assets]);
+
   const handleExportToExcel = () => {
-    exportToExcel({
-      assets,
-      clients
-    });
+    if (assets && clients) {
+      // Converter formato dos assets para compatibilidade com exportação
+      const assetsForExport = assets.map(asset => ({
+        id: asset.uuid,
+        type: asset.solution_id === 11 ? "CHIP" : "ROTEADOR",
+        status: asset.status?.status || "DESCONHECIDO",
+        phoneNumber: asset.line_number,
+        iccid: asset.iccid,
+        radio: asset.radio,
+        serialNumber: asset.serial_number,
+        model: asset.model,
+        registrationDate: new Date().toISOString()
+      }));
+
+      exportToExcel({
+        assets: assetsForExport,
+        clients: clients.map(client => ({
+          id: client.uuid,
+          nome: client.nome,
+          cnpj: client.cnpj,
+          email: client.email,
+          contato: client.contato.toString()
+        }))
+      });
+    }
   };
 
-  function formatNumber(number) {
-    // número = +5599999999999
-    const cleaned = ('' + number).replace(/\D/g, '');
-    // número = 5599999999999
-    const match = cleaned.match(/^(\d{2})(\d{2})(\d{4}|\d{5})(\d{4})$/);
-    // número = 55 99 99999 9999
-    if (match) {
-      return ['(', match[2], ') ', match[3], '-', match[4]].join('')
+  // Função para formatar identificador do asset
+  const getAssetIdentifier = (asset: any) => {
+    if (asset.solution_id === 11) {
+      return asset.line_number || asset.iccid || 'N/A';
     }
-    // número = (99) 99999-9999
-    return '';
-  }
+    return asset.radio || asset.serial_number || 'N/A';
+  };
 
-  // Loading state - show skeleton UI
-  if (assetsLoading) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -58,8 +129,8 @@ const Dashboard = () => {
           <Skeleton className="h-9 w-44" />
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => (
             <Card key={i}>
               <CardHeader className="pb-2">
                 <Skeleton className="h-4 w-24" />
@@ -71,29 +142,25 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-2">
-          {[1, 2].map(i => (
-            <Card key={i} className="col-span-1">
-              <CardHeader>
-                <Skeleton className="h-6 w-40 mb-2" />
-                <Skeleton className="h-4 w-56" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[1, 2, 3].map(j => (
-                    <Skeleton key={j} className="h-16 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      </div>
+    );
+  }
+
+  if (!dashboardStats) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Nenhum dado disponível</p>
         </div>
       </div>
     );
   }
 
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <div className="flex items-center gap-2">
@@ -108,63 +175,87 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Cards principais por categoria */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Card CHIPS */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Chips</CardTitle>
-            <Smartphone className="h-4 w-4 text-telecom-600" />
+            <CardTitle className="text-sm font-medium">CHIPS</CardTitle>
+            <Smartphone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalChips}</div>
-            <p className="text-xs text-muted-foreground">
-              {availableChips} disponíveis
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Roteadores</CardTitle>
-            <Wifi className="h-4 w-4 text-telecom-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalRouters}</div>
-            <p className="text-xs text-muted-foreground">
-              {availableRouters} disponíveis
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ativos em Uso</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {assets.filter(asset => ["ALUGADO", "ASSINATURA"].includes(asset.status)).length}
+            <div className="text-2xl font-bold">{dashboardStats.chips.total}</div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+              <div className="text-center">
+                <div className="font-medium text-green-600">{dashboardStats.chips.available}</div>
+                <div className="text-muted-foreground">Disponíveis</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-600">{dashboardStats.chips.inUse}</div>
+                <div className="text-muted-foreground">Em uso</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-red-600">{dashboardStats.chips.problems}</div>
+                <div className="text-muted-foreground">Problemas</div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Alugados ou em assinatura
-            </p>
           </CardContent>
         </Card>
-        
+
+        {/* Card SPEEDYS */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ativos com Problema</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
+            <CardTitle className="text-sm font-medium">SPEEDYS 5G</CardTitle>
+            <Zap className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{problemAssets.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Necessitam atenção
-            </p>
+            <div className="text-2xl font-bold">{dashboardStats.speedys.total}</div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+              <div className="text-center">
+                <div className="font-medium text-green-600">{dashboardStats.speedys.available}</div>
+                <div className="text-muted-foreground">Disponíveis</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-600">{dashboardStats.speedys.inUse}</div>
+                <div className="text-muted-foreground">Em uso</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-red-600">{dashboardStats.speedys.problems}</div>
+                <div className="text-muted-foreground">Problemas</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card EQUIPAMENTOS */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">EQUIPAMENTOS</CardTitle>
+            <Wifi className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardStats.equipments.total}</div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+              <div className="text-center">
+                <div className="font-medium text-green-600">{dashboardStats.equipments.available}</div>
+                <div className="text-muted-foreground">Disponíveis</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-blue-600">{dashboardStats.equipments.inUse}</div>
+                <div className="text-muted-foreground">Em uso</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-red-600">{dashboardStats.equipments.problems}</div>
+                <div className="text-muted-foreground">Problemas</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Cards secundários */}
       <div className="grid gap-4 md:grid-cols-2">
+        {/* Ativos com Problema */}
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Ativos com Problema</CardTitle>
@@ -173,81 +264,109 @@ const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {problemAssets.length > 0 ? <div className="space-y-2">
-                {problemAssets.slice(0, 5).map(asset => <div key={asset.id} className="flex items-center justify-between p-2 border rounded-md">
+            {dashboardStats.totalProblems > 0 ? (
+              <div className="space-y-2">
+                {/* Problemas dos CHIPs */}
+                {dashboardStats.chips.problemAssets.slice(0, 3).map(asset => (
+                  <div key={asset.uuid} className="flex items-center justify-between p-2 border rounded-md">
                     <div className="flex items-center space-x-2">
-                      {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+                      <Smartphone className="h-4 w-4" />
                       <div>
                         <p className="text-sm font-medium">
-                          {asset.type === "CHIP" ? formatNumber(`+55${(asset as any).phoneNumber}`) : (asset as any).radio}
+                          CHIP: {getAssetIdentifier(asset)}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {asset.type === "CHIP" ? (asset as any).iccid : (asset as any).serialNumber}
+                          {asset.iccid || 'Sem ICCID'}
                         </p>
                       </div>
                     </div>
-                    <Badge className={asset.status === "SEM DADOS" ? "bg-amber-500" : asset.status === "BLOQUEADO" ? "bg-red-500" : "bg-blue-500"}>
-                      {asset.status}
+                    <Badge className="bg-red-500">
+                      {asset.status?.status || 'Problema'}
                     </Badge>
-                  </div>)}
-                {problemAssets.length > 5 && <p className="text-xs text-center text-gray-500 mt-2">
-                    + {problemAssets.length - 5} outros ativos com problema
-                  </p>}
-              </div> : <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+                  </div>
+                ))}
+                
+                {/* Problemas dos SPEEDYs */}
+                {dashboardStats.speedys.problemAssets.slice(0, 2).map(asset => (
+                  <div key={asset.uuid} className="flex items-center justify-between p-2 border rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <Zap className="h-4 w-4" />
+                      <div>
+                        <p className="text-sm font-medium">
+                          SPEEDY: {getAssetIdentifier(asset)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {asset.serial_number || 'Sem Serial'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-red-500">
+                      {asset.status?.status || 'Problema'}
+                    </Badge>
+                  </div>
+                ))}
+
+                {dashboardStats.totalProblems > 5 && (
+                  <p className="text-xs text-center text-gray-500 mt-2">
+                    + {dashboardStats.totalProblems - 5} outros ativos com problema
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
                 <CheckCircle className="h-8 w-8 mb-2" />
                 <p className="text-sm">Não há ativos com problema</p>
-              </div>}
+              </div>
+            )}
           </CardContent>
         </Card>
         
+        {/* Resumo Geral */}
         <Card className="col-span-1">
           <CardHeader className="flex items-center justify-between">
             <div>
-              <CardTitle>Assinaturas Expiradas</CardTitle>
-              
+              <CardTitle>Resumo Geral</CardTitle>
+              <CardDescription>Visão geral do inventário</CardDescription>
             </div>
-            <Button variant="outline" size="sm" className="flex items-center" onClick={() => navigate("/subscriptions")}>
-              Ver todas <ArrowRight className="h-4 w-4 ml-1" />
+            <Button variant="outline" size="sm" className="flex items-center" onClick={() => navigate("/assets")}>
+              Ver inventário <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </CardHeader>
           <CardContent>
-            {expiredSubscriptions.length > 0 ? <div className="space-y-2">
-                {expiredSubscriptions.slice(0, 5).map(asset => {
-              const client = asset.clientId ? clients.find(c => c.id === asset.clientId) : null;
-              return <div key={asset.id} className="flex items-center justify-between p-2 border rounded-md">
-                      <div className="flex items-center space-x-2">
-                        {asset.type === "CHIP" ? <Smartphone className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
-                        <div>
-                          <p className="text-sm font-medium">
-                            {asset.type === "CHIP" ? `CHIP: ${(asset as any).phoneNumber}` : `ROTEADOR: ${(asset as any).model}`}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {client?.nome || "Cliente não encontrado"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className="bg-red-500">
-                          Expirado
-                        </Badge>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {asset.subscription ? format(new Date(asset.subscription.endDate), "dd/MM/yyyy") : ""}
-                        </p>
-                      </div>
-                    </div>;
-            })}
-                {expiredSubscriptions.length > 5 && <p className="text-xs text-center text-gray-500 mt-2">
-                    + {expiredSubscriptions.length - 5} outras assinaturas expiradas
-                  </p>}
-              </div> : <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-                <Calendar className="h-8 w-8 mb-2" />
-                <p className="text-sm">Nenhuma assinatura expirada</p>
-              </div>}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Total de Ativos</span>
+                <Badge variant="outline" className="text-lg px-3 py-1">
+                  {dashboardStats.totalAssets}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-lg font-bold text-green-600">
+                    {dashboardStats.chips.available + dashboardStats.speedys.available + dashboardStats.equipments.available}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Disponíveis</p>
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-blue-600">
+                    {dashboardStats.chips.inUse + dashboardStats.speedys.inUse + dashboardStats.equipments.inUse}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Em uso</p>
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-red-600">
+                    {dashboardStats.totalProblems}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Problemas</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
-        
-        <AssetsStatusCard/>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;
