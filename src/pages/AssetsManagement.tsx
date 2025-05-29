@@ -17,14 +17,20 @@ import {
   TrendingUp,
   Activity,
   AlertTriangle,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
+import { useDashboardAssets } from '@/hooks/useDashboardAssets';
 
 const AssetsManagement = () => {
-  const navigate = useNavigate();
-  const [lastSync] = useState(new Date(Date.now() - 5 * 60 * 1000)); // 5 minutes ago
-  const [hasProblems] = useState(false); // Demo: set to true to show problem cards
 
+  const navigate = useNavigate();
+  const dashboard = useDashboardAssets();
+
+  const isLoading = dashboard.problemAssets.isLoading;
+
+  const [lastSync] = useState(new Date(Date.now() - 5 * 60 * 1000)); // 5 minutes ago
+  
   const getSyncStatus = () => {
     const minutesAgo = Math.floor((Date.now() - lastSync.getTime()) / (1000 * 60));
     
@@ -57,6 +63,22 @@ const AssetsManagement = () => {
 
   const syncStatus = getSyncStatus();
 
+  
+  // Loading state for the entire dashboard
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-6 flex flex-col items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-16 w-16 text-legal-primary animate-spin" />
+        <div className="text-center space-y-2">
+          <p className="text-xl font-semibold legal-title">Carregando Gestão</p>
+          <p className="text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hasProblems = (dashboard.problemAssets.data.length > 0); // Demo: set to true to show problem cards
+
   return (
     <TooltipProvider>
       <div className="space-y-8">
@@ -75,31 +97,6 @@ const AssetsManagement = () => {
           </div>
         </div>
 
-        {/* Status de Sincronização */}
-        <Alert className={`${syncStatus.bgColor} border-2 transition-all duration-300 hover:shadow-md`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {syncStatus.icon}
-              <div>
-                <h3 className={`font-bold legal-text ${syncStatus.color}`}>
-                  {syncStatus.text}
-                </h3>
-                <AlertDescription className="text-sm opacity-75">
-                  {syncStatus.detail}
-                </AlertDescription>
-              </div>
-            </div>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-5 w-5 text-muted-foreground hover:text-legal-primary cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Status da última sincronização com o banco de dados</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </Alert>
-
         {/* Cards de Problemas - Apenas se houver */}
         {hasProblems ? (
           <Alert className="bg-red-50 border-red-200 border-2">
@@ -113,19 +110,7 @@ const AssetsManagement = () => {
               </AlertDescription>
             </div>
           </Alert>
-        ) : (
-          <Alert className="bg-green-50 border-green-200 border-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <div>
-              <h3 className="font-bold text-green-700 legal-text">
-                Tudo funcionando perfeitamente! 
-              </h3>
-              <AlertDescription className="text-green-600">
-                Todos os ativos estão em condições normais de operação.
-              </AlertDescription>
-            </div>
-          </Alert>
-        )}
+        ) : null}
 
         {/* Cards de Ações Principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
