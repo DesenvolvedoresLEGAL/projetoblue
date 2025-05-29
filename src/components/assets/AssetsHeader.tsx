@@ -2,8 +2,11 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Download, Upload } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 const AssetsHeader = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex justify-between items-center">
       <h1 className="text-3xl font-bold tracking-tight">Inventário de Ativos</h1>
@@ -16,9 +19,10 @@ const AssetsHeader = () => {
           <Upload className="w-4 h-4 mr-2" />
           Importar
         </Button>
-        <Button size="sm">
+        <Button size="sm"
+          onClick={() => navigate("/assets/register")}>
           <PlusCircle className="w-4 h-4 mr-2" />
-          <a href="/assets/register">Novo Ativo</a>
+          <span>Novo Ativo</span>
         </Button>
       </div>
     </div>
