@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Users, XCircle } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, XCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AssociationTableRow } from "./AssociationTableRow";
 import { ConfirmationModal } from "../association/ConfirmationModal";
@@ -42,13 +42,17 @@ interface AssociationGroupRowProps {
   onEditAssociation: (association: Association) => void;
   onEndAssociation: (associationId: number) => void;
   onEndGroup: (groupKey: string) => void;
+  isEndingAssociation?: boolean;
+  isEndingGroup?: boolean;
 }
 
 export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
   group,
   onEditAssociation,
   onEndAssociation,
-  onEndGroup
+  onEndGroup,
+  isEndingAssociation = false,
+  isEndingGroup = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showEndGroupConfirmation, setShowEndGroupConfirmation] = useState(false);
@@ -85,7 +89,14 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
     return 'Ativa';
   };
 
+  // Calcular quantas associações ativas existem no grupo
+  const getActiveAssociationsCount = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return group.associations.filter(a => !a.exit_date || a.exit_date > today).length;
+  };
+
   const handleEndGroup = () => {
+    console.log('Confirmando encerramento do grupo:', group.groupKey);
     onEndGroup(group.groupKey);
     setShowEndGroupConfirmation(false);
   };
@@ -95,6 +106,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
   };
 
   const groupStatus = getGroupStatus();
+  const activeAssociationsCount = getActiveAssociationsCount();
 
   return (
     <>
@@ -122,6 +134,11 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
             <Badge variant="secondary" className="text-xs">
               {group.totalAssets} ativo{group.totalAssets > 1 ? 's' : ''}
             </Badge>
+            {activeAssociationsCount > 0 && activeAssociationsCount < group.totalAssets && (
+              <Badge variant="outline" className="text-xs">
+                {activeAssociationsCount} ativa{activeAssociationsCount > 1 ? 's' : ''}
+              </Badge>
+            )}
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             {getAssetTypesSummary()}
@@ -150,15 +167,20 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
 
         <TableCell>
           <div className="flex items-center gap-2">
-            {group.canEndGroup && (
+            {group.canEndGroup && activeAssociationsCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEndGroupConfirmation(true)}
-                className="h-8 px-3 hover:bg-destructive/10 text-destructive hover:text-destructive"
-                title="Encerrar grupo de associações"
+                disabled={isEndingGroup}
+                className="h-8 px-3 hover:bg-destructive/10 text-destructive hover:text-destructive disabled:opacity-50"
+                title={`Encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''}`}
               >
-                <XCircle className="h-4 w-4 mr-1" />
+                {isEndingGroup ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-1" />
+                )}
                 Encerrar Grupo
               </Button>
             )}
@@ -173,6 +195,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
           association={association}
           onEdit={onEditAssociation}
           onEndAssociation={onEndAssociation}
+          isEndingAssociation={isEndingAssociation}
         />
       ))}
 
@@ -182,7 +205,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
         onOpenChange={setShowEndGroupConfirmation}
         onConfirm={handleEndGroup}
         title="Encerrar Grupo de Associações"
-        description={`Tem certeza que deseja encerrar todas as ${group.totalAssets} associações do cliente ${group.client_name}? Esta ação encerrará todas as associações simultaneamente.`}
+        description={`Tem certeza que deseja encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''} do cliente ${group.client_name}? Esta ação encerrará todas as associações ativas simultaneamente.`}
         confirmText="Encerrar Grupo"
         cancelText="Cancelar"
         variant="destructive"

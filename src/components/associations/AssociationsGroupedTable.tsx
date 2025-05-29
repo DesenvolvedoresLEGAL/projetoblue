@@ -42,6 +42,8 @@ interface AssociationsGroupedTableProps {
   onEndAssociation: (associationId: number) => void;
   onEndGroup: (groupKey: string) => void;
   debouncedSearchTerm: string;
+  isEndingAssociation?: boolean;
+  isEndingGroup?: boolean;
 }
 
 export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> = ({
@@ -53,7 +55,9 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
   onEditAssociation,
   onEndAssociation,
   onEndGroup,
-  debouncedSearchTerm
+  debouncedSearchTerm,
+  isEndingAssociation = false,
+  isEndingGroup = false
 }) => {
   const groupKeys = Object.keys(groupedAssociations).sort((a, b) => {
     const groupA = groupedAssociations[a];
@@ -92,6 +96,8 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
                 onEditAssociation={onEditAssociation}
                 onEndAssociation={onEndAssociation}
                 onEndGroup={onEndGroup}
+                isEndingAssociation={isEndingAssociation}
+                isEndingGroup={isEndingGroup}
               />
             ))}
           </TableBody>

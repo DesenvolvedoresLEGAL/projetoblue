@@ -62,7 +62,12 @@ export default function AssociationsListContent() {
   });
 
   // Actions
-  const { handleEndAssociation, handleEndGroup } = useAssociationActions();
+  const { 
+    handleEndAssociation, 
+    handleEndGroup, 
+    isEndingAssociation, 
+    isEndingGroup 
+  } = useAssociationActions();
 
   // Aplicar filtro multicampo no frontend e agrupar por cliente e datas
   const { groupedAssociations, totalAssociations } = useMemo(() => {
@@ -92,6 +97,7 @@ export default function AssociationsListContent() {
 
   // Handler para encerrar grupo com access aos grouped associations
   const handleEndGroupWithData = (groupKey: string) => {
+    console.log('Iniciando encerramento do grupo:', groupKey);
     handleEndGroup(groupKey, groupedAssociations);
   };
 
@@ -177,6 +183,8 @@ export default function AssociationsListContent() {
               onEndAssociation={handleEndAssociation}
               onEndGroup={handleEndGroupWithData}
               debouncedSearchTerm={debouncedSearchTerm}
+              isEndingAssociation={isEndingAssociation}
+              isEndingGroup={isEndingGroup}
             />
           ) : (
             <AssociationsEmpty

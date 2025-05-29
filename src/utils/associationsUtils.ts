@@ -61,11 +61,24 @@ export const groupAssociationsByClientAndDates = (associations: Association[]) =
     const assetType = association.asset_solution_name;
     groups[groupKey].assetTypes[assetType] = (groups[groupKey].assetTypes[assetType] || 0) + 1;
     
-    // Verificar se pode encerrar o grupo (função canBeEndedManually inline)
-    const canEnd = !association.exit_date || association.exit_date >= new Date().toISOString().split('T')[0];
-    if (!canEnd) {
-      groups[groupKey].canEndGroup = false;
+    // Verificar se pode encerrar o grupo - lógica mais flexível
+    // Um grupo pode ser encerrado se tem pelo menos uma associação ativa
+    const today = new Date().toISOString().split('T')[0];
+    const isAssociationActive = !association.exit_date || association.exit_date > today;
+    
+    // Se encontrarmos pelo menos uma associação ativa, o grupo pode ser encerrado
+    if (isAssociationActive) {
+      groups[groupKey].canEndGroup = true;
     }
+  });
+  
+  // Verificar novamente a lógica canEndGroup para cada grupo
+  Object.values(groups).forEach(group => {
+    const today = new Date().toISOString().split('T')[0];
+    const hasActiveAssociations = group.associations.some(a => 
+      !a.exit_date || a.exit_date > today
+    );
+    group.canEndGroup = hasActiveAssociations;
   });
   
   return groups;
