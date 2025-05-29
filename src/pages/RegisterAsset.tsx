@@ -551,6 +551,31 @@ export default function RegisterAsset() {
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/20 p-6 rounded-lg">
+                        
+                        <FormField
+                          control={equipmentForm.control}
+                          name="radio"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-legal-dark font-semibold">
+                                Rádio *
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Ex: SPEEDY01, 4BLACK69"
+                                  disabled={createAssetMutation.isPending}
+                                  {...field}
+                                  className="form-input"
+                                />
+                              </FormControl>
+                              <p className="text-xs text-muted-foreground">
+                                Identificador único do equipamento (etiqueta da LEGAL)
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
                           <FormField
                             control={equipmentForm.control}
                             name="serial_number"
@@ -572,6 +597,7 @@ export default function RegisterAsset() {
                               </FormItem>
                             )}
                           />
+                          
 
                           <FormField
                             control={equipmentForm.control}
@@ -672,32 +698,6 @@ export default function RegisterAsset() {
                               </FormItem>
                             )}
                           />
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-
-                    {/* Seção Informações Técnicas */}
-                    <Collapsible open={technicalInfoOpen} onOpenChange={setTechnicalInfoOpen}>
-                      <CollapsibleTrigger className="w-full">
-                        <Card className="cursor-pointer hover:bg-muted/30 transition-colors border-legal-secondary/20">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-legal-secondary/10 rounded-lg">
-                                  <Zap className="h-5 w-5 text-legal-secondary" />
-                                </div>
-                                <h3 className="text-lg font-bold legal-subtitle">Configurações Técnicas</h3>
-                              </div>
-                              {technicalInfoOpen ? 
-                                <ChevronDown className="h-5 w-5 text-legal-secondary" /> : 
-                                <ChevronRight className="h-5 w-5 text-legal-secondary" />
-                              }
-                            </div>
-                          </CardHeader>
-                        </Card>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-legal-secondary/5 p-6 rounded-lg border border-legal-secondary/20">
                           <FormField
                             control={equipmentForm.control}
                             name="solution_id"
@@ -737,37 +737,6 @@ export default function RegisterAsset() {
                             )}
                           />
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="radio"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">
-                                  <Tooltip>
-                                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                      Rádio *
-                                      <Info className="h-3 w-3" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Configuração de frequência e potência do equipamento</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Ex: 2.4GHz, 5GHz, Dual Band"
-                                    disabled={createAssetMutation.isPending}
-                                    {...field}
-                                    className="form-input"
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  Especificação técnica do rádio
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
 
                           <FormField
                             control={equipmentForm.control}
@@ -795,31 +764,7 @@ export default function RegisterAsset() {
                               </FormItem>
                             )}
                           />
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-
-                    {/* Seção Configurações de Segurança */}
-                    <Collapsible open={securityInfoOpen} onOpenChange={setSecurityInfoOpen}>
-                      <CollapsibleTrigger className="w-full">
-                        <Card className="cursor-pointer hover:bg-muted/30 transition-colors border-red-200">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-red-100 rounded-lg">
-                                  <Shield className="h-5 w-5 text-red-600" />
-                                </div>
-                                <h3 className="text-lg font-bold text-red-700">Credenciais de Acesso</h3>
-                              </div>
-                              {securityInfoOpen ? 
-                                <ChevronDown className="h-5 w-5 text-red-600" /> : 
-                                <ChevronRight className="h-5 w-5 text-red-600" />
-                              }
-                            </div>
-                          </CardHeader>
-                        </Card>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-4">
+                        </div>                    
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-red-50/50 p-6 rounded-lg border border-red-200">
                           <FormField
                             control={equipmentForm.control}
