@@ -161,14 +161,17 @@ const AssetAssociation = () => {
       <Card className="border-[#4D2BFB]/20 shadow-sm">
         <CardContent className="p-6">
           {currentStep === 'client' && (
-            <ClientSelectionSimplified onClientSelect={handleClientSelect} />
+            <ClientSelectionSimplified onClientSelected={handleClientSelect} />
           )}
           
           {currentStep === 'assets' && selectedClient && (
             <AssetSelection
-              selectedClient={selectedClient}
-              onAssetsConfirm={handleAssetsConfirm}
-              onBack={handleBack}
+              client={selectedClient}
+              selectedAssets={selectedAssets}
+              onAssetAdded={(asset) => setSelectedAssets(prev => [...prev, asset])}
+              onAssetRemoved={(assetId) => setSelectedAssets(prev => prev.filter(a => a.uuid !== assetId))}
+              onAssetUpdated={(assetId, updates) => setSelectedAssets(prev => prev.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
+              onProceed={() => setCurrentStep('summary')}
             />
           )}
           

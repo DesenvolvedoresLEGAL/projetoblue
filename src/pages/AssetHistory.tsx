@@ -109,20 +109,24 @@ const AssetHistory = () => {
   };
 
   const getAssetIdentifier = (details: any) => {
-    if (details?.line_number) {
+    if (!details || typeof details !== 'object') return 'N/A';
+    
+    if (details.line_number) {
       return `Linha: ${details.line_number}`;
     }
-    if (details?.radio) {
+    if (details.radio) {
       return `Rádio: ${details.radio}`;
     }
-    if (details?.asset_id) {
+    if (details.asset_id) {
       return `ID: ${details.asset_id.substring(0, 8)}...`;
     }
     return 'N/A';
   };
 
   const getUserInfo = (details: any) => {
-    if (details?.username && details.username !== 'system') {
+    if (!details || typeof details !== 'object') return 'Sistema';
+    
+    if (details.username && details.username !== 'system') {
       return details.username;
     }
     return 'Sistema';
@@ -270,7 +274,11 @@ const AssetHistory = () => {
                           {getAssetIdentifier(log.details)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {log.details?.solution_name || log.details?.solution || 'N/A'}
+                          {log.details && typeof log.details === 'object' && (log.details as any).solution_name ? 
+                            (log.details as any).solution_name : 
+                            log.details && typeof log.details === 'object' && (log.details as any).solution ? 
+                              (log.details as any).solution : 'N/A'
+                          }
                         </div>
                       </TableCell>
                       <TableCell>
@@ -283,20 +291,21 @@ const AssetHistory = () => {
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1 text-xs">
-                          {log.details?.event_description && (
+                          {log.details && typeof log.details === 'object' && (log.details as any).event_description && (
                             <div className="text-muted-foreground">
-                              {log.details.event_description}
+                              {(log.details as any).event_description}
                             </div>
                           )}
-                          {log.details?.old_status_name && log.details?.new_status_name && (
+                          {log.details && typeof log.details === 'object' && 
+                           (log.details as any).old_status_name && (log.details as any).new_status_name && (
                             <div className="flex items-center gap-2">
                               <StandardStatusBadge 
-                                status={log.details.old_status_name} 
+                                status={(log.details as any).old_status_name} 
                                 className="text-xs"
                               />
                               <span>→</span>
                               <StandardStatusBadge 
-                                status={log.details.new_status_name} 
+                                status={(log.details as any).new_status_name} 
                                 className="text-xs"
                               />
                             </div>
