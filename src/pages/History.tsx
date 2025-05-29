@@ -210,6 +210,7 @@ export default function HistoryPage() {
               className="flex items-center justify-center w-8 h-8 p-0 hover:bg-[#4D2BFB]/10 hover:text-[#4D2BFB]"
             >
               <ArrowLeft className="h-4 w-4" />
+              Voltar
             </Button>
           </StandardPageHeader>
 
