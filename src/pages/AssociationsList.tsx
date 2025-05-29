@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,7 +113,7 @@ const groupAssociationsByClientAndDates = (associations: Association[]) => {
 
 export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today' | 'grouped'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   
@@ -287,9 +288,8 @@ export default function AssociationsList() {
             solution_id,
             asset_solutions(solution)
           )
-        `)
-        .is('deleted_at', null)
-        .order('entry_date', { ascending: false });
+        `, { count: 'exact' })
+        .is('deleted_at', null);
 
       // Aplicar filtro por status
       if (statusFilter === 'active') {
@@ -300,8 +300,6 @@ export default function AssociationsList() {
           .lte('exit_date', today);
       } else if (statusFilter === 'today') {
         query = query.eq('exit_date', today);
-      } else if (statusFilter === 'grouped') {
-        query = query.select('id, client_id, entry_date, exit_date, association_id, created_at');
       }
 
       // Aplicar filtros por data
@@ -320,6 +318,9 @@ export default function AssociationsList() {
 
       // Aplicar busca principal no Supabase
       query = applySupabaseSearch(query, debouncedSearchTerm, searchType);
+
+      // Adicionar ordenação e paginação
+      query = query.order('entry_date', { ascending: false });
 
       // Paginação
       const startIndex = (currentPage - 1) * itemsPerPage;
