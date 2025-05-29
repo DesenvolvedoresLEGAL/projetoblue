@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, XCircle } from "lucide-react";
+import { Pencil, XCircle, Loader2 } from "lucide-react";
 import { getAssetIdentifier } from "@/utils/formatters";
 import { AssociationStatusBadge } from "./AssociationStatusBadge";
 import { ConfirmationModal } from "../association/ConfirmationModal";
@@ -29,12 +29,14 @@ interface AssociationTableRowProps {
   association: Association;
   onEdit: (association: Association) => void;
   onEndAssociation: (associationId: number) => void;
+  isEndingAssociation?: boolean;
 }
 
 export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({ 
   association, 
   onEdit,
-  onEndAssociation
+  onEndAssociation,
+  isEndingAssociation = false
 }) => {
   const [showEndConfirmation, setShowEndConfirmation] = useState(false);
 
@@ -124,10 +126,15 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEndConfirmation(true)}
-                className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive hover:text-destructive"
+                disabled={isEndingAssociation}
+                className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive hover:text-destructive disabled:opacity-50"
                 title="Encerrar associação"
               >
-                <XCircle className="h-4 w-4" />
+                {isEndingAssociation ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4" />
+                )}
               </Button>
             )}
           </div>
