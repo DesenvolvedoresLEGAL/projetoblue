@@ -23,9 +23,9 @@ interface AssetActionsProps {
 }
 
 const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsProps) => {
-  const [activeDialog, setActiveDialog] = useState<'details' | 'fullData' | 'edit' | 'delete' | null>(null);
+  const [activeDialog, setActiveDialog] = useState<'fullData' | 'edit' | 'delete' | null>(null);
 
-  const handleOpenDialog = (dialog: 'details' | 'fullData' | 'edit' | 'delete') => {
+  const handleOpenDialog = (dialog: 'fullData' | 'edit' | 'delete') => {
     setActiveDialog(dialog);
   };
 
@@ -47,14 +47,9 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
           
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem onClick={() => handleOpenDialog('details')} className="cursor-pointer flex items-center">
-            <Eye className="mr-2 h-4 w-4" />
-            <span>Ver detalhes</span>
-          </DropdownMenuItem>
-          
           <DropdownMenuItem onClick={() => handleOpenDialog('fullData')} className="cursor-pointer flex items-center">
             <FileText className="mr-2 h-4 w-4" />
-            <span>Ver dados completos</span>
+            <span>Ver detalhes</span>
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />
@@ -73,12 +68,6 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <AssetDetailsDialog 
-        isOpen={activeDialog === 'details'} 
-        onClose={handleCloseDialog} 
-        asset={asset} 
-      />
       
       <AssetFullDataDialog 
         isOpen={activeDialog === 'fullData'} 
