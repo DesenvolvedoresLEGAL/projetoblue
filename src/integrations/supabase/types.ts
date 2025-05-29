@@ -1141,6 +1141,16 @@ export type Database = {
       }
     }
     Functions: {
+      detect_association_inconsistencies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          asset_id: string
+          current_status_id: number
+          expected_status_id: number
+          issue_description: string
+          corrected: boolean
+        }[]
+      }
       ensure_user_profile: {
         Args: {
           user_id: string
