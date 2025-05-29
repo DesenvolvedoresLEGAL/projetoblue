@@ -1,26 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Search, Filter, Info } from "lucide-react";
-import { useAssetSolutions } from '@/hooks/useAssetSolutions';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import React from 'react';
+import { Search, Filter, RotateCcw, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface AssetsSearchFormProps {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: (term: string) => void;
   filterType: string;
   filterStatus: string;
   handleSearch: (e: React.FormEvent) => void;
@@ -35,177 +23,131 @@ const AssetsSearchForm = ({
   handleSearch,
   handleFilterChange
 }: AssetsSearchFormProps) => {
-  const { data: assetSolutions = [] } = useAssetSolutions();
-  const [inputValue, setInputValue] = useState(searchTerm);
-  const [inputError, setInputError] = useState('');
   
-  // Inicializar o inputValue com o searchTerm ao montar o componente
-  useEffect(() => {
-    setInputValue(searchTerm);
-  }, [searchTerm]);
-  
-  // Função para validar entrada e detectar caracteres problemáticos
-  const validateInput = (value: string): string => {
-    if (!value) return '';
-    
-    // Lista de caracteres que podem causar problemas na query
-    const problematicChars = /[(){}[\]\\^$.*+?|<>]/g;
-    
-    if (problematicChars.test(value)) {
-      return 'Evite usar caracteres especiais como parênteses, chaves ou símbolos';
-    }
-    
-    if (value.length > 50) {
-      return 'Termo de busca muito longo. Máximo 50 caracteres';
-    }
-    
-    return '';
+  const handleReset = () => {
+    setSearchTerm('');
+    handleFilterChange('type', 'all');
+    handleFilterChange('status', 'all');
   };
-  
-  // Função para detectar o tipo de busca
-  const getSearchType = (value: string): string => {
-    if (!value) return '';
-    
-    const trimmedValue = value.trim();
-    
-    if (/^\d+$/.test(trimmedValue)) {
-      return 'numérico (linha)';
-    }
-    
-    if (trimmedValue.length >= 15 && /^\d+$/.test(trimmedValue)) {
-      return 'ICCID';
-    }
-    
-    return 'texto geral';
-  };
-  
-  // Função para lidar com mudanças no input com validação
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    
-    // Valida entrada em tempo real
-    const error = validateInput(value);
-    setInputError(error);
-    
-    // Só atualiza searchTerm se não houver erro
-    if (!error) {
-      setSearchTerm(value);
-    }
-  };
-
-  // Função melhorada para submissão do formulário
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Valida antes de submeter
-    const error = validateInput(inputValue);
-    if (error) {
-      setInputError(error);
-      return;
-    }
-    
-    setInputError('');
-    setSearchTerm(inputValue);
-    handleSearch(e);
-  };
-
-  const searchType = getSearchType(inputValue);
 
   return (
-    <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por número, ICCID, rádio ou serial..."
-          className={`pl-8 ${inputError ? 'border-red-500' : ''}`}
-          value={inputValue}
-          onChange={handleInputChange}
-          onBlur={() => {
-            // Aplica a busca quando o campo perde o foco, se não houver erro
-            if (!inputError && inputValue !== searchTerm) {
-              setSearchTerm(inputValue);
-            }
-          }}
-        />
-        
-        {/* Mostra erro de validação se houver */}
-        {inputError && (
-          <div className="absolute top-full left-0 mt-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200 z-10">
-            {inputError}
-          </div>
-        )}
-        
-        {/* Mostra tipo de busca detectado */}
-        {searchType && !inputError && inputValue && (
-          <div className="absolute top-full left-0 mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded border border-green-200 z-10">
-            Busca {searchType} detectada
-          </div>
-        )}
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="absolute right-2.5 top-2.5">
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p className="text-xs max-w-xs">
-                <strong>Busca inteligente:</strong>
-                <br />• Números: busca em linha telefônica
-                <br />• Texto: busca em ICCID, rádio, serial e modelo
-                <br />• Suporta termos parciais
-                <br />
-                <span className="text-muted-foreground">
-                  Evite caracteres especiais para melhores resultados.
-                </span>
+    <Card className="border-legal-primary/20 shadow-lg">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          {/* Header da busca */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-legal-primary rounded-lg">
+              <Search className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-black text-legal-dark font-neue-haas text-lg">
+                Buscar e Filtrar Ativos
+              </h3>
+              <p className="text-sm text-gray-600 font-neue-haas">
+                Encontre rapidamente o equipamento que você precisa
               </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-      <div className="flex gap-2">
-        <Select value={filterType} onValueChange={(value) => handleFilterChange('type', value)}>
-          <SelectTrigger className="w-[150px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Tipos</SelectItem>
-            {assetSolutions.map((solution) => (
-              <SelectItem key={solution.id} value={solution.id.toString()}>
-                {solution.solution}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select value={filterStatus} onValueChange={(value) => handleFilterChange('status', value)}>
-          <SelectTrigger className="w-[150px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Status</SelectItem>
-            <SelectItem value="disponível">Disponível</SelectItem>
-            <SelectItem value="em locação">Alugado</SelectItem>
-            <SelectItem value="em assinatura">Assinatura</SelectItem>
-            <SelectItem value="sem dados">Sem Dados</SelectItem>
-            <SelectItem value="bloqueado">Bloqueado</SelectItem>
-            <SelectItem value="em manutenção">Manutenção</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <Button 
-          type="submit" 
-          disabled={!!inputError}
-          className={inputError ? 'opacity-50 cursor-not-allowed' : ''}
-        >
-          Buscar
-        </Button>
-      </div>
-    </form>
+            </div>
+          </div>
+
+          <form onSubmit={handleSearch} className="space-y-4">
+            {/* Campo de busca principal */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-legal-primary" />
+              <Input
+                type="text"
+                placeholder="Pesquisar por ICCID, número de linha, rádio, modelo ou série..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 font-neue-haas"
+              />
+            </div>
+
+            {/* Filtros */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Filtro por Tipo */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-legal-secondary" />
+                  Tipo de Solução
+                </label>
+                <Select
+                  value={filterType}
+                  onValueChange={(value) => handleFilterChange('type', value)}
+                >
+                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
+                    <SelectValue placeholder="Todos os tipos" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-legal-secondary/20">
+                    <SelectItem value="all" className="font-neue-haas">Todos os Tipos</SelectItem>
+                    <SelectItem value="CHIP" className="font-neue-haas">📱 Chips</SelectItem>
+                    <SelectItem value="ROTEADOR" className="font-neue-haas">📡 Roteadores</SelectItem>
+                    <SelectItem value="MODEM" className="font-neue-haas">📶 Modems</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por Status */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-legal-secondary" />
+                  Status do Ativo
+                </label>
+                <Select
+                  value={filterStatus}
+                  onValueChange={(value) => handleFilterChange('status', value)}
+                >
+                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-legal-secondary/20">
+                    <SelectItem value="all" className="font-neue-haas">Todos os Status</SelectItem>
+                    <SelectItem value="DISPONÍVEL" className="font-neue-haas">✓ Disponível</SelectItem>
+                    <SelectItem value="EM LOCAÇÃO" className="font-neue-haas">📍 Em Locação</SelectItem>
+                    <SelectItem value="EM ASSINATURA" className="font-neue-haas">📋 Em Assinatura</SelectItem>
+                    <SelectItem value="SEM DADOS" className="font-neue-haas">⚠️ Sem Dados</SelectItem>
+                    <SelectItem value="BLOQUEADO" className="font-neue-haas">🚫 Bloqueado</SelectItem>
+                    <SelectItem value="EM MANUTENÇÃO" className="font-neue-haas">🔧 Em Manutenção</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Botão de Busca */}
+              <div className="space-y-2">
+                <label className="text-sm text-transparent">Ações</label>
+                <Button
+                  type="submit"
+                  className="w-full h-10 bg-legal-primary hover:bg-legal-dark text-white font-bold font-neue-haas transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Buscar Ativos
+                </Button>
+              </div>
+
+              {/* Botão de Reset */}
+              <div className="space-y-2">
+                <label className="text-sm text-transparent">Reset</label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleReset}
+                  className="w-full h-10 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold font-neue-haas transition-all duration-200"
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+          </form>
+
+          {/* Dicas de busca */}
+          <div className="mt-4 p-3 bg-legal-primary/5 rounded-lg border border-legal-primary/20">
+            <p className="text-xs text-legal-dark font-neue-haas">
+              💡 <strong>Dica:</strong> Use números para buscar linhas telefônicas, ou digite texto para encontrar por ICCID, modelo ou série.
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
