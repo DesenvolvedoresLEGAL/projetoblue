@@ -24,8 +24,6 @@ export const exportToExcel = (assets: AssetWithRelations[], filename?: string) =
     let operadoraFabricante = 'N/A';
     if (asset.manufacturer?.name) {
       operadoraFabricante = asset.manufacturer.name;
-    } else if (asset.manufacturer_id) {
-      operadoraFabricante = `Fabricante ID: ${asset.manufacturer_id}`;
     }
     
     // Determinar identificador principal baseado no tipo de solução

@@ -43,6 +43,12 @@ export const normalizePhoneForSearch = (phone: string): string => {
   return phone.replace(/\D/g, '');
 };
 
+// Função para formatar telefone para armazenamento (apenas números)
+export const formatPhoneForStorage = (phone: string): string => {
+  // Remove todos os caracteres não numéricos para armazenamento
+  return phone.replace(/\D/g, '');
+};
+
 // Nova função para converter notação científica
 export const parsePhoneFromScientific = (phone: string | number): string => {
   if (!phone) return '';

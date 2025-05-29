@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +28,9 @@ const Dashboard = () => {
           radio,
           line_number,
           model,
+          rented_days,
+          created_at,
+          manufacturer:manufacturers(id, name),
           status:asset_status(id, status),
           solution:asset_solutions(id, solution)
         `)
@@ -86,78 +88,8 @@ const Dashboard = () => {
   }, [assets]);
 
   const handleExportToExcel = () => {
-    if (assets && clients) {
-      // Converter formato dos assets para compatibilidade com exportação
-      const assetsForExport: Asset[] = assets.map(asset => {
-        const baseAsset = {
-          id: asset.uuid,
-          uuid: asset.uuid,
-          status: asset.status?.status || "DISPONÍVEL" as const,
-          statusId: asset.status_id,
-          registrationDate: new Date().toISOString(),
-          notes: undefined,
-          lastSeen: undefined,
-          isOnline: undefined,
-          solucao: undefined,
-          marca: undefined,
-          modelo: asset.model || undefined,
-          serial_number: asset.serial_number || undefined,
-          dias_alugada: undefined,
-          radio: asset.radio || undefined,
-          solution_id: asset.solution_id,
-          manufacturer_id: undefined,
-          plan_id: undefined,
-          rented_days: undefined,
-          admin_user: undefined,
-          admin_pass: undefined,
-          created_at: undefined,
-          updated_at: undefined,
-          deleted_at: undefined
-        };
-
-        if (asset.solution_id === 11) {
-          // Para CHIPs
-          return {
-            ...baseAsset,
-            type: "CHIP" as const,
-            iccid: asset.iccid || '',
-            phoneNumber: asset.line_number?.toString() || '',
-            carrier: 'Unknown',
-            line_number: asset.line_number
-          } as ChipAsset;
-        } else {
-          // Para Equipamentos
-          return {
-            ...baseAsset,
-            type: "ROTEADOR" as const,
-            uniqueId: asset.uuid,
-            brand: '',
-            model: asset.model || '',
-            ssid: '',
-            password: '',
-            serialNumber: asset.serial_number || '',
-            adminUser: undefined,
-            adminPassword: undefined,
-            imei: undefined
-          } as EquipamentAsset;
-        }
-      });
-
-      exportToExcel({
-        assets: assetsForExport,
-        clients: clients.map(client => ({
-          id: client.uuid,
-          uuid: client.uuid,
-          nome: client.nome,
-          cnpj: client.cnpj,
-          email: client.email || '',
-          contato: client.contato,
-          assets: [],
-          created_at: client.created_at,
-          updated_at: client.updated_at,
-          deleted_at: client.deleted_at
-        }))
-      });
+    if (assets) {
+      exportToExcel(assets);
     }
   };
 
