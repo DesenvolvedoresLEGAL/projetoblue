@@ -8,7 +8,6 @@ import { LayoutDashboard, Smartphone, Wifi, CheckCircle, AlertCircle, XCircle, C
 import { exportToExcel } from "@/utils/excelExport";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -30,6 +29,7 @@ const Dashboard = () => {
           model,
           rented_days,
           created_at,
+          updated_at,
           manufacturer:manufacturers(id, name),
           status:asset_status(id, status),
           solution:asset_solutions(id, solution)
@@ -37,7 +37,13 @@ const Dashboard = () => {
         .is("deleted_at", null);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transformar dados para compatibilidade com AssetWithRelations
+      return (data || []).map(asset => ({
+        ...asset,
+        plano: null, // Valor padrão para compatibilidade
+        solucao: asset.solution?.solution || null // Mapear solution para solucao
+      }));
     },
     staleTime: 30000,
     refetchOnWindowFocus: false

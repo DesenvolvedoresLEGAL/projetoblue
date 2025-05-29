@@ -36,15 +36,15 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
     setIsLoading(true);
 
     try {
-      // Formatar telefone para armazenamento
-      const formattedPhone = formatPhoneForStorage(formData.contato);
+      // Formatar telefone para armazenamento - converter para number
+      const formattedPhone = parseInt(formatPhoneForStorage(formData.contato));
       
       const { data, error } = await supabase
         .from('clients')
         .insert({
           nome: formData.nome.trim(),
           cnpj: '00000000000000', // CNPJ placeholder - será removido futuramente
-          contato: formattedPhone,
+          contato: formattedPhone, // Agora como number
           email: formData.email.trim() || null
         })
         .select()
