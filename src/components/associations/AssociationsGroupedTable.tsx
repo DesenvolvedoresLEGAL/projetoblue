@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { AssociationGroupRow } from "./AssociationGroupRow";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface Association {
   id: number;
@@ -44,6 +45,7 @@ interface AssociationsGroupedTableProps {
   debouncedSearchTerm: string;
   isEndingAssociation?: boolean;
   isEndingGroup?: boolean;
+  operationProgress?: { current: number; total: number };
 }
 
 export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> = ({
@@ -57,7 +59,8 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
   onEndGroup,
   debouncedSearchTerm,
   isEndingAssociation = false,
-  isEndingGroup = false
+  isEndingGroup = false,
+  operationProgress = { current: 0, total: 0 }
 }) => {
   const groupKeys = Object.keys(groupedAssociations).sort((a, b) => {
     const groupA = groupedAssociations[a];
@@ -76,6 +79,21 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
 
   return (
     <>
+      {/* Indicador de operação em progresso */}
+      {isEndingGroup && (
+        <Alert className="mb-4">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertDescription>
+            Encerrando associações em lote... Esta operação pode levar alguns segundos.
+            {operationProgress.total > 0 && (
+              <span className="ml-2">
+                ({operationProgress.current}/{operationProgress.total})
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>

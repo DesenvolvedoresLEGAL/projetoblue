@@ -61,12 +61,13 @@ export default function AssociationsListContent() {
     itemsPerPage
   });
 
-  // Actions
+  // Actions com controle melhorado
   const { 
     handleEndAssociation, 
     handleEndGroup, 
     isEndingAssociation, 
-    isEndingGroup 
+    isEndingGroup,
+    operationProgress
   } = useAssociationActions();
 
   // Aplicar filtro multicampo no frontend e agrupar por cliente e datas
@@ -97,7 +98,7 @@ export default function AssociationsListContent() {
 
   // Handler para encerrar grupo com access aos grouped associations
   const handleEndGroupWithData = (groupKey: string) => {
-    console.log('Iniciando encerramento do grupo:', groupKey);
+    console.log('[AssociationsListContent] Iniciando encerramento do grupo:', groupKey);
     handleEndGroup(groupKey, groupedAssociations);
   };
 
@@ -130,6 +131,7 @@ export default function AssociationsListContent() {
             size="sm"
             onClick={() => navigate(`/assets`)}
             className="flex items-center gap-2"
+            disabled={isEndingGroup}
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
@@ -141,6 +143,7 @@ export default function AssociationsListContent() {
             </CardTitle>
             <CardDescription>
               Consulte todas as associações entre ativos e clientes, agrupadas por cliente
+              {isEndingGroup && " - Operação em andamento..."}
             </CardDescription>
           </div>
         </CardHeader>
@@ -185,6 +188,7 @@ export default function AssociationsListContent() {
               debouncedSearchTerm={debouncedSearchTerm}
               isEndingAssociation={isEndingAssociation}
               isEndingGroup={isEndingGroup}
+              operationProgress={operationProgress}
             />
           ) : (
             <AssociationsEmpty

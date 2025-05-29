@@ -96,7 +96,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
   };
 
   const handleEndGroup = () => {
-    console.log('Confirmando encerramento do grupo:', group.groupKey);
+    console.log('[AssociationGroupRow] Confirmando encerramento do grupo:', group.groupKey);
     onEndGroup(group.groupKey);
     setShowEndGroupConfirmation(false);
   };
@@ -118,6 +118,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
             size="sm"
             onClick={toggleExpanded}
             className="p-1 h-6 w-6"
+            disabled={isEndingGroup}
           >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
@@ -137,6 +138,11 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
             {activeAssociationsCount > 0 && activeAssociationsCount < group.totalAssets && (
               <Badge variant="outline" className="text-xs">
                 {activeAssociationsCount} ativa{activeAssociationsCount > 1 ? 's' : ''}
+              </Badge>
+            )}
+            {isEndingGroup && (
+              <Badge variant="secondary" className="text-xs animate-pulse">
+                Encerrando...
               </Badge>
             )}
           </div>
@@ -172,16 +178,21 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowEndGroupConfirmation(true)}
-                disabled={isEndingGroup}
+                disabled={isEndingGroup || isEndingAssociation}
                 className="h-8 px-3 hover:bg-destructive/10 text-destructive hover:text-destructive disabled:opacity-50"
                 title={`Encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''}`}
               >
                 {isEndingGroup ? (
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Encerrando...
+                  </>
                 ) : (
-                  <XCircle className="h-4 w-4 mr-1" />
+                  <>
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Encerrar Grupo
+                  </>
                 )}
-                Encerrar Grupo
               </Button>
             )}
           </div>
@@ -205,7 +216,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
         onOpenChange={setShowEndGroupConfirmation}
         onConfirm={handleEndGroup}
         title="Encerrar Grupo de Associações"
-        description={`Tem certeza que deseja encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''} do cliente ${group.client_name}? Esta ação encerrará todas as associações ativas simultaneamente.`}
+        description={`Tem certeza que deseja encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''} do cliente ${group.client_name}? Esta ação encerrará todas as associações ativas simultaneamente e definirá seus ativos como disponíveis.`}
         confirmText="Encerrar Grupo"
         cancelText="Cancelar"
         variant="destructive"
