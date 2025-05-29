@@ -41,8 +41,16 @@ const Dashboard = () => {
       // Transformar dados para compatibilidade com AssetWithRelations
       return (data || []).map(asset => ({
         ...asset,
-        plano: null, // Valor padrão para compatibilidade
-        solucao: asset.solution?.solution || null // Mapear solution para solucao
+        plano: { id: null, nome: 'Não definido' }, // Valor padrão para compatibilidade
+        solucao: asset.solution?.solution || 'Desconhecido', // Mapear solution para solucao
+        status: {
+          id: asset.status?.id,
+          name: asset.status?.status || 'Desconhecido' // Mapear status para name
+        },
+        manufacturer: {
+          id: asset.manufacturer?.id,
+          name: asset.manufacturer?.name || 'Desconhecido'
+        }
       }));
     },
     staleTime: 30000,
