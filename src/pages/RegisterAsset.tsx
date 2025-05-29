@@ -14,7 +14,8 @@ import {
   Shield,
   Smartphone,
   Router,
-  Loader2
+  Loader2,
+  PackagePlus
 } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import {
   useStatusRecords
 } from "@/hooks/useAssetManagement";
 import { useNavigate } from "react-router-dom";
+import { StandardPageHeader } from "@/components/ui/standard-page-header";
 
 // Esquemas de validação separados para CHIPS e EQUIPAMENTOS
 const chipSchema = z.object({
@@ -250,32 +252,21 @@ export default function RegisterAsset() {
     <TooltipProvider>
       <div className="container mx-auto space-y-8">
         {/* Header com identidade Legal */}
-        <div className="flex flex-row gap-4 items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 hover:bg-legal-primary/10 hover:text-legal-primary transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div className="flex-1">
-            <div className="bg-gradient-to-r from-legal-primary to-legal-dark rounded-2xl p-6 text-white">
-              <div className="flex items-center gap-3">
-                <Shield className="h-8 w-8 text-legal-secondary" />
-                <div>
-                  <h1 className="text-2xl font-black legal-title text-white mb-1">
-                    Cadastrar Novo Ativo
-                  </h1>
-                  <p className="text-legal-secondary/90 font-medium">
-                    Registre chips e equipamentos de forma simples e segura
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StandardPageHeader
+        icon={PackagePlus}
+        title="Cadastrar Novo Ativo"
+        description="Adicione CHIPs ou equipamentos ao inventário da empresa"
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/assets')}
+          className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+      </StandardPageHeader>
 
         <Card className="legal-card border-2">
           <CardHeader className="bg-gradient-to-r from-legal-primary/5 to-legal-secondary/5">
