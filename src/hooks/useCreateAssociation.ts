@@ -24,15 +24,22 @@ export const useCreateAssociation = () => {
 
       if (assetError) throw assetError;
 
+      // Map association type to association_id
+      let associationId = 1; // Default to ALUGUEL
+      if (params.associationType === 'ASSINATURA') {
+        associationId = 2;
+      } else if (params.associationType === 'EMPRESTIMO') {
+        associationId = 3;
+      }
+
       // Criar associação
       const { data, error } = await supabase
         .from('asset_client_assoc')
         .insert({
           asset_id: params.assetId,
           client_id: params.clientId,
-          association_type: params.associationType,
+          association_id: associationId, // Use association_id instead of association_type
           entry_date: params.startDate,
-          rented_days: params.rentedDays,
           notes: params.notes
         })
         .select()

@@ -39,10 +39,23 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const filteredClients = clients.filter(client => 
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.cnpj.includes(searchTerm) ||
-    client.contato.includes(searchTerm)
+    client.contato.toString().includes(searchTerm) // Convert number to string for search
   );
 
-  const handleClientSelect = (client: Client) => {
+  const handleClientSelect = (clientData: any) => {
+    // Map database fields to Client interface
+    const client: Client = {
+      id: clientData.uuid, // Use uuid as id
+      uuid: clientData.uuid,
+      nome: clientData.nome,
+      cnpj: clientData.cnpj,
+      email: clientData.email || '',
+      contato: clientData.contato,
+      created_at: clientData.created_at,
+      updated_at: clientData.updated_at,
+      deleted_at: clientData.deleted_at
+    };
+    
     onClientSelected(client);
     toast.success(`Cliente ${client.nome} selecionado!`);
   };
@@ -74,7 +87,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
           <div className="max-h-96 overflow-y-auto space-y-2">
             {filteredClients.map((client) => (
               <Card 
-                key={client.id} 
+                key={client.uuid} 
                 className="cursor-pointer hover:bg-[#4D2BFB]/5 hover:border-[#4D2BFB]/40 transition-all"
                 onClick={() => handleClientSelect(client)}
               >
