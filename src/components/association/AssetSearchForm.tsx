@@ -89,7 +89,7 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
       const asset: SelectedAsset = {
         id: data.uuid,
         uuid: data.uuid,
-        type: data.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
+        type: data.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
         registrationDate: data.created_at,
         status: data.asset_status?.status || 'DISPONÍVEL',
         statusId: data.status_id,
@@ -109,7 +109,13 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
         brand: data.manufacturers?.name || '',
         ssid: '#WiFi.LEGAL',
         password: '123legal',
-        serialNumber: data.serial_number || ''
+        serialNumber: data.serial_number || '',
+        gb: 0,
+        notes: '',
+        rented_days: 0,
+        admin_user: 'admin',
+        admin_pass: '',
+        plan_id: 1
       };
 
       onAssetFound(asset);

@@ -81,7 +81,7 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
       return data.map(asset => ({
         id: asset.uuid,
         uuid: asset.uuid,
-        type: asset.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
+        type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
         registrationDate: asset.created_at,
         status: asset.asset_status?.status || 'DISPONÍVEL',
         statusId: asset.status_id,
@@ -101,7 +101,15 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
         brand: asset.manufacturers?.name || '',
         ssid: '#WiFi.LEGAL',
         password: '123legal',
-        serialNumber: asset.serial_number || ''
+        serialNumber: asset.serial_number || '',
+        gb: 0,
+        notes: '',
+        rented_days: 0,
+        admin_user: 'admin',
+        admin_pass: '',
+        plan_id: 1,
+        associationType: 'aluguel',
+        startDate: new Date().toISOString().split('T')[0]
       })) as SelectedAsset[];
     },
     enabled: open
