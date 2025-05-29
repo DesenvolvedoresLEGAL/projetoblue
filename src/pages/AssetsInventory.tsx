@@ -141,13 +141,13 @@ const AssetsInventory = () => {
         />
       )}
       
-      {assetsData?.totalPages && assetsData.totalPages > 1 && (
+      {assetsData?.totalPages && assetsData.totalPages > 1 ? (
         <AssetsPagination 
           currentPage={currentPage}
           totalPages={assetsData.totalPages}
           setCurrentPage={setCurrentPage}
         />
-      )}
+      ) : null}
       
       {/* Debug info em desenvolvimento
       {process.env.NODE_ENV === 'development' && (
