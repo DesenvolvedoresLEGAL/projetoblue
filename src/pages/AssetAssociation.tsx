@@ -1,228 +1,210 @@
 
 import React, { useState } from 'react';
+import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Link2, User, Package, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { ClientSelection } from '@/components/association/ClientSelection';
+import { Client } from '@/types/asset';
+import { ClientSelectionSimplified } from '@/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@/components/association/AssetSelection';
-import { AssociationSummary } from '@/components/association/AssociationSummary';
-import { Client, Asset, AssetType } from '@/types/asset';
-import { toast } from 'sonner';
+import { AssociationConfirmation } from '@/components/association/AssociationConfirmation';
 
-// Interface específica para ativos selecionados na associação
 export interface SelectedAsset {
-  // Campos base do Asset
-  id: string;
   uuid: string;
-  type: AssetType;
-  registrationDate: string;
-  status: string;
-  statusId?: number;
-  solucao?: string;
-  marca?: string;
-  modelo?: string;
-  
-  // Campos específicos da base de dados
+  type: 'CHIP' | 'EQUIPMENT';
+  iccid?: string;
+  radio?: string;
   serial_number?: string;
   model?: string;
-  radio?: string;
-  solution_id?: number;
-  manufacturer_id?: number;
-  plan_id?: number;
-  rented_days?: number;
-  admin_user?: string;
-  admin_pass?: string;
-  created_at?: string;
-  updated_at?: string;
-  iccid?: string;
-  line_number?: string;
-  
-  // Campos específicos da associação
-  gb?: number;
-  ssid?: string;
-  password?: string;
-  notes?: string;
-  
-  // Campos herdados para compatibilidade
-  phoneNumber?: string;
-  carrier?: string;
-  uniqueId?: string;
-  brand?: string;
-  serialNumber?: string;
+  solucao?: string;
+  status?: string;
+  // Configurações da associação
+  associationType: 1 | 2; // 1 = Locação, 2 = Assinatura
+  startDate: string;
+  endDate?: string;
+  monthlyValue?: number;
+  observations?: string;
 }
 
-interface AssociationFormData {
-  client: Client | null;
-  assets: SelectedAsset[];
-  step: 'client' | 'assets' | 'summary';
-}
+type Step = 'client' | 'assets' | 'confirmation';
 
 const AssetAssociation = () => {
+  const [currentStep, setCurrentStep] = useState<Step>('client');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<AssociationFormData>({
-    client: null,
-    assets: [],
-    step: 'client'
-  });
+
+  const steps = [
+    { id: 'client', label: 'Cliente', icon: User, description: 'Selecionar cliente' },
+    { id: 'assets', label: 'Ativos', icon: Package, description: 'Escolher ativos' },
+    { id: 'confirmation', label: 'Confirmação', icon: CheckCircle, description: 'Revisar e confirmar' }
+  ];
+
+  const currentStepIndex = steps.findIndex(step => step.id === currentStep);
 
   const handleClientSelected = (client: Client) => {
-    setFormData(prev => ({
-      ...prev,
-      client,
-      step: 'assets'
-    }));
+    setSelectedClient(client);
+    setCurrentStep('assets');
   };
 
   const handleAssetAdded = (asset: SelectedAsset) => {
-    setFormData(prev => ({
-      ...prev,
-      assets: [...prev.assets, asset]
-    }));
+    setSelectedAssets(prev => [...prev, asset]);
   };
 
   const handleAssetRemoved = (assetId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      assets: prev.assets.filter(asset => asset.uuid !== assetId)
-    }));
+    setSelectedAssets(prev => prev.filter(asset => asset.uuid !== assetId));
   };
 
   const handleAssetUpdated = (assetId: string, updatedAsset: Partial<SelectedAsset>) => {
-    setFormData(prev => ({
-      ...prev,
-      assets: prev.assets.map(asset => 
+    setSelectedAssets(prev => 
+      prev.map(asset => 
         asset.uuid === assetId ? { ...asset, ...updatedAsset } : asset
       )
-    }));
-  };
-
-  const handleProceedToSummary = () => {
-    if (formData.assets.length === 0) {
-      toast.error('Selecione pelo menos um ativo para continuar');
-      return;
-    }
-
-    // Validar regra SPEEDY 5G + CHIP
-    const speedyAssets = formData.assets.filter(asset => 
-      asset.solucao === 'SPEEDY 5G' || asset.solution_id === 1
     );
-    const chipAssets = formData.assets.filter(asset => asset.type === 'CHIP');
-
-    if (speedyAssets.length > 0 && chipAssets.length === 0) {
-      toast.error('Ao associar um equipamento SPEEDY 5G é obrigatório associar também um CHIP');
-      return;
-    }
-
-    setFormData(prev => ({ ...prev, step: 'summary' }));
   };
 
-  const handleBack = () => {
-    if (formData.step === 'assets') {
-      setFormData(prev => ({ ...prev, step: 'client' }));
-    } else if (formData.step === 'summary') {
-      setFormData(prev => ({ ...prev, step: 'assets' }));
-    } else {
-      navigate('/assets');
-    }
+  const handleProceedToConfirmation = () => {
+    setCurrentStep('confirmation');
   };
 
   const handleAssociationComplete = () => {
-    // Limpar formulário
-    setFormData({
-      client: null,
-      assets: [],
-      step: 'client'
-    });
-    
-    toast.success('Associação criada com sucesso!');
-    navigate('/assets/associations');
+    // Reset state and navigate back
+    setSelectedClient(null);
+    setSelectedAssets([]);
+    setCurrentStep('client');
+    navigate('/associations');
+  };
+
+  const handleBack = () => {
+    switch (currentStep) {
+      case 'assets':
+        setCurrentStep('client');
+        break;
+      case 'confirmation':
+        setCurrentStep('assets');
+        break;
+      default:
+        navigate('/associations');
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <StandardPageHeader
+        icon={Link2}
+        title="Nova Associação de Ativos"
+        description="Associe ativos a clientes para controle de locação ou assinatura"
+      >
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleBack}
-          className="flex items-center gap-2"
+          onClick={() => navigate('/associations')}
+          className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
         >
           <ArrowLeft className="h-4 w-4" />
-          Voltar
+          Cancelar
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-1">
-            Nova Associação de Ativos
-          </h1>
-          <p className="text-muted-foreground">
-            Associe ativos a clientes seguindo o fluxo guiado
-          </p>
-        </div>
-      </div>
+      </StandardPageHeader>
 
-      <div className="max-w-4xl">
-        {/* Indicador de progresso */}
-        <div className="flex items-center mb-6">
-          <div className={`flex items-center gap-2 ${formData.step === 'client' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              formData.step === 'client' ? 'border-primary bg-primary text-primary-foreground' : 
-              formData.client ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'
-            }`}>
-              1
-            </div>
-            <span className="font-medium">Cliente</span>
+      {/* Progress Steps */}
+      <Card className="border-[#4D2BFB]/20 bg-gradient-to-r from-[#4D2BFB]/5 to-[#03F9FF]/5">
+        <CardHeader>
+          <CardTitle className="text-[#020CBC] font-neue-haas">
+            Processo de Associação
+          </CardTitle>
+          <div className="flex items-center justify-between mt-4">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = step.id === currentStep;
+              const isCompleted = index < currentStepIndex;
+              
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div className={`flex items-center gap-3 ${index > 0 ? 'ml-4' : ''}`}>
+                    <div className={`
+                      flex items-center justify-center w-10 h-10 rounded-full border-2 
+                      ${isActive ? 'bg-[#4D2BFB] border-[#4D2BFB] text-white' : 
+                        isCompleted ? 'bg-[#03F9FF] border-[#03F9FF] text-[#020CBC]' : 
+                        'bg-white border-gray-300 text-gray-400'}
+                    `}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className={`font-medium font-neue-haas ${
+                        isActive ? 'text-[#020CBC]' : isCompleted ? 'text-[#4D2BFB]' : 'text-gray-400'
+                      }`}>
+                        {step.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-neue-haas">
+                        {step.description}
+                      </div>
+                    </div>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-12 h-0.5 mx-4 ${
+                      index < currentStepIndex ? 'bg-[#03F9FF]' : 'bg-gray-300'
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
           </div>
-          
-          <div className="flex-1 h-px bg-border mx-4" />
-          
-          <div className={`flex items-center gap-2 ${formData.step === 'assets' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              formData.step === 'assets' ? 'border-primary bg-primary text-primary-foreground' : 
-              formData.assets.length > 0 ? 'border-green-500 bg-green-500 text-white' : 'border-muted-foreground'
-            }`}>
-              2
+        </CardHeader>
+      </Card>
+
+      {/* Step Content */}
+      {currentStep === 'client' && (
+        <ClientSelectionSimplified onClientSelected={handleClientSelected} />
+      )}
+
+      {currentStep === 'assets' && selectedClient && (
+        <AssetSelection
+          client={selectedClient}
+          selectedAssets={selectedAssets}
+          onAssetAdded={handleAssetAdded}
+          onAssetRemoved={handleAssetRemoved}
+          onAssetUpdated={handleAssetUpdated}
+          onProceed={handleProceedToConfirmation}
+        />
+      )}
+
+      {currentStep === 'confirmation' && selectedClient && (
+        <AssociationConfirmation
+          client={selectedClient}
+          selectedAssets={selectedAssets}
+          onComplete={handleAssociationComplete}
+          onBack={handleBack}
+        />
+      )}
+
+      {/* Navigation */}
+      {currentStep !== 'client' && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                className="flex items-center gap-2 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB] hover:text-white font-neue-haas"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Button>
+              
+              {currentStep === 'assets' && selectedAssets.length > 0 && (
+                <Button
+                  onClick={handleProceedToConfirmation}
+                  className="flex items-center gap-2 bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
+                >
+                  Continuar
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
-            <span className="font-medium">Ativos</span>
-          </div>
-          
-          <div className="flex-1 h-px bg-border mx-4" />
-          
-          <div className={`flex items-center gap-2 ${formData.step === 'summary' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-              formData.step === 'summary' ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
-            }`}>
-              3
-            </div>
-            <span className="font-medium">Confirmação</span>
-          </div>
-        </div>
-
-        {/* Conteúdo das etapas */}
-        {formData.step === 'client' && (
-          <ClientSelection onClientSelected={handleClientSelected} />
-        )}
-
-        {formData.step === 'assets' && formData.client && (
-          <AssetSelection
-            client={formData.client}
-            selectedAssets={formData.assets}
-            onAssetAdded={handleAssetAdded}
-            onAssetRemoved={handleAssetRemoved}
-            onAssetUpdated={handleAssetUpdated}
-            onProceed={handleProceedToSummary}
-          />
-        )}
-
-        {formData.step === 'summary' && formData.client && (
-          <AssociationSummary
-            client={formData.client}
-            assets={formData.assets}
-            onComplete={handleAssociationComplete}
-            onBack={() => setFormData(prev => ({ ...prev, step: 'assets' }))}
-          />
-        )}
-      </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

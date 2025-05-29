@@ -1,9 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Users } from "lucide-react";
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from "@/components/ui/card";
+import { AssociationsPageHeader } from "@/components/associations/AssociationsPageHeader";
+import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
 import { AssociationsGroupedTable } from "@/components/associations/AssociationsGroupedTable";
@@ -23,7 +22,6 @@ export default function AssociationsListContent() {
   const [editingAssociation, setEditingAssociation] = useState<Association | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  const navigate = useNavigate();
   const itemsPerPage = 100;
   
   // Debounce para o termo de busca e detecção de tipo
@@ -102,20 +100,18 @@ export default function AssociationsListContent() {
     handleEndGroup(groupKey, groupedAssociations);
   };
 
+  // Mock function for export (can be implemented later)
+  const handleExport = () => {
+    console.log('Export functionality to be implemented');
+  };
+
   if (error) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 space-y-6">
+        <AssociationsPageHeader totalCount={totalCount} />
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Lista de Associações
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              Erro ao carregar associações. Tente novamente.
-            </div>
+          <CardContent className="text-center py-8 text-muted-foreground font-neue-haas">
+            Erro ao carregar associações. Tente novamente.
           </CardContent>
         </Card>
       </div>
@@ -124,55 +120,41 @@ export default function AssociationsListContent() {
 
   return (
     <div className="space-y-6">
-      <Card className='border-none bg-none-1 shadow-none'>
-        <CardHeader className='flex flex-row gap-4 items-center'>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
-            disabled={isEndingGroup}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div className="flex flex-col">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Lista de Associações
-            </CardTitle>
-            <CardDescription>
-              Consulte todas as associações entre ativos e clientes, agrupadas por cliente
-              {isEndingGroup && " - Operação em andamento..."}
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <AssociationsFilters
-            searchInput={searchInput}
-            setSearchInput={setSearchInput}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            debouncedSearchTerm={debouncedSearchTerm}
-            searchType={searchType}
-            showDateFilters={showDateFilters}
-            setShowDateFilters={setShowDateFilters}
-            entryDateFrom={entryDateFrom}
-            setEntryDateFrom={setEntryDateFrom}
-            entryDateTo={entryDateTo}
-            setEntryDateTo={setEntryDateTo}
-            exitDateFrom={exitDateFrom}
-            setExitDateFrom={setExitDateFrom}
-            exitDateTo={exitDateTo}
-            setExitDateTo={setExitDateTo}
-            dateValidationError={dateValidationError}
-            hasActiveDateFilters={hasActiveDateFilters}
-            clearDateFilters={clearDateFilters}
-          />
+      <AssociationsPageHeader 
+        totalCount={totalCount}
+        onExport={handleExport}
+        isExporting={false}
+      />
 
+      <StandardFiltersCard title="Filtros de Associações">
+        <AssociationsFilters
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          debouncedSearchTerm={debouncedSearchTerm}
+          searchType={searchType}
+          showDateFilters={showDateFilters}
+          setShowDateFilters={setShowDateFilters}
+          entryDateFrom={entryDateFrom}
+          setEntryDateFrom={setEntryDateFrom}
+          entryDateTo={entryDateTo}
+          setEntryDateTo={setEntryDateTo}
+          exitDateFrom={exitDateFrom}
+          setExitDateFrom={setExitDateFrom}
+          exitDateTo={exitDateTo}
+          setExitDateTo={setExitDateTo}
+          dateValidationError={dateValidationError}
+          hasActiveDateFilters={hasActiveDateFilters}
+          clearDateFilters={clearDateFilters}
+        />
+      </StandardFiltersCard>
+
+      <Card className="shadow-sm">
+        <CardContent className="space-y-6 pt-6">
           {/* Tabela Agrupada */}
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground font-neue-haas">
               Carregando associações...
             </div>
           ) : Object.keys(groupedAssociations).length > 0 ? (
