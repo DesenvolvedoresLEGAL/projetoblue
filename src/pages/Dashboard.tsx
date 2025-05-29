@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +43,10 @@ const Dashboard = () => {
       return (data || []).map(asset => ({
         ...asset,
         plano: { id: null, nome: 'Não definido' }, // Valor padrão para compatibilidade
-        solucao: asset.solution?.solution || 'Desconhecido', // Mapear solution para solucao
+        solucao: {
+          id: asset.solution?.id || 0,
+          name: asset.solution?.solution || 'Desconhecido'
+        }, // Mapear solution para solucao como objeto
         status: {
           id: asset.status?.id,
           name: asset.status?.status || 'Desconhecido' // Mapear status para name
@@ -276,7 +280,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <Badge className="bg-red-500">
-                      {asset.status?.status || 'Problema'}
+                      {asset.status?.name || 'Problema'}
                     </Badge>
                   </div>
                 ))}
@@ -296,7 +300,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <Badge className="bg-red-500">
-                      {asset.status?.status || 'Problema'}
+                      {asset.status?.name || 'Problema'}
                     </Badge>
                   </div>
                 ))}

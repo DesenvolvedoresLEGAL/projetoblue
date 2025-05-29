@@ -30,8 +30,10 @@ export const exportToExcel = (assets: AssetWithRelations[], filename?: string) =
     let iccidRadio = 'N/A';
     let numeroSerial = 'N/A';
     
-    // Usar a propriedade solucao que é uma string
-    if (asset.solucao === 'CHIP') {
+    // Usar a propriedade solucao que é um objeto
+    const tipoSolucao = typeof asset.solucao === 'string' ? asset.solucao : asset.solucao?.name || 'Desconhecido';
+    
+    if (tipoSolucao === 'CHIP') {
       // Para CHIPs, usar ICCID como identificador principal
       iccidRadio = asset.iccid || 'N/A';
       numeroSerial = asset.line_number?.toString() || 'N/A';
@@ -48,7 +50,7 @@ export const exportToExcel = (assets: AssetWithRelations[], filename?: string) =
 
     return {
       'ID': asset.uuid,
-      'Tipo': asset.solucao || 'N/A',
+      'Tipo': tipoSolucao,
       'Status': asset.status?.name || 'N/A',
       'Operadora/Fabricante': operadoraFabricante,
       'ICCID/Rádio': iccidRadio,
