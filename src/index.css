@@ -14,7 +14,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 259 95% 57%; /* LEGAL primary color */
+    /* LEGAL primary colors */
+    --primary: 245 79% 57%; /* #4D2BFB - Azul Principal */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -23,7 +24,8 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 249 93% 37%; /* LEGAL accent color */
+    /* LEGAL accent colors */
+    --accent: 186 100% 51%; /* #03F9FF - Ciano Secundário */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -37,12 +39,17 @@
 
     --sidebar-background: 220 33% 98%;
     --sidebar-foreground: 222 47% 11.2%;
-    --sidebar-primary: 259 95% 57%; /* LEGAL primary color */
+    --sidebar-primary: 245 79% 57%; /* LEGAL primary color */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* LEGAL specific colors */
+    --legal-primary: 245 79% 57%;    /* #4D2BFB */
+    --legal-secondary: 186 100% 51%; /* #03F9FF */
+    --legal-dark: 234 97% 40%;       /* #020CBC */
   }
 
   .dark {
@@ -55,7 +62,7 @@
     --popover: 240 24% 12%;  /* LEGAL dark popover */
     --popover-foreground: 210 40% 98%;
 
-    --primary: 259 95% 57%; /* LEGAL primary color */
+    --primary: 245 79% 57%; /* LEGAL primary color */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 24% 14%;  /* LEGAL dark secondary */
@@ -64,7 +71,7 @@
     --muted: 240 24% 16%;  /* LEGAL dark muted */
     --muted-foreground: 210 30% 80%;
 
-    --accent: 249 93% 37%; /* LEGAL accent color */
+    --accent: 186 100% 51%; /* LEGAL ciano color */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -72,16 +79,16 @@
 
     --border: 240 24% 16%;  /* LEGAL dark border */
     --input: 240 24% 16%;  /* LEGAL dark input */
-    --ring: 259 95% 57%; /* LEGAL primary color */
+    --ring: 245 79% 57%; /* LEGAL primary color */
 
     --sidebar-background: 240 24% 10%; /* LEGAL dark sidebar */
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 259 95% 57%; /* LEGAL primary color */
+    --sidebar-primary: 245 79% 57%; /* LEGAL primary color */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 24% 14%;  /* LEGAL dark accent */
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 240 24% 16%;  /* LEGAL dark border */
-    --sidebar-ring: 259 95% 57%; /* LEGAL primary color */
+    --sidebar-ring: 245 79% 57%; /* LEGAL primary color */
   }
 }
 
@@ -91,7 +98,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     transition: background-color 0.5s ease, color 0.5s ease;
   }
 
@@ -100,13 +107,26 @@
   }
 
   ::selection {
-    background-color: hsl(259 95% 57% / 0.2); /* LEGAL primary color with opacity */
+    background-color: hsl(245 79% 57% / 0.2); /* LEGAL primary color with opacity */
     color: hsl(210 40% 98%);
   }
 
   .dark ::selection {
-    background-color: hsl(259 95% 57% / 0.3); /* LEGAL primary color with opacity */
+    background-color: hsl(245 79% 57% / 0.3); /* LEGAL primary color with opacity */
     color: white;
+  }
+
+  /* LEGAL Typography Classes */
+  .legal-title {
+    @apply font-neue-haas font-black text-legal-dark dark:text-legal-primary;
+  }
+
+  .legal-subtitle {
+    @apply font-neue-haas font-bold text-legal-primary;
+  }
+
+  .legal-text {
+    @apply font-neue-haas font-medium;
   }
 }
 
@@ -120,7 +140,7 @@
   }
   
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-telecom-500 focus:border-telecom-500 dark:bg-gray-800 dark:text-gray-100;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-legal-primary focus:border-legal-primary dark:bg-gray-800 dark:text-gray-100;
   }
   
   .form-label {
@@ -133,6 +153,19 @@
   
   .glass {
     @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 rounded-xl;
+  }
+
+  /* LEGAL Specific Components */
+  .legal-card {
+    @apply bg-white dark:bg-card border border-legal-primary/20 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:border-legal-primary/40;
+  }
+
+  .legal-button {
+    @apply bg-legal-primary hover:bg-legal-dark text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-legal-primary/50;
+  }
+
+  .legal-badge {
+    @apply bg-legal-secondary/20 text-legal-dark font-medium px-2 py-1 rounded-full text-xs;
   }
 }
 

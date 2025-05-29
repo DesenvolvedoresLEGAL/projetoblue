@@ -76,15 +76,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// LEGAL platform custom colors
+				// LEGAL platform colors - Updated with correct values
 				legal: {
-					primary: '#4D2BFB',
-					accent: '#020CBC',
-					dark: '#0C0C1F',
+					primary: '#4D2BFB',    // Azul Principal
+					secondary: '#03F9FF',   // Ciano Secundário  
+					dark: '#020CBC',        // Azul Profundo
+					accent: '#4D2BFB',      // Para destaques
+					cyan: '#03F9FF',        // Ciano específico
 				}
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
+				sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
+				'neue-haas': ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'], // Fallback for commercial font
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -117,12 +120,17 @@ export default {
 						transform: 'scale(1)',
 						opacity: '0'
 					}
+				},
+				'sync-spin': {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'ripple': 'ripple 0.8s ease-out forwards'
+				'ripple': 'ripple 0.8s ease-out forwards',
+				'sync-spin': 'sync-spin 1s linear infinite'
 			}
 		}
 	},
