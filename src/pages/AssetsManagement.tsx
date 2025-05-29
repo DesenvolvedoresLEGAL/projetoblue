@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, LinkIcon, History } from "lucide-react";
+import { PlusCircle, LinkIcon, History, List } from "lucide-react";
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
@@ -75,7 +75,7 @@ const AssetsManagement = () => {
         >
           <CardHeader>
             <div className="flex items-center space-x-2">
-              <LinkIcon className="h-6 w-6 text-primary" />
+              <List className="h-6 w-6 text-primary" />
               <CardTitle>Listar associações</CardTitle>
             </div>
             <CardDescription>
