@@ -129,7 +129,7 @@ export default function AssociationsListContent() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/assets`)}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2"
             disabled={isEndingGroup}
           >
