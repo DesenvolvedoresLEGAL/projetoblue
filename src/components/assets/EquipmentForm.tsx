@@ -21,13 +21,11 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
     model: '',
     solution_id: '',
     manufacturer_id: '',
-    admin_user: 'admin',
-    admin_pass: '',
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Buscar soluções (exceto CHIP)
+  // Buscar soluções (equipamentos)
   const { data: solutions = [] } = useQuery({
     queryKey: ['solutions'],
     queryFn: async () => {
@@ -35,7 +33,6 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
         .from('asset_solutions')
         .select('*')
         .neq('id', 11) // Excluir CHIP
-        .is('deleted_at', null)
         .order('solution');
       
       if (error) throw error;
@@ -61,8 +58,8 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.radio || !formData.serial_number || !formData.model || !formData.solution_id) {
-      toast.error('Rádio, serial, modelo e solução são obrigatórios');
+    if (!formData.radio || !formData.solution_id) {
+      toast.error('Rádio e tipo de equipamento são obrigatórios');
       return;
     }
 
@@ -75,11 +72,9 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
           solution_id: parseInt(formData.solution_id),
           status_id: 1, // DISPONÍVEL
           radio: formData.radio,
-          serial_number: formData.serial_number,
-          model: formData.model,
+          serial_number: formData.serial_number || null,
+          model: formData.model || null,
           manufacturer_id: formData.manufacturer_id ? parseInt(formData.manufacturer_id) : null,
-          admin_user: formData.admin_user,
-          admin_pass: formData.admin_pass,
           notes: formData.notes || null
         });
 
@@ -104,7 +99,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Rádio */}
         <div className="space-y-2">
-          <Label htmlFor="radio">Rádio/Etiqueta *</Label>
+          <Label htmlFor="radio">Rádio *</Label>
           <Input
             id="radio"
             value={formData.radio}
@@ -114,40 +109,15 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
           />
         </div>
 
-        {/* Serial */}
+        {/* Tipo de Equipamento */}
         <div className="space-y-2">
-          <Label htmlFor="serial_number">Número de Série *</Label>
-          <Input
-            id="serial_number"
-            value={formData.serial_number}
-            onChange={(e) => setFormData(prev => ({ ...prev, serial_number: e.target.value }))}
-            placeholder="Digite o número de série"
-            required
-          />
-        </div>
-
-        {/* Modelo */}
-        <div className="space-y-2">
-          <Label htmlFor="model">Modelo *</Label>
-          <Input
-            id="model"
-            value={formData.model}
-            onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
-            placeholder="Digite o modelo"
-            required
-          />
-        </div>
-
-        {/* Solução */}
-        <div className="space-y-2">
-          <Label htmlFor="solution_id">Solução *</Label>
+          <Label htmlFor="solution_id">Tipo de Equipamento *</Label>
           <Select
             value={formData.solution_id}
             onValueChange={(value) => setFormData(prev => ({ ...prev, solution_id: value }))}
-            required
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a solução" />
+              <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
             <SelectContent>
               {solutions.map((solution) => (
@@ -159,8 +129,30 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
           </Select>
         </div>
 
-        {/* Fabricante */}
+        {/* Número Serial */}
         <div className="space-y-2">
+          <Label htmlFor="serial_number">Número Serial</Label>
+          <Input
+            id="serial_number"
+            value={formData.serial_number}
+            onChange={(e) => setFormData(prev => ({ ...prev, serial_number: e.target.value }))}
+            placeholder="Digite o número serial"
+          />
+        </div>
+
+        {/* Modelo */}
+        <div className="space-y-2">
+          <Label htmlFor="model">Modelo</Label>
+          <Input
+            id="model"
+            value={formData.model}
+            onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
+            placeholder="Digite o modelo"
+          />
+        </div>
+
+        {/* Fabricante */}
+        <div className="space-y-2 md:col-span-2">
           <Label htmlFor="manufacturer_id">Fabricante</Label>
           <Select
             value={formData.manufacturer_id}
@@ -177,29 +169,6 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Usuário Admin */}
-        <div className="space-y-2">
-          <Label htmlFor="admin_user">Usuário Admin</Label>
-          <Input
-            id="admin_user"
-            value={formData.admin_user}
-            onChange={(e) => setFormData(prev => ({ ...prev, admin_user: e.target.value }))}
-            placeholder="admin"
-          />
-        </div>
-
-        {/* Senha Admin */}
-        <div className="space-y-2">
-          <Label htmlFor="admin_pass">Senha Admin</Label>
-          <Input
-            id="admin_pass"
-            type="password"
-            value={formData.admin_pass}
-            onChange={(e) => setFormData(prev => ({ ...prev, admin_pass: e.target.value }))}
-            placeholder="Digite a senha do admin"
-          />
         </div>
       </div>
 

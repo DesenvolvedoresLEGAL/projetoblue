@@ -4,18 +4,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
+import { Search, Smartphone, Wifi } from "lucide-react";
 import { toast } from 'sonner';
-import { Search, Package } from "lucide-react";
 
 interface AssetListModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAssetSelected: (asset: SelectedAsset) => void;
   selectedAssets: SelectedAsset[];
-  type: 'equipment' | 'chip';
+  type: 'chip' | 'equipment';
 }
 
 export const AssetListModal: React.FC<AssetListModalProps> = ({
@@ -29,13 +31,13 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
 
   // Buscar ativos disponíveis
   const { data: assets = [], isLoading } = useQuery({
-    queryKey: ['available-assets', type, searchTerm],
+    queryKey: ['available-assets', type],
     queryFn: async () => {
       let query = supabase
         .from('assets')
         .select(`
           uuid, serial_number, model, iccid, solution_id, status_id, 
-          line_number, radio, manufacturer_id, created_at, updated_at,
+          line_number, radio, manufacturer_id, created_at,
           manufacturers(id, name),
           asset_status(id, status),
           asset_solutions(id, solution)
@@ -46,39 +48,16 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
       // Filtrar por tipo
       if (type === 'chip') {
         query = query.eq('solution_id', 11);
-        if (searchTerm.trim()) {
-          query = query.ilike('iccid', `%${searchTerm.trim()}%`);
-        }
       } else {
         query = query.neq('solution_id', 11);
-        if (searchTerm.trim()) {
-          query = query.or(
-            `radio.ilike.%${searchTerm.trim()}%,` +
-            `serial_number.ilike.%${searchTerm.trim()}%,` +
-            `model.ilike.%${searchTerm.trim()}%`
-          );
-        }
       }
 
-      // Verificar quais ativos já estão associados
-      const { data: associatedAssets } = await supabase
-        .from('asset_client_assoc')
-        .select('asset_id')
-        .is('exit_date', null);
+      const { data, error } = await query;
+      
+      if (error) throw error;
 
-      const associatedIds = associatedAssets?.map(a => a.asset_id) || [];
-
-      const { data, error } = await query
-        .not('uuid', 'in', `(${associatedIds.join(',')})`)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Erro ao buscar ativos:', error);
-        throw error;
-      }
-
-      return data.map(asset => ({
+      // Mapear para SelectedAsset
+      return (data || []).map(asset => ({
         id: asset.uuid,
         uuid: asset.uuid,
         type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
@@ -108,11 +87,26 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
         admin_user: 'admin',
         admin_pass: '',
         plan_id: 1,
-        associationType: 'aluguel',
-        startDate: new Date().toISOString().split('T')[0]
-      })) as SelectedAsset[];
+        associationType: 'ALUGUEL',
+        startDate: new Date().toISOString()
+      } as SelectedAsset));
     },
     enabled: open
+  });
+
+  // Filtrar ativos pela busca
+  const filteredAssets = assets.filter(asset => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    if (type === 'chip') {
+      return asset.iccid?.toLowerCase().includes(searchLower) ||
+             asset.line_number?.toLowerCase().includes(searchLower);
+    } else {
+      return asset.radio?.toLowerCase().includes(searchLower) ||
+             asset.serial_number?.toLowerCase().includes(searchLower) ||
+             asset.model?.toLowerCase().includes(searchLower);
+    }
   });
 
   const handleAssetSelect = (asset: SelectedAsset) => {
@@ -124,104 +118,103 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
 
     onAssetSelected(asset);
     onOpenChange(false);
-    toast.success(`${type === 'chip' ? 'CHIP' : 'Equipamento'} adicionado com sucesso!`);
+    setSearchTerm('');
   };
-
-  const filteredAssets = assets.filter(asset => 
-    !selectedAssets.some(selected => selected.uuid === asset.uuid)
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            {type === 'chip' ? '📱 CHIPs Disponíveis' : '📡 Equipamentos Disponíveis'}
+            {type === 'chip' ? <Smartphone className="h-5 w-5" /> : <Wifi className="h-5 w-5" />}
+            {type === 'chip' ? 'CHIPs Disponíveis' : 'Equipamentos Disponíveis'}
           </DialogTitle>
           <DialogDescription>
-            Selecione {type === 'chip' ? 'um CHIP' : 'um equipamento'} da lista abaixo
+            Selecione um {type === 'chip' ? 'CHIP' : 'equipamento'} para adicionar à associação
           </DialogDescription>
         </DialogHeader>
 
-        {/* Campo de busca */}
-        <div className="space-y-2">
-          <Label htmlFor="modal-search">
-            Buscar {type === 'chip' ? 'por ICCID' : 'por rádio, serial ou modelo'}
-          </Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              id="modal-search"
-              placeholder={type === 'chip' ? 'Digite ICCID...' : 'Digite rádio, serial ou modelo...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+        <div className="space-y-4">
+          {/* Campo de busca */}
+          <div className="space-y-2">
+            <Label htmlFor="search">Buscar</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder={`Buscar ${type === 'chip' ? 'por ICCID ou linha' : 'por rádio, serial ou modelo'}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Lista de ativos */}
-        <div className="flex-1 overflow-y-auto max-h-96 space-y-2">
+          {/* Tabela de ativos */}
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando ativos...
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Carregando ativos...</p>
             </div>
           ) : filteredAssets.length > 0 ? (
-            <>
-              <div className="text-sm text-muted-foreground mb-2">
-                {filteredAssets.length} {type === 'chip' ? 'CHIP(s)' : 'equipamento(s)'} disponível(eis):
-              </div>
-              {filteredAssets.map((asset) => (
-                <div
-                  key={asset.uuid}
-                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
-                  onClick={() => handleAssetSelect(asset)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-primary flex items-center gap-2">
-                        {type === 'chip' ? '📱' : '📡'} 
-                        {asset.solucao || 'Sem solução'}
-                        {asset.marca && ` - ${asset.marca}`}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {type === 'chip' ? (
-                          <>
-                            <div>ICCID: {asset.iccid}</div>
-                            {asset.line_number && <div>Linha: {asset.line_number}</div>}
-                          </>
-                        ) : (
-                          <>
-                            <div>Rádio: {asset.radio}</div>
-                            <div>Serial: {asset.serial_number}</div>
-                            <div>Modelo: {asset.model}</div>
-                          </>
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Identificação</TableHead>
+                    <TableHead>Tipo/Modelo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAssets.map((asset) => (
+                    <TableRow key={asset.uuid}>
+                      <TableCell>
+                        <div className="font-medium">
+                          {type === 'chip' ? asset.iccid : asset.radio || asset.serial_number}
+                        </div>
+                        {type === 'chip' && asset.line_number && (
+                          <div className="text-sm text-muted-foreground">
+                            Linha: {asset.line_number}
+                          </div>
                         )}
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Selecionar
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : searchTerm.trim() ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhum {type === 'chip' ? 'CHIP' : 'equipamento'} encontrado para "{searchTerm}"
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="font-medium">
+                            {asset.marca || asset.brand || 'N/A'}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {asset.modelo || asset.model || 'N/A'}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          {asset.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAssetSelect(asset)}
+                          className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
+                        >
+                          Selecionar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Nenhum {type === 'chip' ? 'CHIP' : 'equipamento'} disponível no momento
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Nenhum {type === 'chip' ? 'CHIP' : 'equipamento'} disponível encontrado
+              </p>
             </div>
           )}
-        </div>
-
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fechar
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
