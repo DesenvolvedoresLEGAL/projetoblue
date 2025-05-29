@@ -1,66 +1,95 @@
 
 import * as XLSX from 'xlsx';
-import { Asset, Client, ChipAsset, EquipamentAsset } from '@/types/asset';
+import { AssetWithRelations } from '@/hooks/useAssetsData';
+import { format } from 'date-fns';
 
-interface ExcelExportData {
-  assets: Asset[];
-  clients: Client[];
+export interface ExportData {
+  'ID': string;
+  'Tipo': string;
+  'Status': string;
+  'Operadora/Fabricante': string;
+  'ICCID/Rádio': string;
+  'Número/Serial': string;
+  'Modelo': string;
+  'Dias Alugado': number;
+  'Data Criação': string;
 }
 
-export const exportToExcel = ({ assets, clients }: ExcelExportData) => {
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
+export const exportToExcel = (assets: AssetWithRelations[], filename?: string) => {
+  console.log('Iniciando exportação de', assets.length, 'ativos');
   
-  // Assets worksheet
-  const assetsData = assets.map(asset => {
-    const baseData = {
-      'ID': asset.id,
-      'Tipo': asset.type,
-      'Status': asset.status,
-      'Data de Registro': new Date(asset.registrationDate).toLocaleDateString('pt-BR'),
-      'Observações': asset.notes || ''
-    };
-    
-    if (asset.type === 'CHIP') {
-      const chip = asset as ChipAsset;
-      return {
-        ...baseData,
-        'ICCID': chip.iccid,
-        'Número': chip.phoneNumber,
-        'Operadora': chip.carrier
-      };
-    } else {
-      const router = asset as EquipamentAsset;
-      return {
-        ...baseData,
-        'Marca': router.brand,
-        'Modelo': router.model,
-        'SSID': router.ssid,
-        'Número de Série': router.serialNumber
-      };
+  // Mapear dados para formato de exportação
+  const exportData: ExportData[] = assets.map((asset) => {
+    // Obter nome do fabricante/operadora
+    let operadoraFabricante = 'N/A';
+    if (asset.manufacturer?.name) {
+      operadoraFabricante = asset.manufacturer.name;
+    } else if (asset.manufacturer_id) {
+      operadoraFabricante = `Fabricante ID: ${asset.manufacturer_id}`;
     }
+    
+    // Determinar identificador principal baseado no tipo de solução
+    let iccidRadio = 'N/A';
+    let numeroSerial = 'N/A';
+    
+    if (asset.solution?.solution === 'CHIP' || asset.solution_id === 11) {
+      // Para CHIPs, usar ICCID como identificador principal
+      iccidRadio = asset.iccid || 'N/A';
+      numeroSerial = asset.line_number?.toString() || 'N/A';
+    } else {
+      // Para equipamentos, usar rádio como identificador principal
+      iccidRadio = asset.radio || 'N/A';
+      numeroSerial = asset.serial_number || 'N/A';
+    }
+    
+    // Formatar data de criação
+    const dataCreated = asset.created_at 
+      ? format(new Date(asset.created_at), 'dd/MM/yyyy HH:mm')
+      : 'N/A';
+
+    return {
+      'ID': asset.uuid,
+      'Tipo': asset.solution?.solution || 'N/A',
+      'Status': asset.status?.status || 'N/A',
+      'Operadora/Fabricante': operadoraFabricante,
+      'ICCID/Rádio': iccidRadio,
+      'Número/Serial': numeroSerial,
+      'Modelo': asset.model || 'N/A',
+      'Dias Alugado': asset.rented_days || 0,
+      'Data Criação': dataCreated
+    };
   });
+
+  console.log('Dados preparados para exportação:', exportData.slice(0, 3)); // Log primeiros 3 itens
+
+  // Criar workbook e worksheet
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+  // Ajustar largura das colunas
+  const columnWidths = [
+    { wch: 35 }, // ID
+    { wch: 15 }, // Tipo
+    { wch: 15 }, // Status
+    { wch: 20 }, // Operadora/Fabricante
+    { wch: 25 }, // ICCID/Rádio
+    { wch: 20 }, // Número/Serial
+    { wch: 15 }, // Modelo
+    { wch: 12 }, // Dias Alugado
+    { wch: 18 }, // Data Criação
+  ];
   
-  const assetsWorksheet = XLSX.utils.json_to_sheet(assetsData);
-  XLSX.utils.book_append_sheet(workbook, assetsWorksheet, 'Ativos');
+  worksheet['!cols'] = columnWidths;
+
+  // Adicionar worksheet ao workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventário de Ativos');
+
+  // Gerar nome do arquivo
+  const finalFilename = filename || `inventario-ativos-${format(new Date(), 'yyyy-MM-dd-HHmm')}.xlsx`;
+
+  // Salvar arquivo
+  XLSX.writeFile(workbook, finalFilename);
   
-  // Clients worksheet
-  const clientsData = clients.map(client => ({
-    'ID': client.id,
-    'Nome': client.nome,
-    'CNPJ': client.cnpj,
-    'Contato': client.contato,
-    'Email': client.email || '',
-    'Endereço': '-', // Not available in current schema
-    'Cidade': '-', // Not available in current schema
-    'Estado': '-', // Not available in current schema
-    'CEP': '-' // Not available in current schema
-  }));
-  
-  const clientsWorksheet = XLSX.utils.json_to_sheet(clientsData);
-  XLSX.utils.book_append_sheet(workbook, clientsWorksheet, 'Clientes');
-  
-  // Download file
-  const fileName = `inventario_${new Date().toISOString().split('T')[0]}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
+  console.log('Exportação concluída:', finalFilename);
+  return finalFilename;
 };

@@ -1,231 +1,130 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { getAssetIdentifier } from '@/utils/assetUtils';
+import { historyService, AssetLogWithRelations } from '@/services/api/history/historyService';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-export interface AssetHistoryEntry {
+// Interface processada para uso na UI
+export interface ProcessedHistoryLog {
   id: number;
   date: string;
   event: string;
   description: string;
-  asset_id?: string;
-  asset_name?: string;
-  old_status?: string;
-  new_status?: string;
-  details?: any;
-  client_name?: string;
+  client_name: string | null;
+  asset_name: string | null;
+  old_status: string | null;
+  new_status: string | null;
+  user_email: string | null;
+  details: any;
 }
 
-export function useAssetHistory() {
-  const query = useQuery({
-    queryKey: ['asset', 'history'],
-    queryFn: async (): Promise<AssetHistoryEntry[]> => {
-      try {
-        console.log('Fetching asset history...');
-        
-        const { data, error } = await supabase
-          .from('asset_logs')
-          .select('id, event, date, details')
-          .order('date', { ascending: false })
-          .limit(20);
-        
-        if (error) {
-          console.error('Error fetching asset history:', error);
-          throw error;
-        }
-        
-        console.log('Raw asset history data:', data);
-        
-        if (!data || data.length === 0) {
-          console.log('No asset history found');
-          return [];
-        }
-        
-        const processedHistory = data.map(log => {
-          let description = log.event || 'Event logged';
-          let asset_name = 'N/A';
-          let client_name = 'Cliente não identificado';
-          let old_status = undefined;
-          let new_status = undefined;
-          let asset_id = undefined;
-          
-          // Safely parse details
-          if (log.details && typeof log.details === 'object') {
-            const details = log.details as Record<string, any>;
-            
-            if (details.description) {
-              description = details.description;
-            }
-            
-            // Extract client name from details
-            if (details.client_name && details.client_name.trim() !== '') {
-              client_name = details.client_name;
-            }
-            
-            // Handle asset identification - CORRIGIDO
-            if (details.solution_id || details.line_number || details.radio) {
-              // Para CHIP (solution_id = 11), usar line_number
-              if (details.solution_id === 11 && details.line_number) {
-                // Converter notação científica para número normal
-                const lineNumber = typeof details.line_number === 'string' 
-                  ? parseFloat(details.line_number).toString()
-                  : details.line_number.toString();
-                asset_name = lineNumber;
-              } 
-              // Para outros tipos, usar radio
-              else if (details.radio) {
-                asset_name = details.radio;
-              }
-              // Fallback para line_number se radio não estiver disponível
-              else if (details.line_number) {
-                const lineNumber = typeof details.line_number === 'string' 
-                  ? parseFloat(details.line_number).toString()
-                  : details.line_number.toString();
-                asset_name = lineNumber;
-              }
-            }
-            
-            old_status = details.old_status;
-            new_status = details.new_status;
-            asset_id = details.asset_id;
-          }
-          
-          console.log('Processed log entry:', {
-            id: log.id,
-            event: log.event,
-            asset_name,
-            client_name,
-            details: log.details
-          });
-          
-          return {
-            id: log.id,
-            date: log.date,
-            event: log.event,
-            description,
-            asset_name,
-            client_name,
-            old_status,
-            new_status,
-            asset_id,
-            details: log.details
-          };
-        });
-        
-        console.log('Final processed asset history:', processedHistory);
-        return processedHistory;
-        
-      } catch (error) {
-        console.error('Error in useAssetHistory:', error);
-        throw error;
-      }
-    },
-    staleTime: 30000,
-    retry: 1
+export const useAssetHistory = () => {
+  const { data: rawLogs = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['asset-history'],
+    queryFn: historyService.getAssetLogsWithRelations,
+    staleTime: 30000, // 30 segundos
+    refetchInterval: 60000, // 1 minuto
   });
 
-  // Helper functions - CORRIGIDAS
-  const getAssetIdentifier = (log: any): string => {
-    if (!log || !log.details) return 'N/A';
+  // Processar os dados para formato mais amigável à UI
+  const historyLogs: ProcessedHistoryLog[] = rawLogs.map((log: AssetLogWithRelations) => {
+    // Extrair informações do asset
+    const assetInfo = log.association?.asset;
+    let assetName = 'N/A';
     
-    const details = log.details;
-    
-    // Para CHIP (solution_id = 11), usar line_number
-    if (details.solution_id === 11 && details.line_number) {
-      const lineNumber = typeof details.line_number === 'string' 
-        ? parseFloat(details.line_number).toString()
-        : details.line_number.toString();
-      return lineNumber;
+    if (assetInfo) {
+      // Para CHIPs, usar line_number, para outros usar radio ou serial
+      if (assetInfo.line_number) {
+        assetName = assetInfo.line_number.toString();
+      } else if (assetInfo.radio) {
+        assetName = assetInfo.radio;
+      } else if (assetInfo.serial_number) {
+        assetName = assetInfo.serial_number;
+      } else if (assetInfo.iccid) {
+        assetName = assetInfo.iccid;
+      }
     }
-    
-    // Para outros tipos, usar radio
-    if (details.radio) {
-      return details.radio;
-    }
-    
-    // Fallback para line_number
-    if (details.line_number) {
-      const lineNumber = typeof details.line_number === 'string' 
-        ? parseFloat(details.line_number).toString()
-        : details.line_number.toString();
-      return lineNumber;
-    }
-    
-    return log.asset_name || 'N/A';
-  };
 
-  const getClientName = (log: any): string => {
-    if (!log) return 'Cliente não identificado';
-    
-    // Primeiro, tentar pegar do campo processado
-    if (log.client_name && log.client_name !== 'Cliente não identificado') {
-      return log.client_name;
-    }
-    
-    // Depois, tentar extrair dos details
-    if (log.details && log.details.client_name && log.details.client_name.trim() !== '') {
-      return log.details.client_name;
-    }
-    
-    return 'Cliente não identificado';
-  };
+    // Extrair informações do cliente
+    const clientName = log.association?.client?.nome || null;
 
-  const formatDate = (date: string): string => {
-    if (!date) return '';
-    return new Date(date).toLocaleString('pt-BR');
-  };
+    // Extrair informações de status
+    const oldStatus = log.status_before?.status || null;
+    const newStatus = log.status_after?.status || null;
 
-  const getStatusDisplay = (log: any) => {
+    // Extrair email do usuário dos detalhes ou usar informação padrão
+    let userEmail = 'Sistema Automático';
+    if (log.details && typeof log.details === 'object') {
+      const details = log.details as any;
+      if (details.user_email) {
+        userEmail = details.user_email;
+      } else if (details.username && details.username !== 'system') {
+        userEmail = details.username;
+      }
+    }
+
+    // Gerar descrição mais amigável
+    let description = historyService.formatLogDetails(log.details);
+    
+    // Melhorar descrição baseada no evento
+    if (log.event.includes('ASSOCIATION_CREATED')) {
+      description = `Nova associação criada ${clientName ? `para ${clientName}` : ''}`;
+    } else if (log.event.includes('ASSOCIATION_REMOVED')) {
+      description = `Associação encerrada ${clientName ? `de ${clientName}` : ''}`;
+    } else if (log.event.includes('STATUS_UPDATED')) {
+      description = `Status alterado ${oldStatus && newStatus ? `de ${oldStatus} para ${newStatus}` : ''}`;
+    } else if (log.event.includes('ASSET_CRIADO')) {
+      description = 'Ativo cadastrado no sistema';
+    }
+
     return {
-      before: log.old_status,
-      after: log.new_status
+      id: log.id,
+      date: log.date,
+      event: log.event,
+      description,
+      client_name: clientName,
+      asset_name: assetName,
+      old_status: oldStatus,
+      new_status: newStatus,
+      user_email: userEmail,
+      details: log.details
     };
-  };
+  });
 
-  const formatLogDetails = (details: any): string => {
-    if (!details) return 'Nenhum detalhe disponível';
-    
+  // Função para formatar data
+  const formatDate = (dateString: string): string => {
     try {
-      if (typeof details === 'string') {
-        return details;
-      }
-      
-      if (typeof details === 'object') {
-        const desc = details.event_description || details.description || 'Operação realizada';
-        return desc;
-      }
-      
-      return 'Detalhes do sistema';
-    } catch {
-      return 'Detalhes não disponíveis';
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch (error) {
+      return dateString;
     }
   };
 
+  // Função para formatar nome do evento
   const formatEventName = (event: string): string => {
     const eventTranslations: Record<string, string> = {
-      'INSERT': 'Criação',
-      'UPDATE': 'Atualização',
-      'DELETE': 'Remoção',
-      'STATUS_UPDATED': 'Status Atualizado',
-      'ASSET_CRIADO': 'Ativo Criado',
-      'SOFT_DELETE': 'Ativo Removido',
-      'ASSOCIATION': 'Associação',
-      'DISASSOCIATION': 'Desassociação'
+      'INSERT': 'Ativo criado',
+      'UPDATE': 'Dados atualizados',
+      'DELETE': 'Ativo excluído',
+      'STATUS_UPDATED': 'Status alterado',
+      'ASSET_CRIADO': 'Ativo criado',
+      'SOFT_DELETE': 'Ativo removido',
+      'ASSOCIATION_CREATED': 'Nova associação',
+      'ASSOCIATION_REMOVED': 'Associação removida',
+      'DISASSOCIATION': 'Associação encerrada',
+      'ASSOCIATION_ENDED': 'Associação encerrada'
     };
     
     return eventTranslations[event] || event;
   };
 
   return {
-    historyLogs: query.data || [],
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
-    getAssetIdentifier,
-    getClientName,
+    historyLogs,
+    isLoading,
+    error,
+    refetch,
     formatDate,
-    getStatusDisplay,
-    formatLogDetails,
     formatEventName
   };
-}
+};
