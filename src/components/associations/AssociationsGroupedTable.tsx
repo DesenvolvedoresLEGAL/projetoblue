@@ -2,8 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { AssociationTableRow } from "./AssociationTableRow";
-import { Separator } from "@/components/ui/separator";
+import { AssociationGroupRow } from "./AssociationGroupRow";
 
 interface Association {
   id: number;
@@ -21,14 +20,27 @@ interface Association {
   asset_solution_name: string;
 }
 
+interface AssociationGroup {
+  groupKey: string;
+  client_name: string;
+  client_id: string;
+  entry_date: string;
+  exit_date: string | null;
+  associations: Association[];
+  totalAssets: number;
+  assetTypes: { [key: string]: number };
+  canEndGroup: boolean;
+}
+
 interface AssociationsGroupedTableProps {
-  groupedAssociations: Record<string, Association[]>;
+  groupedAssociations: Record<string, AssociationGroup>;
   totalCount: number;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   onEditAssociation: (association: Association) => void;
   onEndAssociation: (associationId: number) => void;
+  onEndGroup: (groupKey: string) => void;
   debouncedSearchTerm: string;
 }
 
@@ -40,10 +52,23 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
   onPageChange,
   onEditAssociation,
   onEndAssociation,
+  onEndGroup,
   debouncedSearchTerm
 }) => {
-  const clientNames = Object.keys(groupedAssociations).sort();
-  const totalAssociations = Object.values(groupedAssociations).reduce((sum, group) => sum + group.length, 0);
+  const groupKeys = Object.keys(groupedAssociations).sort((a, b) => {
+    const groupA = groupedAssociations[a];
+    const groupB = groupedAssociations[b];
+    
+    // Ordenar por cliente, depois por data de entrada
+    if (groupA.client_name !== groupB.client_name) {
+      return groupA.client_name.localeCompare(groupB.client_name);
+    }
+    return new Date(groupB.entry_date).getTime() - new Date(groupA.entry_date).getTime();
+  });
+  
+  const totalAssociations = Object.values(groupedAssociations)
+    .reduce((sum, group) => sum + group.associations.length, 0);
+  const totalGroups = groupKeys.length;
 
   return (
     <>
@@ -51,49 +76,23 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Ativo</TableHead>
-              <TableHead>Cliente</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+              <TableHead>Cliente / Ativos</TableHead>
               <TableHead>Data de Início</TableHead>
               <TableHead>Data de Fim</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[150px]">Ações</TableHead>
+              <TableHead className="w-[200px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clientNames.map((clientName, clientIndex) => (
-              <React.Fragment key={clientName}>
-                {/* Cabeçalho do Cliente */}
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <td colSpan={7} className="p-4 font-semibold text-primary">
-                    <div className="flex items-center gap-2">
-                      <span>{clientName}</span>
-                      <span className="text-sm text-muted-foreground">
-                        ({groupedAssociations[clientName].length} associaç{groupedAssociations[clientName].length === 1 ? 'ão' : 'ões'})
-                      </span>
-                    </div>
-                  </td>
-                </TableRow>
-                
-                {/* Associações do Cliente */}
-                {groupedAssociations[clientName].map((association) => (
-                  <AssociationTableRow
-                    key={association.id}
-                    association={association}
-                    onEdit={onEditAssociation}
-                    onEndAssociation={onEndAssociation}
-                  />
-                ))}
-                
-                {/* Separador entre grupos (exceto o último) */}
-                {clientIndex < clientNames.length - 1 && (
-                  <TableRow>
-                    <td colSpan={7} className="p-0">
-                      <Separator />
-                    </td>
-                  </TableRow>
-                )}
-              </React.Fragment>
+            {groupKeys.map((groupKey) => (
+              <AssociationGroupRow
+                key={groupKey}
+                group={groupedAssociations[groupKey]}
+                onEditAssociation={onEditAssociation}
+                onEndAssociation={onEndAssociation}
+                onEndGroup={onEndGroup}
+              />
             ))}
           </TableBody>
         </Table>
@@ -101,7 +100,7 @@ export const AssociationsGroupedTable: React.FC<AssociationsGroupedTableProps> =
 
       {/* Estatísticas */}
       <div className="text-sm text-muted-foreground text-center">
-        Mostrando {totalAssociations} de {totalCount} associações em {clientNames.length} cliente{clientNames.length === 1 ? '' : 's'}
+        Mostrando {totalAssociations} associações em {totalGroups} grupo{totalGroups === 1 ? '' : 's'} de {totalCount} associações totais
         {debouncedSearchTerm && ` (filtradas por "${debouncedSearchTerm}")`}
       </div>
 

@@ -62,21 +62,57 @@ const filterMultiField = (
   });
 };
 
-// Função para agrupar associações por cliente
-const groupAssociationsByClient = (associations: Association[]) => {
-  return associations.reduce((acc, association) => {
-    const clientName = association.client_name || 'Cliente não identificado';
-    if (!acc[clientName]) {
-      acc[clientName] = [];
+// Função para agrupamento melhorado por cliente e datas
+const groupAssociationsByClientAndDates = (associations: Association[]) => {
+  const groups: { [key: string]: {
+    groupKey: string;
+    client_name: string;
+    client_id: string;
+    entry_date: string;
+    exit_date: string | null;
+    associations: Association[];
+    totalAssets: number;
+    assetTypes: { [key: string]: number };
+    canEndGroup: boolean;
+  } } = {};
+
+  associations.forEach(association => {
+    const groupKey = `${association.client_id}_${association.entry_date}_${association.exit_date || 'null'}`;
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = {
+        groupKey,
+        client_name: association.client_name,
+        client_id: association.client_id,
+        entry_date: association.entry_date,
+        exit_date: association.exit_date,
+        associations: [],
+        totalAssets: 0,
+        assetTypes: {},
+        canEndGroup: true
+      };
     }
-    acc[clientName].push(association);
-    return acc;
-  }, {} as Record<string, Association[]>);
+    
+    groups[groupKey].associations.push(association);
+    groups[groupKey].totalAssets++;
+    
+    // Contar tipos de ativos
+    const assetType = association.asset_solution_name;
+    groups[groupKey].assetTypes[assetType] = (groups[groupKey].assetTypes[assetType] || 0) + 1;
+    
+    // Verificar se pode encerrar o grupo (função canBeEndedManually inline)
+    const canEnd = !association.exit_date || association.exit_date >= new Date().toISOString().split('T')[0];
+    if (!canEnd) {
+      groups[groupKey].canEndGroup = false;
+    }
+  });
+  
+  return groups;
 };
 
 export default function AssociationsList() {
   const [searchInput, setSearchInput] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'ended' | 'today' | 'grouped'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   
@@ -125,6 +161,33 @@ export default function AssociationsList() {
     } catch (error) {
       console.error('Erro ao encerrar associação:', error);
       toast.error('Erro ao encerrar associação');
+    }
+  };
+
+  // Função para encerrar grupo de associações
+  const handleEndGroup = async (groupKey: string) => {
+    try {
+      const group = groupedAssociations[groupKey];
+      const associationIds = group.associations.map(a => a.id);
+      
+      const { error } = await supabase
+        .from('asset_client_assoc')
+        .update({ 
+          exit_date: new Date().toISOString().split('T')[0],
+          updated_at: new Date().toISOString()
+        })
+        .in('id', associationIds);
+
+      if (error) {
+        console.error('Erro ao encerrar grupo de associações:', error);
+        toast.error('Erro ao encerrar grupo de associações');
+        return;
+      }
+
+      toast.success(`Grupo de ${group.totalAssets} associações encerrado com sucesso`);
+    } catch (error) {
+      console.error('Erro ao encerrar grupo de associações:', error);
+      toast.error('Erro ao encerrar grupo de associações');
     }
   };
 
@@ -237,6 +300,8 @@ export default function AssociationsList() {
           .lte('exit_date', today);
       } else if (statusFilter === 'today') {
         query = query.eq('exit_date', today);
+      } else if (statusFilter === 'grouped') {
+        query = query.select('id, client_id, entry_date, exit_date, association_id, created_at');
       }
 
       // Aplicar filtros por data
@@ -293,7 +358,7 @@ export default function AssociationsList() {
     enabled: true
   });
 
-  // Aplicar filtro multicampo no frontend e agrupar por cliente
+  // Aplicar filtro multicampo no frontend e agrupar por cliente e datas
   const { groupedAssociations, totalAssociations } = React.useMemo(() => {
     const rawData = associationsData?.data || [];
     
@@ -301,8 +366,8 @@ export default function AssociationsList() {
     const filteredData = debouncedSearchTerm ? 
       filterMultiField(rawData, debouncedSearchTerm) : rawData;
     
-    // Agrupar por cliente
-    const grouped = groupAssociationsByClient(filteredData);
+    // Agrupar por cliente e datas
+    const grouped = groupAssociationsByClientAndDates(filteredData);
     
     return {
       groupedAssociations: grouped,
@@ -399,6 +464,7 @@ export default function AssociationsList() {
               onPageChange={setCurrentPage}
               onEditAssociation={handleEditAssociation}
               onEndAssociation={handleEndAssociation}
+              onEndGroup={handleEndGroup}
               debouncedSearchTerm={debouncedSearchTerm}
             />
           ) : (
