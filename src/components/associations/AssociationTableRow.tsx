@@ -50,8 +50,17 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
     }
   };
 
-  // Verificar se a associação está ativa (não tem data de saída ou a data é futura)
-  const isActive = !association.exit_date || new Date(association.exit_date) > new Date();
+  // Função melhorada para verificar se a associação pode ser encerrada manualmente
+  const canBeEndedManually = (association: Association): boolean => {
+    // Se não tem data de saída, pode ser encerrada
+    if (!association.exit_date) return true;
+    
+    // Obter a data de hoje no formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Se a data de saída é hoje ou futura, pode ser encerrada
+    return association.exit_date >= today;
+  };
 
   // Função melhorada para obter identificador do ativo
   const getImprovedAssetIdentifier = (assoc: Association) => {
@@ -67,6 +76,8 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
     onEndAssociation(association.id);
     setShowEndConfirmation(false);
   };
+
+  const showEndButton = canBeEndedManually(association);
 
   return (
     <>
@@ -108,7 +119,7 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
               <Pencil className="h-4 w-4" />
             </Button>
             
-            {isActive && (
+            {showEndButton && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -129,7 +140,7 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
         onOpenChange={setShowEndConfirmation}
         onConfirm={handleEndAssociation}
         title="Encerrar Associação"
-        description={`Tem certeza que deseja encerrar a associação do ativo ${getImprovedAssetIdentifier(association)} com o cliente ${association.client_name}? Esta ação definirá a data de fim como hoje e o status do ativo será atualizado.`}
+        description={`Tem certeza que deseja encerrar a associação do ativo ${getImprovedAssetIdentifier(association)} com o cliente ${association.client_name}? ${association.exit_date ? 'Esta ação finalizará a associação antecipadamente.' : 'Esta ação definirá a data de fim como hoje e o status do ativo será atualizado.'}`}
         confirmText="Encerrar"
         cancelText="Cancelar"
         variant="destructive"
