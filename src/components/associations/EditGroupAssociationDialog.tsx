@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Save, Loader2, Users, Info } from "lucide-react";
+import { CalendarIcon, Save, Loader2, Users, Info, Wifi, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatDateForSubmission, formatDateForDisplay, validateDateRange } from '@/utils/dateUtils';
+import { formatDateForSubmission, validateDateRange } from '@/utils/dateUtils';
 
 interface Association {
   id: number;
@@ -47,11 +47,18 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
   const [newEntryDate, setNewEntryDate] = useState<Date | undefined>();
   const [newExitDate, setNewExitDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState('');
+  const [ssid, setSsid] = useState('');
+  const [networkPassword, setNetworkPassword] = useState('');
 
   // Pegar dados do primeiro item para mostrar informações do grupo
   const firstAssociation = associations[0];
   const clientName = firstAssociation?.client_name || 'Cliente';
   const totalAssets = associations.length;
+
+  // Verificar se há equipamentos no grupo (para mostrar campos SSID/senha)
+  const hasEquipments = associations.some(assoc => 
+    assoc.asset_solution_name?.toUpperCase() !== 'CHIP' && assoc.asset_solution_id !== 11
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +90,19 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
 
         if (notes.trim()) {
           updateData.notes = notes.trim();
+        }
+
+        // Adicionar SSID e senha apenas para equipamentos
+        const isEquipment = association.asset_solution_name?.toUpperCase() !== 'CHIP' && 
+                           association.asset_solution_id !== 11;
+        
+        if (isEquipment) {
+          if (ssid.trim()) {
+            updateData.ssid = ssid.trim();
+          }
+          if (networkPassword.trim()) {
+            updateData.pass = networkPassword.trim();
+          }
         }
 
         const { error } = await supabase
@@ -192,13 +212,46 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
             </Popover>
           </div>
 
+          {/* Campos SSID e Senha (apenas se houver equipamentos) */}
+          {hasEquipments && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="group-ssid" className="font-neue-haas font-bold text-[#020CBC] flex items-center gap-1">
+                  <Wifi className="h-3 w-3" />
+                  SSID da Rede
+                </Label>
+                <Input
+                  id="group-ssid"
+                  value={ssid}
+                  onChange={(e) => setSsid(e.target.value)}
+                  placeholder="#WiFi.LEGAL"
+                  className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="group-password" className="font-neue-haas font-bold text-[#020CBC] flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  Senha da Rede
+                </Label>
+                <Input
+                  id="group-password"
+                  type="password"
+                  value={networkPassword}
+                  onChange={(e) => setNetworkPassword(e.target.value)}
+                  placeholder="123legal"
+                  className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Notas */}
           <div className="space-y-2">
-            <Label htmlFor="notes" className="font-neue-haas font-bold text-[#020CBC]">
+            <Label htmlFor="group-notes" className="font-neue-haas font-bold text-[#020CBC]">
               Observações (opcional)
             </Label>
             <Input
-              id="notes"
+              id="group-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Adicionar observações sobre a edição"

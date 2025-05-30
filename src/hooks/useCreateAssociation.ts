@@ -7,8 +7,9 @@ interface CreateAssociationParams {
   assetId: string;
   associationType: string;
   startDate: string;
-  rentedDays?: number;
   notes?: string;
+  ssid?: string;
+  pass?: string;
 }
 
 export const useCreateAssociation = () => {
@@ -33,15 +34,25 @@ export const useCreateAssociation = () => {
       }
 
       // Criar associação
+      const insertData: any = {
+        asset_id: params.assetId,
+        client_id: params.clientId,
+        association_id: associationId,
+        entry_date: params.startDate,
+        notes: params.notes
+      };
+
+      // Adicionar SSID e senha apenas se fornecidos
+      if (params.ssid) {
+        insertData.ssid = params.ssid;
+      }
+      if (params.pass) {
+        insertData.pass = params.pass;
+      }
+
       const { data, error } = await supabase
         .from('asset_client_assoc')
-        .insert({
-          asset_id: params.assetId,
-          client_id: params.clientId,
-          association_id: associationId, // Use association_id instead of association_type
-          entry_date: params.startDate,
-          notes: params.notes
-        })
+        .insert(insertData)
         .select()
         .single();
 

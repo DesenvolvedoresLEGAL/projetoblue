@@ -1,192 +1,144 @@
 
 import React, { useState } from 'react';
-import { StandardPageHeader } from "@/components/ui/standard-page-header";
-import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ArrowLeft, ArrowRight } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { ClientSelectionSimplified } from '@/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@/components/association/AssetSelection';
 import { AssociationSummary } from '@/components/association/AssociationSummary';
-import { Client } from '@/types/asset';
+import { useCreateAssociation } from '@/hooks/useCreateAssociation';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export interface SelectedAsset {
-  id: string;
   uuid: string;
-  type: 'CHIP' | 'EQUIPMENT';
-  registrationDate: string;
-  status: string;
-  statusId?: number;
-  notes?: string;
-  solucao?: string;
-  marca?: string;
-  modelo?: string;
-  serial_number?: string;
-  model?: string;
-  radio?: string;
+  iccid?: string | null;
+  radio?: string | null;
+  line_number?: number | null;
   solution_id?: number;
-  manufacturer_id?: number;
-  plan_id?: number;
-  rented_days?: number;
-  admin_user?: string;
-  admin_pass?: string;
-  iccid?: string;
-  line_number?: string;
-  phoneNumber?: string;
-  carrier?: string;
-  uniqueId?: string;
-  brand?: string;
-  ssid?: string;
-  password?: string;
-  serialNumber?: string;
-  gb?: number;
+  asset_solution_name?: string;
   associationType?: string;
   startDate?: string;
+  notes?: string;
+  ssid?: string;
+  pass?: string;
 }
 
-type Step = 'client' | 'assets' | 'summary';
+interface Client {
+  uuid: string;
+  nome: string;
+  cnpj: string;
+  contato: number;
+  email?: string;
+}
 
-const AssetAssociation = () => {
-  const [currentStep, setCurrentStep] = useState<Step>('client');
+export default function AssetAssociation() {
+  const navigate = useNavigate();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
-  const navigate = useNavigate();
+  const createAssociation = useCreateAssociation();
 
-  const handleClientSelect = (client: Client) => {
-    setSelectedClient(client);
-    setCurrentStep('assets');
+  const handleAssetUpdate = (assetId: string, updates: Partial<SelectedAsset>) => {
+    setSelectedAssets(prev =>
+      prev.map(asset =>
+        asset.uuid === assetId ? { ...asset, ...updates } : asset
+      )
+    );
   };
 
-  const handleAssetsConfirm = (assets: SelectedAsset[]) => {
-    setSelectedAssets(assets);
-    setCurrentStep('summary');
+  const handleRemoveAsset = (assetId: string) => {
+    setSelectedAssets(prev => prev.filter(asset => asset.uuid !== assetId));
   };
 
-  const handleBack = () => {
-    if (currentStep === 'assets') {
-      setCurrentStep('client');
-    } else if (currentStep === 'summary') {
-      setCurrentStep('assets');
+  const handleConfirmAssociations = async () => {
+    if (!selectedClient || selectedAssets.length === 0) {
+      toast.error('Selecione um cliente e pelo menos um ativo');
+      return;
+    }
+
+    try {
+      // Criar associações sequencialmente
+      for (const asset of selectedAssets) {
+        const params = {
+          clientId: selectedClient.uuid,
+          assetId: asset.uuid,
+          associationType: asset.associationType || 'ALUGUEL',
+          startDate: asset.startDate || new Date().toISOString().split('T')[0],
+          notes: asset.notes,
+          ssid: asset.ssid,
+          pass: asset.pass
+        };
+
+        await createAssociation.mutateAsync(params);
+      }
+
+      toast.success(`${selectedAssets.length} associação${selectedAssets.length > 1 ? 'ões' : ''} criada${selectedAssets.length > 1 ? 's' : ''} com sucesso!`);
+      
+      // Resetar formulário
+      setSelectedClient(null);
+      setSelectedAssets([]);
+      
+      // Navegar para a lista de associações
+      navigate('/assets/associations-list');
+    } catch (error) {
+      console.error('Erro ao criar associações:', error);
+      toast.error('Erro ao criar associações. Tente novamente.');
     }
   };
 
-  const handleComplete = () => {
-    // Reset e voltar para lista de associações
-    setSelectedClient(null);
-    setSelectedAssets([]);
-    setCurrentStep('client');
-    navigate('/associations');
-  };
-
-  const getStepNumber = () => {
-    switch (currentStep) {
-      case 'client': return 1;
-      case 'assets': return 2;
-      case 'summary': return 3;
-      default: return 1;
-    }
-  };
-
-  const getStepTitle = () => {
-    switch (currentStep) {
-      case 'client': return 'Selecionar Cliente';
-      case 'assets': return 'Selecionar Ativos';
-      case 'summary': return 'Confirmar Associação';
-      default: return 'Selecionar Cliente';
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/assets');
     }
   };
 
   return (
-    <div className="space-y-6">
-      <StandardPageHeader
-        icon={Users}
-        title="Nova Associação de Ativos"
-        description="Associe ativos disponíveis a clientes de forma rápida e organizada"
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/associations')}
-          className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header com botão voltar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#020CBC]">Associar Ativos</h1>
+          <p className="text-muted-foreground mt-1">
+            Associe ativos a clientes para aluguel, assinatura ou empréstimo
+          </p>
+        </div>
+        <button
+          onClick={handleGoBack}
+          className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-[#4D2BFB] hover:bg-[#4D2BFB]/10 rounded-lg transition-colors"
+          title="Voltar"
         >
           <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </StandardPageHeader>
+        </button>
+      </div>
 
-      {/* Progress indicator */}
-      <StandardFiltersCard title={`Etapa ${getStepNumber()}/3: ${getStepTitle()}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {['client', 'assets', 'summary'].map((step, index) => {
-              const stepNumber = index + 1;
-              const isActive = currentStep === step;
-              const isCompleted = getStepNumber() > stepNumber;
-              
-              return (
-                <div key={step} className="flex items-center">
-                  <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                    ${isActive ? 'bg-[#4D2BFB] text-white' : 
-                      isCompleted ? 'bg-[#03F9FF] text-[#020CBC]' : 'bg-gray-200 text-gray-500'}
-                  `}>
-                    {stepNumber}
-                  </div>
-                  {index < 2 && (
-                    <ArrowRight className={`
-                      h-4 w-4 mx-2 
-                      ${isCompleted ? 'text-[#03F9FF]' : 'text-gray-300'}
-                    `} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {currentStep !== 'client' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
-            >
-              Voltar
-            </Button>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Coluna Esquerda - Seleções */}
+        <div className="space-y-6">
+          {/* Seleção de Cliente */}
+          <ClientSelectionSimplified
+            selectedClient={selectedClient}
+            onSelectClient={setSelectedClient}
+          />
+
+          {/* Seleção de Ativos */}
+          <AssetSelection
+            selectedAssets={selectedAssets}
+            onAssetsChange={setSelectedAssets}
+            onAssetUpdate={handleAssetUpdate}
+            onRemoveAsset={handleRemoveAsset}
+          />
         </div>
-      </StandardFiltersCard>
 
-      {/* Step content */}
-      <Card className="border-[#4D2BFB]/20 shadow-sm">
-        <CardContent className="p-6">
-          {currentStep === 'client' && (
-            <ClientSelectionSimplified onClientSelected={handleClientSelect} />
-          )}
-          
-          {currentStep === 'assets' && selectedClient && (
-            <AssetSelection
-              client={selectedClient}
-              selectedAssets={selectedAssets}
-              onAssetAdded={(asset) => setSelectedAssets(prev => [...prev, asset])}
-              onAssetRemoved={(assetId) => setSelectedAssets(prev => prev.filter(a => a.uuid !== assetId))}
-              onAssetUpdated={(assetId, updates) => setSelectedAssets(prev => prev.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
-              onProceed={() => setCurrentStep('summary')}
-            />
-          )}
-          
-          {currentStep === 'summary' && selectedClient && selectedAssets.length > 0 && (
-            <AssociationSummary
-              client={selectedClient}
-              assets={selectedAssets}
-              onComplete={handleComplete}
-              onBack={handleBack}
-            />
-          )}
-        </CardContent>
-      </Card>
+        {/* Coluna Direita - Resumo */}
+        <div className="space-y-6">
+          <AssociationSummary
+            selectedClient={selectedClient}
+            selectedAssets={selectedAssets}
+            onConfirm={handleConfirmAssociations}
+            isLoading={createAssociation.isPending}
+          />
+        </div>
+      </div>
     </div>
   );
-};
-
-export default AssetAssociation;
+}

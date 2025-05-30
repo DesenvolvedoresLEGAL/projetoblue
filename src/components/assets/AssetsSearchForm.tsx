@@ -1,154 +1,215 @@
 
 import React from 'react';
-import { Search, Filter, RotateCcw, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Search, Filter, X } from "lucide-react";
 
 interface AssetsSearchFormProps {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  filterType: string;
-  filterStatus: string;
-  handleSearch: (e: React.FormEvent) => void;
-  handleFilterChange: (type: string, value: string) => void;
+  onSearchChange: (value: string) => void;
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+  solutionFilter: string;
+  onSolutionChange: (value: string) => void;
+  manufacturerFilter: string;
+  onManufacturerChange: (value: string) => void;
+  onClearFilters: () => void;
+  totalResults?: number;
 }
 
-const AssetsSearchForm = ({
+export default function AssetsSearchForm({
   searchTerm,
-  setSearchTerm,
-  filterType,
-  filterStatus,
-  handleSearch,
-  handleFilterChange
-}: AssetsSearchFormProps) => {
-  
-  const handleReset = () => {
-    setSearchTerm('');
-    handleFilterChange('type', 'all');
-    handleFilterChange('status', 'all');
-  };
+  onSearchChange,
+  statusFilter,
+  onStatusChange,
+  solutionFilter,
+  onSolutionChange,
+  manufacturerFilter,
+  onManufacturerChange,
+  onClearFilters,
+  totalResults
+}: AssetsSearchFormProps) {
+  // Buscar solutions do banco
+  const { data: solutions = [] } = useQuery({
+    queryKey: ['asset-solutions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_solutions')
+        .select('id, solution')
+        .is('deleted_at', null)
+        .order('solution');
+      
+      if (error) {
+        console.error('Erro ao buscar solutions:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Buscar status do banco
+  const { data: statuses = [] } = useQuery({
+    queryKey: ['asset-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_status')
+        .select('id, status')
+        .is('deleted_at', null)
+        .order('status');
+      
+      if (error) {
+        console.error('Erro ao buscar status:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  // Buscar manufacturers do banco
+  const { data: manufacturers = [] } = useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('id, name')
+        .is('deleted_at', null)
+        .order('name');
+      
+      if (error) {
+        console.error('Erro ao buscar manufacturers:', error);
+        return [];
+      }
+      return data || [];
+    }
+  });
+
+  const hasActiveFilters = statusFilter !== 'all' || solutionFilter !== 'all' || manufacturerFilter !== 'all' || searchTerm.trim() !== '';
+  const activeFiltersCount = [statusFilter !== 'all', solutionFilter !== 'all', manufacturerFilter !== 'all', searchTerm.trim() !== ''].filter(Boolean).length;
 
   return (
-    <Card className="border-legal-primary/20 shadow-lg">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          {/* Header da busca */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-legal-primary rounded-lg">
-              <Search className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-black text-legal-dark font-neue-haas text-lg">
-                Buscar e Filtrar Ativos
-              </h3>
-              <p className="text-sm text-gray-600 font-neue-haas">
-                Encontre rapidamente o equipamento que você precisa
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSearch} className="space-y-4">
-            {/* Campo de busca principal */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-legal-primary" />
-              <Input
-                type="text"
-                placeholder="Pesquisar por ICCID, número de linha, rádio, modelo ou série..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 font-neue-haas"
-              />
-            </div>
-
-            {/* Filtros */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Filtro por Tipo */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-legal-secondary" />
-                  Tipo de Solução
-                </label>
-                <Select
-                  value={filterType}
-                  onValueChange={(value) => handleFilterChange('type', value)}
-                >
-                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
-                    <SelectValue placeholder="Todos os tipos" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-legal-secondary/20">
-                    <SelectItem value="all" className="font-neue-haas">Todos os Tipos</SelectItem>
-                    <SelectItem value="CHIP" className="font-neue-haas">📱 Chips</SelectItem>
-                    <SelectItem value="ROTEADOR" className="font-neue-haas">📡 Roteadores</SelectItem>
-                    <SelectItem value="MODEM" className="font-neue-haas">📶 Modems</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtro por Status */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-legal-secondary" />
-                  Status do Ativo
-                </label>
-                <Select
-                  value={filterStatus}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
-                    <SelectValue placeholder="Todos os status" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-legal-secondary/20">
-                    <SelectItem value="all" className="font-neue-haas">Todos os Status</SelectItem>
-                    <SelectItem value="DISPONÍVEL" className="font-neue-haas">✓ Disponível</SelectItem>
-                    <SelectItem value="EM LOCAÇÃO" className="font-neue-haas">📍 Em Locação</SelectItem>
-                    <SelectItem value="EM ASSINATURA" className="font-neue-haas">📋 Em Assinatura</SelectItem>
-                    <SelectItem value="SEM DADOS" className="font-neue-haas">⚠️ Sem Dados</SelectItem>
-                    <SelectItem value="BLOQUEADO" className="font-neue-haas">🚫 Bloqueado</SelectItem>
-                    <SelectItem value="EM MANUTENÇÃO" className="font-neue-haas">🔧 Em Manutenção</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Botão de Busca */}
-              <div className="space-y-2">
-                <label className="text-sm text-transparent">Ações</label>
-                <Button
-                  type="submit"
-                  className="w-full h-10 bg-legal-primary hover:bg-legal-dark text-white font-bold font-neue-haas transition-all duration-200 shadow-md hover:shadow-lg"
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Buscar Ativos
-                </Button>
-              </div>
-
-              {/* Botão de Reset */}
-              <div className="space-y-2">
-                <label className="text-sm text-transparent">Reset</label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleReset}
-                  className="w-full h-10 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold font-neue-haas transition-all duration-200"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Limpar Filtros
-                </Button>
-              </div>
-            </div>
-          </form>
-
-          {/* Dicas de busca */}
-          <div className="mt-4 p-3 bg-legal-primary/5 rounded-lg border border-legal-primary/20">
-            <p className="text-xs text-legal-dark font-neue-haas">
-              💡 <strong>Dica:</strong> Use números para buscar linhas telefônicas, ou digite texto para encontrar por ICCID, modelo ou série.
-            </p>
+    <Card className="border-[#4D2BFB]/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Search className="h-5 w-5 text-[#03F9FF]" />
+          Filtros de Busca
+          {activeFiltersCount > 0 && (
+            <Badge variant="secondary" className="bg-[#03F9FF]/20 text-[#020CBC]">
+              {activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''}
+            </Badge>
+          )}
+        </CardTitle>
+        <CardDescription>
+          Use os filtros para encontrar ativos específicos
+          {totalResults !== undefined && (
+            <span className="ml-2 font-medium text-[#020CBC]">
+              ({totalResults} resultado{totalResults !== 1 ? 's' : ''})
+            </span>
+          )}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Busca por texto */}
+        <div className="space-y-2">
+          <Label htmlFor="search-text" className="text-sm font-medium">
+            Buscar por ICCID, Número, Rádio ou ID
+          </Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="search-text"
+              type="text"
+              placeholder="Digite para buscar..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20"
+            />
           </div>
         </div>
+
+        {/* Filtros em grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filtro por Status */}
+          <div className="space-y-2">
+            <Label htmlFor="status-filter" className="text-sm font-medium">
+              Status
+            </Label>
+            <Select value={statusFilter} onValueChange={onStatusChange}>
+              <SelectTrigger className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20">
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                {statuses.map((status) => (
+                  <SelectItem key={status.id} value={status.id.toString()}>
+                    {status.status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro por Solução */}
+          <div className="space-y-2">
+            <Label htmlFor="solution-filter" className="text-sm font-medium">
+              Tipo/Solução
+            </Label>
+            <Select value={solutionFilter} onValueChange={onSolutionChange}>
+              <SelectTrigger className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20">
+                <SelectValue placeholder="Todas as soluções" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as soluções</SelectItem>
+                {solutions.map((solution) => (
+                  <SelectItem key={solution.id} value={solution.id.toString()}>
+                    {solution.solution}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtro por Fabricante */}
+          <div className="space-y-2">
+            <Label htmlFor="manufacturer-filter" className="text-sm font-medium">
+              Fabricante
+            </Label>
+            <Select value={manufacturerFilter} onValueChange={onManufacturerChange}>
+              <SelectTrigger className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20">
+                <SelectValue placeholder="Todos os fabricantes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os fabricantes</SelectItem>
+                {manufacturers.map((manufacturer) => (
+                  <SelectItem key={manufacturer.id} value={manufacturer.id.toString()}>
+                    {manufacturer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Botão Limpar Filtros */}
+        {hasActiveFilters && (
+          <div className="flex justify-end pt-2">
+            <Button
+              onClick={onClearFilters}
+              variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Limpar Filtros
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
-};
-
-export default AssetsSearchForm;
+}
