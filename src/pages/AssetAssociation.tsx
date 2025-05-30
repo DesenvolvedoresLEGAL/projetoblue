@@ -107,7 +107,7 @@ const AssetAssociation = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/associations')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
         >
           <ArrowLeft className="h-4 w-4" />
