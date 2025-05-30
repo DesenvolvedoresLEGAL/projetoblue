@@ -84,6 +84,13 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
                 </>
               )}
             </div>
+                <h3 className="text-lg font-semibold border-b pb-1">Informações do admin</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <span className="font-medium">Admin:</span>
+                  <span>{asset.admin_user}</span>
+                  <span className="font-medium">Senha:</span>
+                  <span>{asset.admin_pass}</span>
+                </div>
           </div>
 
           <div className="space-y-4 col-span-1 md:col-span-2">
