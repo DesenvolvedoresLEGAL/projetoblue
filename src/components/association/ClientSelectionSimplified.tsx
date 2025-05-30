@@ -11,6 +11,7 @@ import { Client } from '@/types/asset';
 import { Search, Users, Plus } from "lucide-react";
 import { toast } from 'sonner';
 import { ClientFormSimplified } from './ClientFormSimplified';
+import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface ClientSelectionSimplifiedProps {
   onClientSelected: (client: Client) => void;
@@ -22,7 +23,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  // Buscar clientes
+  // Buscar clientes apenas por nome e telefone
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
@@ -37,10 +38,9 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
     }
   });
 
-  // Filtrar clientes baseado na busca
+  // Filtrar clientes baseado na busca por nome e telefone apenas
   const filteredClients = clients.filter(client => 
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.cnpj.includes(searchTerm) ||
     client.contato.toString().includes(searchTerm)
   );
 
@@ -76,10 +76,6 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
     setIsNewClientModalOpen(false);
   };
 
-  // Determina se deve mostrar o botão de criar cliente
-  const showCreateButton = searchTerm && filteredClients.length === 0;
-  const showCreateButtonAlways = !searchTerm || filteredClients.length === 0;
-
   return (
     <div className="space-y-4">
       {/* Campo de busca */}
@@ -89,7 +85,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="client-search"
-            placeholder="Digite o nome, CNPJ ou telefone do cliente..."
+            placeholder="Digite o nome ou telefone do cliente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -121,7 +117,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
                         {client.nome}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        CNPJ: {client.cnpj} • Tel: {client.contato}
+                        Tel: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
                       </div>
                     </div>
                   </div>

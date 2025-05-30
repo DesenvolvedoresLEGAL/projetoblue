@@ -53,10 +53,10 @@ export const assetClientAssocSchema = z.object({
   ssid: z.string().optional(),
 });
 
-// Schema para cliente corrigido
+// Schema para cliente simplificado - CNPJ opcional
 export const clientSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
-  cnpj: z.string().min(1, "CNPJ é obrigatório"),
+  cnpj: z.string().optional(), // CNPJ agora é opcional
   email: z.string().email().optional(),
   contato: z.number().positive("Contato deve ser um número válido"),
 });

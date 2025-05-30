@@ -27,28 +27,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
 
   const handleFormSubmit = async (data: ClientFormValues) => {
     try {
-      // Verificar se CNPJ já existe
-      const { data: existingClient } = await supabase
-        .from('clients')
-        .select('uuid')
-        .eq('cnpj', data.cnpj)
-        .is('deleted_at', null)
-        .single();
-
-      if (existingClient) {
-        setError('cnpj', {
-          type: 'manual',
-          message: 'Este CNPJ já está cadastrado'
-        });
-        return;
-      }
-
       // Criar cliente
       const { data: newClient, error } = await supabase
         .from('clients')
         .insert({
           nome: data.nome,
-          cnpj: data.cnpj,
+          cnpj: '00000000000000', // CNPJ placeholder para compatibilidade
           email: data.email || null,
           contato: data.contato
         })
@@ -92,19 +76,6 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
         />
         {errors.nome && (
           <span className="text-sm text-destructive">{errors.nome.message}</span>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="cnpj">CNPJ *</Label>
-        <Input
-          id="cnpj"
-          placeholder="00.000.000/0000-00"
-          {...register('cnpj')}
-          disabled={isSubmitting}
-        />
-        {errors.cnpj && (
-          <span className="text-sm text-destructive">{errors.cnpj.message}</span>
         )}
       </div>
 

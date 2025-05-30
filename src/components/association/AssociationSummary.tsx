@@ -9,6 +9,7 @@ import { SelectedAsset } from '@/pages/AssetAssociation';
 import { CheckCircle, User, Package, Calendar, AlertCircle } from "lucide-react";
 import { useCreateAssociation } from '@/hooks/useCreateAssociation';
 import { toast } from 'sonner';
+import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -72,18 +73,14 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="text-sm text-muted-foreground">Nome</div>
               <div className="font-medium">{client.nome}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">CNPJ</div>
-              <div className="font-medium">{client.cnpj}</div>
-            </div>
-            <div>
               <div className="text-sm text-muted-foreground">Contato</div>
-              <div className="font-medium">{client.contato}</div>
+              <div className="font-medium">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</div>
             </div>
           </div>
         </CardContent>

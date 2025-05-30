@@ -48,14 +48,10 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           <CardTitle className="text-lg">Cliente Selecionado</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium">Nome:</span>
               <p className="text-muted-foreground">{client.nome}</p>
-            </div>
-            <div>
-              <span className="font-medium">CNPJ:</span>
-              <p className="text-muted-foreground">{client.cnpj}</p>
             </div>
             <div>
               <span className="font-medium">Telefone:</span>

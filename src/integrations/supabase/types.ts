@@ -67,13 +67,6 @@ export type Database = {
             referencedColumns: ["uuid"]
           },
           {
-            foreignKeyName: "asset_client_assoc_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "v_problem_assets"
-            referencedColumns: ["uuid"]
-          },
-          {
             foreignKeyName: "asset_client_assoc_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -850,7 +843,7 @@ export type Database = {
       }
       clients: {
         Row: {
-          cnpj: string
+          cnpj: string | null
           contato: number
           created_at: string
           deleted_at: string | null
@@ -860,7 +853,7 @@ export type Database = {
           uuid: string
         }
         Insert: {
-          cnpj: string
+          cnpj?: string | null
           contato: number
           created_at?: string
           deleted_at?: string | null
@@ -870,7 +863,7 @@ export type Database = {
           uuid?: string
         }
         Update: {
-          cnpj?: string
+          cnpj?: string | null
           contato?: number
           created_at?: string
           deleted_at?: string | null
@@ -1122,22 +1115,7 @@ export type Database = {
           status_name: string | null
           uuid: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_assets_solutions"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "asset_solutions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_assets_status"
-            columns: ["status_id"]
-            isOneToOne: false
-            referencedRelation: "asset_status"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {

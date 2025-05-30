@@ -21,7 +21,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  // Buscar clientes com busca aprimorada por nome, CNPJ e telefone
+  // Buscar clientes com busca aprimorada por nome e telefone apenas
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients', searchTerm],
     queryFn: async () => {
@@ -35,20 +35,16 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         const term = searchTerm.trim();
         const normalizedPhone = normalizePhoneForSearch(term);
         
-        // Busca por nome (case-insensitive), CNPJ ou telefone
+        // Busca por nome e telefone apenas
         if (normalizedPhone && normalizedPhone.length >= 2) {
           // Se o termo contém apenas números, busca também por telefone
           query = query.or(
             `nome.ilike.%${term}%,` +
-            `cnpj.ilike.%${term}%,` +
             `contato::text.ilike.%${normalizedPhone}%`
           );
         } else {
-          // Busca apenas por nome e CNPJ se não for numérico
-          query = query.or(
-            `nome.ilike.%${term}%,` +
-            `cnpj.ilike.%${term}%`
-          );
+          // Busca apenas por nome se não for numérico
+          query = query.ilike('nome', `%${term}%`);
         }
       }
 
@@ -93,29 +89,29 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
           Selecionar Cliente
         </CardTitle>
         <CardDescription>
-          Busque por nome, CNPJ ou telefone. Se não encontrar, cadastre um novo cliente.
+          Busque por nome ou telefone. Se não encontrar, cadastre um novo cliente.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Campo de busca aprimorado */}
+        {/* Campo de busca simplificado */}
         <div className="space-y-2">
           <Label htmlFor="search">Buscar Cliente</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               id="search"
-              placeholder="Digite nome, CNPJ ou telefone..."
+              placeholder="Digite nome ou telefone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
           <div className="text-xs text-muted-foreground">
-            Exemplos: "João Silva", "12.345.678/0001-90", "(11) 99999-9999"
+            Exemplos: "João Silva", "(11) 99999-9999"
           </div>
         </div>
 
-        {/* Lista de clientes com melhor visualização */}
+        {/* Lista de clientes simplificada */}
         <div className="space-y-2">
           {isLoadingClients ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -133,9 +129,6 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                   onClick={() => handleClientSelect(client)}
                 >
                   <div className="font-medium text-primary">{client.nome}</div>
-                  <div className="text-sm text-muted-foreground">
-                    CNPJ: {client.cnpj}
-                  </div>
                   <div className="text-sm text-muted-foreground">
                     Telefone: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
                   </div>
@@ -166,7 +159,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                 Digite para buscar clientes existentes
               </div>
               <div className="text-sm text-muted-foreground">
-                Busca por nome, CNPJ ou telefone
+                Busca por nome ou telefone
               </div>
               <Button
                 onClick={() => setIsNewClientModalOpen(true)}
