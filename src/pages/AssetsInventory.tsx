@@ -15,8 +15,6 @@ const AssetsInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [filterSolution, setFilterSolution] = useState("all");
-  const [filterManufacturer, setFilterManufacturer] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
@@ -99,17 +97,6 @@ const AssetsInventory = () => {
     setShouldFetch(true);
     refetch();
   }, [queryClient, refetch]);
-
-  // Handlers para limpar filtros
-  const handleClearFilters = useCallback(() => {
-    setSearchTerm("");
-    setFilterStatus("all");
-    setFilterSolution("all");
-    setFilterManufacturer("all");
-    setCurrentPage(1);
-    setShouldFetch(true);
-    refetch();
-  }, [refetch]);
   
   // Renderizar estado de carregamento
   if (isLoading) {
@@ -137,15 +124,11 @@ const AssetsInventory = () => {
       
       <AssetsSearchForm 
         searchTerm={searchTerm}
-        onSearchChange={handleSearchTermChange}
-        statusFilter={filterStatus}
-        onStatusChange={(value) => handleFilterChange('status', value)}
-        solutionFilter={filterSolution}
-        onSolutionChange={(value) => setFilterSolution(value)}
-        manufacturerFilter={filterManufacturer}
-        onManufacturerChange={(value) => setFilterManufacturer(value)}
-        onClearFilters={handleClearFilters}
-        totalResults={assetsData?.totalCount}
+        setSearchTerm={handleSearchTermChange}
+        filterType={filterType}
+        filterStatus={filterStatus}
+        handleSearch={handleSearch}
+        handleFilterChange={handleFilterChange}
       />
       
       {assetsData?.assets && (
@@ -165,6 +148,14 @@ const AssetsInventory = () => {
           setCurrentPage={setCurrentPage}
         />
       ) : null}
+      
+      {/* Debug info em desenvolvimento
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+          Debug: Termo="{searchTerm}" | Tipo="{filterType}" | Status="{filterStatus}" | 
+          Página={currentPage} | Total={assetsData?.totalCount || 0}
+        </div>
+      )} */}
     </div>
   );
 };

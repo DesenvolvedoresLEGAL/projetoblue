@@ -4,10 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { AlertTriangle, Wifi, Lock } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,8 +24,6 @@ interface Association {
   asset_solution_id: number;
   asset_solution_name: string;
   notes?: string;
-  ssid?: string;
-  pass?: string;
 }
 
 interface EditAssociationDialogProps {
@@ -39,16 +36,9 @@ export function EditAssociationDialog({ association, open, onOpenChange }: EditA
   const [entryDate, setEntryDate] = useState<Date | undefined>();
   const [exitDate, setExitDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState('');
-  const [ssid, setSsid] = useState('');
-  const [networkPassword, setNetworkPassword] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-
-  // Verificar se é equipamento (não CHIP)
-  const isEquipment = association && 
-    association.asset_solution_name?.toUpperCase() !== 'CHIP' && 
-    association.asset_solution_id !== 11;
 
   // Preencher formulário quando associação muda
   useEffect(() => {
@@ -67,8 +57,6 @@ export function EditAssociationDialog({ association, open, onOpenChange }: EditA
       }
       
       setNotes(association.notes || '');
-      setSsid(association.ssid || '');
-      setNetworkPassword(association.pass || '');
       setValidationError(null);
     }
   }, [association]);
@@ -85,13 +73,7 @@ export function EditAssociationDialog({ association, open, onOpenChange }: EditA
   }, [entryDate, exitDate]);
 
   const updateMutation = useMutation({
-    mutationFn: async (updateData: { 
-      entry_date: string; 
-      exit_date?: string | null; 
-      notes?: string;
-      ssid?: string;
-      pass?: string;
-    }) => {
+    mutationFn: async (updateData: { entry_date: string; exit_date?: string | null; notes?: string }) => {
       const { error } = await supabase
         .from('asset_client_assoc')
         .update(updateData)
@@ -121,17 +103,11 @@ export function EditAssociationDialog({ association, open, onOpenChange }: EditA
       return;
     }
 
-    const updateData: any = {
+    const updateData = {
       entry_date: entryDate.toISOString().split('T')[0],
       exit_date: exitDate ? exitDate.toISOString().split('T')[0] : null,
       notes: notes.trim() || null
     };
-
-    // Adicionar SSID e senha apenas para equipamentos
-    if (isEquipment) {
-      updateData.ssid = ssid.trim() || null;
-      updateData.pass = networkPassword.trim() || null;
-    }
 
     updateMutation.mutate(updateData);
   };
@@ -197,37 +173,6 @@ export function EditAssociationDialog({ association, open, onOpenChange }: EditA
               placeholder="Selecionar data de fim (opcional)"
             />
           </div>
-
-          {/* Campos SSID e Senha (apenas para equipamentos) */}
-          {isEquipment && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ssid" className="flex items-center gap-1">
-                  <Wifi className="h-3 w-3" />
-                  SSID da Rede
-                </Label>
-                <Input
-                  id="ssid"
-                  value={ssid}
-                  onChange={(e) => setSsid(e.target.value)}
-                  placeholder="#WiFi.LEGAL"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="network-password" className="flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  Senha da Rede
-                </Label>
-                <Input
-                  id="network-password"
-                  type="password"
-                  value={networkPassword}
-                  onChange={(e) => setNetworkPassword(e.target.value)}
-                  placeholder="123legal"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Notas */}
           <div className="space-y-2">

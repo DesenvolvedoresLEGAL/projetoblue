@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Trash2, List } from "lucide-react";
+import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { AssetListModal } from './AssetListModal';
+import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
 
 interface AssetSelectionProps {
+  client: Client;
   selectedAssets: SelectedAsset[];
   onAssetAdded: (asset: SelectedAsset) => void;
   onAssetRemoved: (assetId: string) => void;
@@ -17,6 +20,7 @@ interface AssetSelectionProps {
 }
 
 export const AssetSelection: React.FC<AssetSelectionProps> = ({
+  client,
   selectedAssets,
   onAssetAdded,
   onAssetRemoved,
@@ -38,6 +42,29 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Informações do cliente selecionado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Cliente Selecionado</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Nome:</span>
+              <p className="text-muted-foreground">{client.nome}</p>
+            </div>
+            <div>
+              <span className="font-medium">CNPJ:</span>
+              <p className="text-muted-foreground">{client.cnpj}</p>
+            </div>
+            <div>
+              <span className="font-medium">Telefone:</span>
+              <p className="text-muted-foreground">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Seleção de ativos */}
       <Card>
         <CardHeader>
@@ -59,12 +86,12 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium flex items-center gap-2">
-                        {asset.solution_id === 11 ? '📱' : '📡'} 
-                        {asset.solution_id === 11 ? 'CHIP' : 'EQUIPAMENTO'} 
+                        {asset.type === 'CHIP' ? '📱' : '📡'} 
+                        {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} 
                         {asset.solucao && ` - ${asset.solucao}`}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {asset.solution_id === 11 ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
+                        {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
                       </div>
                     </div>
                     <Button

@@ -58,9 +58,9 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
 
       // Mapear para SelectedAsset
       return (data || []).map(asset => ({
+        id: asset.uuid,
         uuid: asset.uuid,
-        solution_id: asset.solution_id,
-        asset_solution_name: asset.asset_solutions?.solution,
+        type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
         registrationDate: asset.created_at,
         status: asset.asset_status?.status || 'DISPONÍVEL',
         statusId: asset.status_id,
@@ -70,9 +70,10 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
         serial_number: asset.serial_number,
         model: asset.model,
         radio: asset.radio,
+        solution_id: asset.solution_id,
         manufacturer_id: asset.manufacturer_id,
         iccid: asset.iccid,
-        line_number: asset.line_number || null,
+        line_number: asset.line_number?.toString() || '',
         phoneNumber: asset.line_number?.toString() || '',
         carrier: 'Unknown',
         uniqueId: asset.uuid,
@@ -100,7 +101,7 @@ export const AssetListModal: React.FC<AssetListModalProps> = ({
     const searchLower = searchTerm.toLowerCase();
     if (type === 'chip') {
       return asset.iccid?.toLowerCase().includes(searchLower) ||
-             asset.line_number?.toString()?.toLowerCase().includes(searchLower);
+             asset.line_number?.toLowerCase().includes(searchLower);
     } else {
       return asset.radio?.toLowerCase().includes(searchLower) ||
              asset.serial_number?.toLowerCase().includes(searchLower) ||

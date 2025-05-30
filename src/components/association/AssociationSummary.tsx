@@ -1,178 +1,211 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, User, Calendar, FileText } from "lucide-react";
+import { Client } from '@/types/asset';
 import { SelectedAsset } from '@/pages/AssetAssociation';
-
-interface Client {
-  uuid: string;
-  nome: string;
-  cnpj: string;
-  contato: number;
-  email?: string;
-}
+import { CheckCircle, User, Package, Calendar, AlertCircle } from "lucide-react";
+import { useCreateAssociation } from '@/hooks/useCreateAssociation';
+import { toast } from 'sonner';
 
 interface AssociationSummaryProps {
-  selectedClient: Client | null;
-  selectedAssets: SelectedAsset[];
-  onConfirm: () => void;
-  isLoading?: boolean;
+  client: Client;
+  assets: SelectedAsset[];
+  onComplete: () => void;
+  onBack: () => void;
 }
 
 export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
-  selectedClient,
-  selectedAssets,
-  onConfirm,
-  isLoading = false
+  client,
+  assets,
+  onComplete,
+  onBack
 }) => {
-  if (!selectedClient || selectedAssets.length === 0) {
-    return null;
-  }
+  const [isCreating, setIsCreating] = useState(false);
+  const createAssociation = useCreateAssociation();
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Data não definida';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+  const handleConfirm = async () => {
+    setIsCreating(true);
+    
+    try {
+      // Criar associações para cada ativo
+      for (const asset of assets) {
+        await createAssociation.mutateAsync({
+          clientId: client.id,
+          assetId: asset.uuid,
+          associationType: asset.associationType || 'ALUGUEL',
+          startDate: asset.startDate || new Date().toISOString(),
+          rentedDays: asset.rented_days || 30,
+          notes: asset.notes || ''
+        });
+      }
+
+      toast.success('Associações criadas com sucesso!');
+      onComplete();
+    } catch (error) {
+      console.error('Erro ao criar associações:', error);
+      toast.error('Erro ao criar associações');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const getAssetDisplayName = (asset: SelectedAsset) => {
-    if (asset.asset_solution_name?.toUpperCase() === 'CHIP' || asset.solution_id === 11) {
-      return asset.line_number?.toString() || asset.iccid || 'CHIP sem identificação';
-    }
-    return asset.radio || 'Equipamento sem identificação';
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const getTotalValue = () => {
+    // Exemplo de cálculo de valor total
+    return assets.length * 50; // R$ 50 por ativo
   };
 
   return (
-    <Card className="border-[#4D2BFB]/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <CheckCircle2 className="h-5 w-5 text-[#03F9FF]" />
-          Resumo da Associação
-        </CardTitle>
-        <CardDescription>
-          Confirme os dados antes de finalizar a associação
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Informações do Cliente */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-[#03F9FF]" />
-            <h3 className="font-semibold text-[#020CBC]">Cliente Selecionado</h3>
-          </div>
-          <div className="bg-[#4D2BFB]/5 rounded-lg p-4">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Nome:</span>
-                <span className="font-medium">{selectedClient.nome}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">CNPJ:</span>
-                <span className="font-medium">{selectedClient.cnpj}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Contato:</span>
-                <span className="font-medium">{selectedClient.contato}</span>
-              </div>
-              {selectedClient.email && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Email:</span>
-                  <span className="font-medium">{selectedClient.email}</span>
-                </div>
-              )}
+    <div className="space-y-6">
+      {/* Informações do Cliente */}
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
+            <User className="h-5 w-5 text-[#03F9FF]" />
+            Cliente Selecionado
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Nome</div>
+              <div className="font-medium">{client.nome}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">CNPJ</div>
+              <div className="font-medium">{client.cnpj}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Contato</div>
+              <div className="font-medium">{client.contato}</div>
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <Separator />
-
-        {/* Ativos Selecionados */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-[#03F9FF]" />
-            <h3 className="font-semibold text-[#020CBC]">
-              Ativos Selecionados ({selectedAssets.length})
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {selectedAssets.map((asset, index) => (
-              <div key={asset.uuid} className="bg-[#4D2BFB]/5 rounded-lg p-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-[#020CBC]">
-                      {getAssetDisplayName(asset)}
-                    </span>
-                    <Badge variant="secondary" className="bg-[#03F9FF]/20 text-[#020CBC]">
-                      {asset.asset_solution_name || 'N/A'}
-                    </Badge>
+      {/* Resumo dos Ativos */}
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
+            <Package className="h-5 w-5 text-[#03F9FF]" />
+            Ativos Selecionados ({assets.length})
+          </CardTitle>
+          <CardDescription>
+            Revise os ativos e configurações antes de confirmar
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {assets.map((asset, index) => (
+            <div key={asset.uuid}>
+              <div className="flex items-start justify-between p-4 bg-[#F0F3FF] rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-white rounded-lg">
+                    {asset.type === 'CHIP' ? '📱' : '📡'}
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Tipo:</span>
-                      <div className="font-medium">{asset.associationType || 'ALUGUEL'}</div>
+                  <div className="space-y-2">
+                    <div className="font-medium text-[#020CBC]">
+                      {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} - {asset.solucao}
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Data de Início:</span>
-                      <div className="font-medium">{formatDate(asset.startDate)}</div>
+                    <div className="text-sm space-y-1">
+                      {asset.type === 'CHIP' ? (
+                        <>
+                          <div>ICCID: {asset.iccid}</div>
+                          <div>Linha: {asset.line_number}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div>Rádio: {asset.radio}</div>
+                          <div>Modelo: {asset.modelo}</div>
+                        </>
+                      )}
                     </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <Badge variant="outline">
+                        {asset.associationType || 'ALUGUEL'}
+                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(asset.startDate || new Date().toISOString())}
+                      </div>
+                      {asset.rented_days && (
+                        <div>{asset.rented_days} dias</div>
+                      )}
+                    </div>
+                    {asset.notes && (
+                      <div className="text-sm text-muted-foreground italic">
+                        "{asset.notes}"
+                      </div>
+                    )}
                   </div>
-                  {asset.notes && (
-                    <div className="pt-2">
-                      <div className="flex items-center gap-1 mb-1">
-                        <FileText className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Observações:</span>
-                      </div>
-                      <div className="text-sm bg-white/50 rounded p-2 border">
-                        {asset.notes}
-                      </div>
-                    </div>
-                  )}
-                  {/* Mostrar SSID e senha para equipamentos */}
-                  {asset.ssid && (
-                    <div className="pt-2">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">SSID:</span>
-                          <div className="font-medium">{asset.ssid}</div>
-                        </div>
-                        {asset.pass && (
-                          <div>
-                            <span className="text-muted-foreground">Senha:</span>
-                            <div className="font-medium">••••••••</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+              {index < assets.length - 1 && <Separator className="my-4" />}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
-        {/* Botão de Confirmação */}
-        <div className="pt-4">
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="w-full bg-[#4D2BFB] hover:bg-[#3a1ecc] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Criando Associações...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                Confirmar e Criar Associações
-              </>
-            )}
-          </button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Resumo Financeiro */}
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
+            <CheckCircle className="h-5 w-5 text-[#03F9FF]" />
+            Resumo da Associação
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Total de Ativos</div>
+              <div className="text-2xl font-bold text-[#020CBC]">{assets.length}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Valor Estimado</div>
+              <div className="text-2xl font-bold text-[#020CBC]">
+                R$ {getTotalValue().toFixed(2)}
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <div className="font-medium">Confirmação Final</div>
+                <div>
+                  Ao confirmar, os ativos selecionados serão associados ao cliente 
+                  e não estarão mais disponíveis para outras associações.
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Botões de ação */}
+      <div className="flex gap-4">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          disabled={isCreating}
+          className="flex-1 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
+        >
+          Voltar
+        </Button>
+        <Button
+          onClick={handleConfirm}
+          disabled={isCreating}
+          className="flex-1 bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas"
+        >
+          {isCreating ? 'Criando Associações...' : 'Confirmar Associações'}
+        </Button>
+      </div>
+    </div>
   );
 };
