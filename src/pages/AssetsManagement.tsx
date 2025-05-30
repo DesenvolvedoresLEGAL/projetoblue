@@ -162,7 +162,7 @@ const AssetsManagement = () => {
                 <Tooltip>
                   <TooltipTrigger>
                     <CardTitle className="legal-subtitle text-xl cursor-help">
-                      Gerenciar Equipamentos
+                      Associar Ativos
                     </CardTitle>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -204,7 +204,7 @@ const AssetsManagement = () => {
                   <List className="h-6 w-6 text-legal-primary" />
                 </div>
                 <CardTitle className="legal-subtitle text-xl">
-                  Ver Inventário Completo
+                  Histórico de Associações
                 </CardTitle>
               </div>
               <CardDescription className="legal-text">
