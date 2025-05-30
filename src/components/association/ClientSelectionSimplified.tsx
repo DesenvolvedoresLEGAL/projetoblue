@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/asset';
-import { Search, Users } from "lucide-react";
+import { Search, Users, Plus } from "lucide-react";
 import { toast } from 'sonner';
+import { ClientFormSimplified } from './ClientFormSimplified';
 
 interface ClientSelectionSimplifiedProps {
   onClientSelected: (client: Client) => void;
@@ -18,7 +20,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   onClientSelected
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
   // Buscar clientes
   const { data: clients = [], isLoading } = useQuery({
@@ -39,13 +41,13 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const filteredClients = clients.filter(client => 
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.cnpj.includes(searchTerm) ||
-    client.contato.toString().includes(searchTerm) // Convert number to string for search
+    client.contato.toString().includes(searchTerm)
   );
 
   const handleClientSelect = (clientData: any) => {
     // Map database fields to Client interface
     const client: Client = {
-      id: clientData.uuid, // Use uuid as id
+      id: clientData.uuid,
       uuid: clientData.uuid,
       nome: clientData.nome,
       cnpj: clientData.cnpj,
@@ -59,6 +61,24 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
     onClientSelected(client);
     toast.success(`Cliente ${client.nome} selecionado!`);
   };
+
+  const handleNewClientCreated = (client: Client) => {
+    setIsNewClientModalOpen(false);
+    onClientSelected(client);
+    toast.success(`Cliente ${client.nome} cadastrado e selecionado!`);
+  };
+
+  const handleOpenNewClientModal = () => {
+    setIsNewClientModalOpen(true);
+  };
+
+  const handleCancelNewClient = () => {
+    setIsNewClientModalOpen(false);
+  };
+
+  // Determina se deve mostrar o botão de criar cliente
+  const showCreateButton = searchTerm && filteredClients.length === 0;
+  const showCreateButtonAlways = !searchTerm || filteredClients.length === 0;
 
   return (
     <div className="space-y-4">
@@ -110,21 +130,53 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
             ))}
           </div>
         ) : searchTerm ? (
-          <div className="text-center py-8">
+          <div className="text-center py-8 space-y-4">
             <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-muted-foreground">
               Nenhum cliente encontrado para "{searchTerm}"
             </p>
+            <Button
+              onClick={handleOpenNewClientModal}
+              className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Cadastrar Novo Cliente
+            </Button>
           </div>
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-8 space-y-4">
             <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-muted-foreground">
-              Digite algo para buscar clientes
+              Digite algo para buscar clientes ou cadastre um novo
             </p>
+            <Button
+              onClick={handleOpenNewClientModal}
+              variant="outline"
+              className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Cadastrar Novo Cliente
+            </Button>
           </div>
         )}
       </div>
+
+      {/* Modal de criação de cliente */}
+      <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-neue-haas font-bold text-[#020CBC]">
+              Cadastrar Novo Cliente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <ClientFormSimplified
+              onSubmit={handleNewClientCreated}
+              onCancel={handleCancelNewClient}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
