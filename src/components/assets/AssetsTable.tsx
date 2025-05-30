@@ -71,12 +71,12 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
         <TableHeader>
           <TableRow>
             <TableHead>Nº</TableHead>
-            <TableHead>Tipo</TableHead>
+            <TableHead>Radio/Número</TableHead>
             <TableHead>ICCID / SN</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Fabricante</TableHead>
             <TableHead>Modelo</TableHead>
-            <TableHead>Radio/Número</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -87,7 +87,10 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 <TableCell className="font-medium">
                   {getRowNumber(index)}
                 </TableCell>
-                <TableCell>{asset.solucao.name}</TableCell>
+                <TableCell>{asset.solucao.id === 11 ?
+                  <>{asset.line_number ? formatPhoneNumber(asset.line_number.toString()) : 'N/A'}</> :
+                  <>{asset.radio || 'N/A'}</>}
+                </TableCell>
                 <TableCell>
                   {/* Mostrar número da linha para chips e número de série para outros */}
                   {asset.solucao.id === 11 ?
@@ -100,10 +103,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 </TableCell>
                 <TableCell>{capitalize(asset.manufacturer.name)}</TableCell>
                 <TableCell>{!asset.model ? 'N/A' : asset.solucao.id === 11 ? capitalize(asset.model) : asset.model}</TableCell>
-                <TableCell>{asset.solucao.id === 11 ?
-                  <>{asset.line_number ? formatPhoneNumber(asset.line_number.toString()) : 'N/A'}</> :
-                  <>{asset.radio || 'N/A'}</>}
-                </TableCell>
+                <TableCell>{asset.solucao.name}</TableCell>
                 <TableCell className="text-right">
                   <AssetActions
                     asset={asset}
