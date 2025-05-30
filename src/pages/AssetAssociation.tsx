@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 
 export interface SelectedAsset {
   uuid: string;
+  id?: string;
+  type?: string;
   iccid?: string | null;
   radio?: string | null;
   line_number?: number | null;
@@ -20,6 +22,27 @@ export interface SelectedAsset {
   notes?: string;
   ssid?: string;
   pass?: string;
+  // Campos adicionais para compatibilidade
+  registrationDate?: string;
+  status?: string;
+  statusId?: number;
+  solucao?: string;
+  marca?: string;
+  modelo?: string;
+  serial_number?: string;
+  model?: string;
+  manufacturer_id?: number;
+  phoneNumber?: string;
+  carrier?: string;
+  uniqueId?: string;
+  brand?: string;
+  password?: string;
+  serialNumber?: string;
+  gb?: number;
+  rented_days?: number;
+  admin_user?: string;
+  admin_pass?: string;
+  plan_id?: number;
 }
 
 interface Client {
@@ -123,9 +146,10 @@ export default function AssetAssociation() {
           {/* Seleção de Ativos */}
           <AssetSelection
             selectedAssets={selectedAssets}
-            onAssetsChange={setSelectedAssets}
-            onAssetUpdate={handleAssetUpdate}
-            onRemoveAsset={handleRemoveAsset}
+            onAssetAdded={(asset) => setSelectedAssets(prev => [...prev, asset])}
+            onAssetRemoved={handleRemoveAsset}
+            onAssetUpdated={handleAssetUpdate}
+            onProceed={handleConfirmAssociations}
           />
         </div>
 

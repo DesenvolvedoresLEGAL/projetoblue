@@ -87,9 +87,9 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
 
       // Mapear para SelectedAsset
       const asset: SelectedAsset = {
-        id: data.uuid,
         uuid: data.uuid,
-        type: data.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
+        solution_id: data.solution_id,
+        asset_solution_name: data.asset_solutions?.solution,
         registrationDate: data.created_at,
         status: data.asset_status?.status || 'DISPONÍVEL',
         statusId: data.status_id,
@@ -99,10 +99,9 @@ export const AssetSearchForm: React.FC<AssetSearchFormProps> = ({
         serial_number: data.serial_number,
         model: data.model,
         radio: data.radio,
-        solution_id: data.solution_id,
         manufacturer_id: data.manufacturer_id,
         iccid: data.iccid,
-        line_number: data.line_number?.toString() || '',
+        line_number: data.line_number || null,
         phoneNumber: data.line_number?.toString() || '',
         carrier: 'Unknown',
         uniqueId: data.uuid,

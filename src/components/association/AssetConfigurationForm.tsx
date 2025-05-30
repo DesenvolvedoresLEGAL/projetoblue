@@ -63,6 +63,12 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     }
   }, [isChip, notes]);
 
+  const handleBackupChange = (checked: boolean | 'indeterminate') => {
+    if (typeof checked === 'boolean') {
+      setIsBackupChip(checked);
+    }
+  };
+
   return (
     <Card className="border-[#4D2BFB]/20">
       <CardHeader className="pb-3">
@@ -111,7 +117,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
             <Checkbox
               id="backup-chip"
               checked={isBackupChip}
-              onCheckedChange={setIsBackupChip}
+              onCheckedChange={handleBackupChange}
             />
             <Label
               htmlFor="backup-chip"
