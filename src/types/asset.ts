@@ -59,6 +59,14 @@ export interface BaseAsset {
   rented_days?: number;
   admin_user?: string;
   admin_pass?: string;
+  // Novos campos de configurações de rede - Fábrica (imutáveis)
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  // Novos campos de configurações de rede - Atuais (editáveis)
+  ssid_atual?: string;
+  pass_atual?: string;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string;

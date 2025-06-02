@@ -28,7 +28,14 @@ export const assetMutations = {
         plan_id: assetData.plan_id,
         radio: assetData.radio,
         admin_user: assetData.admin_user || 'admin',
-        rented_days: assetData.rented_days || 0
+        rented_days: assetData.rented_days || 0,
+        // Incluir novos campos de configurações de rede
+        ssid_fabrica: assetData.ssid_fabrica,
+        pass_fabrica: assetData.pass_fabrica,
+        admin_user_fabrica: assetData.admin_user_fabrica,
+        admin_pass_fabrica: assetData.admin_pass_fabrica,
+        ssid_atual: assetData.ssid_atual,
+        pass_atual: assetData.pass_atual
       };
       
       // Insert the new asset
@@ -85,6 +92,12 @@ export const assetMutations = {
       if (assetData.rented_days !== undefined) updateData.rented_days = assetData.rented_days;
       if (assetData.admin_user !== undefined) updateData.admin_user = assetData.admin_user;
       if (assetData.admin_pass !== undefined) updateData.admin_pass = assetData.admin_pass;
+      
+      // Campos atuais de rede - apenas esses podem ser editados
+      if (assetData.ssid_atual !== undefined) updateData.ssid_atual = assetData.ssid_atual;
+      if (assetData.pass_atual !== undefined) updateData.pass_atual = assetData.pass_atual;
+      
+      // IMPORTANTE: Campos de fábrica NUNCA são incluídos no update
       
       console.log('Final update data:', updateData);
       

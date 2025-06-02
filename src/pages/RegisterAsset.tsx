@@ -14,7 +14,9 @@ import {
   Smartphone,
   Router,
   Loader2,
-  PackagePlus
+  PackagePlus,
+  Wifi,
+  Copy
 } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PasswordInput } from "@/components/auth/PasswordInput";
+import { NetworkFields } from "@/components/ui/network-fields";
 import { checkPasswordStrength } from "@/utils/passwordStrength";
 import {
   useCreateAsset,
@@ -38,6 +41,7 @@ import { useNavigate } from "react-router-dom";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { useAssetRegistrationState } from "@/hooks/useAssetRegistrationState";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { toast } from "@/utils/toast";
 
 // Esquemas de validação separados para CHIPS e EQUIPAMENTOS
 const chipSchema = z.object({
@@ -57,6 +61,14 @@ const equipmentSchema = z.object({
   solution_id: z.number().min(1, "Solução é obrigatória"),
   admin_user: z.string().min(1, "Usuário admin é obrigatório"),
   admin_pass: z.string().min(1, "Senha admin é obrigatória"),
+  // Campos de rede de fábrica - obrigatórios
+  ssid_fabrica: z.string().min(1, "SSID de fábrica é obrigatório"),
+  pass_fabrica: z.string().min(1, "Senha WiFi de fábrica é obrigatória"),
+  admin_user_fabrica: z.string().min(1, "Usuário admin de fábrica é obrigatório"),
+  admin_pass_fabrica: z.string().min(1, "Senha admin de fábrica é obrigatória"),
+  // Campos de rede atuais - opcionais
+  ssid_atual: z.string().optional(),
+  pass_atual: z.string().optional(),
 });
 
 type ChipFormValues = z.infer<typeof chipSchema>;
@@ -80,12 +92,14 @@ export default function RegisterAsset() {
     basicInfoOpen,
     technicalInfoOpen,
     securityInfoOpen,
+    networkInfoOpen,
     setAssetType,
     setPasswordStrength,
     setAllowWeakPassword,
     setBasicInfoOpen,
     setTechnicalInfoOpen,
     setSecurityInfoOpen,
+    setNetworkInfoOpen,
     syncWithForm,
     updateFormData,
     resetFormData,
@@ -130,7 +144,13 @@ export default function RegisterAsset() {
       manufacturer_id: undefined,
       solution_id: undefined,
       admin_user: "admin",
-      admin_pass: ""
+      admin_pass: "",
+      ssid_fabrica: "",
+      pass_fabrica: "",
+      admin_user_fabrica: "admin",
+      admin_pass_fabrica: "",
+      ssid_atual: "",
+      pass_atual: ""
     }
   });
 
@@ -177,6 +197,22 @@ export default function RegisterAsset() {
     const strength = checkPasswordStrength(value);
     setPasswordStrength(strength);
     equipmentForm.setValue("admin_pass", value);
+  };
+
+  // Função para copiar dados de fábrica para campos atuais
+  const copyFactoryToCurrentFields = () => {
+    const factoryData = {
+      ssid_atual: equipmentForm.getValues("ssid_fabrica"),
+      pass_atual: equipmentForm.getValues("pass_fabrica"),
+    };
+
+    Object.entries(factoryData).forEach(([key, value]) => {
+      if (value) {
+        equipmentForm.setValue(key as keyof EquipmentFormValues, value);
+      }
+    });
+
+    toast.success("Dados de fábrica copiados para os campos atuais");
   };
 
   const onSubmitChip = (formData: ChipFormValues) => {
@@ -226,6 +262,14 @@ export default function RegisterAsset() {
       manufacturer_id: formData.manufacturer_id,
       admin_user: formData.admin_user,
       admin_pass: formData.admin_pass,
+      // Incluir dados de rede de fábrica
+      ssid_fabrica: formData.ssid_fabrica,
+      pass_fabrica: formData.pass_fabrica,
+      admin_user_fabrica: formData.admin_user_fabrica,
+      admin_pass_fabrica: formData.admin_pass_fabrica,
+      // Incluir dados de rede atuais
+      ssid_atual: formData.ssid_atual,
+      pass_atual: formData.pass_atual,
     };
 
     console.log('Cadastrando EQUIPAMENTO:', createData);
@@ -358,6 +402,7 @@ export default function RegisterAsset() {
                 setBasicInfoOpen(true);
                 setTechnicalInfoOpen(false);
                 setSecurityInfoOpen(false);
+                setNetworkInfoOpen(false);
               }}
               className="w-full"
             >
@@ -920,6 +965,53 @@ export default function RegisterAsset() {
                             )}
                           />
                         </div>
+
+                        {/* Nova Seção: Configurações de Rede */}
+                        <Collapsible open={networkInfoOpen} onOpenChange={setNetworkInfoOpen}>
+                          <CollapsibleTrigger className="w-full">
+                            <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-blue-200 ${isMobile ? 'touch-manipulation' : ''}`}>
+                              <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-blue-100 rounded-lg`}>
+                                      <Wifi className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
+                                    </div>
+                                    <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-blue-700`}>
+                                      Configurações de Rede
+                                    </h3>
+                                  </div>
+                                  {networkInfoOpen ? 
+                                    <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} /> : 
+                                    <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
+                                  }
+                                </div>
+                              </CardHeader>
+                            </Card>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-4 space-y-4">
+                            {/* Configurações de Fábrica */}
+                            <NetworkFields
+                              form={equipmentForm}
+                              isLoading={createAssetMutation.isPending}
+                              isMobile={isMobile}
+                              fieldPrefix="fabrica"
+                              title="Configurações Originais de Fábrica"
+                              description="Dados originais do equipamento (não alteráveis após cadastro)"
+                            />
+
+                            {/* Configurações Atuais */}
+                            <NetworkFields
+                              form={equipmentForm}
+                              isLoading={createAssetMutation.isPending}
+                              isMobile={isMobile}
+                              fieldPrefix="atual"
+                              title="Configurações Atuais"
+                              description="Configurações aplicadas atualmente no equipamento"
+                              showCopyButton={true}
+                              onCopyFromFactory={copyFactoryToCurrentFields}
+                            />
+                          </CollapsibleContent>
+                        </Collapsible>
                       </CollapsibleContent>
                     </Collapsible>
 

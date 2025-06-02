@@ -21,6 +21,14 @@ interface EquipmentFormValues {
   solution_id?: number;
   admin_user: string;
   admin_pass: string;
+  // Novos campos de configurações de rede - Fábrica
+  ssid_fabrica: string;
+  pass_fabrica: string;
+  admin_user_fabrica: string;
+  admin_pass_fabrica: string;
+  // Novos campos de configurações de rede - Atuais
+  ssid_atual: string;
+  pass_atual: string;
 }
 
 interface AssetRegistrationState {
@@ -32,6 +40,7 @@ interface AssetRegistrationState {
   basicInfoOpen: boolean;
   technicalInfoOpen: boolean;
   securityInfoOpen: boolean;
+  networkInfoOpen: boolean; // Nova seção para configurações de rede
 }
 
 // Use a chave específica solicitada
@@ -59,13 +68,20 @@ export const useAssetRegistrationState = () => {
       equipmentFormData: {
         rented_days: 0,
         admin_user: "admin",
-        status_id: 1
+        status_id: 1,
+        ssid_fabrica: "",
+        pass_fabrica: "",
+        admin_user_fabrica: "admin",
+        admin_pass_fabrica: "",
+        ssid_atual: "",
+        pass_atual: ""
       },
       passwordStrength: null,
       allowWeakPassword: false,
       basicInfoOpen: true,
       technicalInfoOpen: false,
-      securityInfoOpen: false
+      securityInfoOpen: false,
+      networkInfoOpen: false
     };
   });
 
@@ -112,6 +128,10 @@ export const useAssetRegistrationState = () => {
     setState(prev => ({ ...prev, securityInfoOpen: open }));
   };
 
+  const setNetworkInfoOpen = (open: boolean) => {
+    setState(prev => ({ ...prev, networkInfoOpen: open }));
+  };
+
   // Sync form data with React Hook Form - restaurar dados automaticamente
   const syncWithForm = (form: UseFormReturn<any>, formType: 'chip' | 'equipment') => {
     const formData = formType === 'chip' ? state.chipFormData : state.equipmentFormData;
@@ -141,7 +161,13 @@ export const useAssetRegistrationState = () => {
       setEquipmentFormData({
         rented_days: 0,
         admin_user: "admin",
-        status_id: 1
+        status_id: 1,
+        ssid_fabrica: "",
+        pass_fabrica: "",
+        admin_user_fabrica: "admin",
+        admin_pass_fabrica: "",
+        ssid_atual: "",
+        pass_atual: ""
       });
     }
   };
@@ -161,13 +187,20 @@ export const useAssetRegistrationState = () => {
       equipmentFormData: {
         rented_days: 0,
         admin_user: "admin",
-        status_id: 1
+        status_id: 1,
+        ssid_fabrica: "",
+        pass_fabrica: "",
+        admin_user_fabrica: "admin",
+        admin_pass_fabrica: "",
+        ssid_atual: "",
+        pass_atual: ""
       },
       passwordStrength: null,
       allowWeakPassword: false,
       basicInfoOpen: true,
       technicalInfoOpen: false,
-      securityInfoOpen: false
+      securityInfoOpen: false,
+      networkInfoOpen: false
     });
   };
 
@@ -180,6 +213,7 @@ export const useAssetRegistrationState = () => {
     basicInfoOpen: state.basicInfoOpen,
     technicalInfoOpen: state.technicalInfoOpen,
     securityInfoOpen: state.securityInfoOpen,
+    networkInfoOpen: state.networkInfoOpen,
     setAssetType,
     setChipFormData,
     setEquipmentFormData,
@@ -188,6 +222,7 @@ export const useAssetRegistrationState = () => {
     setBasicInfoOpen,
     setTechnicalInfoOpen,
     setSecurityInfoOpen,
+    setNetworkInfoOpen,
     syncWithForm,
     updateFormData,
     resetFormData,

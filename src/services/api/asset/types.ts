@@ -1,4 +1,3 @@
-
 import { AssetType, AssetStatus } from "@/types/asset";
 
 export interface CreateAssetData {
@@ -16,6 +15,14 @@ export interface CreateAssetData {
   admin_user?: string;
   rented_days?: number;
   notes?: string;
+  // Novos campos de configurações de rede - Fábrica
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  // Novos campos de configurações de rede - Atuais
+  ssid_atual?: string;
+  pass_atual?: string;
 }
 
 export interface AssetUpdateParams {
@@ -33,6 +40,9 @@ export interface AssetUpdateParams {
   serial_number?: string;
   clientId?: string;
   subscription?: any;
+  // Apenas campos atuais podem ser editados - campos de fábrica nunca
+  ssid_atual?: string;
+  pass_atual?: string;
 }
 
 export interface AssetCreateParams extends CreateAssetData {}
