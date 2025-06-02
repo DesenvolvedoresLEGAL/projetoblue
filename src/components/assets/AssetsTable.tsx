@@ -22,9 +22,17 @@ interface AssetsTableProps {
   onAssetDeleted: () => void;
   currentPage: number;
   pageSize: number;
+  isLoading?: boolean;
 }
 
-const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, pageSize }: AssetsTableProps) => {
+const AssetsTable = ({ 
+  assets, 
+  onAssetUpdated, 
+  onAssetDeleted, 
+  currentPage, 
+  pageSize,
+  isLoading = false 
+}: AssetsTableProps) => {
   const getRowNumber = (index: number): number => {
     return (currentPage - 1) * pageSize + index + 1;
   };
@@ -67,7 +75,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
       {/* Wrapper com scroll horizontal e largura mínima */}
       <div className="overflow-x-auto">
         <div className="min-w-[600px] sm:min-w-[800px] lg:min-w-full">
-          <div className="border rounded-md">
+          <div className={`border rounded-md ${isLoading ? 'opacity-70' : ''} transition-opacity duration-200`}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -84,7 +92,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
               <TableBody>
                 {assets && assets.length > 0 ? (
                   assets.map((asset, index) => (
-                    <TableRow key={asset.uuid}>
+                    <TableRow key={asset.uuid} className={isLoading ? 'opacity-70' : ''}>
                       <TableCell className="font-medium text-sm">
                         {getRowNumber(index)}
                       </TableCell>
@@ -137,7 +145,7 @@ const AssetsTable = ({ assets, onAssetUpdated, onAssetDeleted, currentPage, page
                 ) : (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-4">
-                      Nenhum ativo encontrado com os filtros atuais.
+                      {isLoading ? 'Buscando ativos...' : 'Nenhum ativo encontrado com os filtros atuais.'}
                     </TableCell>
                   </TableRow>
                 )}

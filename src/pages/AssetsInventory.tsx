@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useAssetsData } from '@/hooks/useAssetsData';
 import AssetsHeader from '@/components/assets/AssetsHeader';
 import AssetsSearchForm from '@/components/assets/AssetsSearchForm';
@@ -17,6 +19,9 @@ const AssetsInventory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
+  // Implementa debounce de 500ms para o termo de busca
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  
   const queryClient = useQueryClient();
   
   const { 
@@ -24,9 +29,10 @@ const AssetsInventory = () => {
     isLoading, 
     error, 
     refetch,
-    isError
+    isError,
+    isFetching
   } = useAssetsData({
-    searchTerm,
+    searchTerm: debouncedSearchTerm, // Usa o termo com debounce
     filterType,
     filterStatus,
     currentPage,
@@ -36,22 +42,19 @@ const AssetsInventory = () => {
   
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Executando busca com termo:', searchTerm);
+    console.log('Executando busca com termo:', debouncedSearchTerm);
     setCurrentPage(1);
     setShouldFetch(true);
     refetch();
-  }, [searchTerm, refetch]);
+  }, [debouncedSearchTerm, refetch]);
   
   const handleSearchTermChange = useCallback((value: string) => {
     console.log('Termo de busca alterado para:', value);
     setSearchTerm(value);
     
-    if (!value.trim()) {
-      setShouldFetch(true);
-      setCurrentPage(1);
-    } else {
-      setShouldFetch(true);
-    }
+    // Reset para página 1 quando o termo muda
+    setCurrentPage(1);
+    setShouldFetch(true);
   }, []);
   
   const handleFilterChange = useCallback((type: string, value: string) => {
@@ -86,7 +89,8 @@ const AssetsInventory = () => {
     refetch();
   }, [queryClient, refetch]);
   
-  if (isLoading) {
+  // Mostra loading apenas no carregamento inicial, não durante debounce
+  if (isLoading && !debouncedSearchTerm && filterType === 'all' && filterStatus === 'all') {
     return <AssetsLoading />;
   }
   
@@ -104,6 +108,9 @@ const AssetsInventory = () => {
     );
   }
   
+  // Determina se está buscando (durante debounce ou fetching)
+  const isSearching = searchTerm !== debouncedSearchTerm || isFetching;
+  
   return (
     <div className="container mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
       <AssetsHeader />
@@ -115,6 +122,7 @@ const AssetsInventory = () => {
         filterStatus={filterStatus}
         handleSearch={handleSearch}
         handleFilterChange={handleFilterChange}
+        isSearching={isSearching}
       />
       
       {assetsData?.assets && (
@@ -124,6 +132,7 @@ const AssetsInventory = () => {
           onAssetDeleted={handleAssetDeleted}
           currentPage={currentPage}
           pageSize={ASSETS_PER_PAGE}
+          isLoading={isSearching}
         />
       )}
       
