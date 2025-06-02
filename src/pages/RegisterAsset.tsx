@@ -137,6 +137,7 @@ export default function RegisterAsset() {
 
   // Sync persisted data with forms on mount and asset type change
   useEffect(() => {
+    console.log('Sincronizando dados salvos com o formulário...');
     if (assetType === 'CHIP') {
       syncWithForm(chipForm, 'chip');
     } else {
@@ -144,27 +145,29 @@ export default function RegisterAsset() {
     }
   }, [assetType]);
 
-  // Watch form changes and persist them
+  // Watch form changes and persist them - SALVAR EM TEMPO REAL
   useEffect(() => {
     const subscription = chipForm.watch((data) => {
+      console.log('Salvando dados do formulário de chip:', data);
       updateFormData(data, 'chip');
     });
     return () => subscription.unsubscribe();
-  }, [chipForm.watch]);
+  }, [chipForm.watch, updateFormData]);
 
   useEffect(() => {
     const subscription = equipmentForm.watch((data) => {
+      console.log('Salvando dados do formulário de equipamento:', data);
       updateFormData(data, 'equipment');
     });
     return () => subscription.unsubscribe();
-  }, [equipmentForm.watch]);
+  }, [equipmentForm.watch, updateFormData]);
 
-  // Clear state when component unmounts (navigating away)
+  // Clear state when component unmounts (navigating away) - apenas se não houve sucesso
   useEffect(() => {
     return () => {
-      // Only clear if not showing success (means user is navigating away without completing)
       if (!showSuccess) {
-        clearState();
+        console.log('Componente desmontado sem sucesso - mantendo dados salvos');
+        // Não limpar os dados aqui - manter para quando o usuário voltar
       }
     };
   }, [showSuccess]);
@@ -190,9 +193,13 @@ export default function RegisterAsset() {
     
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
+        console.log('Chip cadastrado com sucesso - limpando sessionStorage');
         setShowSuccess(true);
-        // Clear persisted state on success
+        // LIMPAR STORAGE APÓS SUCESSO
         clearState();
+        // Resetar formulários
+        chipForm.reset();
+        equipmentForm.reset();
         setTimeout(() => {
           navigate('/assets/management');
         }, 2000);
@@ -226,9 +233,13 @@ export default function RegisterAsset() {
     
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
+        console.log('Equipamento cadastrado com sucesso - limpando sessionStorage');
         setShowSuccess(true);
-        // Clear persisted state on success
+        // LIMPAR STORAGE APÓS SUCESSO
         clearState();
+        // Resetar formulários
+        chipForm.reset();
+        equipmentForm.reset();
         setTimeout(() => {
           navigate('/assets/management');
         }, 2000);
@@ -312,7 +323,12 @@ export default function RegisterAsset() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            // Limpar dados ao sair intencionalmente
+            console.log('Usuário saindo da página - limpando dados salvos');
+            clearState();
+            navigate(-1);
+          }}
           className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -332,6 +348,7 @@ export default function RegisterAsset() {
               value={assetType}
               onValueChange={(value) => {
                 const newAssetType = value as 'CHIP' | 'EQUIPAMENTO';
+                console.log('Trocando tipo de ativo para:', newAssetType);
                 setAssetType(newAssetType);
                 
                 // Reset forms but don't clear persisted data

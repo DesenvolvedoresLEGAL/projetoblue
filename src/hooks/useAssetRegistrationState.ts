@@ -34,7 +34,8 @@ interface AssetRegistrationState {
   securityInfoOpen: boolean;
 }
 
-const STORAGE_KEY = 'asset-registration-state';
+// Use a chave específica solicitada
+const STORAGE_KEY = 'register-asset-form-draft';
 
 export const useAssetRegistrationState = () => {
   // Initialize state from sessionStorage or defaults
@@ -42,7 +43,9 @@ export const useAssetRegistrationState = () => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsedState = JSON.parse(saved);
+        console.log('Dados do formulário restaurados do sessionStorage:', parsedState);
+        return parsedState;
       }
     } catch (error) {
       console.warn('Failed to load registration state from sessionStorage:', error);
@@ -66,10 +69,11 @@ export const useAssetRegistrationState = () => {
     };
   });
 
-  // Persist state to sessionStorage whenever it changes
+  // Persist state to sessionStorage whenever it changes - salvar em tempo real
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      console.log('Estado do formulário salvo no sessionStorage:', state);
     } catch (error) {
       console.warn('Failed to save registration state to sessionStorage:', error);
     }
@@ -108,7 +112,7 @@ export const useAssetRegistrationState = () => {
     setState(prev => ({ ...prev, securityInfoOpen: open }));
   };
 
-  // Sync form data with React Hook Form
+  // Sync form data with React Hook Form - restaurar dados automaticamente
   const syncWithForm = (form: UseFormReturn<any>, formType: 'chip' | 'equipment') => {
     const formData = formType === 'chip' ? state.chipFormData : state.equipmentFormData;
     
@@ -119,7 +123,7 @@ export const useAssetRegistrationState = () => {
     });
   };
 
-  // Update persisted data when form changes
+  // Update persisted data when form changes - salvar dados em tempo real
   const updateFormData = (data: any, formType: 'chip' | 'equipment') => {
     if (formType === 'chip') {
       setChipFormData(data);
@@ -142,10 +146,11 @@ export const useAssetRegistrationState = () => {
     }
   };
 
-  // Clear all state (used when completing or canceling)
+  // Clear all state - limpar após sucesso ou cancelamento
   const clearState = () => {
     try {
       sessionStorage.removeItem(STORAGE_KEY);
+      console.log('Dados do formulário removidos do sessionStorage');
     } catch (error) {
       console.warn('Failed to clear registration state from sessionStorage:', error);
     }
