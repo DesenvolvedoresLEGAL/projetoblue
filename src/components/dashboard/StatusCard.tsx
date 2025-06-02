@@ -1,138 +1,266 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { CircleAlert, CheckCircle, Shield } from "lucide-react";
+import { formatPhoneNumber } from "@/utils/formatters";
+import { capitalize } from "@/utils/stringUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface StatusItem {
+interface StatusCardItem {
   id: string;
-  name: string;
+  identifier: string;
+  type: string;
   status: string;
-  lastUpdate?: string;
+  additionalInfo?: string;
 }
 
 interface StatusCardProps {
-  title: string;
+  title: string | React.ReactNode;
   description: string;
-  items: StatusItem[];
+  items: StatusCardItem[];
   isLoading?: boolean;
+  emptyMessage?: string;
   actionLink: string;
   actionText: string;
-  variant?: "default" | "destructive" | "secondary";
+  variant?: "default" | "destructive" | "warning";
   icon?: React.ReactNode;
-  emptyMessage?: string;
-  isMobile?: boolean;
+  limitItems?: number;
+  showCount?: boolean;
 }
 
+/**
+ * StatusCard - Enhanced with LEGAL visual identity and conditional display
+ * Only shows problem cards when there are actual problems
+ */
 export const StatusCard: React.FC<StatusCardProps> = ({
   title,
   description,
   items,
   isLoading = false,
+  emptyMessage = "Nenhum item encontrado.",
   actionLink,
   actionText,
   variant = "default",
   icon,
-  emptyMessage = "Nenhum item encontrado.",
-  isMobile = false
+  limitItems = 5,
+  showCount = true,
 }) => {
-  // Limit items shown on mobile to prevent overflow
-  const displayItems = isMobile ? items.slice(0, 3) : items.slice(0, 5);
-  const hasMoreItems = items.length > displayItems.length;
+  // Don't render destructive cards if there are no problems
+  if (variant === "destructive" && !isLoading && items.length === 0) {
+    return (
+      <TooltipProvider>
+        <Card className="legal-card border-green-200 dark:border-green-800">
+          <CardHeader className="pb-4">
+            <CardTitle className="legal-subtitle text-lg flex items-center gap-2 text-green-700 dark:text-green-400">
+              <CheckCircle className="h-5 w-5" />
+              <span>Tudo Certo!</span>
+            </CardTitle>
+            <CardDescription className="text-green-600 dark:text-green-300">
+              Nenhum problema detectado nos ativos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="py-6">
+            <div className="flex flex-col items-center justify-center text-center space-y-3">
+              <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <Shield className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-green-700 dark:text-green-400 mb-1">
+                  Sistema Operacional
+                </h3>
+                <p className="text-sm text-green-600 dark:text-green-300">
+                  Todos os ativos estão funcionando corretamente
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to={actionLink} className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" 
+                    size="sm"
+                  >
+                    Ver Todos os Ativos
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Visualizar inventário completo de ativos</p>
+              </TooltipContent>
+            </Tooltip>
+          </CardFooter>
+        </Card>
+      </TooltipProvider>
+    );
+  }
 
-  const getVariantClasses = () => {
+  // Apply styling based on variant
+  const getCardStyles = () => {
     switch (variant) {
       case "destructive":
-        return "border-red-200 dark:border-red-800";
-      case "secondary":
-        return "border-yellow-200 dark:border-yellow-800";
+        return "border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20";
+      case "warning":
+        return "border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-950/20";
       default:
-        return "border-gray-200 dark:border-gray-700";
+        return "legal-card";
     }
   };
 
+  const getButtonVariant = () => {
+    switch (variant) {
+      case "destructive":
+        return "destructive";
+      case "warning":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+  const getIconColor = () => {
+    switch (variant) {
+      case "destructive":
+        return "text-red-500";
+      case "warning":
+        return "text-yellow-500";
+      default:
+        return "text-legal-primary";
+    }
+  };
+
+  const getTitleColor = () => {
+    switch (variant) {
+      case "destructive":
+        return "text-red-700 dark:text-red-400";
+      case "warning":
+        return "text-yellow-700 dark:text-yellow-400";
+      default:
+        return "legal-title";
+    }
+  };
+
+  // Limit the number of items displayed
+  const displayedItems = items.slice(0, limitItems);
+  const hasMoreItems = items.length > limitItems;
+
   return (
-    <Card className={`h-full flex flex-col ${getVariantClasses()}`}>
-      <CardHeader className="pb-2 md:pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-          {icon}
-          <span className="text-sm sm:text-base md:text-lg">{title}</span>
-        </CardTitle>
-        <CardDescription className="text-xs md:text-sm">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="flex-1 space-y-2 md:space-y-3">
-        {isLoading ? (
-          <div className="space-y-2 md:space-y-3">
-            {Array(isMobile ? 3 : 4)
-              .fill(0)
-              .map((_, i) => (
-                <Skeleton key={i} className="h-12 md:h-14 w-full" />
-              ))}
+    <TooltipProvider>
+      <Card className={`flex flex-col h-full ${getCardStyles()}`}>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className={`text-lg flex items-center gap-2 ${getTitleColor()}`}>
+              {isLoading ? (
+                <Skeleton className="h-6 w-16" />
+              ) : (
+                <>
+                  {icon}
+                  <span className="legal-subtitle">
+                    {showCount ? `${items.length} ` : ""}
+                    {typeof title === "string" ? title : title}
+                  </span>
+                </>
+              )}
+            </CardTitle>
           </div>
-        ) : displayItems.length > 0 ? (
-          <>
-            <div className="space-y-2">
-              {displayItems.map((item, index) => (
-                <div 
-                  key={item.id || index} 
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 md:p-3 bg-gray-50 dark:bg-gray-800/30 rounded-lg border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm font-medium truncate">
-                      {item.name}
-                    </p>
-                    {item.lastUpdate && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.lastUpdate}
-                      </p>
-                    )}
-                  </div>
-                  <Badge 
-                    variant={variant === "destructive" ? "destructive" : "secondary"}
-                    className="text-xs shrink-0"
-                  >
-                    {item.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-            
-            {hasMoreItems && (
-              <div className="text-center pt-2">
-                <p className="text-xs text-muted-foreground">
-                  +{items.length - displayItems.length} itens adicionais
-                </p>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-6 md:py-8 text-center">
-            <div className="p-3 md:p-4 bg-green-100 dark:bg-green-950/30 rounded-full mb-3 md:mb-4">
-              {icon || <div className="h-6 w-6 md:h-8 md:w-8 bg-green-500 rounded-full" />}
-            </div>
-            <p className="text-xs md:text-sm text-muted-foreground px-4">
-              {emptyMessage}
-            </p>
-          </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="pt-0 mt-auto">
-        <Link to={actionLink} className="w-full">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full text-xs md:text-sm h-8 md:h-9"
+          <CardDescription
+            className={
+              variant === "destructive"
+                ? "text-red-600 dark:text-red-300"
+                : variant === "warning"
+                ? "text-yellow-600 dark:text-yellow-300"
+                : "legal-text"
+            }
           >
-            {actionText}
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
+            {description}
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="pb-2 flex-1">
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array(3)
+                .fill(0)
+                .map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-full" />
+                ))}
+            </div>
+          ) : displayedItems.length > 0 ? (
+            <ul className="space-y-2">
+              {displayedItems.map((item) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <li className="flex items-center gap-2 text-sm font-mono border-b border-gray-100 dark:border-gray-800 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded px-2 transition-colors cursor-help">
+                      <CircleAlert
+                        className={`h-4 w-4 flex-shrink-0 ${getIconColor()}`}
+                      />
+                      <span className="font-semibold flex-1 truncate">
+                        {item.type === 'CHIP' ? formatPhoneNumber(item.identifier) : item.identifier}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.additionalInfo || `(${capitalize(item.status)})`}
+                      </span>
+                    </li>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1">
+                      <p><strong>Tipo:</strong> {item.type}</p>
+                      <p><strong>Identificador:</strong> {item.identifier}</p>
+                      <p><strong>Status:</strong> {capitalize(item.status)}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+              {hasMoreItems && (
+                <li className="text-center text-sm text-muted-foreground pt-2 italic">
+                  + {items.length - limitItems} itens adicionais...
+                </li>
+              )}
+            </ul>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">
+                {emptyMessage}
+              </p>
+            </div>
+          )}
+        </CardContent>
+        
+        <CardFooter className="pt-0 mt-auto">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link to={actionLink} className="w-full">
+                <Button 
+                  variant={getButtonVariant()} 
+                  className={`w-full transition-all duration-200 ${
+                    variant === "default" ? "border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white" : ""
+                  }`}
+                  size="sm"
+                >
+                  {actionText}
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Ver lista detalhada e gerenciar ativos</p>
+            </TooltipContent>
+          </Tooltip>
+        </CardFooter>
+      </Card>
+    </TooltipProvider>
   );
 };
+
+export default StatusCard;
