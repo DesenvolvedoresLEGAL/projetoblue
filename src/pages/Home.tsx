@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
@@ -152,7 +151,6 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?type=1"
             actionText="Gerenciar Chips"
-            isMobile={isMobile}
           />
 
           <StatsSummaryCard
@@ -162,7 +160,6 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?type=1"
             actionText="Gerenciar Speedys"
-            isMobile={isMobile}
           />
 
           <StatsSummaryCard
@@ -172,7 +169,6 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory"
             actionText="Gerenciar Equipamentos"
-            isMobile={isMobile}
           />
         </div>
 

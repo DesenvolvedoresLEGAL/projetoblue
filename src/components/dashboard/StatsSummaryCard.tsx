@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { Check, X, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface StatsData {
   total: number;
@@ -34,6 +35,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
   actionLink,
   actionText
 }) => {
+  const isMobile = useIsMobile();
   const availabilityPercentage = data.total > 0 ? Math.round((data.available / data.total) * 100) : 0;
   
   const getAvailabilityColor = () => {
@@ -102,7 +104,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
               </div>
 
               {/* Stats Grid - Mobile Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+              <div className={`grid gap-2 md:gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="bg-green-50 dark:bg-green-950/30 p-2 md:p-3 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors cursor-help">
