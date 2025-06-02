@@ -2,6 +2,7 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Manufacturer } from '@/types/asset';
 
 interface CommonFormFieldsProps {
   formData: {
@@ -11,7 +12,7 @@ interface CommonFormFieldsProps {
   isChip: boolean;
   handleStatusChange: (value: string) => void;
   handleManufacturerChange: (value: string) => void;
-  manufacturers: { id: number; name: string }[];
+  manufacturers: Manufacturer[];
 }
 
 const CommonFormFields = ({ 
@@ -53,9 +54,14 @@ const CommonFormFields = ({
             <SelectValue placeholder={`Selecione ${isChip ? 'uma operadora' : 'um fabricante'}`} />
           </SelectTrigger>
           <SelectContent>
-            {manufacturers.map(manufacturer => (
+            {isChip ? manufacturers.filter(m => m.description.toLowerCase() === "operadora").map(manufacturer => (
               <SelectItem key={manufacturer.id} value={manufacturer.id.toString()}>
-                {manufacturer.name}
+                { manufacturer.name }
+              </SelectItem>
+            )) : 
+            manufacturers.filter(m => m.description.toLowerCase() !== "operadora").map(manufacturer => (
+              <SelectItem key={manufacturer.id} value={manufacturer.id.toString()}>
+                { manufacturer.name }
               </SelectItem>
             ))}
           </SelectContent>
