@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { ClientSelectionSimplified } from '@/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@/components/association/AssetSelection';
 import { AssociationSummary } from '@/components/association/AssociationSummary';
 import { Client } from '@/types/asset';
+import { useAssetAssociationState } from '@/hooks/useAssetAssociationState';
 
 export interface SelectedAsset {
   id: string;
@@ -48,9 +49,16 @@ export interface SelectedAsset {
 type Step = 'client' | 'assets' | 'summary';
 
 const AssetAssociation = () => {
-  const [currentStep, setCurrentStep] = useState<Step>('client');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [selectedAssets, setSelectedAssets] = useState<SelectedAsset[]>([]);
+  const {
+    currentStep,
+    selectedClient,
+    selectedAssets,
+    setCurrentStep,
+    setSelectedClient,
+    setSelectedAssets,
+    clearState
+  } = useAssetAssociationState();
+  
   const navigate = useNavigate();
 
   const handleClientSelect = (client: Client) => {
@@ -72,11 +80,15 @@ const AssetAssociation = () => {
   };
 
   const handleComplete = () => {
-    // Reset e voltar para lista de associações
-    setSelectedClient(null);
-    setSelectedAssets([]);
-    setCurrentStep('client');
+    // Clear persisted state and navigate
+    clearState();
     navigate('/associations');
+  };
+
+  const handleCancel = () => {
+    // Clear persisted state when canceling
+    clearState();
+    navigate(-1);
   };
 
   const getStepNumber = () => {
@@ -107,7 +119,7 @@ const AssetAssociation = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={handleCancel}
           className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
         >
           <ArrowLeft className="h-4 w-4" />

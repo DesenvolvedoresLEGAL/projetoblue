@@ -67,6 +67,13 @@ export type Database = {
             referencedColumns: ["uuid"]
           },
           {
+            foreignKeyName: "asset_client_assoc_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "v_problem_assets"
+            referencedColumns: ["uuid"]
+          },
+          {
             foreignKeyName: "asset_client_assoc_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -1115,7 +1122,22 @@ export type Database = {
           status_name: string | null
           uuid: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_assets_solutions"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "asset_solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_assets_status"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
