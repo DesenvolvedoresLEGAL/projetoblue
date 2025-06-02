@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAssetsData } from '@/hooks/useAssetsData';
@@ -20,7 +19,6 @@ const AssetsInventory = () => {
   
   const queryClient = useQueryClient();
   
-  // Utilizando o hook personalizado para buscar dados dos ativos com controle de refetch
   const { 
     data: assetsData,
     isLoading, 
@@ -36,35 +34,30 @@ const AssetsInventory = () => {
     enabled: shouldFetch
   });
   
-  // Função para controlar quando a busca será realizada
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     console.log('Executando busca com termo:', searchTerm);
-    setCurrentPage(1); // Resetar para primeira página ao pesquisar
-    setShouldFetch(true); // Ativar a consulta
+    setCurrentPage(1);
+    setShouldFetch(true);
     refetch();
   }, [searchTerm, refetch]);
   
-  // Controlador do termo de busca com debounce implícito
   const handleSearchTermChange = useCallback((value: string) => {
     console.log('Termo de busca alterado para:', value);
     setSearchTerm(value);
     
-    // Se o termo estiver vazio, busca imediatamente
     if (!value.trim()) {
       setShouldFetch(true);
       setCurrentPage(1);
     } else {
-      // Para termos não vazios, aguarda submissão manual ou blur
       setShouldFetch(true);
     }
   }, []);
   
-  // Controlador de filtros
   const handleFilterChange = useCallback((type: string, value: string) => {
     console.log(`Filtro ${type} alterado para:`, value);
-    setCurrentPage(1); // Resetar para primeira página ao filtrar
-    setShouldFetch(true); // Ativar a consulta quando um filtro mudar
+    setCurrentPage(1);
+    setShouldFetch(true);
     
     if (type === 'type') {
       setFilterType(value);
@@ -73,24 +66,19 @@ const AssetsInventory = () => {
     }
   }, []);
 
-  // Controlador para atualização de ativos - CORRIGIDO
   const handleAssetUpdated = useCallback(() => {
     console.log('Asset atualizado, invalidando cache e recarregando dados...');
     
-    // Invalidar todas as queries relacionadas a assets
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
     
-    // Forçar refetch específico
     setShouldFetch(true);
     refetch();
   }, [queryClient, refetch]);
 
-  // Controlador para exclusão de ativos
   const handleAssetDeleted = useCallback(() => {
     console.log('Asset deletado, invalidando cache e recarregando dados...');
     
-    // Invalidar todas as queries relacionadas a assets
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
     
@@ -98,12 +86,10 @@ const AssetsInventory = () => {
     refetch();
   }, [queryClient, refetch]);
   
-  // Renderizar estado de carregamento
   if (isLoading) {
     return <AssetsLoading />;
   }
   
-  // Renderizar estado de erro com informações mais detalhadas
   if (error || isError) {
     console.error('Erro na página AssetsInventory:', error);
     return (
@@ -119,7 +105,7 @@ const AssetsInventory = () => {
   }
   
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="container mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
       <AssetsHeader />
       
       <AssetsSearchForm 
@@ -148,14 +134,6 @@ const AssetsInventory = () => {
           setCurrentPage={setCurrentPage}
         />
       ) : null}
-      
-      {/* Debug info em desenvolvimento
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
-          Debug: Termo="{searchTerm}" | Tipo="{filterType}" | Status="{filterStatus}" | 
-          Página={currentPage} | Total={assetsData?.totalCount || 0}
-        </div>
-      )} */}
     </div>
   );
 };

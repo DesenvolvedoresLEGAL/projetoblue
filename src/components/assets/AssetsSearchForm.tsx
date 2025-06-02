@@ -30,20 +30,28 @@ const AssetsSearchForm = ({
     handleFilterChange('status', 'all');
   };
 
+  // Placeholder responsivo baseado no tamanho da tela
+  const getSearchPlaceholder = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return "Buscar ativos...";
+    }
+    return "Pesquisar por ICCID, número de linha, rádio, modelo ou série...";
+  };
+
   return (
     <Card className="border-legal-primary/20 shadow-lg">
-      <CardContent className="p-6">
+      <CardContent className="p-4 md:p-6">
         <div className="space-y-4">
           {/* Header da busca */}
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-legal-primary rounded-lg">
-              <Search className="h-5 w-5 text-white" />
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <div>
-              <h3 className="font-black text-legal-dark font-neue-haas text-lg">
+              <h3 className="font-black text-legal-dark font-neue-haas text-base sm:text-lg">
                 Buscar e Filtrar Ativos
               </h3>
-              <p className="text-sm text-gray-600 font-neue-haas">
+              <p className="text-xs sm:text-sm text-gray-600 font-neue-haas">
                 Encontre rapidamente o equipamento que você precisa
               </p>
             </div>
@@ -55,26 +63,27 @@ const AssetsSearchForm = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-legal-primary" />
               <Input
                 type="text"
-                placeholder="Pesquisar por ICCID, número de linha, rádio, modelo ou série..."
+                placeholder={getSearchPlaceholder()}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 font-neue-haas"
               />
             </div>
 
-            {/* Filtros */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Filtros com grid responsivo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {/* Filtro por Tipo */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
                   <Filter className="h-4 w-4 text-legal-secondary" />
-                  Tipo de Solução
+                  <span className="hidden sm:inline">Tipo de Solução</span>
+                  <span className="sm:hidden">Tipo</span>
                 </label>
                 <Select
                   value={filterType}
                   onValueChange={(value) => handleFilterChange('type', value)}
                 >
-                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
+                  <SelectTrigger className="h-12 border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
                     <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-legal-secondary/20">
@@ -90,13 +99,14 @@ const AssetsSearchForm = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
                   <Filter className="h-4 w-4 text-legal-secondary" />
-                  Status do Ativo
+                  <span className="hidden sm:inline">Status do Ativo</span>
+                  <span className="sm:hidden">Status</span>
                 </label>
                 <Select
                   value={filterStatus}
                   onValueChange={(value) => handleFilterChange('status', value)}
                 >
-                  <SelectTrigger className="border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
+                  <SelectTrigger className="h-12 border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
                     <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-legal-secondary/20">
@@ -116,10 +126,11 @@ const AssetsSearchForm = ({
                 <label className="text-sm text-transparent">Ações</label>
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-legal-primary hover:bg-legal-dark text-white font-bold font-neue-haas transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="w-full h-12 bg-legal-primary hover:bg-legal-dark text-white font-bold font-neue-haas transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   <Zap className="h-4 w-4 mr-2" />
-                  Buscar Ativos
+                  <span className="hidden sm:inline">Buscar Ativos</span>
+                  <span className="sm:hidden">Buscar</span>
                 </Button>
               </div>
 
@@ -130,10 +141,11 @@ const AssetsSearchForm = ({
                   type="button"
                   variant="outline"
                   onClick={handleReset}
-                  className="w-full h-10 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold font-neue-haas transition-all duration-200"
+                  className="w-full h-12 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold font-neue-haas transition-all duration-200"
                 >
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  Limpar Filtros
+                  <span className="hidden sm:inline">Limpar Filtros</span>
+                  <span className="sm:hidden">Limpar</span>
                 </Button>
               </div>
             </div>
@@ -142,7 +154,8 @@ const AssetsSearchForm = ({
           {/* Dicas de busca */}
           <div className="mt-4 p-3 bg-legal-primary/5 rounded-lg border border-legal-primary/20">
             <p className="text-xs text-legal-dark font-neue-haas">
-              💡 <strong>Dica:</strong> Use números para buscar linhas telefônicas, ou digite texto para encontrar por ICCID, modelo ou série.
+              💡 <strong>Dica:</strong> <span className="hidden sm:inline">Use números para buscar linhas telefônicas, ou digite texto para encontrar por ICCID, modelo ou série.</span>
+              <span className="sm:hidden">Digite para buscar por ICCID, modelo ou série.</span>
             </p>
           </div>
         </div>

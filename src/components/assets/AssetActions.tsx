@@ -40,7 +40,7 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0 hover:bg-legal-primary/10 transition-colors duration-200"
+            className="h-10 w-10 p-0 hover:bg-legal-primary/10 transition-colors duration-200"
           >
             <span className="sr-only">Abrir menu de ações</span>
             <MoreHorizontal className="h-4 w-4 text-legal-primary" />
@@ -48,7 +48,8 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="bg-white shadow-lg border border-legal-primary/20 rounded-lg min-w-[200px]"
+          side="left"
+          className="bg-white shadow-lg border border-legal-primary/20 rounded-lg min-w-[200px] w-64 sm:w-auto z-50"
         >
           <DropdownMenuLabel className="font-black text-legal-dark font-neue-haas">
             Ações do Ativo
@@ -63,7 +64,7 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
             <Eye className="h-4 w-4 text-legal-primary" />
             <div className="flex flex-col">
               <span className="font-bold text-legal-dark font-neue-haas">Ver Detalhes</span>
-              <span className="text-xs text-gray-500">Visualizar informações completas</span>
+              <span className="text-xs text-gray-500 hidden sm:block">Visualizar informações completas</span>
             </div>
           </DropdownMenuItem>
           
@@ -76,7 +77,7 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
             <Pencil className="h-4 w-4 text-legal-secondary" />
             <div className="flex flex-col">
               <span className="font-bold text-legal-dark font-neue-haas">Editar Ativo</span>
-              <span className="text-xs text-gray-500">Modificar dados cadastrais</span>
+              <span className="text-xs text-gray-500 hidden sm:block">Modificar dados cadastrais</span>
             </div>
           </DropdownMenuItem>
           
@@ -92,7 +93,7 @@ const AssetActions = ({ asset, onAssetUpdated, onAssetDeleted }: AssetActionsPro
             </div>
             <div className="flex flex-col">
               <span className="font-bold font-neue-haas">Excluir Ativo</span>
-              <span className="text-xs text-red-400">Ação irreversível - use com cuidado</span>
+              <span className="text-xs text-red-400 hidden sm:block">Ação irreversível - use com cuidado</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
