@@ -54,11 +54,11 @@ export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStat
   return (
     <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex text-xl items-center gap-2">
           <PieChartIcon className="h-5 w-5" />
           Ativos por Status
         </CardTitle>
-        <CardDescription>
+        <CardDescription className='text-sm sm:text-xs'>
           { isMobile ? 
           "Distribuição dos ativos por status (toque para ver detalhes por tipo)" 
           : "Distribuição dos ativos por status (passe o mouse para ver detalhes por tipo)" }
