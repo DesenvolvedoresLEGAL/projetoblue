@@ -37,6 +37,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { useAssetRegistrationState } from "@/hooks/useAssetRegistrationState";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // Esquemas de validação separados para CHIPS e EQUIPAMENTOS
 const chipSchema = z.object({
@@ -67,6 +68,7 @@ const capitalize = (text: string): string => {
 
 export default function RegisterAsset() {
   const [showSuccess, setShowSuccess] = useState(false);
+  const isMobile = useIsMobile();
 
   const navigate = useNavigate();
 
@@ -167,7 +169,6 @@ export default function RegisterAsset() {
     return () => {
       if (!showSuccess) {
         console.log('Componente desmontado sem sucesso - mantendo dados salvos');
-        // Não limpar os dados aqui - manter para quando o usuário voltar
       }
     };
   }, [showSuccess]);
@@ -195,9 +196,7 @@ export default function RegisterAsset() {
       onSuccess: () => {
         console.log('Chip cadastrado com sucesso - limpando sessionStorage');
         setShowSuccess(true);
-        // LIMPAR STORAGE APÓS SUCESSO
         clearState();
-        // Resetar formulários
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => {
@@ -235,9 +234,7 @@ export default function RegisterAsset() {
       onSuccess: () => {
         console.log('Equipamento cadastrado com sucesso - limpando sessionStorage');
         setShowSuccess(true);
-        // LIMPAR STORAGE APÓS SUCESSO
         clearState();
-        // Resetar formulários
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => {
@@ -287,22 +284,22 @@ export default function RegisterAsset() {
     }
   };
 
-  // Success Alert
+  // Success Alert - Mobile Optimized
   if (showSuccess) {
     return (
-      <div className="container mx-auto flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md w-full legal-card border-green-200">
-          <CardContent className="p-8 text-center">
-            <div className="p-4 bg-green-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
+      <div className="container mx-auto flex items-center justify-center min-h-[60vh] px-4">
+        <Card className={`${isMobile ? 'w-full max-w-sm' : 'max-w-md w-full'} legal-card border-green-200`}>
+          <CardContent className={`${isMobile ? 'p-6' : 'p-8'} text-center`}>
+            <div className={`p-4 bg-green-100 rounded-full ${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto mb-4 flex items-center justify-center`}>
+              <CheckCircle2 className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-green-600`} />
             </div>
-            <h2 className="text-2xl font-bold text-green-700 mb-2 legal-title">
+            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-700 mb-2 legal-title`}>
               Ativo Cadastrado!
             </h2>
-            <p className="text-green-600 mb-4">
+            <p className={`text-green-600 mb-4 ${isMobile ? 'text-sm' : ''}`}>
               {assetType === 'CHIP' ? 'Chip registrado' : 'Equipamento registrado'} com sucesso no sistema.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Redirecionando para o painel de gestão...
             </p>
           </CardContent>
@@ -313,37 +310,36 @@ export default function RegisterAsset() {
 
   return (
     <TooltipProvider>
-      <div className="container mx-auto space-y-8">
-        {/* Header com identidade Legal */}
+      <div className={`container mx-auto space-y-4 md:space-y-8 ${isMobile ? 'px-4' : ''}`}>
+        {/* Header com identidade Legal - Mobile Responsive */}
         <StandardPageHeader
-        icon={PackagePlus}
-        title="Cadastrar Novo Ativo"
-        description="Adicione CHIPs ou equipamentos ao inventário da empresa"
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            // Limpar dados ao sair intencionalmente
-            console.log('Usuário saindo da página - limpando dados salvos');
-            clearState();
-            navigate(-1);
-          }}
-          className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+          icon={PackagePlus}
+          title="Cadastrar Novo Ativo"
+          description="Adicione CHIPs ou equipamentos ao inventário da empresa"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-      </StandardPageHeader>
+          <Button
+            variant="ghost"
+            size={isMobile ? "sm" : "sm"}
+            onClick={() => {
+              console.log('Usuário saindo da página - limpando dados salvos');
+              clearState();
+              navigate(-1);
+            }}
+            className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {!isMobile && "Voltar"}
+          </Button>
+        </StandardPageHeader>
 
         <Card className="legal-card border-2">
           <CardHeader className="bg-gradient-to-r from-legal-primary/5 to-legal-secondary/5">
-            <CardTitle className="legal-subtitle flex items-center gap-2">
-              <Zap className="h-6 w-6 text-legal-primary" />
+            <CardTitle className={`legal-subtitle flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+              <Zap className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-legal-primary`} />
               Detalhes do Ativo
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
             <Tabs
               value={assetType}
               onValueChange={(value) => {
@@ -351,7 +347,6 @@ export default function RegisterAsset() {
                 console.log('Trocando tipo de ativo para:', newAssetType);
                 setAssetType(newAssetType);
                 
-                // Reset forms but don't clear persisted data
                 if (newAssetType === 'CHIP') {
                   equipmentForm.reset();
                 } else {
@@ -366,64 +361,66 @@ export default function RegisterAsset() {
               }}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-2 mb-8 h-14 bg-muted/50">
+              <TabsList className={`grid grid-cols-2 mb-6 md:mb-8 ${isMobile ? 'h-12' : 'h-14'} bg-muted/50`}>
                 <TabsTrigger 
                   value="CHIP" 
-                  className="flex items-center gap-2 text-base font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white"
+                  className={`flex items-center gap-2 ${isMobile ? 'text-sm px-2' : 'text-base px-4'} font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white`}
                 >
-                  <Smartphone className="h-5 w-5" />
-                  Chip / SIM Card
+                  <Smartphone className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  {isMobile ? 'CHIP' : 'Chip / SIM Card'}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="EQUIPAMENTO"
-                  className="flex items-center gap-2 text-base font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white"
+                  className={`flex items-center gap-2 ${isMobile ? 'text-sm px-2' : 'text-base px-4'} font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white`}
                 >
-                  <Router className="h-5 w-5" />
-                  Equipamento
+                  <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+                  {isMobile ? 'EQUIPAMENTO' : 'Equipamento'}
                 </TabsTrigger>
               </TabsList>
 
-              {/* FORMULÁRIO DE CHIP */}
-              <TabsContent value="CHIP" className="space-y-6">
+              {/* FORMULÁRIO DE CHIP - Mobile Optimized */}
+              <TabsContent value="CHIP" className="space-y-4 md:space-y-6">
                 <Alert className="bg-blue-50 border-legal-primary/30">
-                  <Smartphone className="h-5 w-5 text-legal-primary" />
-                  <AlertDescription className="text-legal-dark">
+                  <Smartphone className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
+                  <AlertDescription className={`text-legal-dark ${isMobile ? 'text-sm' : ''}`}>
                     <strong>Chips/SIM Cards:</strong> Cadastre cartões SIM para conectividade móvel. 
-                    Inclua informações da operadora e dados técnicos.
+                    {!isMobile && " Inclua informações da operadora e dados técnicos."}
                   </AlertDescription>
                 </Alert>
 
                 <Form {...chipForm}>
-                  <form onSubmit={chipForm.handleSubmit(onSubmitChip)} className="space-y-6">
+                  <form onSubmit={chipForm.handleSubmit(onSubmitChip)} className="space-y-4 md:space-y-6">
                     
-                    {/* Seção Informações Básicas */}
+                    {/* Seção Informações Básicas - Mobile Responsive */}
                     <Collapsible open={basicInfoOpen} onOpenChange={setBasicInfoOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <Card className="cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20">
-                          <CardHeader className="pb-3">
+                        <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20 ${isMobile ? 'touch-manipulation' : ''}`}>
+                          <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-legal-primary/10 rounded-lg">
-                                  <Info className="h-5 w-5 text-legal-primary" />
+                                <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-legal-primary/10 rounded-lg`}>
+                                  <Info className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
                                 </div>
-                                <h3 className="text-lg font-bold legal-subtitle">Informações Básicas</h3>
+                                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold legal-subtitle`}>
+                                  Informações Básicas
+                                </h3>
                               </div>
                               {basicInfoOpen ? 
-                                <ChevronDown className="h-5 w-5 text-legal-primary" /> : 
-                                <ChevronRight className="h-5 w-5 text-legal-primary" />
+                                <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} /> : 
+                                <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
                               }
                             </div>
                           </CardHeader>
                         </Card>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/20 p-6 rounded-lg">
+                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'} bg-muted/20 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
                           <FormField
                             control={chipForm.control}
                             name="line_number"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
                                   Número da Linha *
                                 </FormLabel>
                                 <FormControl>
@@ -436,7 +433,7 @@ export default function RegisterAsset() {
                                       const value = e.target.value;
                                       field.onChange(value === "" ? undefined : Number(value));
                                     }}
-                                    className="form-input"
+                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
@@ -452,7 +449,7 @@ export default function RegisterAsset() {
                             name="iccid"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
                                   <Tooltip>
                                     <TooltipTrigger className="flex items-center gap-1 cursor-help">
                                       ICCID *
@@ -468,11 +465,11 @@ export default function RegisterAsset() {
                                     placeholder="Ex: 89550421180216543847"
                                     disabled={createAssetMutation.isPending}
                                     {...field}
-                                    className="form-input"
+                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
-                                  Código impresso no cartão SIM (19-20 dígitos)
+                                  {isMobile ? 'Código do SIM (19-20 dígitos)' : 'Código impresso no cartão SIM (19-20 dígitos)'}
                                 </p>
                                 <FormMessage />
                               </FormItem>
@@ -484,9 +481,9 @@ export default function RegisterAsset() {
                             name="manufacturer_id"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Operadora *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Operadora *</FormLabel>
                                 {isReferenceDataLoading ? (
-                                  <Skeleton className="h-10 w-full" />
+                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
                                 ) : (
                                   <Select
                                     value={field.value?.toString() || ""}
@@ -494,7 +491,7 @@ export default function RegisterAsset() {
                                     disabled={createAssetMutation.isPending}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="form-input">
+                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
                                         <SelectValue placeholder="Escolha a operadora de telefonia" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -523,9 +520,9 @@ export default function RegisterAsset() {
                             name="status_id"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Status Inicial *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Status Inicial *</FormLabel>
                                 {isReferenceDataLoading ? (
-                                  <Skeleton className="h-10 w-full" />
+                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
                                 ) : (
                                   <Select
                                     value={field.value?.toString() || ""}
@@ -533,7 +530,7 @@ export default function RegisterAsset() {
                                     disabled={createAssetMutation.isPending}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="form-input">
+                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
                                         <SelectValue placeholder="Escolha o status do chip" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -560,11 +557,11 @@ export default function RegisterAsset() {
                       </CollapsibleContent>
                     </Collapsible>
 
-                    <div className="flex justify-end pt-4">
+                    <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} pt-4`}>
                       <Button
                         type="submit"
                         disabled={createAssetMutation.isPending}
-                        className="legal-button text-white font-bold px-8 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200"
+                        className={`legal-button text-white font-bold ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-base'} shadow-lg hover:shadow-xl transition-all duration-200`}
                       >
                         {createAssetMutation.isPending ? (
                           <>
@@ -583,48 +580,50 @@ export default function RegisterAsset() {
                 </Form>
               </TabsContent>
 
-              {/* FORMULÁRIO DE EQUIPAMENTO */}
-              <TabsContent value="EQUIPAMENTO" className="space-y-6">
+              {/* FORMULÁRIO DE EQUIPAMENTO - Mobile Optimized */}
+              <TabsContent value="EQUIPAMENTO" className="space-y-4 md:space-y-6">
                 <Alert className="bg-blue-50 border-legal-primary/30">
-                  <Router className="h-5 w-5 text-legal-primary" />
-                  <AlertDescription className="text-legal-dark">
-                    <strong>Equipamentos:</strong> Cadastre roteadores, switches e outros dispositivos de rede. 
-                    Complete todas as seções para um registro completo.
+                  <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
+                  <AlertDescription className={`text-legal-dark ${isMobile ? 'text-sm' : ''}`}>
+                    <strong>Equipamentos:</strong> Cadastre roteadores, switches e outros dispositivos de rede.
+                    {!isMobile && " Complete todas as seções para um registro completo."}
                   </AlertDescription>
                 </Alert>
 
                 <Form {...equipmentForm}>
-                  <form onSubmit={equipmentForm.handleSubmit(onSubmitEquipment)} className="space-y-6">
+                  <form onSubmit={equipmentForm.handleSubmit(onSubmitEquipment)} className="space-y-4 md:space-y-6">
 
-                    {/* Seção Informações Básicas */}
+                    {/* Seção Informações Básicas - Mobile Responsive */}
                     <Collapsible open={basicInfoOpen} onOpenChange={setBasicInfoOpen}>
                       <CollapsibleTrigger className="w-full">
-                        <Card className="cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20">
-                          <CardHeader className="pb-3">
+                        <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20 ${isMobile ? 'touch-manipulation' : ''}`}>
+                          <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-legal-primary/10 rounded-lg">
-                                  <Info className="h-5 w-5 text-legal-primary" />
+                                <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-legal-primary/10 rounded-lg`}>
+                                  <Info className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
                                 </div>
-                                <h3 className="text-lg font-bold legal-subtitle">Informações Básicas</h3>
+                                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold legal-subtitle`}>
+                                  Informações Básicas
+                                </h3>
                               </div>
                               {basicInfoOpen ? 
-                                <ChevronDown className="h-5 w-5 text-legal-primary" /> : 
-                                <ChevronRight className="h-5 w-5 text-legal-primary" />
+                                <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} /> : 
+                                <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
                               }
                             </div>
                           </CardHeader>
                         </Card>
                       </CollapsibleTrigger>
                       <CollapsibleContent className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/20 p-6 rounded-lg">
+                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'} bg-muted/20 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
                         
                         <FormField
                           control={equipmentForm.control}
                           name="radio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-legal-dark font-semibold">
+                              <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
                                 Rádio *
                               </FormLabel>
                               <FormControl>
@@ -632,11 +631,11 @@ export default function RegisterAsset() {
                                   placeholder="Ex: SPEEDY01, 4BLACK69"
                                   disabled={createAssetMutation.isPending}
                                   {...field}
-                                  className="form-input"
+                                  className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                 />
                               </FormControl>
                               <p className="text-xs text-muted-foreground">
-                                Identificador único do equipamento (etiqueta da LEGAL)
+                                {isMobile ? 'ID único (etiqueta LEGAL)' : 'Identificador único do equipamento (etiqueta da LEGAL)'}
                               </p>
                               <FormMessage />
                             </FormItem>
@@ -648,17 +647,17 @@ export default function RegisterAsset() {
                             name="serial_number"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Número de Série *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Número de Série *</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Ex: SN123456789"
                                     disabled={createAssetMutation.isPending}
                                     {...field}
-                                    className="form-input"
+                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
-                                  Número único do equipamento (etiqueta do fabricante)
+                                  {isMobile ? 'Número único do equipamento' : 'Número único do equipamento (etiqueta do fabricante)'}
                                 </p>
                                 <FormMessage />
                               </FormItem>
@@ -671,13 +670,13 @@ export default function RegisterAsset() {
                             name="model"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Modelo *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Modelo *</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="Ex: Archer C6, WRT54G"
                                     disabled={createAssetMutation.isPending}
                                     {...field}
-                                    className="form-input"
+                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
@@ -693,9 +692,9 @@ export default function RegisterAsset() {
                             name="manufacturer_id"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Fabricante *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Fabricante *</FormLabel>
                                 {isReferenceDataLoading ? (
-                                  <Skeleton className="h-10 w-full" />
+                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
                                 ) : (
                                   <Select
                                     value={field.value?.toString() || ""}
@@ -703,7 +702,7 @@ export default function RegisterAsset() {
                                     disabled={createAssetMutation.isPending}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="form-input">
+                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
                                         <SelectValue placeholder="Escolha o fabricante" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -732,9 +731,9 @@ export default function RegisterAsset() {
                             name="status_id"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Status Inicial *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Status Inicial *</FormLabel>
                                 {isReferenceDataLoading ? (
-                                  <Skeleton className="h-10 w-full" />
+                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
                                 ) : (
                                   <Select
                                     value={field.value?.toString() || ""}
@@ -742,7 +741,7 @@ export default function RegisterAsset() {
                                     disabled={createAssetMutation.isPending}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="form-input">
+                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
                                         <SelectValue placeholder="Escolha o status" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -770,9 +769,9 @@ export default function RegisterAsset() {
                             name="solution_id"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Tipo de Solução *</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Tipo de Solução *</FormLabel>
                                 {isReferenceDataLoading ? (
-                                  <Skeleton className="h-10 w-full" />
+                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
                                 ) : (
                                   <Select
                                     value={field.value?.toString() || ""}
@@ -780,7 +779,7 @@ export default function RegisterAsset() {
                                     disabled={createAssetMutation.isPending}
                                   >
                                     <FormControl>
-                                      <SelectTrigger className="form-input">
+                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
                                         <SelectValue placeholder="Escolha o tipo de solução" />
                                       </SelectTrigger>
                                     </FormControl>
@@ -804,13 +803,12 @@ export default function RegisterAsset() {
                             )}
                           />
 
-
                           <FormField
                             control={equipmentForm.control}
                             name="rented_days"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-legal-dark font-semibold">Dias de Locação</FormLabel>
+                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Dias de Locação</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="number"
@@ -821,34 +819,36 @@ export default function RegisterAsset() {
                                       const value = e.target.value;
                                       field.onChange(value === "" ? 0 : Number(value));
                                     }}
-                                    className="form-input"
+                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-muted-foreground">
-                                  Tempo de locação (0 = equipamento próprio)
+                                  {isMobile ? '0 = equipamento próprio' : 'Tempo de locação (0 = equipamento próprio)'}
                                 </p>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        </div>                    
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-red-50/50 p-6 rounded-lg border border-red-200">
+                        </div>
+                        
+                        {/* Security Section - Mobile Optimized */}
+                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'} bg-red-50/50 ${isMobile ? 'p-4' : 'p-6'} rounded-lg border border-red-200 mt-4`}>
                           <FormField
                             control={equipmentForm.control}
                             name="admin_user"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-red-700 font-semibold">Usuário Administrador *</FormLabel>
+                                <FormLabel className={`text-red-700 font-semibold ${isMobile ? 'text-sm' : ''}`}>Usuário Administrador *</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="admin"
                                     disabled={createAssetMutation.isPending}
                                     {...field}
-                                    className="form-input border-red-200 focus:border-red-500"
+                                    className={`form-input border-red-200 focus:border-red-500 ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-red-600">
-                                  Nome de usuário para acesso administrativo
+                                  {isMobile ? 'Nome de usuário admin' : 'Nome de usuário para acesso administrativo'}
                                 </p>
                                 <FormMessage />
                               </FormItem>
@@ -860,7 +860,7 @@ export default function RegisterAsset() {
                             name="admin_pass"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-red-700 font-semibold">Senha Administrador *</FormLabel>
+                                <FormLabel className={`text-red-700 font-semibold ${isMobile ? 'text-sm' : ''}`}>Senha Administrador *</FormLabel>
                                 <FormControl>
                                   <PasswordInput
                                     id="admin_pass"
@@ -868,7 +868,7 @@ export default function RegisterAsset() {
                                     onChange={(e) => handlePasswordChange(e.target.value)}
                                     placeholder="Digite uma senha segura"
                                     disabled={createAssetMutation.isPending}
-                                    className="form-input border-red-200 focus:border-red-500"
+                                    className={`form-input border-red-200 focus:border-red-500 ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                                   />
                                 </FormControl>
                                 <p className="text-xs text-red-600">
@@ -879,20 +879,26 @@ export default function RegisterAsset() {
                                     {passwordStrength === 'strong' ? (
                                       <div className="flex items-center gap-2 text-green-600 text-sm">
                                         <CheckCircle2 className="h-4 w-4" />
-                                        <span className="font-medium">Senha forte - Excelente segurança!</span>
+                                        <span className="font-medium">
+                                          {isMobile ? 'Senha forte!' : 'Senha forte - Excelente segurança!'}
+                                        </span>
                                       </div>
                                     ) : passwordStrength === 'medium' ? (
                                       <div className="flex items-center gap-2 text-amber-600 text-sm">
                                         <Info className="h-4 w-4" />
-                                        <span className="font-medium">Senha média - Considerável melhorar</span>
+                                        <span className="font-medium">
+                                          {isMobile ? 'Senha média' : 'Senha média - Considerável melhorar'}
+                                        </span>
                                       </div>
                                     ) : (
                                       <>
                                         <div className="flex items-center gap-2 text-orange-500 text-sm">
                                           <AlertTriangle className="h-4 w-4" />
-                                          <span className="font-medium">Senha fraca - Não recomendada</span>
+                                          <span className="font-medium">
+                                            {isMobile ? 'Senha fraca' : 'Senha fraca - Não recomendada'}
+                                          </span>
                                         </div>
-                                        <div className="ml-6">
+                                        <div className={`${isMobile ? 'ml-0' : 'ml-6'}`}>
                                           <label className="flex items-center text-sm cursor-pointer">
                                             <input
                                               type="checkbox"
@@ -900,7 +906,9 @@ export default function RegisterAsset() {
                                               onChange={(e) => setAllowWeakPassword(e.target.checked)}
                                               className="mr-2 accent-legal-primary"
                                             />
-                                            <span className="text-muted-foreground">Permitir senha fraca (não recomendado)</span>
+                                            <span className="text-muted-foreground">
+                                              {isMobile ? 'Permitir senha fraca' : 'Permitir senha fraca (não recomendado)'}
+                                            </span>
                                           </label>
                                         </div>
                                       </>
@@ -915,11 +923,11 @@ export default function RegisterAsset() {
                       </CollapsibleContent>
                     </Collapsible>
 
-                    <div className="flex justify-end pt-6">
+                    <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} pt-6`}>
                       <Button
                         type="submit"
                         disabled={createAssetMutation.isPending}
-                        className="legal-button text-white font-bold px-8 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200"
+                        className={`legal-button text-white font-bold ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-base'} shadow-lg hover:shadow-xl transition-all duration-200`}
                       >
                         {createAssetMutation.isPending ? (
                           <>
