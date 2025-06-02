@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { PieChart as PieChartIcon } from "lucide-react";
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface RefactoredAssetStatusDistributionCardProps {
   dashboardStats: any;
@@ -48,6 +49,7 @@ export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStat
 
   // Colors for chart
   const COLORS = ['#4D2BFB', '#0ea5e9', '#f97316', '#ef4444', '#8b5cf6', '#84cc16'];
+  const isMobile = useIsMobile();
 
   return (
     <Card className="flex flex-col">
@@ -61,20 +63,20 @@ export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStat
         </CardDescription>
       </CardHeader>
       <CardContent className="flex p-[1rem] flex-row pt-0 h-full items-center">
-        <div className="h-full w-full">
+        <div className="min-h-[250px] h-[250px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={statusChartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={window.innerWidth <= 640 ? 28 : 40}
-                outerRadius={window.innerWidth <= 640 ? 38 : 70}
+                innerRadius={isMobile ? 28 : 40}
+                outerRadius={isMobile ? 38 : 70}
                 fill="#8884d8"
                 paddingAngle={5}
                 dataKey="total"
                 nameKey="status"
-                label={window.innerWidth <= 640 ? false : ({ status, total }) => `${status}: ${total}`}
+                label={isMobile ? false : ({ status, total }) => `${status}: ${total}`}
                 labelLine={false}
               >
                 {statusChartData.map((entry, index) => (
@@ -83,9 +85,9 @@ export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStat
               </Pie>
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                layout={window.innerWidth <= 640 ? "horizontal" : "vertical"}
-                verticalAlign={window.innerWidth <= 640 ? "bottom" : "middle"}
-                align={window.innerWidth <= 640 ? "center" : "right"}
+                layout={isMobile ? "horizontal" : "vertical"}
+                verticalAlign={isMobile ? "bottom" : "middle"}
+                align={isMobile ? "center" : "right"}
                 iconSize={12}
               />
             </PieChart>

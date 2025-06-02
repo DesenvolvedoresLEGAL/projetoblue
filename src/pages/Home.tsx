@@ -11,6 +11,7 @@ import { SubscriptionAssetsCard } from "@/components/dashboard/SubscriptionAsset
 import { StandardizedRecentAlertsCard } from "@/components/dashboard/StandardizedRecentAlertsCard";
 import { RefactoredAssetStatusDistributionCard } from "@/components/dashboard/RefactoredAssetStatusDistributionCard";
 import { SyncStatusAlert } from "@/components/dashboard/SyncStatusAlert";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /**
  * Home dashboard component
@@ -22,6 +23,8 @@ const Home: React.FC = () => {
   const dashboard = useDashboardAssets();
   // Use dashboard stats for PieChart data
   const dashboardStats = useDashboardStats();
+
+  const isMobile = useIsMobile();
 
   // Safe loading state check
   const isLoading = dashboard.problemAssets.isLoading || 
