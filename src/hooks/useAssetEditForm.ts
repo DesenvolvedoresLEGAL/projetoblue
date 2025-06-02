@@ -40,7 +40,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         radio: asset.radio || '',
         status_id: asset.status?.id || 1,
         manufacturer_id: asset.manufacturer?.id || undefined,
-        plan_id: asset.plano?.id || undefined,
+        plan_id: asset.plan?.id || undefined,
         rented_days: asset.rented_days?.toString() || '0',
         admin_user: asset.admin_user || 'admin',
         admin_pass: asset.admin_pass || '',

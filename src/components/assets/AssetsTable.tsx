@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import {
@@ -54,7 +53,6 @@ const AssetsTable = ({
           const value = asset[fieldName as keyof AssetWithRelations];
           if (typeof value === 'object' && value !== null) {
             if ('name' in value) return value.name || 'N/A';
-            if ('nome' in value) return value.nome || 'N/A';
             return 'N/A';
           }
           return value?.toString() || 'N/A';

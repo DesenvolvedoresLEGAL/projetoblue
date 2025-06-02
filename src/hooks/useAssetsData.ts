@@ -44,6 +44,8 @@ export type AssetWithRelations = {
     name: string;
     size_gb?: number;
   };
+  // Propriedade para destacar qual campo correspondeu à busca
+  matchedField?: string;
 };
 
 export interface UseAssetsDataParams {
@@ -132,6 +134,16 @@ export const useAssetsData = ({
             updated_at,
             admin_user,
             admin_pass,
+            solution_id,
+            status_id,
+            manufacturer_id,
+            plan_id,
+            ssid_fabrica,
+            pass_fabrica,
+            admin_user_fabrica,
+            admin_pass_fabrica,
+            ssid_atual,
+            pass_atual,
             manufacturer:manufacturers(id, name),
             plano:plans(id, nome),
             status:asset_status(id, status),
@@ -234,17 +246,17 @@ export const useAssetsData = ({
               name: asset.solucao?.solution || 'Desconhecido'
             },
             status: {
-              id: asset.status?.id,
+              id: asset.status?.id || 0,
               name: asset.status?.status || 'Desconhecido'
             },
             manufacturer: {
-              id: asset.manufacturer?.id,
+              id: asset.manufacturer?.id || 0,
               name: asset.manufacturer?.name || 'Desconhecido'
             },
             plan: {
-              id: asset.plan?.id,
-              name: asset.plan?.name || 'Desconhecido',
-              size_gb: asset.plan?.size_gb || 0
+              id: asset.plano?.id || 0,
+              name: asset.plano?.nome || 'Desconhecido',
+              size_gb: asset.plano?.tamanho_gb || 0
             },
             admin_user: asset.admin_user,
             admin_pass: asset.admin_pass,
