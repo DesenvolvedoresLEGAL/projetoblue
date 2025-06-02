@@ -59,7 +59,9 @@ export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStat
           Ativos por Status
         </CardTitle>
         <CardDescription>
-          Distribuição dos ativos por status (passe o mouse para ver detalhes por tipo)
+          { isMobile ? 
+          "Distribuição dos ativos por status (toque para ver detalhes por tipo)" 
+          : "Distribuição dos ativos por status (passe o mouse para ver detalhes por tipo)" }
         </CardDescription>
       </CardHeader>
       <CardContent className="flex p-[1rem] flex-row pt-0 h-full items-center">
