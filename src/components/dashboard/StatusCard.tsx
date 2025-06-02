@@ -78,7 +78,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 <h3 className="font-semibold text-green-700 dark:text-green-400 mb-1">
                   Sistema Operacional
                 </h3>
-                <p className="text-sm text-green-600 dark:text-green-300">
+                <p className="text-xs text-green-600 dark:text-green-300">
                   Todos os ativos estão funcionando corretamente
                 </p>
               </div>
@@ -90,7 +90,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 <Link to={actionLink} className="w-full">
                   <Button 
                     variant="outline" 
-                    className="w-full border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" 
+                    className="text-xs w-full border-green-500 text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20" 
                     size="sm"
                   >
                     Ver Todos os Ativos
