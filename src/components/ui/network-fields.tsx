@@ -29,8 +29,6 @@ export const NetworkFields = ({
   showCopyButton = false,
   onCopyFromFactory
 }: NetworkFieldsProps) => {
-  const [showPasswords, setShowPasswords] = React.useState(false);
-
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value).then(() => {
       toast.success(`${label} copiado para a área de transferência`);
@@ -110,9 +108,11 @@ export const NetworkFields = ({
                 <FormControl>
                   <div className="relative">
                     <PasswordInput
+                      id={`pass_${fieldPrefix}`}
                       placeholder="Digite a senha da rede"
                       disabled={isLoading}
-                      {...field}
+                      value={field.value || ''}
+                      onChange={field.onChange}
                       className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                     />
                   </div>
@@ -185,9 +185,11 @@ export const NetworkFields = ({
               <div className="flex gap-2">
                 <FormControl>
                   <PasswordInput
+                    id={`admin_pass_${fieldPrefix}`}
                     placeholder="Digite a senha admin"
                     disabled={isLoading}
-                    {...field}
+                    value={field.value || ''}
+                    onChange={field.onChange}
                     className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
                   />
                 </FormControl>

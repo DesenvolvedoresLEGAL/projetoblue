@@ -247,54 +247,72 @@ export type Database = {
       assets: {
         Row: {
           admin_pass: string
+          admin_pass_fabrica: string | null
           admin_user: string
+          admin_user_fabrica: string | null
           created_at: string | null
           deleted_at: string | null
           iccid: string | null
           line_number: number | null
           manufacturer_id: number | null
           model: string | null
+          pass_atual: string | null
+          pass_fabrica: string | null
           plan_id: number | null
           radio: string | null
           rented_days: number
           serial_number: string | null
           solution_id: number | null
+          ssid_atual: string | null
+          ssid_fabrica: string | null
           status_id: number | null
           updated_at: string
           uuid: string
         }
         Insert: {
           admin_pass?: string
+          admin_pass_fabrica?: string | null
           admin_user?: string
+          admin_user_fabrica?: string | null
           created_at?: string | null
           deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
           model?: string | null
+          pass_atual?: string | null
+          pass_fabrica?: string | null
           plan_id?: number | null
           radio?: string | null
           rented_days?: number
           serial_number?: string | null
           solution_id?: number | null
+          ssid_atual?: string | null
+          ssid_fabrica?: string | null
           status_id?: number | null
           updated_at?: string
           uuid?: string
         }
         Update: {
           admin_pass?: string
+          admin_pass_fabrica?: string | null
           admin_user?: string
+          admin_user_fabrica?: string | null
           created_at?: string | null
           deleted_at?: string | null
           iccid?: string | null
           line_number?: number | null
           manufacturer_id?: number | null
           model?: string | null
+          pass_atual?: string | null
+          pass_fabrica?: string | null
           plan_id?: number | null
           radio?: string | null
           rented_days?: number
           serial_number?: string | null
           solution_id?: number | null
+          ssid_atual?: string | null
+          ssid_fabrica?: string | null
           status_id?: number | null
           updated_at?: string
           uuid?: string

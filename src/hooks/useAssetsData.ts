@@ -1,25 +1,49 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
 
 export type AssetWithRelations = {
   uuid: string;
+  solution_id: number;
+  status_id: number;
   model?: string;
-  rented_days?: number;
   serial_number?: string;
-  line_number?: number;
+  admin_pass?: string;
   iccid?: string;
+  line_number?: number;
+  manufacturer_id?: number;
+  plan_id?: number;
+  rented_days?: number;
   radio?: string;
+  admin_user?: string;
+  // Novos campos de configurações de rede - Fábrica
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  // Novos campos de configurações de rede - Atuais
+  ssid_atual?: string;
+  pass_atual?: string;
   created_at: string;
   updated_at: string;
-  manufacturer: { id?: number; name: string };
-  plano: { id?: number; nome: string }; 
-  status: { id?: number; name: string };
-  solucao: { id: number; name: string };
-  admin_user?: string;
-  admin_pass?: string;
-  matchedField?: string;
+  deleted_at?: string;
+  solucao: {
+    id: number;
+    name: string;
+  };
+  status: {
+    id: number;
+    name: string;
+  };
+  manufacturer: {
+    id: number;
+    name: string;
+  };
+  plan?: {
+    id: number;
+    name: string;
+    size_gb?: number;
+  };
 };
 
 export interface UseAssetsDataParams {
@@ -217,9 +241,10 @@ export const useAssetsData = ({
               id: asset.manufacturer?.id,
               name: asset.manufacturer?.name || 'Desconhecido'
             },
-            plano: {
-              id: asset.plano?.id,
-              nome: asset.plano?.nome || 'Desconhecido'
+            plan: {
+              id: asset.plan?.id,
+              name: asset.plan?.name || 'Desconhecido',
+              size_gb: asset.plan?.size_gb || 0
             },
             admin_user: asset.admin_user,
             admin_pass: asset.admin_pass,
