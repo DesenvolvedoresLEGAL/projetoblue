@@ -104,9 +104,9 @@ const AssetsSearchForm = ({
                         value={solution.solution} 
                         className="font-neue-haas"
                       >
-                        {solution.solution === 'CHIP' && '📱 '}
-                        {solution.solution === 'ROTEADOR' && '📡 '}
-                        {solution.solution === 'MODEM' && '📶 '}
+                        {solution.solution === 'CHIP' ? '📱 '
+                        : solution.solution === 'SPEEDY 5G' ? '📡 '
+                        : '📶 ' }
                         {solution.solution}
                       </SelectItem>
                     ))}
