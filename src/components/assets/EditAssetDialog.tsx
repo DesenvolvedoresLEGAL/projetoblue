@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAssetEditForm } from '@/hooks/useAssetEditForm';
 import { referenceDataService } from '@/services/api/referenceDataService';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import CommonFormFields from './edit/CommonFormFields';
 import ChipEditForm from './edit/ChipEditForm';
 import DeviceEditForm from './edit/DeviceEditForm';
@@ -19,6 +20,8 @@ interface EditAssetDialogProps {
 }
 
 const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDialogProps) => {
+  const isMobile = useIsMobile();
+  
   const {
     isLoading,
     formData,
@@ -61,45 +64,76 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-medium">Editar Ativo</DialogTitle>
+      <DialogContent 
+        className={`
+          ${isMobile 
+            ? 'w-full max-w-[95vw] h-[90vh] max-h-[90vh] m-2 p-0' 
+            : 'max-w-md max-h-[85vh]'
+          }
+          overflow-hidden flex flex-col
+        `}
+      >
+        <DialogHeader className={isMobile ? "p-4 pb-2 flex-shrink-0" : "flex-shrink-0"}>
+          <DialogTitle className={`font-medium ${isMobile ? 'text-lg' : 'text-xl'}`}>
+            Editar Ativo
+          </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 gap-4">
-            <CommonFormFields 
-              formData={formData}
-              isChip={isChip}
-              handleStatusChange={handleStatusChange}
-              handleManufacturerChange={handleManufacturerChange}
-              manufacturers={manufacturers}
-            />
-            
-            {isChip ? (
-              <ChipEditForm 
+        <div className={`flex-1 overflow-y-auto ${isMobile ? 'px-4' : 'px-6'}`}>
+          <form onSubmit={handleSubmit} className={`space-y-${isMobile ? '4' : '4'} pb-4`}>
+            <div className="grid grid-cols-1 gap-4">
+              <CommonFormFields 
                 formData={formData}
-                handleChange={handleChange}
-                handlePlanChange={handlePlanChange}
-                plans={plans}
+                isChip={isChip}
+                handleStatusChange={handleStatusChange}
+                handleManufacturerChange={handleManufacturerChange}
+                manufacturers={manufacturers}
               />
-            ) : (
-              <DeviceEditForm 
-                formData={formData}
-                handleChange={handleChange}
-              />
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </DialogFooter>
-        </form>
+              
+              {isChip ? (
+                <ChipEditForm 
+                  formData={formData}
+                  handleChange={handleChange}
+                  handlePlanChange={handlePlanChange}
+                  plans={plans}
+                />
+              ) : (
+                <DeviceEditForm 
+                  formData={formData}
+                  handleChange={handleChange}
+                />
+              )}
+            </div>
+          </form>
+        </div>
+        
+        <DialogFooter 
+          className={`
+            flex-shrink-0 border-t bg-background
+            ${isMobile 
+              ? 'flex-col space-y-2 p-4 gap-0' 
+              : 'flex-row space-y-0 p-6 pt-4'
+            }
+          `}
+        >
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onClose} 
+            disabled={isLoading}
+            className={isMobile ? 'w-full h-12 text-base order-2' : 'w-auto'}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            onClick={handleSubmit}
+            className={isMobile ? 'w-full h-12 text-base order-1' : 'w-auto'}
+          >
+            {isLoading ? "Salvando..." : "Salvar Alterações"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
