@@ -61,11 +61,11 @@ export const StatusCard: React.FC<StatusCardProps> = ({
       <TooltipProvider>
         <Card className="legal-card border-green-200 dark:border-green-800">
           <CardHeader className="pb-4">
-            <CardTitle className="legal-subtitle text-lg flex items-center gap-2 text-green-700 dark:text-green-400">
+            <CardTitle className="legal-subtitle text-xl flex items-center gap-2 text-green-700 dark:text-green-400">
               <CheckCircle className="h-5 w-5" />
               <span>Tudo Certo!</span>
             </CardTitle>
-            <CardDescription className="text-green-600 dark:text-green-300">
+            <CardDescription className="text-xs text-green-600 dark:text-green-300">
               Nenhum problema detectado nos ativos
             </CardDescription>
           </CardHeader>

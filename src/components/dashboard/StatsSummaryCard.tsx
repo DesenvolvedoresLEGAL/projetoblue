@@ -48,8 +48,8 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
     <TooltipProvider>
       <Card className="legal-card group h-full flex flex-col">
         <CardHeader className="pb-2 md:pb-3">
-          <CardTitle className="legal-title text-lg md:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="text-sm sm:text-base md:text-lg">{title}</span>
+          <CardTitle className="legal-title text-2xl md:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-xl sm:text-base md:text-lg">{title}</span>
             <Tooltip>
               <TooltipTrigger>
                 <div className={`text-xl md:text-2xl font-black ${getAvailabilityColor()}`}>
