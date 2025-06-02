@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
@@ -179,7 +180,8 @@ const Home: React.FC = () => {
             description="Ativos que necessitam de atenção imediata"
             items={dashboard.chipProblems.map(item => ({
               id: item.uuid,
-              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              type: 'CHIP',
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
@@ -196,7 +198,8 @@ const Home: React.FC = () => {
             description="Roteadores que precisam de manutenção"
             items={dashboard.speedyProblems.map(item => ({
               id: item.uuid,
-              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              type: 'EQUIPAMENTO',
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
@@ -213,7 +216,8 @@ const Home: React.FC = () => {
             description="Infraestrutura que requer atenção"
             items={dashboard.equipmentProblems.map(item => ({
               id: item.uuid,
-              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              type: 'EQUIPAMENTO',
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
