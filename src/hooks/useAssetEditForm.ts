@@ -24,6 +24,8 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     rented_days?: string;
     admin_user?: string;
     admin_pass?: string;
+    ssid_atual?: string;
+    pass_atual?: string;
   }>({});
 
   // Determine if asset is a CHIP based on solution id
@@ -101,6 +103,8 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         dataToUpdate.rented_days = formData.rented_days ? parseInt(formData.rented_days) : 0;
         dataToUpdate.admin_user = formData.admin_user || 'admin';
         dataToUpdate.admin_pass = formData.admin_pass || '';
+        dataToUpdate.ssid_atual = formData.ssid_atual || '';
+        dataToUpdate.pass_atual = formData.pass_atual || '';
       }
       
       console.log('Calling updateAsset with data:', dataToUpdate);

@@ -11,6 +11,8 @@ interface DeviceEditFormProps {
     rented_days?: string;
     admin_user?: string;
     admin_pass?: string;
+    ssid_atual?: string;
+    pass_atual?: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -76,6 +78,30 @@ const DeviceEditForm = ({ formData, handleChange }: DeviceEditFormProps) => {
           name="admin_pass"
           type="password"
           value={formData.admin_pass || ''}
+          onChange={handleChange}
+          placeholder="Digite para alterar a senha"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="ssid_atual">SSID</Label>
+        <Input
+          id="ssid_atual"
+          name="ssid_atual"
+          type="text"
+          value={formData.ssid_atual || ''}
+          onChange={handleChange}
+          placeholder="Digite para alterar a senha"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="pass_atual">Senha da rede</Label>
+        <Input
+          id="pass_atual"
+          name="pass_atual"
+          type="password"
+          value={formData.pass_atual || ''}
           onChange={handleChange}
           placeholder="Digite para alterar a senha"
         />
