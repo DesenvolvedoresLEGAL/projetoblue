@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +36,7 @@ import {
 } from "@/hooks/useAssetManagement";
 import { useNavigate } from "react-router-dom";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
+import { useAssetRegistrationState } from "@/hooks/useAssetRegistrationState";
 
 // Esquemas de validação separados para CHIPS e EQUIPAMENTOS
 const chipSchema = z.object({
@@ -66,15 +66,29 @@ const capitalize = (text: string): string => {
 };
 
 export default function RegisterAsset() {
-  const [assetType, setAssetType] = useState<'CHIP' | 'EQUIPAMENTO'>('CHIP');
-  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
-  const [allowWeakPassword, setAllowWeakPassword] = useState(false);
-  const [basicInfoOpen, setBasicInfoOpen] = useState(true);
-  const [technicalInfoOpen, setTechnicalInfoOpen] = useState(false);
-  const [securityInfoOpen, setSecurityInfoOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const navigate = useNavigate();
+
+  // Use persistent state hook
+  const {
+    assetType,
+    passwordStrength,
+    allowWeakPassword,
+    basicInfoOpen,
+    technicalInfoOpen,
+    securityInfoOpen,
+    setAssetType,
+    setPasswordStrength,
+    setAllowWeakPassword,
+    setBasicInfoOpen,
+    setTechnicalInfoOpen,
+    setSecurityInfoOpen,
+    syncWithForm,
+    updateFormData,
+    resetFormData,
+    clearState
+  } = useAssetRegistrationState();
 
   // Hooks para buscar dados de referência
   const { data: manufacturers = [], isLoading: isManufacturersLoading } = useManufacturers();
@@ -121,6 +135,40 @@ export default function RegisterAsset() {
   const createAssetMutation = useCreateAsset();
   const equipmentPassword = equipmentForm.watch("admin_pass");
 
+  // Sync persisted data with forms on mount and asset type change
+  useEffect(() => {
+    if (assetType === 'CHIP') {
+      syncWithForm(chipForm, 'chip');
+    } else {
+      syncWithForm(equipmentForm, 'equipment');
+    }
+  }, [assetType]);
+
+  // Watch form changes and persist them
+  useEffect(() => {
+    const subscription = chipForm.watch((data) => {
+      updateFormData(data, 'chip');
+    });
+    return () => subscription.unsubscribe();
+  }, [chipForm.watch]);
+
+  useEffect(() => {
+    const subscription = equipmentForm.watch((data) => {
+      updateFormData(data, 'equipment');
+    });
+    return () => subscription.unsubscribe();
+  }, [equipmentForm.watch]);
+
+  // Clear state when component unmounts (navigating away)
+  useEffect(() => {
+    return () => {
+      // Only clear if not showing success (means user is navigating away without completing)
+      if (!showSuccess) {
+        clearState();
+      }
+    };
+  }, [showSuccess]);
+
   const handlePasswordChange = (value: string) => {
     const strength = checkPasswordStrength(value);
     setPasswordStrength(strength);
@@ -143,6 +191,8 @@ export default function RegisterAsset() {
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
         setShowSuccess(true);
+        // Clear persisted state on success
+        clearState();
         setTimeout(() => {
           navigate('/assets/management');
         }, 2000);
@@ -177,6 +227,8 @@ export default function RegisterAsset() {
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
         setShowSuccess(true);
+        // Clear persisted state on success
+        clearState();
         setTimeout(() => {
           navigate('/assets/management');
         }, 2000);
@@ -279,9 +331,16 @@ export default function RegisterAsset() {
             <Tabs
               value={assetType}
               onValueChange={(value) => {
-                setAssetType(value as 'CHIP' | 'EQUIPAMENTO');
-                chipForm.reset();
-                equipmentForm.reset();
+                const newAssetType = value as 'CHIP' | 'EQUIPAMENTO';
+                setAssetType(newAssetType);
+                
+                // Reset forms but don't clear persisted data
+                if (newAssetType === 'CHIP') {
+                  equipmentForm.reset();
+                } else {
+                  chipForm.reset();
+                }
+                
                 setPasswordStrength(null);
                 setAllowWeakPassword(false);
                 setBasicInfoOpen(true);
@@ -798,7 +857,39 @@ export default function RegisterAsset() {
                                 <p className="text-xs text-red-600">
                                   Senha para acesso ao equipamento
                                 </p>
-                                {renderPasswordStrength()}
+                                {passwordStrength && (
+                                  <div className="space-y-2 mt-2">
+                                    {passwordStrength === 'strong' ? (
+                                      <div className="flex items-center gap-2 text-green-600 text-sm">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        <span className="font-medium">Senha forte - Excelente segurança!</span>
+                                      </div>
+                                    ) : passwordStrength === 'medium' ? (
+                                      <div className="flex items-center gap-2 text-amber-600 text-sm">
+                                        <Info className="h-4 w-4" />
+                                        <span className="font-medium">Senha média - Considerável melhorar</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center gap-2 text-orange-500 text-sm">
+                                          <AlertTriangle className="h-4 w-4" />
+                                          <span className="font-medium">Senha fraca - Não recomendada</span>
+                                        </div>
+                                        <div className="ml-6">
+                                          <label className="flex items-center text-sm cursor-pointer">
+                                            <input
+                                              type="checkbox"
+                                              checked={allowWeakPassword}
+                                              onChange={(e) => setAllowWeakPassword(e.target.checked)}
+                                              className="mr-2 accent-legal-primary"
+                                            />
+                                            <span className="text-muted-foreground">Permitir senha fraca (não recomendado)</span>
+                                          </label>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                                 <FormMessage />
                               </FormItem>
                             )}
