@@ -152,6 +152,7 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?type=1"
             actionText="Gerenciar Chips"
+            isMobile={isMobile}
           />
 
           <StatsSummaryCard
@@ -161,6 +162,7 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?type=1"
             actionText="Gerenciar Speedys"
+            isMobile={isMobile}
           />
 
           <StatsSummaryCard
@@ -170,6 +172,7 @@ const Home: React.FC = () => {
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory"
             actionText="Gerenciar Equipamentos"
+            isMobile={isMobile}
           />
         </div>
 
@@ -178,7 +181,11 @@ const Home: React.FC = () => {
           <StatusCard
             title="Chips com Problema"
             description="Ativos que necessitam de atenção imediata"
-            items={dashboard.chipProblems}
+            items={dashboard.chipProblems.map(item => ({
+              id: item.uuid,
+              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              status: item.status
+            }))}
             isLoading={dashboard.problemAssets.isLoading}
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
@@ -191,7 +198,11 @@ const Home: React.FC = () => {
           <StatusCard
             title="Speedys com Problema"
             description="Roteadores que precisam de manutenção"
-            items={dashboard.speedyProblems}
+            items={dashboard.speedyProblems.map(item => ({
+              id: item.uuid,
+              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              status: item.status
+            }))}
             isLoading={dashboard.problemAssets.isLoading}
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
@@ -204,7 +215,11 @@ const Home: React.FC = () => {
           <StatusCard
             title="Equipamentos com Problema"
             description="Infraestrutura que requer atenção"
-            items={dashboard.equipmentProblems}
+            items={dashboard.equipmentProblems.map(item => ({
+              id: item.uuid,
+              name: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
+              status: item.status
+            }))}
             isLoading={dashboard.problemAssets.isLoading}
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
