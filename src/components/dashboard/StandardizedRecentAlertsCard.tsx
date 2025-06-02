@@ -25,13 +25,15 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
   return (
     <TooltipProvider>
       <Card className="legal-card h-full flex flex-col">
-        <CardHeader className="pb-3">
-          <CardTitle className="legal-title flex items-center gap-2">
-            <Bell className="h-5 w-5 text-legal-primary" />
-            <span>Atividades Recentes</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardTitle className="legal-title flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 md:h-5 md:w-5 text-legal-primary" />
+              <span className="text-sm sm:text-base md:text-lg">Atividades Recentes</span>
+            </div>
             <Tooltip>
               <TooltipTrigger>
-                <div className="legal-badge">
+                <div className="legal-badge text-xs md:text-sm w-fit">
                   {recentEventsCount} eventos
                 </div>
               </TooltipTrigger>
@@ -40,39 +42,39 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
               </TooltipContent>
             </Tooltip>
           </CardTitle>
-          <CardDescription className="legal-text">
+          <CardDescription className="legal-text text-xs md:text-sm">
             Últimos eventos e atividades registrados no sistema
           </CardDescription>
         </CardHeader>
         
         <CardContent className="flex-1">
           {dashboard.recentAlerts.isLoading ? (
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {Array(4)
                 .fill(0)
                 .map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <Skeleton className="h-16 w-full rounded-lg" />
+                    <Skeleton className="h-12 md:h-16 w-full rounded-lg" />
                   </div>
                 ))}
             </div>
           ) : validEvents.length > 0 ? (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-2 md:space-y-3 max-h-80 md:max-h-96 overflow-y-auto">
               {validEvents
                 .slice(0, 5)
                 .map((alert: any) => {
                   return (
                     <Tooltip key={`${alert.id}-${alert.timestamp || alert.date}`}>
                       <TooltipTrigger asChild>
-                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-legal-primary/30 transition-all duration-200 cursor-help group">
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 p-3 md:p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-legal-primary/30 transition-all duration-200 cursor-help group">
                           <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium leading-relaxed legal-text group-hover:text-legal-dark dark:group-hover:text-legal-primary transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs md:text-sm font-medium leading-relaxed legal-text group-hover:text-legal-dark dark:group-hover:text-legal-primary transition-colors">
                                   {improveEventMessage(alert)}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-1 ml-2">
+                              <div className="flex items-center gap-1 shrink-0">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
                                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                                   {formatBrazilianDateTime(alert.date)}
@@ -80,7 +82,7 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1 md:gap-2 flex-wrap">
                               <span className={`text-xs px-2 py-1 rounded-full font-medium transition-colors ${getAssetTypeBadgeColor(alert.assetType)}`}>
                                 {alert.assetType}
                               </span>
@@ -118,30 +120,30 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
                 })}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 bg-legal-primary/10 rounded-full mb-4">
-                <Activity className="h-8 w-8 text-legal-primary" />
+            <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
+              <div className="p-3 md:p-4 bg-legal-primary/10 rounded-full mb-3 md:mb-4">
+                <Activity className="h-6 w-6 md:h-8 md:w-8 text-legal-primary" />
               </div>
-              <h3 className="font-semibold text-legal-dark dark:text-legal-primary mb-2">
+              <h3 className="font-semibold text-legal-dark dark:text-legal-primary mb-2 text-sm md:text-base">
                 Sistema Tranquilo
               </h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
+              <p className="text-muted-foreground text-xs md:text-sm max-w-xs px-4">
                 Nenhuma atividade recente registrada. O sistema está operando normalmente.
               </p>
             </div>
           )}
         </CardContent>
         
-        <CardFooter className="pt-3">
+        <CardFooter className="pt-2 md:pt-3 mt-auto">
           <Tooltip>
             <TooltipTrigger asChild>
               <Link to="/history" className="w-full">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full legal-button border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white group transition-all duration-200"
+                  className="w-full legal-button border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white group transition-all duration-200 text-xs md:text-sm h-8 md:h-9"
                 >
-                  <TrendingUp className="h-4 w-4 mr-2" />
+                  <TrendingUp className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                   Ver Histórico Completo
                 </Button>
               </Link>

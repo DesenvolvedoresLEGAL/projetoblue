@@ -24,7 +24,7 @@ export const SyncStatusAlert: React.FC<SyncStatusAlertProps> = ({
   const getSyncStatus = () => {
     if (!isOnline) {
       return {
-        icon: <AlertCircle className="h-4 w-4 text-red-500" />,
+        icon: <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-red-500" />,
         text: "Desconectado",
         color: "bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200"
       };
@@ -32,14 +32,14 @@ export const SyncStatusAlert: React.FC<SyncStatusAlertProps> = ({
     
     if (isSyncing) {
       return {
-        icon: <RefreshCw className="h-4 w-4 text-legal-primary animate-sync-spin" />,
+        icon: <RefreshCw className="h-3 w-3 md:h-4 md:w-4 text-legal-primary animate-sync-spin" />,
         text: "Sincronizando...",
         color: "bg-blue-50 border-legal-primary/30 text-legal-dark dark:bg-blue-950 dark:border-legal-primary dark:text-legal-primary"
       };
     }
 
     return {
-      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+      icon: <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" />,
       text: "Sincronizado",
       color: "bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200"
     };
@@ -49,12 +49,12 @@ export const SyncStatusAlert: React.FC<SyncStatusAlertProps> = ({
 
   return (
     <TooltipProvider>
-      <Alert className={`mb-6 ${status.color} transition-all duration-300`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      <Alert className={`mb-4 md:mb-6 ${status.color} transition-all duration-300`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center space-x-2 md:space-x-3">
             {status.icon}
             <div>
-              <AlertDescription className="font-medium legal-text">
+              <AlertDescription className="font-medium legal-text text-sm md:text-base">
                 Sistema {status.text}
               </AlertDescription>
               <p className="text-xs opacity-75 mt-1">
@@ -68,7 +68,7 @@ export const SyncStatusAlert: React.FC<SyncStatusAlertProps> = ({
               <TooltipTrigger>
                 <Badge 
                   variant="secondary" 
-                  className="bg-legal-primary/10 text-legal-dark hover:bg-legal-primary/20 transition-colors cursor-help"
+                  className="bg-legal-primary/10 text-legal-dark hover:bg-legal-primary/20 transition-colors cursor-help text-xs md:text-sm"
                 >
                   Status da Rede
                 </Badge>

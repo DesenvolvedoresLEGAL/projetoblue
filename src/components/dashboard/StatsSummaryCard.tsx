@@ -24,7 +24,7 @@ interface StatsSummaryCardProps {
 
 /**
  * StatsSummaryCard - Reusable component for displaying asset statistics
- * Updated with LEGAL visual identity and enhanced UX
+ * Updated with LEGAL visual identity, enhanced UX and mobile responsiveness
  */
 export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
   title,
@@ -45,13 +45,13 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
   return (
     <TooltipProvider>
       <Card className="legal-card group h-full flex flex-col">
-        <CardHeader className="pb-3">
-          <CardTitle className="legal-title text-xl flex items-center justify-between">
-            <span>{title}</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardTitle className="legal-title text-lg md:text-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-sm sm:text-base md:text-lg">{title}</span>
             <Tooltip>
               <TooltipTrigger>
-                <div className={`text-2xl font-black ${getAvailabilityColor()}`}>
-                  {isLoading ? <Skeleton className="h-8 w-16" /> : data.total}
+                <div className={`text-xl md:text-2xl font-black ${getAvailabilityColor()}`}>
+                  {isLoading ? <Skeleton className="h-6 md:h-8 w-12 md:w-16" /> : data.total}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -59,32 +59,32 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
               </TooltipContent>
             </Tooltip>
           </CardTitle>
-          <CardDescription className="legal-text text-sm">
+          <CardDescription className="legal-text text-xs md:text-sm">
             {description}
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="flex-1">
+        <CardContent className="flex-1 space-y-3 md:space-y-4">
           {isLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-10 w-32" />
-              <div className="flex gap-4">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-8 md:h-10 w-24 md:w-32" />
+              <div className="flex gap-2 md:gap-4">
+                <Skeleton className="h-4 md:h-6 w-16 md:w-24" />
+                <Skeleton className="h-4 md:h-6 w-16 md:w-24" />
               </div>
             </div>
           ) : (
             <>
               {/* Availability Indicator */}
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-legal-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">
+              <div>
+                <div className="flex items-center gap-1 md:gap-2 mb-2">
+                  <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-legal-primary" />
+                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
                     Disponibilidade
                   </span>
                   <Tooltip>
                     <TooltipTrigger>
-                      <span className={`text-lg font-bold ${getAvailabilityColor()}`}>
+                      <span className={`text-sm md:text-lg font-bold ${getAvailabilityColor()}`}>
                         {availabilityPercentage}%
                       </span>
                     </TooltipTrigger>
@@ -93,28 +93,28 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 md:h-2">
                   <div 
-                    className="bg-gradient-to-r from-legal-primary to-legal-secondary h-2 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-legal-primary to-legal-secondary h-1.5 md:h-2 rounded-full transition-all duration-500"
                     style={{ width: `${availabilityPercentage}%` }}
                   />
                 </div>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Stats Grid - Mobile Responsive */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="bg-green-50 dark:bg-green-950/30 p-3 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors cursor-help">
-                      <div className="flex items-center gap-2">
-                        <div className="size-4 bg-green-500 rounded-full flex items-center justify-center">
-                          <Check className="size-3 text-white" />
+                    <div className="bg-green-50 dark:bg-green-950/30 p-2 md:p-3 rounded-lg border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors cursor-help">
+                      <div className="flex items-center gap-1 md:gap-2">
+                        <div className="size-3 md:size-4 bg-green-500 rounded-full flex items-center justify-center">
+                          <Check className="size-2 md:size-3 text-white" />
                         </div>
                         <p className="text-xs font-medium text-green-700 dark:text-green-300">
                           Disponíveis
                         </p>
                       </div>
-                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-1">
+                      <p className="text-lg md:text-xl font-bold text-green-600 dark:text-green-400 mt-1">
                         {data.available}
                       </p>
                     </div>
@@ -126,16 +126,16 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="bg-gray-50 dark:bg-gray-800/30 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors cursor-help">
-                      <div className="flex items-center gap-2">
-                        <div className="size-4 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center">
-                          <X className="size-3 text-white" />
+                    <div className="bg-gray-50 dark:bg-gray-800/30 p-2 md:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors cursor-help">
+                      <div className="flex items-center gap-1 md:gap-2">
+                        <div className="size-3 md:size-4 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center">
+                          <X className="size-2 md:size-3 text-white" />
                         </div>
                         <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
                           Em Uso
                         </p>
                       </div>
-                      <p className="text-xl font-bold text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-lg md:text-xl font-bold text-gray-600 dark:text-gray-400 mt-1">
                         {data.unavailable}
                       </p>
                     </div>
@@ -153,7 +153,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
           <Link to={actionLink} className="w-full">
             <Button 
               variant="outline" 
-              className="w-full legal-button border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white group-hover:shadow-md transition-all duration-200" 
+              className="w-full legal-button border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white group-hover:shadow-md transition-all duration-200 text-xs md:text-sm h-8 md:h-9" 
               size="sm"
             >
               {actionText}

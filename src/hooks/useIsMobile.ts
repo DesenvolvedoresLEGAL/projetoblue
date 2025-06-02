@@ -1,12 +1,15 @@
+
 import { useState, useEffect } from "react";
 
-// Por padrão, breakpoint de 640px (mobile)
-export function useIsMobile(breakpoint: number = 640): boolean {
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth <= breakpoint);
+// Breakpoint padrão de 768px (tablets e menores)
+export function useIsMobile(breakpoint: number = 768): boolean {
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== "undefined" && window.innerWidth < breakpoint
+  );
 
   useEffect(() => {
     function handleResize() {
-      setIsMobile(window.innerWidth <= breakpoint);
+      setIsMobile(window.innerWidth < breakpoint);
     }
 
     window.addEventListener("resize", handleResize);

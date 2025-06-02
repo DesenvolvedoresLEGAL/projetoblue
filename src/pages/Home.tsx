@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
@@ -15,7 +16,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 
 /**
  * Home dashboard component
- * Updated with LEGAL visual identity and enhanced UX
+ * Updated with LEGAL visual identity, enhanced UX and mobile responsiveness
  * Implements conditional problem cards, sync status, and improved accessibility
  */
 const Home: React.FC = () => {
@@ -85,11 +86,11 @@ const Home: React.FC = () => {
   // Loading state for the entire dashboard
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6 flex flex-col items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-16 w-16 text-legal-primary animate-spin" />
+      <div className="space-y-4 md:space-y-6 p-4 md:p-6 flex flex-col items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-legal-primary animate-spin" />
         <div className="text-center space-y-2">
-          <p className="text-xl font-semibold legal-title">Carregando Dashboard</p>
-          <p className="text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
+          <p className="text-lg md:text-xl font-semibold legal-title">Carregando Dashboard</p>
+          <p className="text-sm md:text-base text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
         </div>
       </div>
     );
@@ -98,15 +99,15 @@ const Home: React.FC = () => {
   // Error state - only shown if critical data failed to load
   if (hasError && !dashboard.assetsStats.data) {
     return (
-      <div className="space-y-4 p-6 flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="p-4 bg-red-100 dark:bg-red-950/30 rounded-full">
-          <AlertTriangle className="h-16 w-16 text-red-600 dark:text-red-400" />
+      <div className="space-y-4 p-4 md:p-6 flex flex-col items-center justify-center min-h-[70vh]">
+        <div className="p-3 md:p-4 bg-red-100 dark:bg-red-950/30 rounded-full">
+          <AlertTriangle className="h-12 w-12 md:h-16 md:w-16 text-red-600 dark:text-red-400" />
         </div>
         <div className="text-center space-y-3">
-          <h2 className="text-2xl font-bold legal-title text-red-700 dark:text-red-400">
+          <h2 className="text-xl md:text-2xl font-bold legal-title text-red-700 dark:text-red-400">
             Erro ao carregar o dashboard
           </h2>
-          <p className="text-muted-foreground text-center max-w-md legal-text">
+          <p className="text-sm md:text-base text-muted-foreground text-center max-w-md legal-text px-4">
             Não foi possível carregar os dados necessários. Verifique sua conexão e tente novamente.
           </p>
           <Button 
@@ -122,14 +123,14 @@ const Home: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6 pb-10">
+      <div className="space-y-4 md:space-y-6 pb-6 md:pb-10 px-4 md:px-0">
         {/* Header with Sync Status */}
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-black legal-title">
+        <div className="flex flex-col space-y-3 md:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black legal-title">
               Dashboard LEGAL
             </h1>
-            <div className="text-sm text-muted-foreground legal-text">
+            <div className="text-xs sm:text-sm text-muted-foreground legal-text">
               Sistema de Gestão de Ativos
             </div>
           </div>
@@ -142,8 +143,8 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Inventory Cards - Enhanced with LEGAL Identity */}
-        <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-3">
+        {/* Inventory Cards - Enhanced with LEGAL Identity and Mobile Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <StatsSummaryCard
             title="Total de Chips"
             description="Cartões SIM para conectividade móvel"
@@ -172,8 +173,8 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Problem Cards - Conditional Display (High Priority UX) */}
-        <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-3">
+        {/* Problem Cards - Conditional Display with Mobile Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <StatusCard
             title="Chips com Problema"
             description="Ativos que necessitam de atenção imediata"
@@ -182,8 +183,9 @@ const Home: React.FC = () => {
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
             variant="destructive"
-            icon={<AlertTriangle className="h-5 w-5" />}
+            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
             emptyMessage="Todos os chips estão funcionando perfeitamente."
+            isMobile={isMobile}
           />
 
           <StatusCard
@@ -194,8 +196,9 @@ const Home: React.FC = () => {
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
             variant="destructive"
-            icon={<AlertTriangle className="h-5 w-5" />}
+            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
             emptyMessage="Todos os Speedys estão operacionais."
+            isMobile={isMobile}
           />
 
           <StatusCard
@@ -206,13 +209,14 @@ const Home: React.FC = () => {
             actionLink="/assets/inventory?status=problem"
             actionText="Resolver Problemas"
             variant="destructive"
-            icon={<AlertTriangle className="h-5 w-5" />}
+            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
             emptyMessage="Toda infraestrutura está funcionando corretamente."
+            isMobile={isMobile}
           />
         </div>
 
-        {/* Lease & Subscription Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Lease & Subscription Cards - Mobile Responsive */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <LeaseAssetsCard 
             leaseAssetsByType={leaseAssetsByType}
             isLoading={dashboard.onLeaseAssets.isLoading}
@@ -224,8 +228,8 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Monitoring Cards - Enhanced with Tooltips */}
-        <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
+        {/* Monitoring Cards - Mobile Responsive */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
           <StandardizedRecentAlertsCard dashboard={dashboard} />
           <RefactoredAssetStatusDistributionCard dashboardStats={dashboardStats} />
         </div>
