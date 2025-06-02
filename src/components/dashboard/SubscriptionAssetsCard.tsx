@@ -24,7 +24,7 @@ export const SubscriptionAssetsCard: React.FC<SubscriptionAssetsCardProps> = ({
     <CardHeader className="pb-2 md:pb-3">
       <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
         <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
-        <span className="text-sm sm:text-base md:text-lg">Ativos em Assinatura</span>
+        <span className="text-xl">Ativos em Assinatura</span>
       </CardTitle>
       <CardDescription className="text-xs md:text-sm">
         Ativos atualmente em assinatura, subdivididos por tipo

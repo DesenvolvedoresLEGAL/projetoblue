@@ -29,7 +29,7 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
           <CardTitle className="legal-title flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 md:h-5 md:w-5 text-legal-primary" />
-              <span className="text-sm sm:text-base md:text-lg">Atividades Recentes</span>
+              <span className="text-xl">Atividades Recentes</span>
             </div>
             <Tooltip>
               <TooltipTrigger>
