@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -145,7 +146,7 @@ export const useAssetsData = ({
             ssid_atual,
             pass_atual,
             manufacturer:manufacturers(id, name),
-            plano:plans(id, nome),
+            plano:plans(id, nome, tamanho_gb),
             status:asset_status(id, status),
             solucao:asset_solutions(id, solution)
           `)
