@@ -98,78 +98,56 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {assets.map((asset, index) => (
-            <div key={asset.uuid}>
-              <div className="flex items-start justify-between p-4 bg-[#F0F3FF] rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-white rounded-lg">
-                    {asset.type === 'CHIP' ? '📱' : '📡'}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="font-medium text-[#020CBC]">
-                      {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} - {asset.solucao}
+          <>
+            {assets.map((asset, index) => (
+              <div key={asset.uuid}>
+                <div className="flex items-start justify-between p-4 bg-[#F0F3FF] rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-white rounded-lg">
+                      {asset.type === 'CHIP' ? '📱' : '📡'}
                     </div>
-                    <div className="text-sm space-y-1">
-                      {asset.type === 'CHIP' ? (
-                        <>
-                          <div>ICCID: {asset.iccid}</div>
-                          <div>Linha: {asset.line_number}</div>
-                        </>
-                      ) : (
-                        <>
-                          <div>Rádio: {asset.radio}</div>
-                          <div>Modelo: {asset.modelo}</div>
-                        </>
+                    <div className="space-y-2">
+                      <div className="font-medium text-[#020CBC]">
+                        {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} - {asset.solucao}
+                      </div>
+                      <div className="text-sm space-y-1">
+                        {asset.type === 'CHIP' ? (
+                          <>
+                            <div>ICCID: {asset.iccid}</div>
+                            <div>Linha: {asset.line_number}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div>Rádio: {asset.radio}</div>
+                            <div>Modelo: {asset.modelo}</div>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <Badge variant="outline">
+                          {asset.associationType || 'ALUGUEL'}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(asset.startDate || new Date().toISOString())}
+                        </div>
+                        {asset.rented_days && (
+                          <div>{asset.rented_days} dias</div>
+                        )}
+                      </div>
+                      {asset.notes && (
+                        <div className="text-sm text-muted-foreground italic">
+                          "{asset.notes}"
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <Badge variant="outline">
-                        {asset.associationType || 'ALUGUEL'}
-                      </Badge>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(asset.startDate || new Date().toISOString())}
-                      </div>
-                      {asset.rented_days && (
-                        <div>{asset.rented_days} dias</div>
-                      )}
-                    </div>
-                    {asset.notes && (
-                      <div className="text-sm text-muted-foreground italic">
-                        "{asset.notes}"
-                      </div>
-                    )}
                   </div>
                 </div>
+                {index < assets.length - 1 && <Separator className="my-4" />}
               </div>
-              {index < assets.length - 1 && <Separator className="my-4" />}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Resumo Financeiro */}
-      <Card className="border-[#4D2BFB]/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
-            <CheckCircle className="h-5 w-5 text-[#03F9FF]" />
-            Resumo da Associação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Total de Ativos</div>
-              <div className="text-2xl font-bold text-[#020CBC]">{assets.length}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Valor Estimado</div>
-              <div className="text-2xl font-bold text-[#020CBC]">
-                R$ {getTotalValue().toFixed(2)}
-              </div>
-            </div>
-          </div>
-          
+            ))}
+          </>
+          <>
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex items-start gap-2">
               <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
@@ -182,6 +160,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
               </div>
             </div>
           </div>
+          </>
         </CardContent>
       </Card>
 
