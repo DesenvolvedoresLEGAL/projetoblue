@@ -1,15 +1,14 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client'; // Use unified client type
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { CheckCircle, User, Package, Calendar, AlertCircle } from "lucide-react";
 import { useCreateAssociation } from '@/hooks/useCreateAssociation';
 import { toast } from 'sonner';
-import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -34,7 +33,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
       // Criar associações para cada ativo
       for (const asset of assets) {
         await createAssociation.mutateAsync({
-          clientId: client.uuid, // Corrigido: usar uuid em vez de id
+          clientId: client.uuid, // Usar uuid do cliente
           assetId: asset.uuid,
           associationType: asset.associationType || 'ALUGUEL',
           startDate: asset.startDate || new Date().toISOString(),
@@ -62,6 +61,11 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
     return assets.length * 50; // R$ 50 por ativo
   };
 
+  // Usar telefones da nova estrutura
+  const primaryPhone = client.telefones && client.telefones.length > 0 
+    ? formatPhoneForDisplay(client.telefones[0]) 
+    : 'Não informado';
+
   return (
     <div className="space-y-6">
       {/* Informações do Cliente */}
@@ -75,13 +79,23 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground">Nome</div>
-              <div className="font-medium">{client.nome}</div>
+              <div className="text-sm text-muted-foreground">Empresa</div>
+              <div className="font-medium">{client.empresa}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Contato</div>
-              <div className="font-medium">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</div>
+              <div className="text-sm text-muted-foreground">Responsável</div>
+              <div className="font-medium">{client.responsavel}</div>
             </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Telefone</div>
+              <div className="font-medium">{primaryPhone}</div>
+            </div>
+            {client.email && (
+              <div>
+                <div className="text-sm text-muted-foreground">Email</div>
+                <div className="font-medium">{client.email}</div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client'; // Use unified client type
 import { SelectedAsset } from '@/pages/AssetAssociation';
 
 type Step = 'client' | 'assets' | 'summary';
