@@ -49,7 +49,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <AssetSummaryCard
             title="CHIPs"
-            description="Cartões SIM para conectividade móvel"
+            description="SIMCARD's para conectividade móvel"
             total={dashboardAssets.assetsStats.data.chips.total}
             available={dashboardAssets.assetsStats.data.chips.available}
             inUse={dashboardAssets.assetsStats.data.chips.unavailable}
