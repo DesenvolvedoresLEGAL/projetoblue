@@ -126,7 +126,7 @@ export const useAssociationsData = ({
       }
 
       // Adicionar ordenação e paginação
-      query = query.order('entry_date', { ascending: false });
+      query = query.order('created_at', { ascending: false });
 
       // Paginação
       const startIndex = (currentPage - 1) * itemsPerPage;
