@@ -5,7 +5,7 @@ import { AssociationsPageHeader } from "@/components/associations/AssociationsPa
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
-import { AssociationsGroupedTable } from "@/components/associations/AssociationsGroupedTable";
+import { AssociationsTimestampTable } from "@/components/associations/AssociationsTimestampTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection } from "@/hooks/useSearchTypeDetection";
@@ -13,7 +13,8 @@ import { useAssociationsData } from "@/hooks/useAssociationsData";
 import { useAssociationActions } from "@/hooks/useAssociationActions";
 import { useDateFilters } from "@/hooks/useDateFilters";
 import { Association, StatusFilterType } from '@/types/associations';
-import { filterMultiField, groupAssociationsByClientAndDates } from '@/utils/associationsUtils';
+import { filterMultiField } from '@/utils/associationsUtils';
+import { groupAssociationsByTimestamp } from '@/utils/timestampGroupingUtils';
 
 export default function AssociationsListContent() {
   const [searchInput, setSearchInput] = useState('');
@@ -62,25 +63,23 @@ export default function AssociationsListContent() {
   // Actions com controle melhorado
   const { 
     handleEndAssociation, 
-    handleEndGroup, 
     isEndingAssociation, 
-    isEndingGroup,
     operationProgress
   } = useAssociationActions();
 
-  // Aplicar filtro multicampo no frontend e agrupar por cliente e datas
-  const { groupedAssociations, totalAssociations } = useMemo(() => {
+  // Aplicar filtro multicampo no frontend e agrupar por timestamp
+  const { timestampGroups, totalAssociations } = useMemo(() => {
     const rawData = associationsData?.data || [];
     
     // Aplicar filtro multicampo
     const filteredData = debouncedSearchTerm ? 
       filterMultiField(rawData, debouncedSearchTerm) : rawData;
     
-    // Agrupar por cliente e datas
-    const grouped = groupAssociationsByClientAndDates(filteredData);
+    // Agrupar por timestamp (YYYY-MM-DD HH:mm)
+    const grouped = groupAssociationsByTimestamp(filteredData);
     
     return {
-      groupedAssociations: grouped,
+      timestampGroups: grouped,
       totalAssociations: filteredData.length
     };
   }, [associationsData?.data, debouncedSearchTerm]);
@@ -92,12 +91,6 @@ export default function AssociationsListContent() {
   const handleEditAssociation = (association: Association) => {
     setEditingAssociation(association);
     setIsEditDialogOpen(true);
-  };
-
-  // Handler para encerrar grupo com access aos grouped associations
-  const handleEndGroupWithData = (groupKey: string) => {
-    console.log('[AssociationsListContent] Iniciando encerramento do grupo:', groupKey);
-    handleEndGroup(groupKey, groupedAssociations);
   };
 
   // Mock function for export (can be implemented later)
@@ -152,24 +145,22 @@ export default function AssociationsListContent() {
 
       <Card className="shadow-sm">
         <CardContent className="space-y-6 pt-6">
-          {/* Tabela Agrupada */}
+          {/* Tabela Agrupada por Timestamp */}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground font-neue-haas">
               Carregando associações...
             </div>
-          ) : Object.keys(groupedAssociations).length > 0 ? (
-            <AssociationsGroupedTable
-              groupedAssociations={groupedAssociations}
+          ) : timestampGroups.length > 0 ? (
+            <AssociationsTimestampTable
+              timestampGroups={timestampGroups}
               totalCount={totalCount}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
               onEditAssociation={handleEditAssociation}
               onEndAssociation={handleEndAssociation}
-              onEndGroup={handleEndGroupWithData}
               debouncedSearchTerm={debouncedSearchTerm}
               isEndingAssociation={isEndingAssociation}
-              isEndingGroup={isEndingGroup}
               operationProgress={operationProgress}
             />
           ) : (

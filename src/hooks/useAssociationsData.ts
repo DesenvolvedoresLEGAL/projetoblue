@@ -125,8 +125,9 @@ export const useAssociationsData = ({
         query = applySupabaseSearch(query, debouncedSearchTerm, searchType);
       }
 
-      // Adicionar ordenação e paginação
-      query = query.order('entry_date', { ascending: false });
+      // Adicionar ordenação por created_at e depois por entry_date (mais recentes primeiro)
+      query = query.order('created_at', { ascending: false })
+                  .order('entry_date', { ascending: false });
 
       // Paginação
       const startIndex = (currentPage - 1) * itemsPerPage;
