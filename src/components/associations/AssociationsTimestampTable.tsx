@@ -35,7 +35,7 @@ export const AssociationsTimestampTable: React.FC<AssociationsTimestampTableProp
   isEndingAssociation,
   operationProgress
 }) => {
-  const { totalAssociations, totalGroups } = getTimestampGroupStats(timestampGroups);
+  const { totalAssociations, totalTimestampGroups } = getTimestampGroupStats(timestampGroups);
 
   const highlightSearchTerm = (text: string | null, searchTerm: string) => {
     if (!text || !searchTerm) return text;
@@ -52,13 +52,18 @@ export const AssociationsTimestampTable: React.FC<AssociationsTimestampTableProp
     );
   };
 
+  // Flatten associations from all company groups for display
+  const flattenedAssociations = timestampGroups.flatMap(group => 
+    group.companyGroups.flatMap(companyGroup => companyGroup.associations)
+  );
+
   return (
     <div className="space-y-4">
       {/* Estatísticas */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <span>{totalAssociations} associações</span>
         <span>•</span>
-        <span>{totalGroups} grupos por timestamp</span>
+        <span>{totalTimestampGroups} grupos por timestamp</span>
         {operationProgress && (
           <>
             <span>•</span>
@@ -103,75 +108,77 @@ export const AssociationsTimestampTable: React.FC<AssociationsTimestampTableProp
                     </TableRow>
                   )}
                   
-                  {/* Associações do grupo */}
-                  {group.associations.map((association) => (
-                    <TableRow key={association.id} className="hover:bg-muted/50">
-                      <TableCell className="font-mono text-xs">
-                        {highlightSearchTerm(association.id.toString(), debouncedSearchTerm)}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {highlightSearchTerm(association.client_name, debouncedSearchTerm)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {highlightSearchTerm(association.asset_iccid || association.asset_radio || association.asset_id, debouncedSearchTerm)}
-                      </TableCell>
-                      <TableCell>
-                        {association.asset_line_number ? 
-                          highlightSearchTerm(association.asset_line_number.toString(), debouncedSearchTerm) : 
-                          '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {highlightSearchTerm(association.asset_radio, debouncedSearchTerm) || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {association.asset_solution_name}
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatDate(association.entry_date)}</TableCell>
-                      <TableCell>{association.exit_date ? formatDate(association.exit_date) : '-'}</TableCell>
-                      <TableCell>
-                        <AssociationStatusBadge 
-                          exitDate={association.exit_date}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                          {association.association_id === 1 ? 'Locação' : 
-                           association.association_id === 2 ? 'Assinatura' : 
-                           'Outros'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEditAssociation(association)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {!association.exit_date && (
+                  {/* Associações do grupo - flatten company groups */}
+                  {group.companyGroups.flatMap(companyGroup => 
+                    companyGroup.associations.map((association) => (
+                      <TableRow key={association.id} className="hover:bg-muted/50">
+                        <TableCell className="font-mono text-xs">
+                          {highlightSearchTerm(association.id.toString(), debouncedSearchTerm)}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {highlightSearchTerm(association.client_name, debouncedSearchTerm)}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {highlightSearchTerm(association.asset_iccid || association.asset_radio || association.asset_id, debouncedSearchTerm)}
+                        </TableCell>
+                        <TableCell>
+                          {association.asset_line_number ? 
+                            highlightSearchTerm(association.asset_line_number.toString(), debouncedSearchTerm) : 
+                            '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {highlightSearchTerm(association.asset_radio, debouncedSearchTerm) || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                            {association.asset_solution_name}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatDate(association.entry_date)}</TableCell>
+                        <TableCell>{association.exit_date ? formatDate(association.exit_date) : '-'}</TableCell>
+                        <TableCell>
+                          <AssociationStatusBadge 
+                            exitDate={association.exit_date}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                            {association.association_id === 1 ? 'Locação' : 
+                             association.association_id === 2 ? 'Assinatura' : 
+                             'Outros'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => onEndAssociation(association.id)}
-                              disabled={isEndingAssociation}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              onClick={() => onEditAssociation(association)}
+                              className="h-8 w-8 p-0"
                             >
-                              {isEndingAssociation ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <StopCircle className="h-4 w-4" />
-                              )}
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {!association.exit_date && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onEndAssociation(association.id)}
+                                disabled={isEndingAssociation}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                {isEndingAssociation ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <StopCircle className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </React.Fragment>
               ))}
             </TableBody>
