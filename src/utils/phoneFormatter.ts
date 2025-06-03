@@ -14,6 +14,11 @@ export const formatPhoneNumber = (phone: string | number): string => {
   // Remove todos os caracteres não numéricos
   const cleanPhone = phoneStr.replace(/\D/g, '');
   
+  // Não formatar se muito curto
+  if (cleanPhone.length < 8) {
+    return cleanPhone;
+  }
+  
   // Se tem 11 dígitos (celular com DDD)
   if (cleanPhone.length === 11) {
     return `(${cleanPhone.slice(0, 2)}) ${cleanPhone.slice(2, 3)} ${cleanPhone.slice(3, 7)}-${cleanPhone.slice(7)}`;
@@ -67,4 +72,10 @@ export const parsePhoneFromScientific = (phone: string | number): string => {
   }
   
   return phone.toString();
+};
+
+// Função para validar se o telefone tem formato válido
+export const isValidPhoneNumber = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return cleanPhone.length >= 8 && cleanPhone.length <= 11;
 };

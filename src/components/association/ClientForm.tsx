@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,8 @@ import { Loader2, Save, X, Plus, Trash2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
 import { toast } from 'sonner';
-import { mapDatabaseClientToFrontend, mapFormDataToDatabase, normalizePhoneForStorage } from '@/utils/clientMappers';
+import { mapDatabaseClientToFrontend, normalizePhoneForStorage } from '@/utils/clientMappers';
+import { formatPhoneNumber } from '@/utils/phoneFormatter';
 
 interface ClientFormProps {
   onSubmit: (client: Client) => void;
@@ -42,9 +44,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
   };
 
   const updatePhone = (index: number, value: string) => {
+    // Remove formatação para validação e armazenamento
+    const cleanValue = value.replace(/\D/g, '');
+    // Aplica formatação apenas para exibição
+    const formattedValue = formatPhoneNumber(cleanValue);
+    
     setFormData(prev => ({
       ...prev,
-      telefones: prev.telefones.map((tel, i) => i === index ? value : tel)
+      telefones: prev.telefones.map((tel, i) => i === index ? formattedValue : tel)
     }));
   };
 
@@ -59,7 +66,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
     setIsLoading(true);
 
     try {
-      // Preparar dados para inserção incluindo campos legados
+      // Limpar e normalizar telefones para array de strings sem formatação
       const cleanPhones = formData.telefones
         .filter(tel => tel.trim())
         .map(tel => normalizePhoneForStorage(tel));
@@ -67,13 +74,15 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
       const dbData = {
         empresa: formData.empresa.trim(),
         responsavel: formData.responsavel.trim(),
-        telefones: JSON.stringify(cleanPhones),
+        telefones: cleanPhones, // Enviar como array, não como string JSON
         email: formData.email?.trim() || null,
         cnpj: formData.cnpj?.trim() || null,
         // Campos legados para compatibilidade
         nome: formData.empresa.trim(),
         contato: cleanPhones.length > 0 ? parseInt(cleanPhones[0]) || 0 : 0
       };
+
+      console.log('Dados sendo enviados:', dbData);
 
       const { data, error } = await supabase
         .from('clients')
@@ -151,6 +160,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
               placeholder="(11) 99999-9999"
               className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
               required={index === 0}
+              maxLength={15} // Limitar o tamanho do campo
             />
             {formData.telefones.length > 1 && (
               <Button
