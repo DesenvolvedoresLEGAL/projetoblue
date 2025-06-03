@@ -966,6 +966,8 @@ export default function RegisterAsset() {
                           />
                         </div>
 
+                      </CollapsibleContent>
+                    </Collapsible>
                         {/* Nova Seção: Configurações de Rede */}
                         <Collapsible open={networkInfoOpen} onOpenChange={setNetworkInfoOpen}>
                           <CollapsibleTrigger className="w-full">
@@ -1012,8 +1014,6 @@ export default function RegisterAsset() {
                             />
                           </CollapsibleContent>
                         </Collapsible>
-                      </CollapsibleContent>
-                    </Collapsible>
 
                     <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} pt-6`}>
                       <Button
