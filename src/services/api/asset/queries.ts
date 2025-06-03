@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Asset, AssetLog, Status } from "@/types/asset";
+import { Asset, AssetLog, StatusRecord } from "@/types/asset";
 import { AssetListParams, AssetStatusByType, ProblemAsset } from "./types";
 import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
@@ -62,7 +63,7 @@ export const getAssets = async (
       throw error;
     }
 
-    const assets = data.map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map(mapAssetFromDb);
 
     return { data: assets, count: count || 0 };
   } catch (error) {
@@ -135,7 +136,7 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets = data.map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map(mapAssetFromDb);
     console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
     return assets;
   } catch (error) {
@@ -173,7 +174,7 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets = data.map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map(mapAssetFromDb);
     console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
     return assets;
   } catch (error) {
@@ -233,8 +234,6 @@ export const statusByType = async (): Promise<AssetStatusByType[]> => {
 
 /**
  * Get assets by multiple status IDs
- * Problem: Consultas Redundantes
- * Solução: Consolidar consultas para múltiplos status
  */
 export const getAssetsByMultipleStatus = async (
   statusIds: number[]
@@ -261,7 +260,7 @@ export const getAssetsByMultipleStatus = async (
       throw error;
     }
 
-    const assets = data.map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map(mapAssetFromDb);
     console.log(
       `Retrieved ${assets.length} assets with status IDs ${statusIds.join(
         ", "
@@ -333,7 +332,7 @@ export const assetQueries = {
       return null;
     }
   },
-  getStatus: async (): Promise<Status[]> => {
+  getStatus: async (): Promise<StatusRecord[]> => {
     try {
       const { data, error } = await supabase.from("asset_status").select("*");
 
@@ -344,7 +343,7 @@ export const assetQueries = {
 
       console.log(data);
 
-      const statusArray = (data || []).map(mapStatusFromDb);
+      const statusArray: StatusRecord[] = (data || []).map(mapStatusFromDb);
 
       return statusArray;
     } catch (error) {
@@ -380,7 +379,7 @@ export const assetQueries = {
       }
 
       // Mapeia o resultado, protegendo contra null/undefined
-      const assetLogs = data.map(mapAssetLogFromDb);
+      const assetLogs: AssetLog[] = data.map(mapAssetLogFromDb);
 
       return assetLogs;
     } catch (error) {
@@ -414,7 +413,7 @@ export const assetQueries = {
         throw error;
       }
 
-      const assets = data.map(mapAssetFromDb);
+      const assets: Asset[] = (data || []).map(mapAssetFromDb);
       console.log(
         `Retrieved ${assets.length} assets with status ID ${statusId}`
       );
@@ -450,7 +449,7 @@ export const assetQueries = {
         throw error;
       }
 
-      const assets = data.map(mapAssetFromDb);
+      const assets: Asset[] = (data || []).map(mapAssetFromDb);
       console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
       return assets;
     } catch (error) {

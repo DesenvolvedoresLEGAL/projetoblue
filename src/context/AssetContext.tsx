@@ -121,15 +121,13 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return;
         }
         
-        // Map clients data to our format
+        // Map clients data to our format - corrigido para usar uuid em vez de id
         const mappedClients: Client[] = clientsData.map(client => ({
-          id: client.uuid,
-          uuid: client.uuid,
+          uuid: client.uuid, // Corrigido: usar uuid em vez de id
           nome: client.nome,
           cnpj: client.cnpj,
           email: client.email || "",
           contato: client.contato,
-          assets: [],
           created_at: client.created_at,
           updated_at: client.updated_at,
           deleted_at: client.deleted_at
@@ -382,8 +380,8 @@ export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Client-related functions
-  const getClientById = (id: string) => {
-    return clients.find(client => client.id === id);
+  const getClientById = (uuid: string) => { // Corrigido: parâmetro uuid em vez de id
+    return clients.find(client => client.uuid === uuid); // Corrigido: usar uuid
   };
 
   // History-related functions
