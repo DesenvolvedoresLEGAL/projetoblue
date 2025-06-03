@@ -62,7 +62,7 @@ export const AssetSummaryCard: React.FC<AssetSummaryCardProps> = ({
             </div>
             <div>
               <CardTitle className={`legal-title ${isMobile ? 'text-lg' : 'text-xl'}`}>
-                {title}
+                <span>{title}</span> <span className='text-2xl font-bold text-[#4D2BFB] mb-2'>({total.toLocaleString()})</span>
               </CardTitle>
               <CardDescription className="legal-text text-sm">
                 {description}
@@ -72,11 +72,7 @@ export const AssetSummaryCard: React.FC<AssetSummaryCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col justify-between space-y-4">
-        <div>
-          <div className="text-3xl font-bold text-[#4D2BFB] mb-2">
-            {total.toLocaleString()}
-          </div>
-          
+        <div>          
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center">
               <div className="text-lg font-semibold text-green-600">
