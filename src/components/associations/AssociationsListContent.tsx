@@ -5,7 +5,7 @@ import { AssociationsPageHeader } from "@/components/associations/AssociationsPa
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
-import { AssociationsTimestampTable } from "@/components/associations/AssociationsTimestampTable";
+import { AssociationsAdvancedGroupedTable } from "@/components/associations/AssociationsAdvancedGroupedTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection } from "@/hooks/useSearchTypeDetection";
@@ -14,7 +14,7 @@ import { useAssociationActions } from "@/hooks/useAssociationActions";
 import { useDateFilters } from "@/hooks/useDateFilters";
 import { Association, StatusFilterType } from '@/types/associations';
 import { filterMultiField } from '@/utils/associationsUtils';
-import { groupAssociationsByTimestamp } from '@/utils/timestampGroupingUtils';
+import { groupAssociationsByTimestampAndCompany } from '@/utils/timestampGroupingUtils';
 
 export default function AssociationsListContent() {
   const [searchInput, setSearchInput] = useState('');
@@ -67,7 +67,7 @@ export default function AssociationsListContent() {
     operationProgress
   } = useAssociationActions();
 
-  // Aplicar filtro multicampo no frontend e agrupar por timestamp
+  // Aplicar filtro multicampo no frontend e agrupar por timestamp e empresa
   const { timestampGroups, totalAssociations } = useMemo(() => {
     const rawData = associationsData?.data || [];
     
@@ -75,8 +75,8 @@ export default function AssociationsListContent() {
     const filteredData = debouncedSearchTerm ? 
       filterMultiField(rawData, debouncedSearchTerm) : rawData;
     
-    // Agrupar por timestamp (YYYY-MM-DD HH:mm)
-    const grouped = groupAssociationsByTimestamp(filteredData);
+    // Agrupar por timestamp e empresa
+    const grouped = groupAssociationsByTimestampAndCompany(filteredData);
     
     return {
       timestampGroups: grouped,
@@ -145,13 +145,13 @@ export default function AssociationsListContent() {
 
       <Card className="shadow-sm">
         <CardContent className="space-y-6 pt-6">
-          {/* Tabela Agrupada por Timestamp */}
+          {/* Tabela Agrupada Avançada */}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground font-neue-haas">
               Carregando associações...
             </div>
           ) : timestampGroups.length > 0 ? (
-            <AssociationsTimestampTable
+            <AssociationsAdvancedGroupedTable
               timestampGroups={timestampGroups}
               totalCount={totalCount}
               currentPage={currentPage}
