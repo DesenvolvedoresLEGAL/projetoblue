@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,8 +45,20 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
         generalConfig
       });
 
-      // Gerar um ID único para toda a associação
-      const associationId = Date.now();
+      // Mapear tipo de associação para association_id correto
+      const getAssociationId = (type: string) => {
+        switch (type) {
+          case 'ALUGUEL': return 1;
+          case 'ASSINATURA': return 2;
+          case 'EMPRESTIMO': return 3;
+          default: 
+            console.warn(`Tipo de associação não reconhecido: ${type}, usando ALUGUEL como padrão`);
+            return 1;
+        }
+      };
+
+      const associationId = getAssociationId(generalConfig.associationType);
+      console.log(`Mapeando tipo ${generalConfig.associationType} para association_id: ${associationId}`);
       
       // Criar registros de associação para cada ativo
       const associationPromises = assets.map(async (asset) => {
@@ -56,8 +67,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           client_id: client.uuid,
           entry_date: format(generalConfig.startDate, 'yyyy-MM-dd'),
           exit_date: generalConfig.endDate ? format(generalConfig.endDate, 'yyyy-MM-dd') : null,
-          association_id: associationId,
-          notes: asset.notes || generalConfig.notes, // Usar notes específicas do asset ou gerais
+          association_id: associationId, // Usar ID mapeado corretamente
+          notes: asset.notes || generalConfig.notes || null,
           // Campos específicos por ativo
           ssid: asset.ssid_atual || null,
           pass: asset.pass_atual || null,
@@ -77,18 +88,26 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           throw error;
         }
 
+        console.log(`Associação criada com sucesso para ativo ${asset.uuid}:`, data);
         return data;
       });
 
-      await Promise.all(associationPromises);
-
-      console.log('Todas as associações criadas com sucesso');
-      toast.success('Associações criadas com sucesso!');
+      const results = await Promise.all(associationPromises);
+      console.log('Todas as associações criadas com sucesso:', results);
       
+      toast.success('Associações criadas com sucesso!');
       onComplete();
     } catch (error) {
       console.error('Erro ao criar associações:', error);
-      toast.error('Erro ao criar associações. Tente novamente.');
+      
+      // Tratamento de erro mais específico
+      if (error?.code === '23503') {
+        toast.error('Erro de configuração: tipo de associação inválido. Tente novamente.');
+      } else if (error?.code === '23505') {
+        toast.error('Alguns ativos já estão associados. Verifique os ativos selecionados.');
+      } else {
+        toast.error('Erro ao criar associações. Tente novamente.');
+      }
     } finally {
       setIsCreating(false);
     }
