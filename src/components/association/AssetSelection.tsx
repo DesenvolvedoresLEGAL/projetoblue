@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Plus, Trash2, List, Calendar, Wifi } from "lucide-react";
+import { Package, Plus, Trash2, List } from "lucide-react";
 import { Client } from '@/types/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
@@ -45,32 +44,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     ? formatPhoneForDisplay(client.telefones[0]) 
     : '';
 
-  // Função para determinar o tipo de ativo
-  const getAssetTypeInfo = (asset: SelectedAsset) => {
-    const isChip = asset.solution_id === 11;
-    return {
-      isChip,
-      emoji: isChip ? '📱' : '📡',
-      label: isChip ? 'CHIP' : 'EQUIPAMENTO',
-      identifier: isChip ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`
-    };
-  };
-
-  // Validação para prosseguir
-  const canProceed = selectedAssets.length > 0 && selectedAssets.every(asset => {
-    // Validar data de início obrigatória
-    if (!asset.startDate) return false;
-    
-    // Validar que data de fim seja posterior à data de início (se preenchida)
-    if (asset.endDate && asset.startDate) {
-      const startDate = new Date(asset.startDate);
-      const endDate = new Date(asset.endDate);
-      if (endDate <= startDate) return false;
-    }
-    
-    return true;
-  });
-
   return (
     <div className="space-y-6">
       {/* Informações do cliente selecionado */}
@@ -107,10 +80,10 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Configurar Ativos para Associação
+            Selecionar Ativos
           </CardTitle>
           <CardDescription>
-            Adicione CHIPs e equipamentos à associação. Configure os dados de cada ativo individualmente.
+            Adicione CHIPs e equipamentos à associação. Equipamentos SPEEDY 5G requerem um CHIP obrigatoriamente.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -118,51 +91,36 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           {selectedAssets.length > 0 && (
             <div className="space-y-4">
               <h4 className="font-medium">Ativos Selecionados ({selectedAssets.length})</h4>
-              {selectedAssets.map((asset) => {
-                const typeInfo = getAssetTypeInfo(asset);
-                return (
-                  <div key={asset.uuid} className="border rounded-lg p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium flex items-center gap-2">
-                          {typeInfo.emoji} {typeInfo.label}
-                          {asset.solucao && ` - ${asset.solucao}`}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {typeInfo.identifier}
-                        </div>
-                        {/* Indicadores de configuração */}
-                        <div className="flex items-center gap-4 mt-1">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {asset.associationType || 'Tipo não definido'}
-                          </div>
-                          {!typeInfo.isChip && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Wifi className="h-3 w-3" />
-                              {asset.ssid_atual ? 'SSID configurado' : 'SSID não configurado'}
-                            </div>
-                          )}
-                        </div>
+              {selectedAssets.map((asset) => (
+                <div key={asset.uuid} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium flex items-center gap-2">
+                        {asset.type === 'CHIP' ? '📱' : '📡'} 
+                        {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} 
+                        {asset.solucao && ` - ${asset.solucao}`}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onAssetRemoved(asset.uuid)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="text-sm text-muted-foreground">
+                        {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
+                      </div>
                     </div>
-
-                    {/* Formulário de configuração do ativo */}
-                    <AssetConfigurationForm
-                      asset={asset}
-                      onUpdate={(updates) => handleAssetUpdate(asset.uuid, updates)}
-                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onAssetRemoved(asset.uuid)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                );
-              })}
+
+                  {/* Formulário de configuração do ativo */}
+                  <AssetConfigurationForm
+                    asset={asset}
+                    onUpdate={(updates) => handleAssetUpdate(asset.uuid, updates)}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
@@ -220,24 +178,9 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
 
           {/* Botão para continuar */}
           {selectedAssets.length > 0 && (
-            <div className="space-y-2">
-              {!canProceed && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
-                  ⚠️ Alguns ativos possuem configurações inválidas. Verifique:
-                  <ul className="list-disc list-inside mt-1 space-y-1">
-                    <li>Data de início é obrigatória</li>
-                    <li>Data de fim deve ser posterior à data de início</li>
-                  </ul>
-                </div>
-              )}
-              <Button 
-                onClick={onProceed} 
-                className="w-full"
-                disabled={!canProceed}
-              >
-                Continuar para Confirmação
-              </Button>
-            </div>
+            <Button onClick={onProceed} className="w-full">
+              Continuar para Confirmação
+            </Button>
           )}
         </CardContent>
       </Card>
