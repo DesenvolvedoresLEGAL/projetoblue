@@ -138,7 +138,8 @@ const AssetsManagement = () => {
               </p>
               <div className="mt-auto">
                 <Button 
-                  className="w-full legal-button text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200" 
+                  variant='outline'
+                  className="w-full border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/assets/register');
