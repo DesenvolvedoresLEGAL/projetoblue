@@ -5,13 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
 import { Search, Users, Plus } from "lucide-react";
 import { toast } from 'sonner';
 import { ClientFormSimplified } from './ClientFormSimplified';
-import { mapDatabaseClientToFrontend, formatPhoneForDisplay } from '@/utils/clientMappers';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
+import { useClientSearch } from '@/hooks/useClientSearch';
 
 interface ClientSelectionSimplifiedProps {
   onClientSelected: (client: Client) => void;
@@ -23,27 +22,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  const { data: clients = [], isLoading } = useQuery({
-    queryKey: ['clients'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .is('deleted_at', null)
-        .order('empresa');
-      
-      if (error) throw error;
-      return (data || []).map(mapDatabaseClientToFrontend);
-    }
-  });
-
-  const filteredClients = clients.filter(client => {
-    const searchLower = searchTerm.toLowerCase();
-    return client.empresa.toLowerCase().includes(searchLower) ||
-           client.responsavel.toLowerCase().includes(searchLower) ||
-           client.telefones.some(tel => tel.includes(searchTerm.replace(/\D/g, ''))) ||
-           (client.email && client.email.toLowerCase().includes(searchLower));
-  });
+  const { clients: filteredClients, isLoading } = useClientSearch(searchTerm);
 
   const handleClientSelect = (client: Client) => {
     onClientSelected(client);

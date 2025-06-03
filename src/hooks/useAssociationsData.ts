@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SearchType } from '@/hooks/useSearchTypeDetection';
@@ -17,13 +18,14 @@ interface UseAssociationsDataProps {
   itemsPerPage: number;
 }
 
-// Função para aplicar filtro de busca no Supabase baseado no tipo detectado
+// Função para aplicar filtro de busca no Supabase apenas para campos específicos (não busca geral)
 const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
   if (!term || type === 'empty') return query;
 
   const sanitized = sanitizeSearchTerm(term);
   if (!sanitized) return query;
 
+  // Aplicar busca no backend apenas para tipos específicos que são mais eficientes
   switch (type) {
     case 'id':
       return query.eq('id', parseInt(sanitized));
@@ -33,9 +35,9 @@ const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
       return query.ilike('assets.radio', `%${sanitized}%`);
     case 'client_name':
     default:
-      // Buscar por empresa, responsável, telefones ou email
-      // Para o campo JSONB telefones, precisamos usar uma abordagem diferente
-      return query.or(`clients.empresa.ilike.%${sanitized}%,clients.responsavel.ilike.%${sanitized}%,clients.telefones::text.ilike.%${sanitized}%,clients.email.ilike.%${sanitized}%`);
+      // Para busca por cliente, não filtrar no backend para evitar problemas com JSONB
+      // Deixar a busca ser feita no frontend
+      return query;
   }
 };
 
@@ -117,8 +119,11 @@ export const useAssociationsData = ({
         query = query.lte('exit_date', exitDateTo.toISOString().split('T')[0]);
       }
 
-      // Aplicar busca principal no Supabase
-      query = applySupabaseSearch(query, debouncedSearchTerm, searchType);
+      // Aplicar busca no backend apenas para tipos específicos
+      // Para busca geral por cliente, deixar para o frontend
+      if (debouncedSearchTerm && (searchType === 'id' || searchType === 'iccid' || searchType === 'radio')) {
+        query = applySupabaseSearch(query, debouncedSearchTerm, searchType);
+      }
 
       // Adicionar ordenação e paginação
       query = query.order('entry_date', { ascending: false });

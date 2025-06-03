@@ -1,7 +1,7 @@
 
 import { Association, AssociationGroup } from '@/types/associations';
 
-// Função para filtro multicampo que funciona com a interface Association
+// Função para filtro multicampo melhorada que funciona com a interface Association
 export const filterMultiField = (
   associations: Association[],
   searchTerm: string
@@ -28,6 +28,13 @@ export const filterMultiField = (
     
     // Busca em nome da solução
     if (association.asset_solution_name.toLowerCase().includes(term)) return true;
+    
+    // Busca por número sem formatação (remove tudo que não é número)
+    const numericTerm = term.replace(/\D/g, '');
+    if (numericTerm.length >= 4) {
+      // Busca em linha por número
+      if (association.asset_line_number?.toString().includes(numericTerm)) return true;
+    }
     
     return false;
   });
