@@ -65,7 +65,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   };
 
   return (
-    <div className="space-y-4 relative">
+    <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="client-search">Buscar Cliente</Label>
         <div className="relative">
@@ -78,6 +78,17 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
             className="pl-10"
           />
         </div>
+      </div>
+
+      {/* Botão para adicionar novo cliente - posicionado após a busca */}
+      <div className="flex justify-center">
+        <Button
+          onClick={handleOpenNewClientModal}
+          className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Cadastrar Novo Cliente
+        </Button>
       </div>
 
       <div className="space-y-3">
@@ -125,40 +136,16 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
             <p className="text-muted-foreground">
               Nenhum cliente encontrado para "{searchTerm}"
             </p>
-            <Button
-              onClick={handleOpenNewClientModal}
-              className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Cadastrar Novo Cliente
-            </Button>
           </div>
         ) : (
           <div className="text-center py-8 space-y-4">
             <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-muted-foreground">
-              Digite algo para buscar clientes ou cadastre um novo
+              Digite algo para buscar clientes ou use o botão acima para cadastrar um novo
             </p>
-            <Button
-              onClick={handleOpenNewClientModal}
-              variant="outline"
-              className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Cadastrar Novo Cliente
-            </Button>
           </div>
         )}
       </div>
-
-      {/* Botão Flutuante Fixo */}
-      <Button
-        onClick={handleOpenNewClientModal}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white shadow-lg hover:shadow-xl transition-all z-50 p-0"
-        title="Adicionar Novo Cliente"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
 
       <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
         <DialogContent className="sm:max-w-md">

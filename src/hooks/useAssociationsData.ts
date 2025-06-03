@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SearchType } from '@/hooks/useSearchTypeDetection';
@@ -35,7 +34,8 @@ const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
     case 'client_name':
     default:
       // Buscar por empresa, responsável, telefones ou email
-      return query.or(`clients.empresa.ilike.%${sanitized}%,clients.responsavel.ilike.%${sanitized}%,clients.telefones.cs.["${sanitized}"],clients.email.ilike.%${sanitized}%`);
+      // Para o campo JSONB telefones, precisamos usar uma abordagem diferente
+      return query.or(`clients.empresa.ilike.%${sanitized}%,clients.responsavel.ilike.%${sanitized}%,clients.telefones::text.ilike.%${sanitized}%,clients.email.ilike.%${sanitized}%`);
   }
 };
 
