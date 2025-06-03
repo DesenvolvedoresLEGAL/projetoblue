@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -9,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { ClientSelectionSimplified } from '@/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@/components/association/AssetSelection';
 import { AssociationSummary } from '@/components/association/AssociationSummary';
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client'; // Use unified client type
 import { useAssetAssociationState } from '@/hooks/useAssetAssociationState';
 
 export interface SelectedAsset {

@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Trash2, List } from "lucide-react";
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { AssetListModal } from './AssetListModal';
-import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface AssetSelectionProps {
   client: Client;
@@ -40,6 +39,11 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     onAssetUpdated(assetId, updates);
   };
 
+  // Usar telefones da nova estrutura
+  const primaryPhone = client.telefones && client.telefones.length > 0 
+    ? formatPhoneForDisplay(client.telefones[0]) 
+    : '';
+
   return (
     <div className="space-y-6">
       {/* Informações do cliente selecionado */}
@@ -50,13 +54,23 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium">Nome:</span>
-              <p className="text-muted-foreground">{client.nome}</p>
+              <span className="font-medium">Empresa:</span>
+              <p className="text-muted-foreground">{client.empresa}</p>
+            </div>
+            <div>
+              <span className="font-medium">Responsável:</span>
+              <p className="text-muted-foreground">{client.responsavel}</p>
             </div>
             <div>
               <span className="font-medium">Telefone:</span>
-              <p className="text-muted-foreground">{formatPhoneNumber(parsePhoneFromScientific(client.contato))}</p>
+              <p className="text-muted-foreground">{primaryPhone}</p>
             </div>
+            {client.email && (
+              <div>
+                <span className="font-medium">Email:</span>
+                <p className="text-muted-foreground">{client.email}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,12 +1,17 @@
+
 import { ChipAsset, EquipamentAsset, Asset, AssetStatus, AssetType } from "@/types/asset";
 import { AssetHistoryEntry } from "@/types/assetHistory";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/utils/toast";
-import { Client } from "@/types/asset";
+import { Client } from "@/types/client"; // Use unified client type
 import { SubscriptionInfo } from "@/types/asset";
 import { getAssetById } from "../assetActions";
-import { getClientById } from "../clientActions";
 import { isSameStatus } from "@/utils/assetUtils";
+
+// Client operations helper function
+const getClientById = (clients: Client[], uuid: string) => {
+  return clients.find(client => client.uuid === uuid);
+};
 
 // Asset operations
 
@@ -27,16 +32,13 @@ export const returnAssetsToStock = (
       if (asset.clientId) {
         const client = getClientById(clients, asset.clientId);
         if (client) {
-          // Remover referência ao campo assets que não existe mais
-          // O relacionamento agora é mantido apenas via asset.clientId
-          
           const assetIdentifier = asset.type === "CHIP" 
             ? (asset as ChipAsset).iccid 
             : (asset as EquipamentAsset).uniqueId;
             
           addHistoryEntry({
             clientId: asset.clientId,
-            clientName: client.nome,
+            clientName: client.empresa, // Use empresa instead of nome
             assetIds: [asset.id],
             assets: [{
               id: asset.id,
@@ -51,14 +53,14 @@ export const returnAssetsToStock = (
           });
           
           if (asset.type === "ROTEADOR") {
-            toast.error(`⚠️ O roteador saiu do cliente ${client.nome} e retornou ao estoque. Altere o SSID e a senha.`);
+            toast.error(`⚠️ O roteador saiu do cliente ${client.empresa} e retornou ao estoque. Altere o SSID e a senha.`);
           }
         }
       }
       
       const baseUpdates = {
         status: "DISPONÍVEL" as AssetStatus,
-        statusId: 1, // Added to match database status_id (1 = Disponível)
+        statusId: 1,
         clientId: undefined,
         subscription: undefined,
       };
@@ -99,12 +101,12 @@ export const associateAssetToClient = (
     
     if (subscription?.type === "ANUAL" || subscription?.type === "MENSAL") {
       status = "ASSINATURA";
-      statusId = 3; // Assuming 'Assinatura' has id = 3
+      statusId = 3;
     } else if (subscription?.type === "ALUGUEL") {
       status = "ALUGADO";
-      statusId = 2; // Assuming 'Alugado' has id = 2
+      statusId = 2;
     } else {
-      status = "ALUGADO"; // Default fallback
+      status = "ALUGADO";
       statusId = 2;
     }
     
@@ -118,16 +120,13 @@ export const associateAssetToClient = (
       } : undefined
     });
     
-    // Remover referência ao campo assets que não existe mais no Client
-    // A associação agora é mantida apenas via asset.clientId
-    
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 
       : (asset as EquipamentAsset).uniqueId;
       
     addHistoryEntry({
       clientId,
-      clientName: client.nome,
+      clientName: client.empresa, // Use empresa instead of nome
       assetIds: [assetId],
       assets: [{
         id: assetId,
@@ -135,7 +134,7 @@ export const associateAssetToClient = (
         identifier: assetIdentifier
       }],
       operationType: isSameStatus(status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
-      comments: `Ativo ${assetIdentifier} associado ao cliente ${client.nome}`,
+      comments: `Ativo ${assetIdentifier} associado ao cliente ${client.empresa}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -161,7 +160,7 @@ export const removeAssetFromClient = (
     
     if (asset.type === "ROTEADOR") {
       needsPasswordChange = true;
-      toast.error(`⚠️ O roteador saiu do cliente ${client.nome} e retornou ao estoque. Altere o SSID e a senha.`);
+      toast.error(`⚠️ O roteador saiu do cliente ${client.empresa} e retornou ao estoque. Altere o SSID e a senha.`);
     }
     
     updateAsset(assetId, { 
@@ -171,15 +170,13 @@ export const removeAssetFromClient = (
       ...(asset.type === "ROTEADOR" ? { needsPasswordChange } : {})
     });
     
-    // Remover referência ao campo assets que não existe mais no Client
-    
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 
       : (asset as EquipamentAsset).uniqueId;
       
     addHistoryEntry({
       clientId,
-      clientName: client.nome,
+      clientName: client.empresa, // Use empresa instead of nome
       assetIds: [assetId],
       assets: [{
         id: assetId,
@@ -188,7 +185,7 @@ export const removeAssetFromClient = (
       }],
       operationType: isSameStatus(asset.status, "ASSINATURA") ? "ASSINATURA" : "ALUGUEL",
       event: "Retorno ao estoque",
-      comments: `Ativo ${assetIdentifier} removido do cliente ${client.nome}`,
+      comments: `Ativo ${assetIdentifier} removido do cliente ${client.empresa}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -224,7 +221,7 @@ export const extendSubscription = (
         
       addHistoryEntry({
         clientId: asset.clientId,
-        clientName: client.nome,
+        clientName: client.empresa, // Use empresa instead of nome
         assetIds: [asset.id],
         assets: [{
           id: asset.id,

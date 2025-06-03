@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,13 +59,21 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
     setIsLoading(true);
 
     try {
-      // Preparar dados para inserção
-      const dbData = mapFormDataToDatabase({
-        ...formData,
-        telefones: formData.telefones
-          .filter(tel => tel.trim())
-          .map(tel => normalizePhoneForStorage(tel))
-      });
+      // Preparar dados para inserção incluindo campos legados
+      const cleanPhones = formData.telefones
+        .filter(tel => tel.trim())
+        .map(tel => normalizePhoneForStorage(tel));
+
+      const dbData = {
+        empresa: formData.empresa.trim(),
+        responsavel: formData.responsavel.trim(),
+        telefones: JSON.stringify(cleanPhones),
+        email: formData.email?.trim() || null,
+        cnpj: formData.cnpj?.trim() || null,
+        // Campos legados para compatibilidade
+        nome: formData.empresa.trim(),
+        contato: cleanPhones.length > 0 ? parseInt(cleanPhones[0]) || 0 : 0
+      };
 
       const { data, error } = await supabase
         .from('clients')
