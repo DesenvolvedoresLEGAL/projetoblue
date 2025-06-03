@@ -466,7 +466,15 @@ export default function RegisterAsset() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                                  Número da Linha *
+                                  <Tooltip>
+                                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
+                                      Número da linha *
+                                      <Info className="h-3 w-3" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Número de telefone da linha móvel</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 </FormLabel>
                                 <FormControl>
                                   <Input
