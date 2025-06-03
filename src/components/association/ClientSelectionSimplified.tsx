@@ -59,17 +59,6 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
         </div>
       </div>
 
-      {/* Botão para adicionar novo cliente - posicionado após a busca */}
-      <div className="flex justify-center">
-        <Button
-          onClick={handleOpenNewClientModal}
-          className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Cadastrar Novo Cliente
-        </Button>
-      </div>
-
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8">
@@ -124,6 +113,17 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
             </p>
           </div>
         )}
+      </div>
+
+      {/* Botão para adicionar novo cliente - posicionado após a busca */}
+      <div className="flex justify-center">
+        <Button
+          onClick={handleOpenNewClientModal}
+          className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas font-bold"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Cadastrar Novo Cliente
+        </Button>
       </div>
 
       <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
