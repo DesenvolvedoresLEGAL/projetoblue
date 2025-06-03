@@ -6,7 +6,6 @@ import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { EditAssociationDialog } from "@/components/associations/EditAssociationDialog";
 import { AssociationsFilters } from "@/components/associations/AssociationsFilters";
 import { AssociationsGroupedTable } from "@/components/associations/AssociationsGroupedTable";
-import { AssociationsDateGroupedTable } from "@/components/associations/AssociationsDateGroupedTable";
 import { AssociationsEmpty } from "@/components/associations/AssociationsEmpty";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection } from "@/hooks/useSearchTypeDetection";
@@ -15,7 +14,6 @@ import { useAssociationActions } from "@/hooks/useAssociationActions";
 import { useDateFilters } from "@/hooks/useDateFilters";
 import { Association, StatusFilterType } from '@/types/associations';
 import { filterMultiField, groupAssociationsByClientAndDates } from '@/utils/associationsUtils';
-import { groupAssociationsByCreatedDate, shouldShowDateGrouping } from '@/utils/dateGroupingUtils';
 
 export default function AssociationsListContent() {
   const [searchInput, setSearchInput] = useState('');
@@ -70,8 +68,8 @@ export default function AssociationsListContent() {
     operationProgress
   } = useAssociationActions();
 
-  // Aplicar filtro multicampo no frontend e processar agrupamentos
-  const { groupedAssociations, dateGroups, totalAssociations, showDateGrouping } = useMemo(() => {
+  // Aplicar filtro multicampo no frontend e agrupar por cliente e datas
+  const { groupedAssociations, totalAssociations } = useMemo(() => {
     const rawData = associationsData?.data || [];
     
     // Aplicar filtro multicampo
@@ -81,17 +79,9 @@ export default function AssociationsListContent() {
     // Agrupar por cliente e datas
     const grouped = groupAssociationsByClientAndDates(filteredData);
     
-    // Agrupar por data de criação
-    const dateGroups = groupAssociationsByCreatedDate(filteredData);
-    
-    // Verificar se deve mostrar agrupamento por data
-    const showDateGrouping = shouldShowDateGrouping(dateGroups);
-    
     return {
       groupedAssociations: grouped,
-      dateGroups,
-      totalAssociations: filteredData.length,
-      showDateGrouping
+      totalAssociations: filteredData.length
     };
   }, [associationsData?.data, debouncedSearchTerm]);
 
@@ -162,44 +152,26 @@ export default function AssociationsListContent() {
 
       <Card className="shadow-sm">
         <CardContent className="space-y-6 pt-6">
-          {/* Tabela com ou sem agrupamento por data */}
+          {/* Tabela Agrupada */}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground font-neue-haas">
               Carregando associações...
             </div>
           ) : Object.keys(groupedAssociations).length > 0 ? (
-            showDateGrouping ? (
-              <AssociationsDateGroupedTable
-                dateGroups={dateGroups}
-                groupedAssociations={groupedAssociations}
-                totalCount={totalCount}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                onEditAssociation={handleEditAssociation}
-                onEndAssociation={handleEndAssociation}
-                onEndGroup={handleEndGroupWithData}
-                debouncedSearchTerm={debouncedSearchTerm}
-                isEndingAssociation={isEndingAssociation}
-                isEndingGroup={isEndingGroup}
-                operationProgress={operationProgress}
-              />
-            ) : (
-              <AssociationsGroupedTable
-                groupedAssociations={groupedAssociations}
-                totalCount={totalCount}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                onEditAssociation={handleEditAssociation}
-                onEndAssociation={handleEndAssociation}
-                onEndGroup={handleEndGroupWithData}
-                debouncedSearchTerm={debouncedSearchTerm}
-                isEndingAssociation={isEndingAssociation}
-                isEndingGroup={isEndingGroup}
-                operationProgress={operationProgress}
-              />
-            )
+            <AssociationsGroupedTable
+              groupedAssociations={groupedAssociations}
+              totalCount={totalCount}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              onEditAssociation={handleEditAssociation}
+              onEndAssociation={handleEndAssociation}
+              onEndGroup={handleEndGroupWithData}
+              debouncedSearchTerm={debouncedSearchTerm}
+              isEndingAssociation={isEndingAssociation}
+              isEndingGroup={isEndingGroup}
+              operationProgress={operationProgress}
+            />
           ) : (
             <AssociationsEmpty
               debouncedSearchTerm={debouncedSearchTerm}
