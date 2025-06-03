@@ -8,10 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Search, Plus, User } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client';
 import { toast } from 'sonner';
 import { ClientForm } from './ClientForm';
-import { formatPhoneNumber, normalizePhoneForSearch, parsePhoneFromScientific } from '@/utils/phoneFormatter';
+import { mapDatabaseClientToFrontend, formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface ClientSelectionProps {
   onClientSelected: (client: Client) => void;
@@ -21,7 +21,6 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  // Buscar clientes com busca aprimorada por nome e telefone apenas
   const { data: clients = [], isLoading: isLoadingClients } = useQuery({
     queryKey: ['clients', searchTerm],
     queryFn: async () => {
@@ -29,23 +28,16 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         .from('clients')
         .select('*')
         .is('deleted_at', null)
-        .order('nome');
+        .order('empresa');
 
       if (searchTerm.trim()) {
-        const term = searchTerm.trim();
-        const normalizedPhone = normalizePhoneForSearch(term);
-        
-        // Busca por nome e telefone apenas
-        if (normalizedPhone && normalizedPhone.length >= 2) {
-          // Se o termo contém apenas números, busca também por telefone
-          query = query.or(
-            `nome.ilike.%${term}%,` +
-            `contato::text.ilike.%${normalizedPhone}%`
-          );
-        } else {
-          // Busca apenas por nome se não for numérico
-          query = query.ilike('nome', `%${term}%`);
-        }
+        const term = searchTerm.trim().toLowerCase();
+        query = query.or(
+          `empresa.ilike.%${term}%,` +
+          `responsavel.ilike.%${term}%,` +
+          `email.ilike.%${term}%,` +
+          `telefones::text.ilike.%${term.replace(/\D/g, '')}%`
+        );
       }
 
       const { data, error } = await query.limit(50);
@@ -55,23 +47,14 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
         throw error;
       }
 
-      return data.map(client => ({
-        uuid: client.uuid, // Corrigido: usar uuid em vez de id
-        nome: client.nome,
-        cnpj: client.cnpj,
-        email: client.email || '',
-        contato: client.contato,
-        created_at: client.created_at,
-        updated_at: client.updated_at,
-        deleted_at: client.deleted_at
-      })) as Client[];
+      return (data || []).map(mapDatabaseClientToFrontend);
     },
     enabled: true
   });
 
   const handleClientSelect = (client: Client) => {
     onClientSelected(client);
-    toast.success(`Cliente ${client.nome} selecionado com sucesso!`);
+    toast.success(`Cliente ${client.empresa} selecionado com sucesso!`);
   };
 
   const handleNewClientCreated = (newClient: Client) => {
@@ -88,29 +71,27 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
           Selecionar Cliente
         </CardTitle>
         <CardDescription>
-          Busque por nome ou telefone. Se não encontrar, cadastre um novo cliente.
+          Busque por empresa, responsável, telefone ou email. Se não encontrar, cadastre um novo cliente.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Campo de busca simplificado */}
         <div className="space-y-2">
           <Label htmlFor="search">Buscar Cliente</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               id="search"
-              placeholder="Digite nome ou telefone..."
+              placeholder="Digite empresa, responsável, telefone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
           <div className="text-xs text-muted-foreground">
-            Exemplos: "João Silva", "(11) 99999-9999"
+            Exemplos: "João Silva", "Empresa ABC", "(11) 99999-9999"
           </div>
         </div>
 
-        {/* Lista de clientes simplificada */}
         <div className="space-y-2">
           {isLoadingClients ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -123,13 +104,16 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
               </div>
               {clients.map((client) => (
                 <div
-                  key={client.uuid} // Corrigido: usar uuid em vez de id
+                  key={client.uuid}
                   className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
                   onClick={() => handleClientSelect(client)}
                 >
-                  <div className="font-medium text-primary">{client.nome}</div>
+                  <div className="font-medium text-primary">{client.empresa}</div>
                   <div className="text-sm text-muted-foreground">
-                    Telefone: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
+                    Responsável: {client.responsavel}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Telefones: {client.telefones.map(tel => formatPhoneForDisplay(tel)).join(', ')}
                   </div>
                   {client.email && (
                     <div className="text-sm text-muted-foreground">
@@ -158,7 +142,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
                 Digite para buscar clientes existentes
               </div>
               <div className="text-sm text-muted-foreground">
-                Busca por nome ou telefone
+                Busca por empresa, responsável, telefone ou email
               </div>
               <Button
                 onClick={() => setIsNewClientModalOpen(true)}
@@ -172,7 +156,6 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
           )}
         </div>
 
-        {/* Modal de novo cliente */}
         <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>

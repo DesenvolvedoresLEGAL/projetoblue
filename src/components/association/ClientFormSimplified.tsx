@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, X } from "lucide-react";
+import { Loader2, Save, X, Plus, Trash2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client';
 import { toast } from 'sonner';
-import { formatPhoneForStorage, formatPhoneNumber } from '@/utils/phoneFormatter';
+import { mapDatabaseClientToFrontend, mapFormDataToDatabase, normalizePhoneForStorage } from '@/utils/clientMappers';
 
 interface ClientFormSimplifiedProps {
   onSubmit: (client: Client) => void;
@@ -16,36 +17,58 @@ interface ClientFormSimplifiedProps {
 export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSubmit, onCancel }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    nome: '',
-    contato: '',
+    empresa: '',
+    responsavel: '',
+    telefones: [''],
     email: ''
   });
 
-  // Validação básica
-  const isFormValid = formData.nome.trim().length >= 2 && formData.contato.trim().length >= 10;
+  const isFormValid = formData.empresa.trim().length >= 2 && 
+                     formData.responsavel.trim().length >= 2 &&
+                     formData.telefones.some(tel => tel.trim().length >= 10);
+
+  const addPhoneField = () => {
+    setFormData(prev => ({
+      ...prev,
+      telefones: [...prev.telefones, '']
+    }));
+  };
+
+  const removePhoneField = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      telefones: prev.telefones.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updatePhone = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      telefones: prev.telefones.map((tel, i) => i === index ? value : tel)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isFormValid) {
-      toast.error('Preencha pelo menos nome e telefone válidos');
+      toast.error('Preencha empresa, responsável e pelo menos um telefone válido');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Formatar telefone para armazenamento - converter para number
-      const formattedPhone = parseInt(formatPhoneForStorage(formData.contato));
-      
+      const dbData = mapFormDataToDatabase({
+        ...formData,
+        telefones: formData.telefones
+          .filter(tel => tel.trim())
+          .map(tel => normalizePhoneForStorage(tel))
+      });
+
       const { data, error } = await supabase
         .from('clients')
-        .insert({
-          nome: formData.nome.trim(),
-          cnpj: null, // Corrigido: CNPJ agora é opcional/nullable
-          contato: formattedPhone, // Agora como number
-          email: formData.email.trim() || null
-        })
+        .insert(dbData)
         .select()
         .single();
 
@@ -54,17 +77,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
         throw error;
       }
 
-      const newClient: Client = {
-        uuid: data.uuid, // Corrigido: remover campo id
-        nome: data.nome,
-        cnpj: data.cnpj,
-        email: data.email || '',
-        contato: data.contato,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        deleted_at: data.deleted_at
-      };
-
+      const newClient = mapDatabaseClientToFrontend(data);
       onSubmit(newClient);
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
@@ -75,40 +88,74 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
     }
   };
 
-  const handlePhoneChange = (value: string) => {
-    // Aplicar formatação visual durante a digitação
-    const formatted = formatPhoneNumber(value);
-    setFormData({ ...formData, contato: formatted });
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="nome" className="font-neue-haas font-bold text-[#020CBC]">
-          Nome do Cliente *
+        <Label htmlFor="empresa" className="font-neue-haas font-bold text-[#020CBC]">
+          Nome da Empresa *
         </Label>
         <Input
-          id="nome"
-          value={formData.nome}
-          onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-          placeholder="Digite o nome completo"
+          id="empresa"
+          value={formData.empresa}
+          onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
+          placeholder="Digite o nome da empresa"
           className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="contato" className="font-neue-haas font-bold text-[#020CBC]">
-          Telefone *
+        <Label htmlFor="responsavel" className="font-neue-haas font-bold text-[#020CBC]">
+          Nome do Responsável *
         </Label>
         <Input
-          id="contato"
-          value={formData.contato}
-          onChange={(e) => handlePhoneChange(e.target.value)}
-          placeholder="(11) 99999-9999"
+          id="responsavel"
+          value={formData.responsavel}
+          onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
+          placeholder="Digite o nome do responsável"
           className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="font-neue-haas font-bold text-[#020CBC]">
+            Telefones *
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addPhoneField}
+            className="text-[#4D2BFB] border-[#4D2BFB]"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar
+          </Button>
+        </div>
+        {formData.telefones.map((telefone, index) => (
+          <div key={index} className="flex gap-2">
+            <Input
+              value={telefone}
+              onChange={(e) => updatePhone(index, e.target.value)}
+              placeholder="(11) 99999-9999"
+              className="border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20 font-neue-haas"
+              required={index === 0}
+            />
+            {formData.telefones.length > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removePhoneField(index)}
+                className="text-red-500 border-red-300"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
       </div>
 
       <div className="space-y-2">

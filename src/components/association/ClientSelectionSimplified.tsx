@@ -1,16 +1,17 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Client } from '@/types/asset';
+import { Client } from '@/types/client';
 import { Search, Users, Plus } from "lucide-react";
 import { toast } from 'sonner';
 import { ClientFormSimplified } from './ClientFormSimplified';
-import { formatPhoneNumber, parsePhoneFromScientific } from '@/utils/phoneFormatter';
+import { mapDatabaseClientToFrontend, formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface ClientSelectionSimplifiedProps {
   onClientSelected: (client: Client) => void;
@@ -22,7 +23,6 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  // Buscar clientes apenas por nome e telefone
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
@@ -30,40 +30,30 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
         .from('clients')
         .select('*')
         .is('deleted_at', null)
-        .order('nome');
+        .order('empresa');
       
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapDatabaseClientToFrontend);
     }
   });
 
-  // Filtrar clientes baseado na busca por nome e telefone apenas
-  const filteredClients = clients.filter(client => 
-    client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contato.toString().includes(searchTerm)
-  );
+  const filteredClients = clients.filter(client => {
+    const searchLower = searchTerm.toLowerCase();
+    return client.empresa.toLowerCase().includes(searchLower) ||
+           client.responsavel.toLowerCase().includes(searchLower) ||
+           client.telefones.some(tel => tel.includes(searchTerm.replace(/\D/g, ''))) ||
+           (client.email && client.email.toLowerCase().includes(searchLower));
+  });
 
-  const handleClientSelect = (clientData: any) => {
-    // Map database fields to Client interface
-    const client: Client = {
-      uuid: clientData.uuid, // Corrigido: remover campo id
-      nome: clientData.nome,
-      cnpj: clientData.cnpj,
-      email: clientData.email || '',
-      contato: clientData.contato,
-      created_at: clientData.created_at,
-      updated_at: clientData.updated_at,
-      deleted_at: clientData.deleted_at
-    };
-    
+  const handleClientSelect = (client: Client) => {
     onClientSelected(client);
-    toast.success(`Cliente ${client.nome} selecionado!`);
+    toast.success(`Cliente ${client.empresa} selecionado!`);
   };
 
   const handleNewClientCreated = (client: Client) => {
     setIsNewClientModalOpen(false);
     onClientSelected(client);
-    toast.success(`Cliente ${client.nome} cadastrado e selecionado!`);
+    toast.success(`Cliente ${client.empresa} cadastrado e selecionado!`);
   };
 
   const handleOpenNewClientModal = () => {
@@ -76,14 +66,13 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
 
   return (
     <div className="space-y-4">
-      {/* Campo de busca */}
       <div className="space-y-2">
         <Label htmlFor="client-search">Buscar Cliente</Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="client-search"
-            placeholder="Digite o nome ou telefone do cliente..."
+            placeholder="Digite empresa, responsável, telefone ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -91,7 +80,6 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
         </div>
       </div>
 
-      {/* Lista de clientes */}
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8">
@@ -112,11 +100,19 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-[#020CBC] font-neue-haas">
-                        {client.nome}
+                        {client.empresa}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Tel: {formatPhoneNumber(parsePhoneFromScientific(client.contato))}
+                        Responsável: {client.responsavel}
                       </div>
+                      <div className="text-sm text-muted-foreground">
+                        Tel: {client.telefones.map(tel => formatPhoneForDisplay(tel)).join(', ')}
+                      </div>
+                      {client.email && (
+                        <div className="text-sm text-muted-foreground">
+                          Email: {client.email}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -155,7 +151,6 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
         )}
       </div>
 
-      {/* Modal de criação de cliente */}
       <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

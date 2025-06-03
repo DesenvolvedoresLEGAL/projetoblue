@@ -873,7 +873,10 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           email: string | null
+          empresa: string
           nome: string
+          responsavel: string
+          telefones: Json | null
           updated_at: string
           uuid: string
         }
@@ -883,7 +886,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           email?: string | null
+          empresa: string
           nome: string
+          responsavel: string
+          telefones?: Json | null
           updated_at?: string
           uuid?: string
         }
@@ -893,7 +899,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           email?: string | null
+          empresa?: string
           nome?: string
+          responsavel?: string
+          telefones?: Json | null
           updated_at?: string
           uuid?: string
         }
