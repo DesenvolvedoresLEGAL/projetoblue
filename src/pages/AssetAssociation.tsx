@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -8,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ClientSelectionSimplified } from '@/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@/components/association/AssetSelection';
 import { AssociationSummary } from '@/components/association/AssociationSummary';
-import { Client } from '@/types/client'; // Use unified client type
+import { Client } from '@/types/client';
 import { useAssetAssociationState } from '@/hooks/useAssetAssociationState';
 
 export interface SelectedAsset {
@@ -43,6 +44,9 @@ export interface SelectedAsset {
   gb?: number;
   associationType?: string;
   startDate?: string;
+  endDate?: string; // Nova propriedade para data de fim
+  ssid_atual?: string; // Campos de rede editáveis
+  pass_atual?: string; // Campos de rede editáveis
 }
 
 type Step = 'client' | 'assets' | 'summary';
