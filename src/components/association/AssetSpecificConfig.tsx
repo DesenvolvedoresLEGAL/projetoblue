@@ -4,8 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { Wifi, Smartphone, Package } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { referenceDataService } from '@/services/api/referenceDataService';
 
 interface AssetSpecificConfigProps {
   asset: SelectedAsset;
@@ -22,12 +25,28 @@ export const AssetSpecificConfig: React.FC<AssetSpecificConfigProps> = ({
   const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
   const [passAtual, setPassAtual] = useState(asset.pass_atual || '');
   const [isPrincipalChip, setIsPrincipalChip] = useState(asset.isPrincipalChip || false);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(asset.plan_id || null);
+  const [customGb, setCustomGb] = useState(asset.gb || 0);
+
+  // Buscar planos disponíveis
+  const { data: plans = [], isLoading: plansLoading } = useQuery({
+    queryKey: ['plans'],
+    queryFn: () => referenceDataService.getPlans()
+  });
 
   // Verificar se é equipamento (não CHIP)
   const isEquipment = asset.solution_id !== 11 && asset.type !== 'CHIP';
   
   // Verificar se é CHIP
   const isChip = asset.solution_id === 11 || asset.type === 'CHIP';
+
+  // Verificar se o plano selecionado é customizado
+  const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+  const isCustomPlan = selectedPlan && (
+    selectedPlan.nome.toLowerCase().includes('customizado') || 
+    selectedPlan.nome.toLowerCase().includes('outro') ||
+    selectedPlan.nome.toLowerCase().includes('personalizado')
+  );
 
   // Atualizar o asset quando os valores mudarem
   useEffect(() => {
@@ -40,14 +59,16 @@ export const AssetSpecificConfig: React.FC<AssetSpecificConfigProps> = ({
       updates.pass_atual = passAtual;
     }
 
-    // Campo específico para CHIPs
+    // Campos específicos para CHIPs
     if (isChip) {
       updates.isPrincipalChip = isPrincipalChip;
       updates.notes = isPrincipalChip ? 'principal' : 'backup';
+      updates.plan_id = selectedPlanId;
+      updates.gb = isCustomPlan ? customGb : 0;
     }
 
     onUpdate(updates);
-  }, [rentedDays, ssidAtual, passAtual, isPrincipalChip, onUpdate, isEquipment, isChip]);
+  }, [rentedDays, ssidAtual, passAtual, isPrincipalChip, selectedPlanId, customGb, isCustomPlan, onUpdate, isEquipment, isChip]);
 
   // Se não há configurações específicas para este tipo de ativo, não renderizar nada
   if (!isEquipment && !isChip) {
@@ -140,35 +161,108 @@ export const AssetSpecificConfig: React.FC<AssetSpecificConfigProps> = ({
 
       {/* Configuração específica para CHIPs */}
       {isChip && (
-        <Card className="border-[#4D2BFB]/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Smartphone className="h-4 w-4 text-[#03F9FF]" />
-              Configuração do CHIP
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Defina se este CHIP será principal ou backup na associação
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="principal-chip"
-                checked={isPrincipalChip}
-                onCheckedChange={(checked) => setIsPrincipalChip(checked === true)}
-              />
-              <Label htmlFor="principal-chip" className="text-sm font-medium">
-                Este chip é principal?
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isPrincipalChip 
-                ? 'Este CHIP será marcado como principal na associação.'
-                : 'Este CHIP será marcado como backup na associação.'
-              }
-            </p>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {/* Configuração Principal/Backup */}
+          <Card className="border-[#4D2BFB]/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Smartphone className="h-4 w-4 text-[#03F9FF]" />
+                Configuração do CHIP
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Defina se este CHIP será principal ou backup na associação
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="principal-chip"
+                  checked={isPrincipalChip}
+                  onCheckedChange={(checked) => setIsPrincipalChip(checked === true)}
+                />
+                <Label htmlFor="principal-chip" className="text-sm font-medium">
+                  Este chip é principal?
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isPrincipalChip 
+                  ? 'Este CHIP será marcado como principal na associação.'
+                  : 'Este CHIP será marcado como backup na associação.'
+                }
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Configuração de Plano */}
+          <Card className="border-[#4D2BFB]/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Package className="h-4 w-4 text-[#03F9FF]" />
+                Plano do CHIP
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Selecione o plano de dados para este CHIP
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Seleção de Plano */}
+              <div className="space-y-2">
+                <Label htmlFor="plan-select" className="text-sm">Plano *</Label>
+                <Select 
+                  value={selectedPlanId?.toString()} 
+                  onValueChange={(value) => setSelectedPlanId(parseInt(value))}
+                  disabled={plansLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={plansLoading ? "Carregando planos..." : "Selecione o plano"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id.toString()}>
+                        {plan.nome}
+                        {plan.tamanho_gb && plan.tamanho_gb > 0 && ` (${plan.tamanho_gb}GB)`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Escolha o plano de dados que será aplicado a este CHIP
+                </p>
+              </div>
+
+              {/* Campo GB Customizado (só aparece se plano for customizado) */}
+              {isCustomPlan && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-gb" className="text-sm">Tamanho (GB) *</Label>
+                  <Input
+                    id="custom-gb"
+                    type="number"
+                    value={customGb}
+                    onChange={(e) => setCustomGb(parseInt(e.target.value) || 0)}
+                    placeholder="Ex: 10"
+                    min="1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Informe o tamanho em GB para o plano customizado
+                  </p>
+                </div>
+              )}
+
+              {/* Validação visual */}
+              {!selectedPlanId && (
+                <p className="text-xs text-red-500">
+                  ⚠️ Selecione um plano para este CHIP
+                </p>
+              )}
+
+              {isCustomPlan && (!customGb || customGb <= 0) && (
+                <p className="text-xs text-red-500">
+                  ⚠️ Informe um tamanho válido em GB
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );

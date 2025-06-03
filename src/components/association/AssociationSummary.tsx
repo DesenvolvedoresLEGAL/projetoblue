@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatPhoneForDisplay } from '@/utils/clientMappers';
+import { useQuery } from '@tanstack/react-query';
+import { referenceDataService } from '@/services/api/referenceDataService';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -29,6 +32,12 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
   onBack
 }) => {
   const [isCreating, setIsCreating] = useState(false);
+
+  // Buscar planos para exibir os nomes
+  const { data: plans = [] } = useQuery({
+    queryKey: ['plans'],
+    queryFn: () => referenceDataService.getPlans()
+  });
 
   // Usar telefones da nova estrutura
   const primaryPhone = client.telefones && client.telefones.length > 0 
@@ -72,7 +81,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
           // Campos específicos por ativo
           ssid: asset.ssid_atual || null,
           pass: asset.pass_atual || null,
-          gb: asset.gb || 0
+          gb: asset.gb || 0,
+          plan_id: asset.plan_id || null // Novo campo para plano do CHIP
         };
 
         console.log(`Criando associação para ativo ${asset.uuid}:`, associationData);
@@ -124,6 +134,12 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
       case 'EMPRESTIMO': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getPlanName = (planId: number | null | undefined) => {
+    if (!planId) return null;
+    const plan = plans.find(p => p.id === planId);
+    return plan ? plan.nome : `Plano ID: ${planId}`;
   };
 
   return (
@@ -233,6 +249,34 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                       <div className="text-sm text-muted-foreground">
                         {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
                       </div>
+                      
+                      {/* Informações específicas para CHIPs */}
+                      {asset.type === 'CHIP' && (
+                        <div className="space-y-1">
+                          {asset.plan_id && (
+                            <div className="text-xs">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                Plano: {getPlanName(asset.plan_id)}
+                              </Badge>
+                            </div>
+                          )}
+                          {asset.gb && asset.gb > 0 && (
+                            <div className="text-xs">
+                              <Badge variant="outline" className="bg-green-50 text-green-700">
+                                {asset.gb}GB Customizado
+                              </Badge>
+                            </div>
+                          )}
+                          {asset.isPrincipalChip !== undefined && (
+                            <div className="text-xs">
+                              <Badge variant="outline" className={asset.isPrincipalChip ? "bg-yellow-50 text-yellow-700" : "bg-gray-50 text-gray-700"}>
+                                {asset.isPrincipalChip ? 'Principal' : 'Backup'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       {asset.notes && (
                         <div className="text-xs">
                           <Badge variant="outline">{asset.notes}</Badge>

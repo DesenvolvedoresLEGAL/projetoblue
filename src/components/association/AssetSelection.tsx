@@ -61,6 +61,36 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   // Validação: data de fim deve ser posterior à data de início
   const isConfigValid = !generalConfig.endDate || generalConfig.endDate >= generalConfig.startDate;
 
+  // Validação específica para CHIPs - verificar se todos os campos obrigatórios estão preenchidos
+  const validateChipAssets = () => {
+    const chipAssets = selectedAssets.filter(asset => 
+      asset.solution_id === 11 || asset.type === 'CHIP'
+    );
+
+    for (const chip of chipAssets) {
+      // Verificar se tem plano selecionado
+      if (!chip.plan_id) {
+        return `CHIP ${chip.iccid || chip.uuid} precisa ter um plano selecionado`;
+      }
+
+      // Se for plano customizado, verificar se tem GB definido
+      // Assumindo que planos customizados têm nomes específicos
+      const isCustomPlan = chip.plan_id && (
+        // Aqui você pode ajustar a lógica baseada nos nomes dos planos na sua base
+        chip.gb !== undefined && chip.gb > 0
+      );
+
+      if (isCustomPlan && (!chip.gb || chip.gb <= 0)) {
+        return `CHIP ${chip.iccid || chip.uuid} com plano customizado precisa ter tamanho (GB) informado`;
+      }
+    }
+
+    return null;
+  };
+
+  const chipValidationError = validateChipAssets();
+  const canProceed = selectedAssets.length > 0 && isConfigValid && !chipValidationError;
+
   return (
     <div className="space-y-6">
       {/* Informações do cliente selecionado */}
@@ -106,7 +136,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             Selecionar Ativos
           </CardTitle>
           <CardDescription>
-            Adicione CHIPs e equipamentos à associação. Equipamentos SPEEDY 5G requerem um CHIP obrigatoriamente.
+            Adicione CHIPs e equipamentos à associação. CHIPs requerem seleção de plano.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -200,18 +230,28 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             </div>
           )}
 
-          {/* Botão para continuar */}
-          {selectedAssets.length > 0 && isConfigValid && (
-            <Button onClick={onProceed} className="w-full">
-              Continuar para Confirmação
-            </Button>
-          )}
-
-          {/* Mensagem de validação */}
+          {/* Mensagens de validação */}
           {selectedAssets.length > 0 && !isConfigValid && (
             <div className="text-sm text-red-500 text-center">
               Corrija a configuração da associação antes de continuar
             </div>
+          )}
+
+          {chipValidationError && (
+            <div className="text-sm text-red-500 text-center p-3 bg-red-50 rounded border-l-4 border-red-400">
+              <strong>⚠️ Validação:</strong> {chipValidationError}
+            </div>
+          )}
+
+          {/* Botão para continuar */}
+          {selectedAssets.length > 0 && (
+            <Button 
+              onClick={onProceed} 
+              className="w-full"
+              disabled={!canProceed}
+            >
+              {canProceed ? 'Continuar para Confirmação' : 'Complete as configurações para continuar'}
+            </Button>
           )}
         </CardContent>
       </Card>

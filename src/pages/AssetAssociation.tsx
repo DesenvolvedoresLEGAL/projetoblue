@@ -28,7 +28,7 @@ export interface SelectedAsset {
   radio?: string;
   solution_id?: number;
   manufacturer_id?: number;
-  plan_id?: number;
+  plan_id?: number; // Novo campo para plano do CHIP
   rented_days?: number;
   admin_user?: string;
   admin_pass?: string;
@@ -41,7 +41,7 @@ export interface SelectedAsset {
   ssid?: string;
   password?: string;
   serialNumber?: string;
-  gb?: number;
+  gb?: number; // Novo campo para tamanho GB customizado
   associationType?: string;
   startDate?: string;
   endDate?: string;
