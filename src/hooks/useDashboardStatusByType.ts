@@ -27,13 +27,14 @@ export function useDashboardStatusByType() {
       try {
         console.log('Fetching status by type data...');
         
-        const statusSummaryResult = await dashboardQueries.fetchStatusSummary();
+        // Use the detailed breakdown query that includes both asset_solutions and asset_status
+        const detailedBreakdownResult = await dashboardQueries.fetchDetailedStatusBreakdown();
         
-        if (statusSummaryResult.error) {
-          throw statusSummaryResult.error;
+        if (detailedBreakdownResult.error) {
+          throw detailedBreakdownResult.error;
         }
 
-        const assets = statusSummaryResult.data || [];
+        const assets = detailedBreakdownResult.data || [];
         
         // Define cores para cada status
         const statusColors = {
@@ -48,7 +49,7 @@ export function useDashboardStatusByType() {
 
         // Processar dados por tipo de ativo
         const processTypeData = (solutionId: number) => {
-          const typeAssets = assets.filter(asset => (asset.asset_solutions as any)?.id === solutionId);
+          const typeAssets = assets.filter(asset => asset.solution_id === solutionId);
           const statusCounts = new Map<string, number>();
           
           typeAssets.forEach(asset => {
@@ -68,7 +69,7 @@ export function useDashboardStatusByType() {
           speedys: processTypeData(1), // Speedys têm solution_id = 1
           equipment: assets
             .filter(asset => {
-              const solutionId = (asset.asset_solutions as any)?.id;
+              const solutionId = asset.solution_id;
               return solutionId !== 11 && solutionId !== 1;
             })
             .reduce((acc, asset) => {
