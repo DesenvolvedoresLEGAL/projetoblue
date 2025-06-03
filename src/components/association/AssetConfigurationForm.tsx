@@ -56,6 +56,11 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     onUpdate(updates);
   }, [associationType, startDate, endDate, rentedDays, notes, ssidAtual, passAtual, isEquipment, onUpdate]);
 
+  // Função para lidar com a mudança do tipo de associação
+  const handleAssociationTypeChange = (value: string) => {
+    setAssociationType(value as 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO');
+  };
+
   return (
     <Card className="border-[#4D2BFB]/20">
       <CardHeader className="pb-3">
@@ -82,7 +87,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
               <Label htmlFor="association-type" className="text-sm font-medium">
                 Tipo de Associação *
               </Label>
-              <Select value={associationType} onValueChange={setAssociationType}>
+              <Select value={associationType} onValueChange={handleAssociationTypeChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>

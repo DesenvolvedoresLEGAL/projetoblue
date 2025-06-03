@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,16 +12,61 @@ import { AssociationSummary } from '@/components/association/AssociationSummary'
 import { useAssetAssociationState } from '@/hooks/useAssetAssociationState';
 import { toast } from 'sonner';
 
-// Interface expandida para suportar campos adicionais da associação
-export interface SelectedAsset extends Asset {
+// Interface completa para suportar campos adicionais da associação
+export interface SelectedAsset {
+  // Campos básicos do ativo
+  id: string;
+  uuid: string;
+  type: 'CHIP' | 'EQUIPMENT';
+  registrationDate: string;
+  status: string;
+  statusId: number;
+  
+  // Campos de solução e fabricante
+  solution_id: number;
+  solucao?: string;
+  manufacturer_id?: number;
+  marca?: string;
+  brand?: string;
+  
+  // Campos específicos para CHIP
+  iccid?: string;
+  line_number?: string;
+  phoneNumber?: string;
+  carrier?: string;
+  
+  // Campos específicos para EQUIPAMENTO
+  radio?: string;
+  serial_number?: string;
+  serialNumber?: string;
+  model?: string;
+  modelo?: string;
+  
+  // Campos de rede - Fábrica (imutáveis)
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  
+  // Campos de rede - Atuais (editáveis)
+  ssid_atual?: string;
+  pass_atual?: string;
+  ssid?: string;
+  password?: string;
+  
+  // Campos de associação
   associationType?: 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO';
   startDate?: string;
   endDate?: string;
   rented_days?: number;
   notes?: string;
-  // Campos específicos para configuração de rede (separados dos dados de fábrica)
-  ssid_atual?: string;
-  pass_atual?: string;
+  
+  // Campos auxiliares
+  uniqueId?: string;
+  gb?: number;
+  admin_user?: string;
+  admin_pass?: string;
+  plan_id?: number;
 }
 
 const AssetAssociation: React.FC = () => {
@@ -129,7 +175,7 @@ const AssetAssociation: React.FC = () => {
         return selectedClient && (
           <AssociationSummary
             client={selectedClient}
-            selectedAssets={selectedAssets}
+            assets={selectedAssets}
             onBack={handleBackToAssets}
             onComplete={handleComplete}
           />
