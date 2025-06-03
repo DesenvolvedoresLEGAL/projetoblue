@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,7 +31,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
         .from('clients')
         .insert({
           nome: data.nome,
-          cnpj: '00000000000000', // CNPJ placeholder para compatibilidade
+          cnpj: data.cnpj || null, // Corrigido: CNPJ agora é opcional
           email: data.email || null,
           contato: data.contato
         })
@@ -46,8 +45,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) =>
       }
 
       const client: Client = {
-        id: newClient.uuid,
-        uuid: newClient.uuid,
+        uuid: newClient.uuid, // Corrigido: remover campo id
         nome: newClient.nome,
         cnpj: newClient.cnpj,
         email: newClient.email || '',

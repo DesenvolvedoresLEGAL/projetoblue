@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -19,7 +18,7 @@ const Association = () => {
   const [assetId, setAssetId] = useState<string>('');
   const [clientId, setClientId] = useState<string>('');
   const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(undefined);
-  const [selectedClient, setSelectedClient] = useState<{ id: string, nome: string } | undefined>(undefined);
+  const [selectedClient, setSelectedClient] = useState<{ uuid: string, nome: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -29,8 +28,8 @@ const Association = () => {
 
   useEffect(() => {
     // Find the client when the clientId changes
-    const client = clients.find(client => client.id === clientId);
-    setSelectedClient(client ? { id: client.id, nome: client.nome } : undefined);
+    const client = clients.find(client => client.uuid === clientId);
+    setSelectedClient(client ? { uuid: client.uuid, nome: client.nome } : undefined);
   }, [clientId, clients]);
 
   const handleAssociate = async () => {

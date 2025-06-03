@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +46,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   const handleClientSelect = (clientData: any) => {
     // Map database fields to Client interface
     const client: Client = {
-      id: clientData.uuid,
-      uuid: clientData.uuid,
+      uuid: clientData.uuid, // Corrigido: remover campo id
       nome: clientData.nome,
       cnpj: clientData.cnpj,
       email: clientData.email || '',

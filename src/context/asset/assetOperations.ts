@@ -1,4 +1,3 @@
-
 import { ChipAsset, EquipamentAsset, Asset, AssetStatus, AssetType } from "@/types/asset";
 import { AssetHistoryEntry } from "@/types/assetHistory";
 import { v4 as uuidv4 } from "uuid";
@@ -28,17 +27,8 @@ export const returnAssetsToStock = (
       if (asset.clientId) {
         const client = getClientById(clients, asset.clientId);
         if (client) {
-          setClients(prevClients => 
-            prevClients.map(c => {
-              if (c.id === asset.clientId) {
-                return {
-                  ...c,
-                  assets: c.assets?.filter(id => id !== asset.id) || []
-                };
-              }
-              return c;
-            })
-          );
+          // Remover referência ao campo assets que não existe mais
+          // O relacionamento agora é mantido apenas via asset.clientId
           
           const assetIdentifier = asset.type === "CHIP" 
             ? (asset as ChipAsset).iccid 
@@ -128,11 +118,8 @@ export const associateAssetToClient = (
       } : undefined
     });
     
-    if (!client.assets?.includes(assetId)) {
-      updateClient(clientId, {
-        assets: [...(client.assets || []), assetId]
-      });
-    }
+    // Remover referência ao campo assets que não existe mais no Client
+    // A associação agora é mantida apenas via asset.clientId
     
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 
@@ -184,9 +171,7 @@ export const removeAssetFromClient = (
       ...(asset.type === "ROTEADOR" ? { needsPasswordChange } : {})
     });
     
-    updateClient(clientId, {
-      assets: client.assets?.filter(id => id !== assetId) || []
-    });
+    // Remover referência ao campo assets que não existe mais no Client
     
     const assetIdentifier = asset.type === "CHIP" 
       ? (asset as ChipAsset).iccid 

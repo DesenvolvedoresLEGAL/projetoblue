@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
         .from('clients')
         .insert({
           nome: formData.nome.trim(),
-          cnpj: '00000000000000', // CNPJ placeholder - será removido futuramente
+          cnpj: null, // Corrigido: CNPJ agora é opcional/nullable
           contato: formattedPhone, // Agora como number
           email: formData.email.trim() || null
         })
@@ -56,8 +55,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
       }
 
       const newClient: Client = {
-        id: data.uuid,
-        uuid: data.uuid,
+        uuid: data.uuid, // Corrigido: remover campo id
         nome: data.nome,
         cnpj: data.cnpj,
         email: data.email || '',

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,8 +55,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
       }
 
       return data.map(client => ({
-        id: client.uuid,
-        uuid: client.uuid,
+        uuid: client.uuid, // Corrigido: remover campo id
         nome: client.nome,
         cnpj: client.cnpj,
         email: client.email || '',

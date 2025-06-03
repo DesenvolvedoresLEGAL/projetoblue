@@ -1,4 +1,3 @@
-
 import { useAssets } from "@/context/useAssets";
 import { Client, Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
@@ -45,8 +44,8 @@ export default function ClientDetailsDialog({
   
   if (!client) return null;
   
-  const clientAssets = assets.filter(asset => asset.clientId === client.id);
-  const clientHistory = getClientHistory(client.id).slice(0, 5); // Get last 5 entries
+  const clientAssets = assets.filter(asset => asset.clientId === client.uuid); // Corrigido: usar uuid
+  const clientHistory = getClientHistory(client.uuid).slice(0, 5); // Corrigido: usar uuid
   
   const getAssetStatusBadgeStyle = (status: string) => {
     switch (status) {

@@ -3,6 +3,7 @@ import { AssetType, AssetStatus } from "@/types/asset";
 
 // Interface corrigida para criação de assets, alinhada com campos do banco
 export interface CreateAssetData {
+  type?: AssetType; // Adicionado para compatibilidade
   solution_id: number; // Obrigatório no banco
   status_id?: number;
   manufacturer_id?: number;

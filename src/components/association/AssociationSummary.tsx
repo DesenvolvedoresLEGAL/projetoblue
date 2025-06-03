@@ -34,7 +34,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
       // Criar associações para cada ativo
       for (const asset of assets) {
         await createAssociation.mutateAsync({
-          clientId: client.id,
+          clientId: client.uuid, // Corrigido: usar uuid em vez de id
           assetId: asset.uuid,
           associationType: asset.associationType || 'ALUGUEL',
           startDate: asset.startDate || new Date().toISOString(),

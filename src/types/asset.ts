@@ -229,6 +229,9 @@ export interface StatusRecord {
   deleted_at?: string;
 }
 
+// Adicionar alias para compatibilidade com código existente
+export type Status = StatusRecord;
+
 // Interface corrigida para alinhar com tabela 'asset_solutions' do banco
 export interface AssetSolution {
   id: number; // bigint NOT NULL
