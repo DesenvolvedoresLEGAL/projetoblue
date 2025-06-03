@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { Client } from '@/types/client'; // Use unified client type
+import { Client } from '@/types/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
+import { AssociationGeneralConfig } from '@/components/association/AssociationGeneralConfig';
 
 type Step = 'client' | 'assets' | 'summary';
 
@@ -9,9 +10,17 @@ interface AssetAssociationState {
   currentStep: Step;
   selectedClient: Client | null;
   selectedAssets: SelectedAsset[];
+  generalConfig: AssociationGeneralConfig;
 }
 
 const STORAGE_KEY = 'asset-association-state';
+
+const defaultGeneralConfig: AssociationGeneralConfig = {
+  associationType: 'ALUGUEL',
+  startDate: new Date(),
+  endDate: undefined,
+  notes: ''
+};
 
 export const useAssetAssociationState = () => {
   // Initialize state from sessionStorage or defaults
@@ -19,7 +28,15 @@ export const useAssetAssociationState = () => {
     try {
       const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsedState = JSON.parse(saved);
+        // Converter string dates de volta para Date objects
+        if (parsedState.generalConfig?.startDate) {
+          parsedState.generalConfig.startDate = new Date(parsedState.generalConfig.startDate);
+        }
+        if (parsedState.generalConfig?.endDate) {
+          parsedState.generalConfig.endDate = new Date(parsedState.generalConfig.endDate);
+        }
+        return parsedState;
       }
     } catch (error) {
       console.warn('Failed to load association state from sessionStorage:', error);
@@ -28,7 +45,8 @@ export const useAssetAssociationState = () => {
     return {
       currentStep: 'client' as Step,
       selectedClient: null,
-      selectedAssets: []
+      selectedAssets: [],
+      generalConfig: defaultGeneralConfig
     };
   });
 
@@ -57,6 +75,13 @@ export const useAssetAssociationState = () => {
     }));
   };
 
+  const setGeneralConfig = (config: AssociationGeneralConfig | ((prev: AssociationGeneralConfig) => AssociationGeneralConfig)) => {
+    setState(prev => ({
+      ...prev,
+      generalConfig: typeof config === 'function' ? config(prev.generalConfig) : config
+    }));
+  };
+
   // Clear all state (used when completing or canceling)
   const clearState = () => {
     try {
@@ -68,7 +93,8 @@ export const useAssetAssociationState = () => {
     setState({
       currentStep: 'client',
       selectedClient: null,
-      selectedAssets: []
+      selectedAssets: [],
+      generalConfig: defaultGeneralConfig
     });
   };
 
@@ -76,9 +102,11 @@ export const useAssetAssociationState = () => {
     currentStep: state.currentStep,
     selectedClient: state.selectedClient,
     selectedAssets: state.selectedAssets,
+    generalConfig: state.generalConfig,
     setCurrentStep,
     setSelectedClient,
     setSelectedAssets,
+    setGeneralConfig,
     clearState
   };
 };

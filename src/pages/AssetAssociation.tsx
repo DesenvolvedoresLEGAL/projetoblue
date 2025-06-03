@@ -57,9 +57,11 @@ const AssetAssociation = () => {
     currentStep,
     selectedClient,
     selectedAssets,
+    generalConfig,
     setCurrentStep,
     setSelectedClient,
     setSelectedAssets,
+    setGeneralConfig,
     clearState
   } = useAssetAssociationState();
   
@@ -195,6 +197,7 @@ const AssetAssociation = () => {
             <AssociationSummary
               client={selectedClient}
               assets={selectedAssets}
+              generalConfig={generalConfig}
               onComplete={handleComplete}
               onBack={handleBack}
             />

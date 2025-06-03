@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,8 @@ import { Package, Plus, Trash2, List } from "lucide-react";
 import { Client } from '@/types/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
 import { AssetSearchForm } from './AssetSearchForm';
-import { AssetConfigurationForm } from './AssetConfigurationForm';
+import { AssetSpecificConfig } from './AssetSpecificConfig';
+import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';
 import { AssetListModal } from './AssetListModal';
 import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
@@ -29,6 +31,14 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   const [isAddingAsset, setIsAddingAsset] = useState(false);
   const [showEquipmentList, setShowEquipmentList] = useState(false);
   const [showChipList, setShowChipList] = useState(false);
+  
+  // Estado para configuração geral da associação
+  const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
+    associationType: 'ALUGUEL',
+    startDate: new Date(),
+    endDate: undefined,
+    notes: ''
+  });
 
   const handleAssetFound = (asset: SelectedAsset) => {
     onAssetAdded(asset);
@@ -39,10 +49,17 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     onAssetUpdated(assetId, updates);
   };
 
+  const handleGeneralConfigUpdate = (updates: Partial<AssociationGeneralConfig>) => {
+    setGeneralConfig(prev => ({ ...prev, ...updates }));
+  };
+
   // Usar telefones da nova estrutura
   const primaryPhone = client.telefones && client.telefones.length > 0 
     ? formatPhoneForDisplay(client.telefones[0]) 
     : '';
+
+  // Validação: data de fim deve ser posterior à data de início
+  const isConfigValid = !generalConfig.endDate || generalConfig.endDate >= generalConfig.startDate;
 
   return (
     <div className="space-y-6">
@@ -74,6 +91,12 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Configuração Geral da Associação - UMA VEZ APENAS */}
+      <AssociationGeneralConfigComponent
+        config={generalConfig}
+        onUpdate={handleGeneralConfigUpdate}
+      />
 
       {/* Seleção de ativos */}
       <Card>
@@ -114,9 +137,10 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
                     </Button>
                   </div>
 
-                  {/* Formulário de configuração do ativo */}
-                  <AssetConfigurationForm
+                  {/* Configurações específicas do ativo */}
+                  <AssetSpecificConfig
                     asset={asset}
+                    associationType={generalConfig.associationType}
                     onUpdate={(updates) => handleAssetUpdate(asset.uuid, updates)}
                   />
                 </div>
@@ -177,10 +201,17 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           )}
 
           {/* Botão para continuar */}
-          {selectedAssets.length > 0 && (
+          {selectedAssets.length > 0 && isConfigValid && (
             <Button onClick={onProceed} className="w-full">
               Continuar para Confirmação
             </Button>
+          )}
+
+          {/* Mensagem de validação */}
+          {selectedAssets.length > 0 && !isConfigValid && (
+            <div className="text-sm text-red-500 text-center">
+              Corrija a configuração da associação antes de continuar
+            </div>
           )}
         </CardContent>
       </Card>

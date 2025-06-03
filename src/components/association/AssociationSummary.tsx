@@ -1,18 +1,23 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Client } from '@/types/client'; // Use unified client type
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Calendar, Package, Users, AlertCircle } from "lucide-react";
+import { Client } from '@/types/client';
 import { SelectedAsset } from '@/pages/AssetAssociation';
-import { CheckCircle, User, Package, Calendar, AlertCircle } from "lucide-react";
-import { useCreateAssociation } from '@/hooks/useCreateAssociation';
+import { AssociationGeneralConfig } from './AssociationGeneralConfig';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface AssociationSummaryProps {
   client: Client;
   assets: SelectedAsset[];
+  generalConfig: AssociationGeneralConfig;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -20,180 +25,240 @@ interface AssociationSummaryProps {
 export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
   client,
   assets,
+  generalConfig,
   onComplete,
   onBack
 }) => {
   const [isCreating, setIsCreating] = useState(false);
-  const createAssociation = useCreateAssociation();
 
-  const handleConfirm = async () => {
+  // Usar telefones da nova estrutura
+  const primaryPhone = client.telefones && client.telefones.length > 0 
+    ? formatPhoneForDisplay(client.telefones[0]) 
+    : '';
+
+  const handleCreateAssociation = async () => {
     setIsCreating(true);
     
     try {
-      // Criar associações para cada ativo
-      for (const asset of assets) {
-        await createAssociation.mutateAsync({
-          clientId: client.uuid, // Usar uuid do cliente
-          assetId: asset.uuid,
-          associationType: asset.associationType || 'ALUGUEL',
-          startDate: asset.startDate || new Date().toISOString(),
-          rentedDays: asset.rented_days || 30,
-          notes: asset.notes || ''
-        });
-      }
+      console.log('Iniciando criação de associação:', {
+        client: client.uuid,
+        assets: assets.length,
+        generalConfig
+      });
 
+      // Gerar um ID único para toda a associação
+      const associationId = Date.now();
+      
+      // Criar registros de associação para cada ativo
+      const associationPromises = assets.map(async (asset) => {
+        const associationData = {
+          asset_id: asset.uuid,
+          client_id: client.uuid,
+          entry_date: format(generalConfig.startDate, 'yyyy-MM-dd'),
+          exit_date: generalConfig.endDate ? format(generalConfig.endDate, 'yyyy-MM-dd') : null,
+          association_id: associationId,
+          notes: asset.notes || generalConfig.notes, // Usar notes específicas do asset ou gerais
+          // Campos específicos por ativo
+          ssid: asset.ssid_atual || null,
+          pass: asset.pass_atual || null,
+          gb: asset.gb || 0
+        };
+
+        console.log(`Criando associação para ativo ${asset.uuid}:`, associationData);
+
+        const { data, error } = await supabase
+          .from('asset_client_assoc')
+          .insert(associationData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error(`Erro ao criar associação para ativo ${asset.uuid}:`, error);
+          throw error;
+        }
+
+        return data;
+      });
+
+      await Promise.all(associationPromises);
+
+      console.log('Todas as associações criadas com sucesso');
       toast.success('Associações criadas com sucesso!');
+      
       onComplete();
     } catch (error) {
       console.error('Erro ao criar associações:', error);
-      toast.error('Erro ao criar associações');
+      toast.error('Erro ao criar associações. Tente novamente.');
     } finally {
       setIsCreating(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+  const getAssetTypeIcon = (asset: SelectedAsset) => {
+    return asset.type === 'CHIP' ? '📱' : '📡';
   };
 
-  const getTotalValue = () => {
-    // Exemplo de cálculo de valor total
-    return assets.length * 50; // R$ 50 por ativo
+  const getAssociationTypeColor = (type: string) => {
+    switch (type) {
+      case 'ALUGUEL': return 'bg-blue-100 text-blue-800';
+      case 'ASSINATURA': return 'bg-green-100 text-green-800';
+      case 'EMPRESTIMO': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-
-  // Usar telefones da nova estrutura
-  const primaryPhone = client.telefones && client.telefones.length > 0 
-    ? formatPhoneForDisplay(client.telefones[0]) 
-    : 'Não informado';
 
   return (
     <div className="space-y-6">
-      {/* Informações do Cliente */}
-      <Card className="border-[#4D2BFB]/20">
+      <div className="flex items-center gap-2 mb-4">
+        <CheckCircle className="h-5 w-5 text-green-600" />
+        <h3 className="text-lg font-semibold">Confirmar Associação</h3>
+      </div>
+
+      {/* Resumo da Configuração Geral */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
-            <User className="h-5 w-5 text-[#03F9FF]" />
-            Cliente Selecionado
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Calendar className="h-4 w-4" />
+            Configuração da Associação
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground">Empresa</div>
-              <div className="font-medium">{client.empresa}</div>
+              <span className="text-sm font-medium">Tipo:</span>
+              <div className="mt-1">
+                <Badge className={getAssociationTypeColor(generalConfig.associationType)}>
+                  {generalConfig.associationType}
+                </Badge>
+              </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">Responsável</div>
-              <div className="font-medium">{client.responsavel}</div>
+              <span className="text-sm font-medium">Data de Início:</span>
+              <p className="text-sm text-muted-foreground mt-1">
+                {format(generalConfig.startDate, 'dd/MM/yyyy', { locale: ptBR })}
+              </p>
             </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Telefone</div>
-              <div className="font-medium">{primaryPhone}</div>
-            </div>
-            {client.email && (
+            {generalConfig.endDate && (
               <div>
-                <div className="text-sm text-muted-foreground">Email</div>
-                <div className="font-medium">{client.email}</div>
+                <span className="text-sm font-medium">Data de Fim:</span>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {format(generalConfig.endDate, 'dd/MM/yyyy', { locale: ptBR })}
+                </p>
+              </div>
+            )}
+            {generalConfig.notes && (
+              <div className="md:col-span-2">
+                <span className="text-sm font-medium">Observações Gerais:</span>
+                <p className="text-sm text-muted-foreground mt-1">{generalConfig.notes}</p>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Resumo dos Ativos */}
-      <Card className="border-[#4D2BFB]/20">
+      {/* Informações do Cliente */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#020CBC]">
-            <Package className="h-5 w-5 text-[#03F9FF]" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4" />
+            Cliente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="text-sm font-medium">Empresa:</span>
+              <p className="text-sm text-muted-foreground">{client.empresa}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium">Responsável:</span>
+              <p className="text-sm text-muted-foreground">{client.responsavel}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium">Telefone:</span>
+              <p className="text-sm text-muted-foreground">{primaryPhone}</p>
+            </div>
+            {client.email && (
+              <div>
+                <span className="text-sm font-medium">Email:</span>
+                <p className="text-sm text-muted-foreground">{client.email}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista de Ativos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Package className="h-4 w-4" />
             Ativos Selecionados ({assets.length})
           </CardTitle>
           <CardDescription>
-            Revise os ativos e configurações antes de confirmar
+            Resumo dos ativos que serão associados ao cliente
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <>
+        <CardContent>
+          <div className="space-y-4">
             {assets.map((asset, index) => (
               <div key={asset.uuid}>
-                <div className="flex items-start justify-between p-4 bg-[#F0F3FF] rounded-lg">
+                <div className="flex items-start justify-between p-4 rounded-lg border">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-white rounded-lg">
-                      {asset.type === 'CHIP' ? '📱' : '📡'}
-                    </div>
-                    <div className="space-y-2">
-                      <div className="font-medium text-[#020CBC]">
-                        {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'} - {asset.solucao}
+                    <span className="text-2xl">{getAssetTypeIcon(asset)}</span>
+                    <div className="space-y-1">
+                      <div className="font-medium">
+                        {asset.type === 'CHIP' ? 'CHIP' : 'EQUIPAMENTO'}
+                        {asset.solucao && ` - ${asset.solucao}`}
                       </div>
-                      <div className="text-sm space-y-1">
-                        {asset.type === 'CHIP' ? (
-                          <>
-                            <div>ICCID: {asset.iccid}</div>
-                            <div>Linha: {asset.line_number}</div>
-                          </>
-                        ) : (
-                          <>
-                            <div>Rádio: {asset.radio}</div>
-                            <div>Modelo: {asset.modelo}</div>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm">
-                        <Badge variant="outline">
-                          {asset.associationType || 'ALUGUEL'}
-                        </Badge>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(asset.startDate || new Date().toISOString())}
-                        </div>
-                        {asset.rented_days && (
-                          <div>{asset.rented_days} dias</div>
-                        )}
+                      <div className="text-sm text-muted-foreground">
+                        {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Rádio: ${asset.radio || asset.serial_number}`}
                       </div>
                       {asset.notes && (
-                        <div className="text-sm text-muted-foreground italic">
-                          "{asset.notes}"
+                        <div className="text-xs">
+                          <Badge variant="outline">{asset.notes}</Badge>
+                        </div>
+                      )}
+                      {asset.ssid_atual && (
+                        <div className="text-xs text-muted-foreground">
+                          WiFi: {asset.ssid_atual}
+                        </div>
+                      )}
+                      {asset.rented_days && generalConfig.associationType === 'ALUGUEL' && (
+                        <div className="text-xs text-muted-foreground">
+                          Dias de aluguel: {asset.rented_days}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-                {index < assets.length - 1 && <Separator className="my-4" />}
+                {index < assets.length - 1 && <Separator className="my-2" />}
               </div>
             ))}
-          </>
-          <>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-              <div className="text-sm text-amber-800">
-                <div className="font-medium">Confirmação Final</div>
-                <div>
-                  Ao confirmar, os ativos selecionados serão associados ao cliente 
-                  e não estarão mais disponíveis para outras associações.
-                </div>
-              </div>
-            </div>
           </div>
-          </>
         </CardContent>
       </Card>
 
+      {/* Aviso importante */}
+      <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+        <div className="text-sm">
+          <p className="font-medium text-yellow-800">Atenção</p>
+          <p className="text-yellow-700">
+            Ao confirmar, todos os ativos selecionados serão associados ao cliente nas condições especificadas.
+            Esta ação não pode ser desfeita facilmente.
+          </p>
+        </div>
+      </div>
+
       {/* Botões de ação */}
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          disabled={isCreating}
-          className="flex-1 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
-        >
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onBack} disabled={isCreating}>
           Voltar
         </Button>
-        <Button
-          onClick={handleConfirm}
-          disabled={isCreating}
-          className="flex-1 bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas"
-        >
-          {isCreating ? 'Criando Associações...' : 'Confirmar Associações'}
+        
+        <Button onClick={handleCreateAssociation} disabled={isCreating}>
+          {isCreating ? 'Criando Associação...' : 'Confirmar e Criar Associação'}
         </Button>
       </div>
     </div>
