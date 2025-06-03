@@ -46,13 +46,6 @@ const Dashboard = () => {
               Sistema de Gestão Avançada de Ativos
             </div>
           </div>
-          
-          {/* System Status */}
-          <SystemStatusCard 
-            isOnline={systemStatus.data?.isOnline ?? true}
-            lastSync={systemStatus.data?.lastSync ?? "Carregando..."}
-            isSyncing={systemStatus.data?.isSyncing ?? false}
-          />
         </div>
 
         {/* Asset Summary Cards */}
