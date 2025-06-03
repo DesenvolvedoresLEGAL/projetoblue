@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Fetch total assets count
@@ -125,5 +124,104 @@ export async function fetchDetailedStatusBreakdown() {
     .is('deleted_at', null);
   
   console.log('fetchDetailedStatusBreakdown result:', result);
+  return result;
+}
+
+// NEW: Fetch active associations
+export async function fetchActiveAssociations() {
+  console.log('Executing fetchActiveAssociations query');
+  const result = await supabase
+    .from('asset_client_assoc')
+    .select(`
+      id,
+      asset_id,
+      client_id,
+      association_id,
+      entry_date,
+      exit_date,
+      clients!inner(nome),
+      association_types!inner(type),
+      assets!inner(solution_id, asset_solutions!inner(solution))
+    `)
+    .is('exit_date', null)
+    .is('deleted_at', null);
+  
+  console.log('fetchActiveAssociations result:', result);
+  return result;
+}
+
+// NEW: Fetch associations ending today
+export async function fetchAssociationsEndingToday() {
+  console.log('Executing fetchAssociationsEndingToday query');
+  const today = new Date().toISOString().split('T')[0];
+  const result = await supabase
+    .from('asset_client_assoc')
+    .select(`
+      id,
+      asset_id,
+      client_id,
+      association_id,
+      entry_date,
+      exit_date,
+      clients!inner(nome),
+      association_types!inner(type)
+    `)
+    .eq('exit_date', today)
+    .is('deleted_at', null);
+  
+  console.log('fetchAssociationsEndingToday result:', result);
+  return result;
+}
+
+// NEW: Fetch top clients with associations
+export async function fetchTopClientsWithAssociations() {
+  console.log('Executing fetchTopClientsWithAssociations query');
+  const result = await supabase
+    .from('asset_client_assoc')
+    .select(`
+      client_id,
+      clients!inner(nome)
+    `)
+    .is('exit_date', null)
+    .is('deleted_at', null);
+  
+  console.log('fetchTopClientsWithAssociations result:', result);
+  return result;
+}
+
+// NEW: Fetch associations from last 30 days
+export async function fetchAssociationsLast30Days() {
+  console.log('Executing fetchAssociationsLast30Days query');
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const result = await supabase
+    .from('asset_client_assoc')
+    .select(`
+      id,
+      association_id,
+      entry_date,
+      exit_date,
+      created_at,
+      association_types!inner(type)
+    `)
+    .gte('created_at', thirtyDaysAgo.toISOString())
+    .is('deleted_at', null);
+  
+  console.log('fetchAssociationsLast30Days result:', result);
+  return result;
+}
+
+// NEW: Enhanced recent events
+export async function fetchEnhancedRecentEvents() {
+  console.log('Executing fetchEnhancedRecentEvents query');
+  const result = await supabase
+    .from('asset_logs')
+    .select('id, event, date, details, status_before_id, status_after_id')
+    .in('event', ['ASSET_CRIADO', 'ASSOCIATION_CREATED', 'ASSOCIATION_REMOVED', 'STATUS_UPDATED'])
+    .order('date', { ascending: false })
+    .limit(10);
+  
+  console.log('fetchEnhancedRecentEvents result:', result);
   return result;
 }
