@@ -6,14 +6,76 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useNavigate } from "react-router-dom";
 import { Plus, Link, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
+import * as XLSX from 'xlsx';
+import { assetService } from '@/services/api/assetService';
+import useAssetsData from '@/hooks/useAssetsData';
+
 
 export const QuickActionsCard: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const assets = useAssetsData();
 
   const handleExport = (format: 'csv' | 'excel') => {
-    // TODO: Implement export functionality
-    console.log(`Exporting as ${format}`);
+
+    try {
+      const data = assets.data.assets;
+      const fileName = "ATIVOS";
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        alert("Não há dados para exportar.");
+        return;
+      }
+
+      // Retiradas as colunas uuid, created_at, updated_at e matchedField
+      const flattenedData = data.map(asset => ({
+        model: asset.model,
+        rented_days: asset.rented_days,
+        serial_number: asset.serial_number,
+        radio: asset.radio,
+        admin_user: asset.admin_user,
+        admin_pass: asset.admin_pass,
+        ssid_atual: asset.ssid_atual,
+        pass_atual: asset.pass_atual,
+        manufacturer_name: asset.manufacturer?.name ?? "",
+        status_name: asset.status?.name ?? "",
+        solucao_name: asset.solucao?.name ?? "",
+        plan_name: asset.plan?.name ?? ""
+      }));
+
+      if (format === 'csv') {
+        const headers = Object.keys(flattenedData[0]);
+        const csvRows = [
+          headers.join(','), // Cabeçalho
+          ...flattenedData.map(row =>
+            headers.map(field => {
+              let cell = row[field];
+              if (cell == null) cell = "";
+              if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
+                cell = `"${cell.replace(/"/g, '""')}"`;
+              }
+              return cell;
+            }).join(',')
+          )
+        ];
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `${fileName}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+      } else if (format === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(flattenedData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Exportação");
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+      }
+    } catch (error) {
+      console.log(`ERRO DE EXPORTAÇÃO:===>>>> ${error}`);
+    }
   };
 
   return (
