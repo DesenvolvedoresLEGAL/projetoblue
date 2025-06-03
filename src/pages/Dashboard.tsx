@@ -6,6 +6,8 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
 import { useDashboardAssociations } from '@/hooks/useDashboardAssociations';
 import { useDashboardCharts } from '@/hooks/useDashboardCharts';
+import { useDashboardSystemStatus } from '@/hooks/useDashboardSystemStatus';
+import { useDashboardRecentActivities } from '@/hooks/useDashboardRecentActivities';
 import { AssetSummaryCard } from '@/components/dashboard/AssetSummaryCard';
 import { AssociationSummaryCard } from '@/components/dashboard/AssociationSummaryCard';
 import { StatusDistributionChart } from '@/components/dashboard/StatusDistributionChart';
@@ -22,30 +24,13 @@ const Dashboard = () => {
   const dashboardAssets = useDashboardAssets();
   const dashboardAssociations = useDashboardAssociations();
   const dashboardCharts = useDashboardCharts();
+  const systemStatus = useDashboardSystemStatus();
+  const recentActivities = useDashboardRecentActivities();
   
   // Check loading states
   const isLoading = dashboardAssets.assetsStats.isLoading || 
                    dashboardAssociations.isLoading || 
                    dashboardCharts.isLoading;
-
-  // Mock recent activities data (replace with real data from your hook)
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'asset_created' as const,
-      description: 'Novo chip cadastrado',
-      assetName: 'CHIP-001',
-      timestamp: 'Há 2 horas'
-    },
-    {
-      id: 2,
-      type: 'association_created' as const,
-      description: 'Nova associação criada',
-      assetName: 'SPEEDY-001',
-      clientName: 'Cliente ABC',
-      timestamp: 'Há 3 horas'
-    }
-  ];
 
   return (
     <ErrorBoundary>
@@ -64,9 +49,9 @@ const Dashboard = () => {
           
           {/* System Status */}
           <SystemStatusCard 
-            isOnline={true}
-            lastSync="Há 2 minutos"
-            isSyncing={false}
+            isOnline={systemStatus.data?.isOnline ?? true}
+            lastSync={systemStatus.data?.lastSync ?? "Carregando..."}
+            isSyncing={systemStatus.data?.isSyncing ?? false}
           />
         </div>
 
@@ -129,8 +114,8 @@ const Dashboard = () => {
             isLoading={dashboardCharts.isLoading}
           />
           <RecentActivitiesCard
-            activities={recentActivities}
-            isLoading={false}
+            activities={recentActivities.data || []}
+            isLoading={recentActivities.isLoading}
           />
         </div>
       </div>
