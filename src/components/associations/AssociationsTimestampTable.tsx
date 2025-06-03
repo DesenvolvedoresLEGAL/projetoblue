@@ -8,7 +8,6 @@ import { Edit, StopCircle, Loader2 } from "lucide-react";
 import { Association } from '@/types/associations';
 import { TimestampGroup, getTimestampGroupStats } from '@/utils/timestampGroupingUtils';
 import { AssociationStatusBadge } from './AssociationStatusBadge';
-import { AssociationTypeFilter } from './AssociationTypeFilter';
 import { formatDate } from '@/utils/formatDate';
 
 interface AssociationsTimestampTableProps {
@@ -134,12 +133,15 @@ export const AssociationsTimestampTable: React.FC<AssociationsTimestampTableProp
                       <TableCell>{association.exit_date ? formatDate(association.exit_date) : '-'}</TableCell>
                       <TableCell>
                         <AssociationStatusBadge 
-                          entryDate={association.entry_date}
                           exitDate={association.exit_date}
                         />
                       </TableCell>
                       <TableCell>
-                        <AssociationTypeFilter associationId={association.association_id} />
+                        <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                          {association.association_id === 1 ? 'Locação' : 
+                           association.association_id === 2 ? 'Assinatura' : 
+                           'Outros'}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
