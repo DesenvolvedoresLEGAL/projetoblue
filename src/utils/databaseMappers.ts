@@ -1,3 +1,4 @@
+
 import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
@@ -80,6 +81,13 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     rented_days: dbAsset.rented_days,
     admin_user: dbAsset.admin_user,
     admin_pass: dbAsset.admin_pass,
+    // Campos de configurações de rede
+    ssid_fabrica: dbAsset.ssid_fabrica,
+    pass_fabrica: dbAsset.pass_fabrica,
+    admin_user_fabrica: dbAsset.admin_user_fabrica,
+    admin_pass_fabrica: dbAsset.admin_pass_fabrica,
+    ssid_atual: dbAsset.ssid_atual,
+    pass_atual: dbAsset.pass_atual,
     created_at: dbAsset.created_at,
     updated_at: dbAsset.updated_at,
     deleted_at: dbAsset.deleted_at
@@ -99,8 +107,8 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
       uniqueId: dbAsset.uuid,
       brand: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name || '',
       model: dbAsset.model || '',
-      ssid: '',
-      password: '',
+      ssid: dbAsset.ssid_atual || '', // Usar campo atual do banco
+      password: dbAsset.pass_atual || '', // Usar campo atual do banco
       serialNumber: dbAsset.serial_number || '',
       ipAddress: dbAsset.ip_address,
       adminUser: dbAsset.admin_user,
@@ -110,39 +118,38 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
   }
 };
 
-// Map database client record to frontend Client type
+// Map database client record to frontend Client type - corrigido conforme banco
 export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
   if (!dbClient) return null;
   
   return {
-    id: dbClient.uuid,
-    uuid: dbClient.uuid,
+    uuid: dbClient.uuid, // Campo principal no banco
     nome: dbClient.nome,
-    cnpj: dbClient.cnpj,
+    cnpj: dbClient.cnpj, // Nullable no banco
     email: dbClient.email,
-    contato: dbClient.contato,
-    assets: [],
+    contato: dbClient.contato, // bigint no banco
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
     deleted_at: dbClient.deleted_at
+    // Removido campo 'id' e 'assets' que não existem no banco
   };
 };
 
-// Map database asset_client_assoc to frontend type
+// Map database asset_client_assoc to frontend type - corrigido conforme banco
 export const mapDatabaseAssocToFrontend = (dbAssoc: any): AssetClientAssociation => {
   if (!dbAssoc) return null;
   
   return {
-    id: dbAssoc.id,
-    asset_id: dbAssoc.asset_id,
-    client_id: dbAssoc.client_id,
-    entry_date: dbAssoc.entry_date,
-    exit_date: dbAssoc.exit_date,
-    association_id: dbAssoc.association_id,
-    plan_id: dbAssoc.plan_id,
+    id: dbAssoc.id, // bigint sequence
+    asset_id: dbAssoc.asset_id, // text NOT NULL
+    client_id: dbAssoc.client_id, // text NOT NULL
+    entry_date: dbAssoc.entry_date, // date NOT NULL
+    exit_date: dbAssoc.exit_date, // date nullable
+    association_id: dbAssoc.association_id, // bigint NOT NULL
+    plan_id: dbAssoc.plan_id, // bigint nullable
     notes: dbAssoc.notes,
     pass: dbAssoc.pass,
-    gb: dbAssoc.gb,
+    gb: dbAssoc.gb, // bigint com default 0
     ssid: dbAssoc.ssid,
     created_at: dbAssoc.created_at,
     updated_at: dbAssoc.updated_at,
@@ -182,6 +189,10 @@ export const mapFrontendToDatabase = (frontendData: any, isUpdate: boolean = fal
   if (frontendData.admin_user !== undefined) dbData.admin_user = frontendData.admin_user;
   if (frontendData.admin_pass !== undefined) dbData.admin_pass = frontendData.admin_pass;
   if (frontendData.rented_days !== undefined) dbData.rented_days = frontendData.rented_days;
+  
+  // Campos de configurações de rede - atuais (editáveis)
+  if (frontendData.ssid_atual !== undefined) dbData.ssid_atual = frontendData.ssid_atual;
+  if (frontendData.pass_atual !== undefined) dbData.pass_atual = frontendData.pass_atual;
   
   return dbData;
 };

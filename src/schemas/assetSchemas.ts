@@ -10,7 +10,7 @@ export const assetSchema = z.object({
   
   // Campos para CHIP (solution_id: 11)
   iccid: z.string().optional(),
-  line_number: z.number().optional(), // Corrigido para number apenas
+  line_number: z.number().optional(), // bigint no banco
   
   // Campos para ROUTER/EQUIPMENT (solution_id: 2)
   serial_number: z.string().optional(),
@@ -20,7 +20,7 @@ export const assetSchema = z.object({
   admin_pass: z.string().optional(),
   
   // Campos comuns
-  rented_days: z.number().default(0),
+  rented_days: z.number().default(0), // NOT NULL no banco com default 0
   notes: z.string().optional(),
 })
 .refine(
@@ -46,19 +46,19 @@ export const assetClientAssocSchema = z.object({
   entry_date: z.string(),
   exit_date: z.string().optional(),
   association_id: z.number(),
-  plan_id: z.number(),
+  plan_id: z.number().optional(), // Corrigido para opcional (nullable no banco)
   notes: z.string().optional(),
   pass: z.string().optional(),
-  gb: z.number().default(0),
+  gb: z.number().default(0), // bigint com default 0 no banco
   ssid: z.string().optional(),
 });
 
-// Schema para cliente simplificado - CNPJ opcional
+// Schema para cliente corrigido - CNPJ opcional conforme banco
 export const clientSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  cnpj: z.string().optional(), // CNPJ agora é opcional
-  email: z.string().email().optional(),
-  contato: z.number().positive("Contato deve ser um número válido"),
+  nome: z.string().min(1, "Nome é obrigatório"), // NOT NULL no banco
+  cnpj: z.string().optional(), // Nullable no banco, corrigido para opcional
+  email: z.string().email().optional(), // Nullable no banco
+  contato: z.number().positive("Contato deve ser um número válido"), // bigint NOT NULL
 });
 
 // Export type for the form values
