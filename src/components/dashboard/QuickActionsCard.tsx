@@ -16,6 +16,10 @@ export const QuickActionsCard: React.FC = () => {
   const isMobile = useIsMobile();
   const assets = useAssetsData();
 
+  const handleImportCSV = () => {
+    console.log("IMPORT CSV");
+  };
+
   const handleExport = (format: 'csv' | 'excel') => {
 
     try {
@@ -124,6 +128,14 @@ export const QuickActionsCard: React.FC = () => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+            <Button 
+              className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+              variant="outline"
+              onClick={() => handleImportCSV()}
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar Dados (.csv)
+            </Button>
       </CardContent>
     </Card>
   );
