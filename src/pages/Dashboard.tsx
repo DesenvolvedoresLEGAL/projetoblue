@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { Smartphone, Wifi, Zap, LayoutDashboard } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
-import { useDashboardAssociations } from '@/hooks/useDashboardAssociations';
-import { useDashboardCharts } from '@/hooks/useDashboardCharts';
-import { useDashboardSystemStatus } from '@/hooks/useDashboardSystemStatus';
+import { useDashboardAssociationsDetailed } from '@/hooks/useDashboardAssociationsDetailed';
+import { useDashboardStatusByType } from '@/hooks/useDashboardStatusByType';
 import { useDashboardRecentActivities } from '@/hooks/useDashboardRecentActivities';
 import { AssetSummaryCard } from '@/components/dashboard/AssetSummaryCard';
-import { AssociationSummaryCard } from '@/components/dashboard/AssociationSummaryCard';
-import { StatusDistributionChart } from '@/components/dashboard/StatusDistributionChart';
-import { SystemStatusCard } from '@/components/dashboard/SystemStatusCard';
+import { RentalAssociationsCard } from '@/components/dashboard/RentalAssociationsCard';
+import { SubscriptionAssociationsCard } from '@/components/dashboard/SubscriptionAssociationsCard';
+import { AssetTypeStatusChart } from '@/components/dashboard/AssetTypeStatusChart';
 import { QuickActionsCard } from '@/components/dashboard/QuickActionsCard';
 import { RecentActivitiesCard } from '@/components/dashboard/RecentActivitiesCard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -22,15 +21,14 @@ const Dashboard = () => {
   
   // Data hooks
   const dashboardAssets = useDashboardAssets();
-  const dashboardAssociations = useDashboardAssociations();
-  const dashboardCharts = useDashboardCharts();
-  const systemStatus = useDashboardSystemStatus();
+  const associationsDetailed = useDashboardAssociationsDetailed();
+  const statusByType = useDashboardStatusByType();
   const recentActivities = useDashboardRecentActivities();
   
   // Check loading states
   const isLoading = dashboardAssets.assetsStats.isLoading || 
-                   dashboardAssociations.isLoading || 
-                   dashboardCharts.isLoading;
+                   associationsDetailed.isLoading || 
+                   statusByType.isLoading;
 
   return (
     <ErrorBoundary>
@@ -39,6 +37,7 @@ const Dashboard = () => {
         <div className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 className="text-2xl sm:text-3xl font-black legal-title flex items-center gap-2">
+              <LayoutDashboard className="h-8 w-8 text-[#4D2BFB]" />
               Dashboard INVENTÁRIO
             </h1>
             <div className="text-xs sm:text-sm text-muted-foreground legal-text">
@@ -85,26 +84,49 @@ const Dashboard = () => {
 
         {/* Associations and Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="lg:col-span-2">
-            <AssociationSummaryCard
-              totalActive={dashboardAssociations.data?.activeAssociations.total || 0}
-              endingToday={dashboardAssociations.data?.endingToday || 0}
-              byType={dashboardAssociations.data?.activeAssociations.byType || { aluguel: 0, assinatura: 0, outros: 0 }}
-              topClients={dashboardAssociations.data?.topClients || []}
-              isLoading={dashboardAssociations.isLoading}
-            />
-          </div>
-          <div>
-            <QuickActionsCard />
-          </div>
+          <RentalAssociationsCard
+            totalActive={associationsDetailed.data?.rental.totalActive || 0}
+            recentAssets={associationsDetailed.data?.rental.recentAssets || []}
+            distributionByType={associationsDetailed.data?.rental.distributionByType || { chips: 0, speedys: 0, equipment: 0 }}
+            isLoading={associationsDetailed.isLoading}
+          />
+          
+          <SubscriptionAssociationsCard
+            totalActive={associationsDetailed.data?.subscription.totalActive || 0}
+            recentAssets={associationsDetailed.data?.subscription.recentAssets || []}
+            distributionByType={associationsDetailed.data?.subscription.distributionByType || { chips: 0, speedys: 0, equipment: 0 }}
+            isLoading={associationsDetailed.isLoading}
+          />
+          
+          <QuickActionsCard />
         </div>
 
-        {/* Charts and Activities */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
-          <StatusDistributionChart
-            data={dashboardCharts.data?.statusDistribution || []}
-            isLoading={dashboardCharts.isLoading}
+        {/* Asset Type Status Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <AssetTypeStatusChart
+            title="Status - CHIPs"
+            icon={<Smartphone className="h-5 w-5 text-[#4D2BFB]" />}
+            data={statusByType.data?.chips || []}
+            isLoading={statusByType.isLoading}
           />
+          
+          <AssetTypeStatusChart
+            title="Status - Speedys 5G"
+            icon={<Zap className="h-5 w-5 text-[#03F9FF]" />}
+            data={statusByType.data?.speedys || []}
+            isLoading={statusByType.isLoading}
+          />
+          
+          <AssetTypeStatusChart
+            title="Status - Equipamentos"
+            icon={<Wifi className="h-5 w-5 text-[#020CBC]" />}
+            data={statusByType.data?.equipment || []}
+            isLoading={statusByType.isLoading}
+          />
+        </div>
+
+        {/* Recent Activities */}
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           <RecentActivitiesCard
             activities={recentActivities.data || []}
             isLoading={recentActivities.isLoading}
