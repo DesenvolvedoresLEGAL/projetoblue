@@ -34,7 +34,8 @@ const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
       return query.ilike('assets.radio', `%${sanitized}%`);
     case 'client_name':
     default:
-      return query.ilike('clients.nome', `%${sanitized}%`);
+      // Buscar por empresa, responsável, telefones ou email
+      return query.or(`clients.empresa.ilike.%${sanitized}%,clients.responsavel.ilike.%${sanitized}%,clients.telefones.cs.["${sanitized}"],clients.email.ilike.%${sanitized}%`);
   }
 };
 
@@ -80,7 +81,7 @@ export const useAssociationsData = ({
           exit_date,
           association_id,
           created_at,
-          clients!inner(nome),
+          clients!inner(empresa, responsavel, telefones, email),
           assets!inner(
             iccid,
             radio,
@@ -143,7 +144,7 @@ export const useAssociationsData = ({
         exit_date: item.exit_date,
         association_id: item.association_id,
         created_at: item.created_at,
-        client_name: item.clients?.nome || 'Cliente não encontrado',
+        client_name: item.clients?.empresa || 'Cliente não encontrado',
         asset_iccid: item.assets?.iccid,
         asset_radio: item.assets?.radio,
         asset_line_number: item.assets?.line_number,

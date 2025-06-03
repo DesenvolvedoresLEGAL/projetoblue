@@ -65,7 +65,7 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <div className="space-y-2">
         <Label htmlFor="client-search">Buscar Cliente</Label>
         <div className="relative">
@@ -150,6 +150,15 @@ export const ClientSelectionSimplified: React.FC<ClientSelectionSimplifiedProps>
           </div>
         )}
       </div>
+
+      {/* Botão Flutuante Fixo */}
+      <Button
+        onClick={handleOpenNewClientModal}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white shadow-lg hover:shadow-xl transition-all z-50 p-0"
+        title="Adicionar Novo Cliente"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
       <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
         <DialogContent className="sm:max-w-md">
