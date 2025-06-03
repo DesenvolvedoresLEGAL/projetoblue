@@ -44,9 +44,10 @@ export interface SelectedAsset {
   gb?: number;
   associationType?: string;
   startDate?: string;
-  endDate?: string; // Nova propriedade para data de fim
-  ssid_atual?: string; // Campos de rede editáveis
-  pass_atual?: string; // Campos de rede editáveis
+  endDate?: string;
+  ssid_atual?: string;
+  pass_atual?: string;
+  isPrincipalChip?: boolean; // Novo campo para controlar o checkbox
 }
 
 type Step = 'client' | 'assets' | 'summary';

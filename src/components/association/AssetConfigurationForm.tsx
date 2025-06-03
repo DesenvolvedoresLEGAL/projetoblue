@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SelectedAsset } from '@/pages/AssetAssociation';
-import { Settings, Calendar, Wifi } from "lucide-react";
+import { Settings, Calendar, Wifi, Smartphone } from "lucide-react";
 
 interface AssetConfigurationFormProps {
   asset: SelectedAsset;
@@ -33,8 +34,14 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
   const [passAtual, setPassAtual] = useState(asset.pass_atual || '');
 
+  // Campo para controlar se o chip é principal
+  const [isPrincipalChip, setIsPrincipalChip] = useState(asset.isPrincipalChip || false);
+
   // Verificar se é equipamento (não CHIP)
   const isEquipment = asset.solution_id !== 11 && asset.type !== 'CHIP';
+  
+  // Verificar se é CHIP
+  const isChip = asset.solution_id === 11 || asset.type === 'CHIP';
 
   // Validação de datas
   const isEndDateValid = !endDate || !startDate || endDate >= startDate;
@@ -46,7 +53,8 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       startDate: startDate?.toISOString(),
       endDate: endDate?.toISOString(),
       rented_days: rentedDays,
-      notes
+      notes: isChip ? (isPrincipalChip ? 'principal' : 'backup') : notes,
+      isPrincipalChip
     };
 
     // Adicionar campos de rede apenas para equipamentos
@@ -56,7 +64,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     }
 
     onUpdate(updates);
-  }, [associationType, startDate, endDate, rentedDays, notes, ssidAtual, passAtual, onUpdate, isEquipment]);
+  }, [associationType, startDate, endDate, rentedDays, notes, ssidAtual, passAtual, isPrincipalChip, onUpdate, isEquipment, isChip]);
 
   return (
     <div className="space-y-4">
@@ -122,8 +130,8 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
               )}
             </div>
 
-            {/* Dias de Aluguel (se aplicável) */}
-            {associationType === 'ALUGUEL' && (
+            {/* Dias de Aluguel (apenas para equipamentos quando tipo = ALUGUEL) */}
+            {isEquipment && associationType === 'ALUGUEL' && (
               <div className="space-y-2">
                 <Label htmlFor="rented-days" className="text-sm">Dias de Aluguel</Label>
                 <Input
@@ -138,19 +146,54 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
             )}
           </div>
 
-          {/* Observações */}
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm">Observações</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observações sobre esta associação..."
-              rows={2}
-            />
-          </div>
+          {/* Observações (apenas para equipamentos) */}
+          {isEquipment && (
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm">Observações</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Observações sobre esta associação..."
+                rows={2}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Seção: Configuração do CHIP (apenas para CHIPs) */}
+      {isChip && (
+        <Card className="border-[#4D2BFB]/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Smartphone className="h-4 w-4 text-[#03F9FF]" />
+              Configuração do CHIP
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Defina se este CHIP será principal ou backup na associação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="principal-chip"
+                checked={isPrincipalChip}
+                onCheckedChange={(checked) => setIsPrincipalChip(checked === true)}
+              />
+              <Label htmlFor="principal-chip" className="text-sm font-medium">
+                Este chip é principal?
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isPrincipalChip 
+                ? 'Este CHIP será marcado como principal na associação.'
+                : 'Este CHIP será marcado como backup na associação.'
+              }
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Seção: Configurações de Rede (apenas para equipamentos) */}
       {isEquipment && (
