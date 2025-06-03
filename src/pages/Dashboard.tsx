@@ -37,7 +37,6 @@ const Dashboard = () => {
         <div className="flex flex-col space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 className="text-2xl sm:text-3xl font-black legal-title flex items-center gap-2">
-              <LayoutDashboard className="h-8 w-8 text-[#4D2BFB]" />
               Dashboard INVENTÁRIO
             </h1>
             <div className="text-xs sm:text-sm text-muted-foreground legal-text">
