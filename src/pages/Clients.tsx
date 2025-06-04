@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,8 @@ import { ClientsEmptyState } from '@/components/clients/ClientsEmptyState';
 import { ClientsFilters } from '@/components/clients/ClientsFilters';
 import { ClientsTable } from '@/components/clients/ClientsTable';
 import { ClientEditDialog } from '@/components/clients/ClientEditDialog';
+import { exportClientsToCSV } from '@/utils/clientsExport';
+import { toast } from 'sonner';
 
 interface Client {
   uuid: string;
@@ -118,6 +119,18 @@ const Clients = () => {
     setIsEditModalOpen(false);
   };
 
+  // Função para exportar CSV
+  const handleExportCSV = () => {
+    try {
+      const clientsToExport = filteredClients.length > 0 ? filteredClients : clients;
+      const filename = exportClientsToCSV(clientsToExport);
+      toast.success(`Arquivo ${filename} exportado com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao exportar CSV:', error);
+      toast.error('Erro ao exportar arquivo CSV. Tente novamente.');
+    }
+  };
+
   // Renderizar estado de loading
   if (isLoading) {
     return <ClientsLoadingState />;
@@ -143,6 +156,7 @@ const Clients = () => {
         <Button 
           variant="outline" 
           className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto"
+          onClick={handleExportCSV}
         >
           <Download className="h-4 w-4" />
           Exportar CSV
