@@ -176,8 +176,12 @@ const AssetsManagement = () => {
         <div className="relative w-full">
           <div
             ref={scrollContainerRef}
-            className="flex space-x-4 sm:space-x-6 overflow-x-auto scrollbar-none px-2 sm:px-4"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex space-x-4 sm:space-x-6 overflow-x-auto px-2 sm:px-4"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
           >
             {/* Card Registrar Ativo */}
             <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
@@ -450,12 +454,6 @@ const AssetsManagement = () => {
           </CardContent>
         </Card>
       </div>
-
-      <style jsx>{`
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </TooltipProvider>
   );
 };
