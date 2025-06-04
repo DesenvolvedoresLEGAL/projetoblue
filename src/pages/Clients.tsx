@@ -133,7 +133,7 @@ const Clients = () => {
     
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && !client.deleted_at) ||
-      (statusFilter === 'inactive' && client.deleted_at);
+      (statusFilter === 'inactive' && !!client.deleted_at);
     
     return matchesSearch && matchesStatus;
   });

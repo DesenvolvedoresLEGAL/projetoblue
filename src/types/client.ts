@@ -9,7 +9,7 @@ export interface Client {
   cnpj?: string;
   created_at: string;
   updated_at: string;
-  deleted_at?: string;
+  deleted_at?: string; // Added this property
   // Campos legados mantidos para compatibilidade durante transição
   nome?: string;
   contato?: number;
