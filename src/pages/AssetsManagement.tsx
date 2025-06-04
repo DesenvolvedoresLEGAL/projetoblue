@@ -184,7 +184,7 @@ const AssetsManagement = () => {
             } as React.CSSProperties}
           >
             {/* Card Registrar Ativo */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem] "
               onClick={() => navigate('/assets/register')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -200,11 +200,10 @@ const AssetsManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className='flex flex-col flex-1'>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Adicione roteadores, switches, cartões SIM e outros equipamentos 
-                  com todas as informações técnicas necessárias.
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Adicione roteadores, switches, cartões SIM e outros equipamentos com todas as informações técnicas necessárias.
                 </p>
-                <div className="mt-auto">
+                <div>
                   <Button 
                     variant='outline'
                     className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
@@ -244,11 +243,10 @@ const AssetsManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Faça a associação entre equipamentos disponíveis e clientes,
-                  controlando alocações e devoluções de forma organizada.
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Faça a associação entre equipamentos disponíveis e clientes, de forma organizada.
                 </p>           
-                <div className="mt-auto">
+                <div>
                   <Button 
                     variant="outline"
                     className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
@@ -281,11 +279,11 @@ const AssetsManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                   Acesse a lista completa de equipamentos associados, 
                   com status detalhado e opções de gerenciamento.
                 </p>           
-                <div className="mt-auto">
+                <div>
                   <Button 
                     variant="outline"
                     className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
@@ -302,7 +300,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Histórico */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[50vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/history')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -325,11 +323,10 @@ const AssetsManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className='flex flex-col flex-1'>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Visualize o histórico completo de movimentações, alterações de status
-                  e associações dos equipamentos registrados.
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Visualize o histórico completo de movimentações, status e associações dos equipamentos registrados.
                 </p>
-                <div className="mt-auto">
+                <div>
                   <Button 
                     variant="outline"
                     className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
@@ -362,10 +359,10 @@ const AssetsManagement = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className='flex flex-col flex-1'>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Vizualise e/ou atualize informações dos clientes de forma prática.
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Visualize e/ou atualize informações dos clientes ativo e inativos de forma prática.
                 </p>
-                <div className="mt-auto">
+                <div>
                   <Button 
                     variant='outline'
                     className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
