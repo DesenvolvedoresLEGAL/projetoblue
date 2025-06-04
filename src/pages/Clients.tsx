@@ -142,25 +142,27 @@ const Clients = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 py-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 py-4 sm:py-6">
       {/* Header com StandardPageHeader */}
       <StandardPageHeader
         icon={FileUser}
         title="Clientes"
         description="Gerencie os clientes cadastrados no sistema"
       >
-        <Button className="bg-[#4D2BFB] text-white hover:bg-[#3a1ecc] focus:ring-[#4D2BFB] flex items-center gap-2 w-full sm:w-auto">
-          <Plus className="h-4 w-4" />
-          Novo Cliente
-        </Button>
-        <Button 
-          variant="outline" 
-          className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto"
-          onClick={handleExportCSV}
-        >
-          <Download className="h-4 w-4" />
-          Exportar CSV
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+          <Button className="bg-[#4D2BFB] text-white hover:bg-[#3a1ecc] focus:ring-[#4D2BFB] flex items-center gap-2 w-full sm:w-auto h-10 sm:h-9 text-sm">
+            <Plus className="h-4 w-4" />
+            Novo Cliente
+          </Button>
+          <Button 
+            variant="outline" 
+            className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto h-10 sm:h-9 text-sm"
+            onClick={handleExportCSV}
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+        </div>
       </StandardPageHeader>
 
       {/* Filtros e Busca */}
