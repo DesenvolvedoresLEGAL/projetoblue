@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,6 +43,7 @@ interface Client {
   email?: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string;
 }
 
 interface ClientLog {
@@ -91,8 +91,7 @@ const Clients = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at')
-        .is('deleted_at', null)
+        .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at, deleted_at')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
