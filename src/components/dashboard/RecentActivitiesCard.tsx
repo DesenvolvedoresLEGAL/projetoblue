@@ -164,7 +164,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                     </p>
                     <div className="flex flex-wrap gap-1">
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {getAssetTypeBadge(activity.description, activity.details)}
+                        {getAssetTypeBadge(activity.description, activity.details) === "ATIVO" ? "ASSOCIAÇÃO" : getAssetTypeBadge(activity.description, activity.details)}
                       </Badge>
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                         {getStatusBadge(activity.details)}
