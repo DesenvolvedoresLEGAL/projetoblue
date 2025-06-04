@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plus, Link as LinkIcon, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Bell, ExternalLink } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface RecentActivity {
@@ -25,48 +26,46 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  const getActivityIcon = (type: string) => {
+  const getAssetTypeBadge = (description: string): string => {
+    if (description.includes('CHIP') || description.includes('chip')) {
+      return 'CHIP';
+    }
+    if (description.includes('SPEEDY') || description.includes('speedy')) {
+      return 'SPEEDY 5G';
+    }
+    if (description.includes('equipamento') || description.includes('EQUIPAMENTO')) {
+      return 'EQUIPAMENTO';
+    }
+    return 'ATIVO';
+  };
+
+  const getEventTypeBadge = (type: string): string => {
     switch (type) {
       case 'asset_created':
-        return <Plus className="h-4 w-4 text-green-600" />;
+        return 'ASSET CREATED';
       case 'association_created':
-        return <LinkIcon className="h-4 w-4 text-blue-600" />;
+        return 'ASSOCIATION STATUS_UPDATED';
       case 'association_ended':
-        return <LinkIcon className="h-4 w-4 text-orange-600" />;
+        return 'ASSOCIATION REMOVED';
       case 'status_updated':
-        return <Settings className="h-4 w-4 text-purple-600" />;
+        return 'STATUS UPDATED';
       default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
+        return 'STATUS UPDATED';
     }
   };
 
-  const getActivityBadgeVariant = (type: string) => {
-    switch (type) {
-      case 'asset_created':
-        return 'secondary';
-      case 'association_created':
-        return 'default';
-      case 'association_ended':
-        return 'destructive';
-      case 'status_updated':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
-
-  const getActivityBadgeText = (type: string) => {
-    switch (type) {
-      case 'asset_created':
-        return 'Ativo criado';
-      case 'association_created':
-        return 'Associação';
-      case 'association_ended':
-        return 'Encerrado';
-      case 'status_updated':
-        return 'Status';
-      default:
-        return type.replace('_', ' ');
+  const formatTimestamp = (timestamp: string): string => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return timestamp;
     }
   };
 
@@ -82,12 +81,9 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         <CardContent>
           <div className="animate-pulse space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex items-center space-x-3">
-                <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                <div className="flex-1 space-y-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                </div>
+              <div key={i} className="p-4 bg-gray-50 rounded-lg">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
             ))}
           </div>
@@ -99,48 +95,59 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="legal-title flex items-center gap-2">
-          <Clock className="h-5 w-5 text-[#4D2BFB]" />
-          Atividades Recentes
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-[#4D2BFB]" />
+            <span className="text-[#4D2BFB] font-semibold">Atividades Recentes</span>
+          </div>
+          <Badge variant="secondary" className="bg-[#E3F2FD] text-[#1976D2] text-xs">
+            {activities.length} eventos
+          </Badge>
         </CardTitle>
-        <CardDescription className="legal-text">
-          Últimos eventos do sistema
+        <CardDescription className="text-sm text-gray-600">
+          Últimos eventos e atividades registrados no sistema
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto">
+      <CardContent className="flex-1 overflow-y-auto space-y-3">
         {activities.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <Clock className="h-8 w-8 mb-2" />
+            <Bell className="h-8 w-8 mb-2" />
             <p className="text-sm">Nenhuma atividade recente</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {activities.map((activity, index) => (
-              <div key={activity.id || index} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0">
-                <div className="p-2 bg-gray-50 rounded-full">
-                  {getActivityIcon(activity.type)}
+          <>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {activities.map((activity, index) => (
+                <div key={activity.id || index} className="relative p-4 bg-[#f7fafd] rounded-lg border border-gray-100">
+                  <div className="absolute top-3 right-3 text-xs text-gray-500">
+                    {formatTimestamp(activity.timestamp)}
+                  </div>
+                  <div className="pr-24">
+                    <p className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
+                      {activity.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
+                        {getAssetTypeBadge(activity.description)}
+                      </Badge>
+                      <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
+                        disponível
+                      </Badge>
+                      <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
+                        {getEventTypeBadge(activity.type)}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    {activity.description}
-                  </div>
-                  <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>
-                    {activity.assetName && `${activity.assetName}`}
-                    {activity.clientName && !activity.assetName && `${activity.clientName}`}
-                    {activity.assetName && activity.clientName && ` • ${activity.clientName}`}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                      {activity.timestamp}
-                    </span>
-                    <Badge variant={getActivityBadgeVariant(activity.type)} className="text-xs">
-                      {getActivityBadgeText(activity.type)}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <div className="pt-3 border-t border-gray-100">
+              <Button variant="outline" className="w-full border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ver Histórico Completo
+              </Button>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
