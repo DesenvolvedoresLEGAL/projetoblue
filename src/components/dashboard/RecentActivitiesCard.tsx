@@ -13,6 +13,7 @@ interface RecentActivity {
   assetName?: string;
   clientName?: string;
   timestamp: string;
+  details?: any;
 }
 
 interface RecentActivitiesCardProps {
@@ -26,7 +27,20 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  const getAssetTypeBadge = (description: string): string => {
+  const getAssetTypeBadge = (description: string, details?: any): string => {
+    // Usar detalhes da solução se disponível
+    if (details?.solution) {
+      const solution = details.solution.toLowerCase();
+      if (solution.includes('chip') || solution.includes('simcard')) {
+        return 'CHIP';
+      } else if (solution.includes('speedy') || solution.includes('5g')) {
+        return 'SPEEDY 5G';
+      } else {
+        return 'EQUIPAMENTO';
+      }
+    }
+    
+    // Fallback para descrição
     if (description.includes('CHIP') || description.includes('chip')) {
       return 'CHIP';
     }
@@ -39,24 +53,44 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
     return 'ATIVO';
   };
 
+  const getStatusBadge = (details?: any): string => {
+    if (details?.new_status?.status) {
+      return details.new_status.status;
+    }
+    if (details?.status_after) {
+      return details.status_after;
+    }
+    return 'disponível';
+  };
+
   const getEventTypeBadge = (type: string): string => {
     switch (type) {
       case 'asset_created':
-        return 'ASSET CREATED';
+        return 'ASSET CRIADO';
       case 'association_created':
-        return 'ASSOCIATION STATUS_UPDATED';
+        return 'ASSOCIAÇÃO CRIADA';
       case 'association_ended':
-        return 'ASSOCIATION REMOVED';
+        return 'ASSOCIAÇÃO REMOVIDA';
       case 'status_updated':
-        return 'STATUS UPDATED';
+        return 'STATUS ATUALIZADO';
       default:
-        return 'STATUS UPDATED';
+        return 'EVENTO';
     }
   };
 
   const formatTimestamp = (timestamp: string): string => {
     try {
+      if (!timestamp || timestamp === 'undefined' || timestamp === 'null') {
+        return 'Data não disponível';
+      }
+
       const date = new Date(timestamp);
+      
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp:', timestamp);
+        return 'Data inválida';
+      }
+
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
@@ -64,8 +98,9 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch {
-      return timestamp;
+    } catch (error) {
+      console.error('Error formatting timestamp:', error, 'Input:', timestamp);
+      return 'Erro na data';
     }
   };
 
@@ -128,10 +163,10 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                     </p>
                     <div className="flex flex-wrap gap-1">
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {getAssetTypeBadge(activity.description)}
+                        {getAssetTypeBadge(activity.description, activity.details)}
                       </Badge>
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        disponível
+                        {getStatusBadge(activity.details)}
                       </Badge>
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                         {getEventTypeBadge(activity.type)}

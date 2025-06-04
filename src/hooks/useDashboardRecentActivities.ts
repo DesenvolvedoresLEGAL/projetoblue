@@ -19,7 +19,6 @@ export function useDashboardRecentActivities() {
       try {
         console.log('Fetching recent activities...');
         
-        // Buscar apenas eventos de assets (comportamento original)
         const recentEventsResult = await dashboardQueries.fetchEnhancedRecentEvents();
         
         if (recentEventsResult.error) {
@@ -28,68 +27,83 @@ export function useDashboardRecentActivities() {
 
         const assetEvents = recentEventsResult.data || [];
         
-        // Processar eventos de assets
         const assetActivities: RecentActivity[] = assetEvents.map(event => {
           let type: RecentActivity['type'] = 'status_updated';
           let description = 'Atividade registrada';
           let assetName = 'Asset desconhecido';
           let clientName: string | undefined;
 
-          // Extrair informações dos detalhes
           const details = event.details as any;
           
-          // Determinar tipo de atividade
-          switch (event.event) {
-            case 'ASSET_CRIADO':
-              type = 'asset_created';
-              description = 'Novo ativo cadastrado';
-              break;
-            case 'ASSOCIATION_CREATED':
-              type = 'association_created';
-              description = 'Nova associação criada';
-              break;
-            case 'ASSOCIATION_REMOVED':
-              type = 'association_ended';
-              description = 'Associação encerrada';
-              break;
-            case 'STATUS_UPDATED':
-              type = 'status_updated';
-              description = 'Status do ativo atualizado';
-              break;
-            default:
-              description = `Evento: ${event.event}`;
-          }
-
-          // Extrair nome do ativo
+          // Extrair nome do ativo de forma mais robusta
           if (details?.radio) {
             assetName = details.radio;
           } else if (details?.line_number) {
-            assetName = `Linha ${details.line_number}`;
+            assetName = `${details.line_number}`;
           } else if (details?.asset_id) {
             assetName = details.asset_id.toString().substring(0, 8);
+          } else if (details?.iccid) {
+            assetName = details.iccid;
+          } else if (details?.serial_number) {
+            assetName = details.serial_number;
           }
 
-          // Extrair nome do cliente (se disponível)
+          // Extrair nome do cliente
           if (details?.client_name) {
             clientName = details.client_name;
           }
 
-          // Formatar timestamp
-          const eventDate = new Date(event.date);
-          const now = new Date();
-          const diffMinutes = Math.floor((now.getTime() - eventDate.getTime()) / (1000 * 60));
-          
-          let timestamp: string;
-          if (diffMinutes < 1) {
-            timestamp = 'Agora mesmo';
-          } else if (diffMinutes < 60) {
-            timestamp = `Há ${diffMinutes} minuto${diffMinutes > 1 ? 's' : ''}`;
-          } else if (diffMinutes < 1440) { // 24 horas
-            const diffHours = Math.floor(diffMinutes / 60);
-            timestamp = `Há ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
-          } else {
-            const diffDays = Math.floor(diffMinutes / 1440);
-            timestamp = `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+          // Determinar tipo de ativo baseado na solução
+          const getAssetType = (): string => {
+            if (details?.solution) {
+              const solution = details.solution.toLowerCase();
+              if (solution.includes('chip') || solution.includes('simcard')) {
+                return 'CHIP';
+              } else if (solution.includes('speedy') || solution.includes('5g')) {
+                return 'SPEEDY 5G';
+              } else {
+                return 'EQUIPAMENTO';
+              }
+            }
+            return 'ATIVO';
+          };
+
+          const assetType = getAssetType();
+
+          // Gerar mensagens mais descritivas baseadas no tipo de evento
+          switch (event.event) {
+            case 'ASSET_CRIADO':
+              type = 'asset_created';
+              description = `${assetType} ${assetName} cadastrado no sistema`;
+              break;
+              
+            case 'ASSOCIATION_CREATED':
+              type = 'association_created';
+              const clientInfo = clientName ? ` à empresa ${clientName}` : '';
+              description = `${assetType} ${assetName} associado${clientInfo}`;
+              break;
+              
+            case 'ASSOCIATION_REMOVED':
+              type = 'association_ended';
+              description = `${assetType} ${assetName} desassociado`;
+              break;
+              
+            case 'STATUS_UPDATED':
+              type = 'status_updated';
+              const oldStatus = details?.old_status?.status || details?.status_before || '';
+              const newStatus = details?.new_status?.status || details?.status_after || '';
+              
+              if (oldStatus && newStatus) {
+                description = `${assetType} ${assetName} alterado de ${oldStatus} para ${newStatus}`;
+              } else if (newStatus) {
+                description = `${assetType} ${assetName} com status atualizado para ${newStatus}`;
+              } else {
+                description = `${assetType} ${assetName} com status atualizado`;
+              }
+              break;
+              
+            default:
+              description = `${assetType} ${assetName} - ${event.event}`;
           }
 
           return {
@@ -98,26 +112,25 @@ export function useDashboardRecentActivities() {
             description,
             assetName,
             clientName,
-            timestamp,
+            timestamp: event.date, // Usar a data real do evento
             details
           };
         });
 
         // Ordenar por data (mais recente primeiro)
         assetActivities.sort((a, b) => {
-          const dateA = new Date(a.details?.timestamp || a.details?.date || new Date());
-          const dateB = new Date(b.details?.timestamp || b.details?.date || new Date());
+          const dateA = new Date(a.timestamp);
+          const dateB = new Date(b.timestamp);
           return dateB.getTime() - dateA.getTime();
         });
 
-        // Retornar apenas os 10 mais recentes
         return assetActivities.slice(0, 10);
       } catch (error) {
         console.error('Error fetching recent activities:', error);
         return [];
       }
     },
-    staleTime: 30000, // 30 segundos
+    staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false
   });
