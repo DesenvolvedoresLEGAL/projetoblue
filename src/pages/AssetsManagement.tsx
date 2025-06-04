@@ -180,8 +180,8 @@ const AssetsManagement = () => {
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none',
-              WebkitScrollbar: { display: 'none' }
-            }}
+              ...({ WebkitScrollbar: { display: 'none' } } as any)
+            } as React.CSSProperties}
           >
             {/* Card Registrar Ativo */}
             <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
