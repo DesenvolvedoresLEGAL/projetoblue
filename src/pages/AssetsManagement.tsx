@@ -308,7 +308,7 @@ const AssetsManagement = () => {
                   }}
                 >
                   <FileUser className="h-4 w-4 mr-2" />
-                  Cadastrar Novo
+                  Ver Clientes
                 </Button>
               </div>
             </CardContent>
