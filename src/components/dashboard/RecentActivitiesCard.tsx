@@ -6,7 +6,7 @@ import { Clock, Plus, Link as LinkIcon, Settings, Building2, UserPlus, UserMinus
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface RecentActivity {
-  id: number;
+  id: number | string; // Atualizar para aceitar tanto number quanto string
   type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated' | 'client_created' | 'client_updated' | 'client_deleted';
   description: string;
   assetName?: string;
@@ -131,7 +131,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         ) : (
           <div className="space-y-3">
             {activities.map((activity, index) => (
-              <div key={activity.id || index} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0">
+              <div key={`${activity.id}-${index}`} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0">
                 <div className="p-2 bg-gray-50 rounded-full">
                   {getActivityIcon(activity.type)}
                 </div>

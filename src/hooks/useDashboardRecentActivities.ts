@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@/api/dashboardQueries';
 
 export interface RecentActivity {
-  id: number;
+  id: number | string; // Permitir tanto number quanto string para compatibilidade
   type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated' | 'client_created' | 'client_updated' | 'client_deleted';
   description: string;
   assetName?: string;
@@ -167,7 +167,7 @@ export function useDashboardRecentActivities() {
           }
 
           return {
-            id: log.id,
+            id: log.id, // UUID string do log de cliente
             type,
             description,
             clientName: empresa,
