@@ -172,19 +172,19 @@ const AssetsManagement = () => {
           </Alert>
         ) : null}
 
-        {/* Cards de Ações Principais - Agora em carrossel */}
-        <div className="relative max-w-full">
+        {/* Cards de Ações Principais - Carrossel Responsivo */}
+        <div className="relative w-full overflow-hidden">
           <div
             ref={scrollContainerRef}
-            className="flex space-x-4 sm:space-x-6 overflow-x-auto px-2 sm:px-4"
+            className="flex space-x-2 sm:space-x-4 overflow-x-auto px-8 sm:px-10"
             style={{ 
               scrollbarWidth: 'none', 
               msOverflowStyle: 'none',
-              ...({ WebkitScrollbar: { display: 'none' } } as any)
+              WebkitScrollbar: { display: 'none' }
             } as React.CSSProperties}
           >
             {/* Card Registrar Ativo */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem] "
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/register')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -220,7 +220,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Associações */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/associations')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -263,7 +263,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Listar Associações */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/associations-list')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -300,7 +300,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Histórico */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[50vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/history')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -343,7 +343,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Clientes */}
-            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/clients')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -384,16 +384,16 @@ const AssetsManagement = () => {
             onClick={handleScrollLeft}
             disabled={isAtStart}
             className={`
-              absolute top-1/2 left-0 transform -translate-y-1/2 z-10
+              absolute top-1/2 left-1 sm:left-2 transform -translate-y-1/2 z-10
               bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
               hover:bg-white hover:shadow-lg
-              rounded-full p-2 sm:p-3
+              rounded-full p-1.5 sm:p-2
               transition-all duration-200
               ${isAtStart ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
             `}
             aria-label="Scroll para esquerda"
           >
-            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
           {/* Seta Direita */}
@@ -401,16 +401,16 @@ const AssetsManagement = () => {
             onClick={handleScrollRight}
             disabled={isAtEnd}
             className={`
-              absolute top-1/2 right-0 transform -translate-y-1/2 z-10
+              absolute top-1/2 right-1 sm:right-2 transform -translate-y-1/2 z-10
               bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
               hover:bg-white hover:shadow-lg
-              rounded-full p-2 sm:p-3
+              rounded-full p-1.5 sm:p-2
               transition-all duration-200
               ${isAtEnd ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
             `}
             aria-label="Scroll para direita"
           >
-            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
 
