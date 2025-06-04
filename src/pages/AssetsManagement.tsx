@@ -68,11 +68,11 @@ const AssetsManagement = () => {
   // Loading state for the entire dashboard
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6 flex flex-col items-center justify-center min-h-[70vh]">
-        <Loader2 className="h-16 w-16 text-legal-primary animate-spin" />
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-legal-primary animate-spin" />
         <div className="text-center space-y-2">
-          <p className="text-xl font-semibold legal-title">Carregando Gestão</p>
-          <p className="text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
+          <p className="text-lg sm:text-xl font-semibold legal-title">Carregando Gestão</p>
+          <p className="text-sm sm:text-base text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
         </div>
       </div>
     );
@@ -82,16 +82,16 @@ const AssetsManagement = () => {
 
   return (
     <TooltipProvider>
-      <div className="space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8">
         {/* Header com identidade Legal */}
-        <div className="bg-gradient-to-r from-legal-primary to-legal-dark rounded-2xl p-8 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="h-8 w-8 text-legal-secondary" />
+        <div className="bg-gradient-to-r from-legal-primary to-legal-dark rounded-lg sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-legal-secondary" />
             <div>
-              <h1 className="text-3xl font-black legal-title text-white mb-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black legal-title text-white mb-1">
                 Gestão de Ativos
               </h1>
-              <p className="text-legal-secondary/90 text-lg font-medium">
+              <p className="text-sm sm:text-base lg:text-lg text-legal-secondary/90 font-medium">
                 Central de controle para equipamentos e chips
               </p>
             </div>
@@ -101,12 +101,12 @@ const AssetsManagement = () => {
         {/* Cards de Problemas - Apenas se houver */}
         {hasProblems ? (
           <Alert className="bg-red-50 border-red-200 border-2">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
             <div>
-              <h3 className="font-bold text-red-700 legal-text">
+              <h3 className="font-bold text-red-700 legal-text text-sm sm:text-base">
                 Atenção necessária
               </h3>
-              <AlertDescription className="text-red-600">
+              <AlertDescription className="text-red-600 text-sm">
                 Existem ativos que precisam de verificação. Acesse o inventário para detalhes.
               </AlertDescription>
             </div>
@@ -114,33 +114,33 @@ const AssetsManagement = () => {
         ) : null}
 
         {/* Cards de Ações Principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           
           {/* Card Registrar Ativo */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
             onClick={() => navigate('/assets/register')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <PlusCircle className="h-6 w-6 text-legal-primary" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                  <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
                 </div>
-                <CardTitle className="legal-subtitle text-xl">
+                <CardTitle className="legal-subtitle text-lg sm:text-xl">
                   Novo Ativo
                 </CardTitle>
               </div>
-              <CardDescription className="legal-text">
+              <CardDescription className="legal-text text-sm">
                 Cadastre equipamentos e chips no sistema
               </CardDescription>
             </CardHeader>
             <CardContent className='flex flex-col flex-1'>
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                 Adicione roteadores, switches, cartões SIM e outros equipamentos 
                 com todas as informações técnicas necessárias.
               </p>
               <div className="mt-auto">
                 <Button 
                   variant='outline'
-                  className="w-full border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200" 
+                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/assets/register');
@@ -156,14 +156,14 @@ const AssetsManagement = () => {
           {/* Card Gerenciar Associações */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full"
             onClick={() => navigate('/assets/associations')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                  <LinkIcon className="h-6 w-6 text-legal-secondary" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                  <LinkIcon className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
                 </div>
                 <Tooltip>
                   <TooltipTrigger>
-                    <CardTitle className="legal-subtitle text-xl cursor-help text-left">
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
                       Associar Ativos
                     </CardTitle>
                   </TooltipTrigger>
@@ -172,19 +172,19 @@ const AssetsManagement = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <CardDescription className="legal-text">
+              <CardDescription className="legal-text text-sm">
                 Conecte ativos aos seus clientes
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col flex-1">
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                 Faça a associação entre equipamentos disponíveis e clientes,
                 controlando alocações e devoluções de forma organizada.
               </p>           
               <div className="mt-auto">
                 <Button 
                   variant="outline"
-                  className="w-full border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200" 
+                  className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/assets/associations');
@@ -200,28 +200,28 @@ const AssetsManagement = () => {
           {/* Card Listar Associações */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
             onClick={() => navigate('/assets/associations-list')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <List className="h-6 w-6 text-legal-primary" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                  <List className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
                 </div>
-                <CardTitle className="legal-subtitle text-xl">
+                <CardTitle className="legal-subtitle text-lg sm:text-xl">
                   Histórico de Associações
                 </CardTitle>
               </div>
-              <CardDescription className="legal-text">
+              <CardDescription className="legal-text text-sm">
                 Visualize todas as associações ativas
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col flex-1">
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                 Acesse a lista completa de equipamentos associados, 
                 com status detalhado e opções de gerenciamento.
               </p>           
               <div className="mt-auto">
                 <Button 
                   variant="outline"
-                  className="w-full border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200" 
+                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/assets/associations-list');
@@ -237,14 +237,14 @@ const AssetsManagement = () => {
           {/* Card Histórico */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full"
             onClick={() => navigate('/assets/history')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                  <History className="h-6 w-6 text-legal-secondary" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                  <History className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
                 </div>
                 <Tooltip>
                   <TooltipTrigger>
-                    <CardTitle className="legal-subtitle text-xl cursor-help text-left">
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
                       Histórico de Movimentações
                     </CardTitle>
                   </TooltipTrigger>
@@ -253,19 +253,19 @@ const AssetsManagement = () => {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <CardDescription className="legal-text">
+              <CardDescription className="legal-text text-sm">
                 Acompanhe todas as alterações realizadas
               </CardDescription>
             </CardHeader>
             <CardContent className='flex flex-col flex-1'>
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                 Visualize o histórico completo de movimentações, alterações de status
                 e associações dos equipamentos registrados.
               </p>
               <div className="mt-auto">
                 <Button 
                   variant="outline"
-                  className="w-full border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200" 
+                  className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/assets/history');
@@ -278,30 +278,30 @@ const AssetsManagement = () => {
             </CardContent>
           </Card>
 
-          {/* Card Registrar Ativo */}
+          {/* Card Gerenciar Clientes */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
             onClick={() => navigate('/clients')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <FileUser className="h-6 w-6 text-legal-primary" />
+            <CardHeader className="pb-3 sm:pb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                  <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
                 </div>
-                <CardTitle className="legal-subtitle text-xl">
+                <CardTitle className="legal-subtitle text-lg sm:text-xl">
                   Gerenciar clientes
                 </CardTitle>
               </div>
-              <CardDescription className="legal-text">
+              <CardDescription className="legal-text text-sm">
                 Gerencie os clientes cadastrados
               </CardDescription>
             </CardHeader>
             <CardContent className='flex flex-col flex-1'>
-              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
                 Vizualise e/ou atualize informações dos clientes de forma prática.
               </p>
               <div className="mt-auto">
                 <Button 
                   variant='outline'
-                  className="w-full border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200" 
+                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/clients');
@@ -317,33 +317,33 @@ const AssetsManagement = () => {
 
         {/* Informações de Ajuda */}
         <Card className="bg-gradient-to-r from-legal-primary/5 to-legal-secondary/5 border-legal-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-legal-primary/10 rounded-lg">
-                <Info className="h-6 w-6 text-legal-primary" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+              <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg">
+                <Info className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
               </div>
-              <div>
-                <h3 className="font-bold legal-subtitle mb-2">Fluxo Recomendado</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+              <div className="flex-1">
+                <h3 className="font-bold legal-subtitle mb-2 text-base sm:text-lg">Fluxo Recomendado</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-6 h-6 bg-legal-primary text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 bg-legal-primary text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
                     <div>
-                      <h4 className="font-medium text-legal-dark mb-1">Cadastrar</h4>
-                      <p>Registre novos equipamentos e chips com todas as informações técnicas.</p>
+                      <h4 className="font-medium text-legal-dark mb-1 text-sm sm:text-base">Cadastrar</h4>
+                      <p className="text-xs sm:text-sm">Registre novos equipamentos e chips com todas as informações técnicas.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-6 h-6 bg-legal-secondary text-legal-dark rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 bg-legal-secondary text-legal-dark rounded-full flex items-center justify-center text-xs font-bold">2</span>
                     <div>
-                      <h4 className="font-medium text-legal-dark mb-1">Associar</h4>
-                      <p>Vincule os ativos cadastrados aos clientes conforme necessário.</p>
+                      <h4 className="font-medium text-legal-dark mb-1 text-sm sm:text-base">Associar</h4>
+                      <p className="text-xs sm:text-sm">Vincule os ativos cadastrados aos clientes conforme necessário.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="flex-shrink-0 w-6 h-6 bg-legal-primary text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 bg-legal-primary text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
                     <div>
-                      <h4 className="font-medium text-legal-dark mb-1">Monitorar</h4>
-                      <p>Acompanhe o histórico e status através do painel de controle.</p>
+                      <h4 className="font-medium text-legal-dark mb-1 text-sm sm:text-base">Monitorar</h4>
+                      <p className="text-xs sm:text-sm">Acompanhe o histórico e status através do painel de controle.</p>
                     </div>
                   </div>
                 </div>
