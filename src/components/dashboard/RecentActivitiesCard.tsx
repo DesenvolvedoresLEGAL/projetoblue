@@ -2,12 +2,12 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plus, Link as LinkIcon, Settings, Building2, UserPlus, UserMinus, UserCheck } from "lucide-react";
+import { Clock, Plus, Link as LinkIcon, Settings } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface RecentActivity {
-  id: number | string; // Atualizar para aceitar tanto number quanto string
-  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated' | 'client_created' | 'client_updated' | 'client_deleted';
+  id: number;
+  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
   description: string;
   assetName?: string;
   clientName?: string;
@@ -35,12 +35,6 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         return <LinkIcon className="h-4 w-4 text-orange-600" />;
       case 'status_updated':
         return <Settings className="h-4 w-4 text-purple-600" />;
-      case 'client_created':
-        return <UserPlus className="h-4 w-4 text-emerald-600" />;
-      case 'client_updated':
-        return <UserCheck className="h-4 w-4 text-indigo-600" />;
-      case 'client_deleted':
-        return <UserMinus className="h-4 w-4 text-red-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -49,15 +43,12 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   const getActivityBadgeVariant = (type: string) => {
     switch (type) {
       case 'asset_created':
-      case 'client_created':
         return 'secondary';
       case 'association_created':
         return 'default';
       case 'association_ended':
-      case 'client_deleted':
         return 'destructive';
       case 'status_updated':
-      case 'client_updated':
         return 'outline';
       default:
         return 'outline';
@@ -74,12 +65,6 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         return 'Encerrado';
       case 'status_updated':
         return 'Status';
-      case 'client_created':
-        return 'Cliente criado';
-      case 'client_updated':
-        return 'Cliente atualizado';
-      case 'client_deleted':
-        return 'Cliente removido';
       default:
         return type.replace('_', ' ');
     }
@@ -131,7 +116,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         ) : (
           <div className="space-y-3">
             {activities.map((activity, index) => (
-              <div key={`${activity.id}-${index}`} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0">
+              <div key={activity.id || index} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-b-0">
                 <div className="p-2 bg-gray-50 rounded-full">
                   {getActivityIcon(activity.type)}
                 </div>
