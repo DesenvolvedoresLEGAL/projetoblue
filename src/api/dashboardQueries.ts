@@ -225,3 +225,16 @@ export async function fetchEnhancedRecentEvents() {
   console.log('fetchEnhancedRecentEvents result:', result);
   return result;
 }
+
+// NEW: Fetch recent client logs
+export async function fetchRecentClientLogs() {
+  console.log('Executing fetchRecentClientLogs query');
+  const result = await supabase
+    .from('client_logs')
+    .select('id, client_id, event_type, details, performed_by_email, date')
+    .order('date', { ascending: false })
+    .limit(10);
+  
+  console.log('fetchRecentClientLogs result:', result);
+  return result;
+}

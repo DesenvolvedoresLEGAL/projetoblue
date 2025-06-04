@@ -866,6 +866,48 @@ export type Database = {
           },
         ]
       }
+      client_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          date: string
+          details: Json | null
+          event_type: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          performed_by: string | null
+          performed_by_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          date?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          performed_by?: string | null
+          performed_by_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          date?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          performed_by?: string | null
+          performed_by_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           cnpj: string | null

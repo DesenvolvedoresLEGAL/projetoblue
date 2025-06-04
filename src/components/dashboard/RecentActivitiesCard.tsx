@@ -2,14 +2,14 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Plus, Link as LinkIcon, Settings } from "lucide-react";
+import { Clock, Plus, Link as LinkIcon, Settings, Building2, UserPlus, UserMinus, UserCheck } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface RecentActivity {
   id: number;
-  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
+  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated' | 'client_created' | 'client_updated' | 'client_deleted';
   description: string;
-  assetName: string;
+  assetName?: string;
   clientName?: string;
   timestamp: string;
 }
@@ -35,6 +35,12 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         return <LinkIcon className="h-4 w-4 text-orange-600" />;
       case 'status_updated':
         return <Settings className="h-4 w-4 text-purple-600" />;
+      case 'client_created':
+        return <UserPlus className="h-4 w-4 text-emerald-600" />;
+      case 'client_updated':
+        return <UserCheck className="h-4 w-4 text-indigo-600" />;
+      case 'client_deleted':
+        return <UserMinus className="h-4 w-4 text-red-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -43,15 +49,39 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   const getActivityBadgeVariant = (type: string) => {
     switch (type) {
       case 'asset_created':
+      case 'client_created':
         return 'secondary';
       case 'association_created':
         return 'default';
       case 'association_ended':
-        return 'outline';
+      case 'client_deleted':
+        return 'destructive';
       case 'status_updated':
+      case 'client_updated':
         return 'outline';
       default:
         return 'outline';
+    }
+  };
+
+  const getActivityBadgeText = (type: string) => {
+    switch (type) {
+      case 'asset_created':
+        return 'Ativo criado';
+      case 'association_created':
+        return 'Associação';
+      case 'association_ended':
+        return 'Encerrado';
+      case 'status_updated':
+        return 'Status';
+      case 'client_created':
+        return 'Cliente criado';
+      case 'client_updated':
+        return 'Cliente atualizado';
+      case 'client_deleted':
+        return 'Cliente removido';
+      default:
+        return type.replace('_', ' ');
     }
   };
 
@@ -110,15 +140,16 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                     {activity.description}
                   </div>
                   <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>
-                    {activity.assetName}
-                    {activity.clientName && ` • ${activity.clientName}`}
+                    {activity.assetName && `${activity.assetName}`}
+                    {activity.clientName && !activity.assetName && `${activity.clientName}`}
+                    {activity.assetName && activity.clientName && ` • ${activity.clientName}`}
                   </div>
                   <div className="flex items-center justify-between mt-1">
                     <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                       {activity.timestamp}
                     </span>
                     <Badge variant={getActivityBadgeVariant(activity.type)} className="text-xs">
-                      {activity.type.replace('_', ' ')}
+                      {getActivityBadgeText(activity.type)}
                     </Badge>
                   </div>
                 </div>

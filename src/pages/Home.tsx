@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useDashboardAssets } from "@/hooks/useDashboardAssets";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useDashboardRecentActivities } from "@/hooks/useDashboardRecentActivities";
 import { StatsSummaryCard } from "@/components/dashboard/StatsSummaryCard";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LeaseAssetsCard } from "@/components/dashboard/LeaseAssetsCard";
 import { SubscriptionAssetsCard } from "@/components/dashboard/SubscriptionAssetsCard";
-import { StandardizedRecentAlertsCard } from "@/components/dashboard/StandardizedRecentAlertsCard";
+import { RecentActivitiesCard } from "@/components/dashboard/RecentActivitiesCard";
 import { RefactoredAssetStatusDistributionCard } from "@/components/dashboard/RefactoredAssetStatusDistributionCard";
 import { SyncStatusAlert } from "@/components/dashboard/SyncStatusAlert";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -24,6 +25,8 @@ const Home: React.FC = () => {
   const dashboard = useDashboardAssets();
   // Use dashboard stats for PieChart data
   const dashboardStats = useDashboardStats();
+  // Use recent activities hook
+  const recentActivities = useDashboardRecentActivities();
 
   const isMobile = useIsMobile();
 
@@ -31,13 +34,15 @@ const Home: React.FC = () => {
   const isLoading = dashboard.problemAssets.isLoading || 
                    dashboard.assetsStats.isLoading || 
                    dashboard.statusDistribution.isLoading ||
-                   dashboardStats.isLoading;
+                   dashboardStats.isLoading ||
+                   recentActivities.isLoading;
 
   // Safe error state check
   const hasError = dashboard.problemAssets.error || 
                    dashboard.assetsStats.error || 
                    dashboard.statusDistribution.error ||
-                   dashboardStats.error;
+                   dashboardStats.error ||
+                   recentActivities.error;
 
   // Processing lease assets by type using the 'type' property
   const leaseAssetsByType = useMemo(() => {
@@ -245,7 +250,10 @@ const Home: React.FC = () => {
 
         {/* Monitoring Cards - Mobile Responsive */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
-          <StandardizedRecentAlertsCard dashboard={dashboard} />
+          <RecentActivitiesCard 
+            activities={recentActivities.data || []}
+            isLoading={recentActivities.isLoading}
+          />
           <RefactoredAssetStatusDistributionCard dashboardStats={dashboardStats} />
         </div>
       </div>
