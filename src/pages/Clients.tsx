@@ -1,13 +1,18 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Users, Calendar, Mail, Phone, Building, Hash } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ChevronDown, ChevronRight, Users, Calendar, Mail, Phone, Building, Hash, Pencil, Trash, X, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateForDisplay, formatDateTimeForDisplay } from '@/utils/dateUtils';
+import { toast } from '@/hooks/use-toast';
 
 interface Client {
   uuid: string;
@@ -31,10 +36,33 @@ interface ClientLog {
   performed_by_email?: string;
 }
 
+interface EditClientFormData {
+  empresa: string;
+  responsavel: string;
+  telefones: string[];
+  email: string;
+  cnpj: string;
+}
+
 const Clients = () => {
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
+  const queryClient = useQueryClient();
 
-  // Buscar todos os clientes
+  // Form state for editing
+  const [editFormData, setEditFormData] = useState<EditClientFormData>({
+    empresa: '',
+    responsavel: '',
+    telefones: [''],
+    email: '',
+    cnpj: ''
+  });
+
+  // Buscar todos os clientes (apenas não deletados)
   const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
@@ -130,6 +158,168 @@ const Clients = () => {
     if (!telefones || telefones.length === 0) return '-';
     if (telefones.length === 1) return telefones[0];
     return `${telefones[0]} (+${telefones.length - 1})`;
+  };
+
+  // Função para abrir modal de edição
+  const openEditModal = (client: Client) => {
+    setSelectedClient(client);
+    setEditFormData({
+      empresa: client.empresa,
+      responsavel: client.responsavel,
+      telefones: client.telefones.length > 0 ? client.telefones : [''],
+      email: client.email || '',
+      cnpj: client.cnpj || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  // Função para fechar modal de edição
+  const closeEditModal = () => {
+    setSelectedClient(null);
+    setIsEditModalOpen(false);
+    setEditFormData({
+      empresa: '',
+      responsavel: '',
+      telefones: [''],
+      email: '',
+      cnpj: ''
+    });
+  };
+
+  // Função para adicionar novo telefone
+  const addTelefone = () => {
+    setEditFormData(prev => ({
+      ...prev,
+      telefones: [...prev.telefones, '']
+    }));
+  };
+
+  // Função para remover telefone
+  const removeTelefone = (index: number) => {
+    if (editFormData.telefones.length > 1) {
+      setEditFormData(prev => ({
+        ...prev,
+        telefones: prev.telefones.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Função para atualizar telefone
+  const updateTelefone = (index: number, value: string) => {
+    setEditFormData(prev => ({
+      ...prev,
+      telefones: prev.telefones.map((tel, i) => i === index ? value : tel)
+    }));
+  };
+
+  // Função para atualizar cliente
+  const handleUpdateClient = async () => {
+    if (!selectedClient) return;
+
+    // Validações
+    if (!editFormData.empresa.trim()) {
+      toast.toast({
+        title: "Erro",
+        description: "O campo empresa é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!editFormData.responsavel.trim()) {
+      toast.toast({
+        title: "Erro",
+        description: "O campo responsável é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const telefonesFiltrados = editFormData.telefones.filter(tel => tel.trim());
+    if (telefonesFiltrados.length === 0) {
+      toast.toast({
+        title: "Erro",
+        description: "Pelo menos um telefone deve ser informado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          empresa: editFormData.empresa.trim(),
+          responsavel: editFormData.responsavel.trim(),
+          telefones: telefonesFiltrados,
+          email: editFormData.email.trim() || null,
+          cnpj: editFormData.cnpj.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('uuid', selectedClient.uuid);
+
+      if (error) throw error;
+
+      toast.toast({
+        title: "Sucesso",
+        description: "Cliente atualizado com sucesso.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client-logs'] });
+      closeEditModal();
+    } catch (error) {
+      console.error('Erro ao atualizar cliente:', error);
+      toast.toast({
+        title: "Erro",
+        description: "Erro ao atualizar cliente. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Função para soft delete
+  const handleSoftDelete = async (clientUuid: string) => {
+    const client = clients.find(c => c.uuid === clientUuid);
+    if (!client) return;
+
+    if (!window.confirm(`Tem certeza que deseja excluir o cliente "${client.empresa}"?`)) {
+      return;
+    }
+
+    setIsDeleting(clientUuid);
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ 
+          deleted_at: new Date().toISOString() 
+        })
+        .eq('uuid', clientUuid);
+
+      if (error) throw error;
+
+      toast.toast({
+        title: "Sucesso",
+        description: "Cliente excluído com sucesso.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['client-logs'] });
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      toast.toast({
+        title: "Erro",
+        description: "Erro ao excluir cliente. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   // Renderizar estado de loading
@@ -254,6 +444,7 @@ const Clients = () => {
                       Criado em
                     </div>
                   </TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -285,11 +476,31 @@ const Clients = () => {
                         <TableCell>{formatPhones(client.telefones)}</TableCell>
                         <TableCell>{client.cnpj || '-'}</TableCell>
                         <TableCell>{formatDateForDisplay(client.created_at)}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditModal(client)}
+                              disabled={isUpdating || isDeleting === client.uuid}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleSoftDelete(client.uuid)}
+                              disabled={isUpdating || isDeleting === client.uuid}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                       
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={7} className="bg-muted/30 p-0">
+                          <TableCell colSpan={8} className="bg-muted/30 p-0">
                             <Collapsible open={isExpanded}>
                               <CollapsibleContent>
                                 <div className="p-4 space-y-3">
@@ -338,6 +549,110 @@ const Clients = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Edição */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do cliente. Campos obrigatórios estão marcados.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="empresa">Empresa *</Label>
+              <Input
+                id="empresa"
+                value={editFormData.empresa}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, empresa: e.target.value }))}
+                placeholder="Nome da empresa"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsável *</Label>
+              <Input
+                id="responsavel"
+                value={editFormData.responsavel}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, responsavel: e.target.value }))}
+                placeholder="Nome do responsável"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Telefones *</Label>
+              {editFormData.telefones.map((telefone, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={telefone}
+                    onChange={(e) => updateTelefone(index, e.target.value)}
+                    placeholder="(00) 00000-0000"
+                  />
+                  {editFormData.telefones.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeTelefone(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addTelefone}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Telefone
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input
+                id="cnpj"
+                value={editFormData.cnpj}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, cnpj: e.target.value }))}
+                placeholder="00.000.000/0000-00"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeEditModal}
+              disabled={isUpdating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpdateClient}
+              disabled={isUpdating}
+            >
+              {isUpdating ? 'Salvando...' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
