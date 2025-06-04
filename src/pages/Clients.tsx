@@ -218,7 +218,7 @@ const Clients = () => {
 
     // Validações
     if (!editFormData.empresa.trim()) {
-      toast.toast({
+      toast({
         title: "Erro",
         description: "O campo empresa é obrigatório.",
         variant: "destructive"
@@ -227,7 +227,7 @@ const Clients = () => {
     }
 
     if (!editFormData.responsavel.trim()) {
-      toast.toast({
+      toast({
         title: "Erro",
         description: "O campo responsável é obrigatório.",
         variant: "destructive"
@@ -237,7 +237,7 @@ const Clients = () => {
 
     const telefonesFiltrados = editFormData.telefones.filter(tel => tel.trim());
     if (telefonesFiltrados.length === 0) {
-      toast.toast({
+      toast({
         title: "Erro",
         description: "Pelo menos um telefone deve ser informado.",
         variant: "destructive"
@@ -262,7 +262,7 @@ const Clients = () => {
 
       if (error) throw error;
 
-      toast.toast({
+      toast({
         title: "Sucesso",
         description: "Cliente atualizado com sucesso.",
       });
@@ -272,7 +272,7 @@ const Clients = () => {
       closeEditModal();
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
-      toast.toast({
+      toast({
         title: "Erro",
         description: "Erro ao atualizar cliente. Tente novamente.",
         variant: "destructive"
@@ -303,7 +303,7 @@ const Clients = () => {
 
       if (error) throw error;
 
-      toast.toast({
+      toast({
         title: "Sucesso",
         description: "Cliente excluído com sucesso.",
       });
@@ -312,7 +312,7 @@ const Clients = () => {
       queryClient.invalidateQueries({ queryKey: ['client-logs'] });
     } catch (error) {
       console.error('Erro ao excluir cliente:', error);
-      toast.toast({
+      toast({
         title: "Erro",
         description: "Erro ao excluir cliente. Tente novamente.",
         variant: "destructive"
