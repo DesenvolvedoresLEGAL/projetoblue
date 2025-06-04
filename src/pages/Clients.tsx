@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { StandardPageHeader } from '@/components/ui/standard-page-header';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -404,31 +405,24 @@ const Clients = () => {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 py-6">
-      {/* Header com identidade LEGAL */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-        <div className="flex items-center gap-3 mb-4 sm:mb-0">
-          <div className="p-2 bg-[#4D2BFB]/10 rounded-lg">
-            <FileUser className="h-6 w-6 text-[#4D2BFB]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#020CBC]">Clientes</h1>
-            <p className="text-sm text-gray-600">Gerencie os clientes cadastrados no sistema</p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button className="bg-[#4D2BFB] text-white hover:bg-[#3a1ecc] focus:ring-[#4D2BFB] flex items-center gap-2 w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
-            Novo Cliente
-          </Button>
-          <Button 
-            variant="outline" 
-            className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto"
-          >
-            <Download className="h-4 w-4" />
-            Exportar CSV
-          </Button>
-        </div>
-      </div>
+      {/* Header com StandardPageHeader */}
+      <StandardPageHeader
+        icon={FileUser}
+        title="Clientes"
+        description="Gerencie os clientes cadastrados no sistema"
+      >
+        <Button className="bg-[#4D2BFB] text-white hover:bg-[#3a1ecc] focus:ring-[#4D2BFB] flex items-center gap-2 w-full sm:w-auto">
+          <Plus className="h-4 w-4" />
+          Novo Cliente
+        </Button>
+        <Button 
+          variant="outline" 
+          className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto"
+        >
+          <Download className="h-4 w-4" />
+          Exportar CSV
+        </Button>
+      </StandardPageHeader>
 
       {/* Filtros e Busca */}
       <Card className="border border-gray-200 rounded-lg shadow-sm">
