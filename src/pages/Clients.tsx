@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ChevronDown, ChevronRight, Users, Calendar, Mail, Phone, Building, Hash, Pencil, Trash, X, Plus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateForDisplay, formatDateTimeForDisplay } from '@/utils/dateUtils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Client {
   uuid: string;
@@ -218,30 +217,18 @@ const Clients = () => {
 
     // Validações
     if (!editFormData.empresa.trim()) {
-      toast({
-        title: "Erro",
-        description: "O campo empresa é obrigatório.",
-        variant: "destructive"
-      });
+      toast.error("O campo empresa é obrigatório.");
       return;
     }
 
     if (!editFormData.responsavel.trim()) {
-      toast({
-        title: "Erro",
-        description: "O campo responsável é obrigatório.",
-        variant: "destructive"
-      });
+      toast.error("O campo responsável é obrigatório.");
       return;
     }
 
     const telefonesFiltrados = editFormData.telefones.filter(tel => tel.trim());
     if (telefonesFiltrados.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Pelo menos um telefone deve ser informado.",
-        variant: "destructive"
-      });
+      toast.error("Pelo menos um telefone deve ser informado.");
       return;
     }
 
@@ -262,21 +249,14 @@ const Clients = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Cliente atualizado com sucesso.",
-      });
+      toast.success("Cliente atualizado com sucesso.");
 
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client-logs'] });
       closeEditModal();
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar cliente. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error("Erro ao atualizar cliente. Tente novamente.");
     } finally {
       setIsUpdating(false);
     }
@@ -303,20 +283,13 @@ const Clients = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Cliente excluído com sucesso.",
-      });
+      toast.success("Cliente excluído com sucesso.");
 
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client-logs'] });
     } catch (error) {
       console.error('Erro ao excluir cliente:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir cliente. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error("Erro ao excluir cliente. Tente novamente.");
     } finally {
       setIsDeleting(null);
     }
