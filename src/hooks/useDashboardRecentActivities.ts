@@ -39,7 +39,7 @@ export function useDashboardRecentActivities() {
           if (details?.radio) {
             assetName = details.radio;
           } else if (details?.line_number) {
-            assetName = `${details.line_number}`;
+            assetName = `Linha ${details.line_number}`;
           } else if (details?.asset_id) {
             assetName = details.asset_id.toString().substring(0, 8);
           } else if (details?.iccid) {
@@ -55,8 +55,8 @@ export function useDashboardRecentActivities() {
 
           // Determinar tipo de ativo baseado na solução
           const getAssetType = (): string => {
-            if (details?.solution) {
-              const solution = details.solution.toLowerCase();
+            if (details?.solution_name || details?.solution) {
+              const solution = (details.solution_name || details.solution).toLowerCase();
               if (solution.includes('chip') || solution.includes('simcard')) {
                 return 'CHIP';
               } else if (solution.includes('speedy') || solution.includes('5g')) {
@@ -89,9 +89,10 @@ export function useDashboardRecentActivities() {
               break;
               
             case 'STATUS_UPDATED':
+            case 'ASSOCIATION_STATUS_UPDATED':
               type = 'status_updated';
-              const oldStatus = details?.old_status?.status || details?.status_before || '';
-              const newStatus = details?.new_status?.status || details?.status_after || '';
+              const oldStatus = details?.old_status_name || details?.old_status?.status || '';
+              const newStatus = details?.new_status_name || details?.new_status?.status || '';
               
               if (oldStatus && newStatus) {
                 description = `${assetType} ${assetName} alterado de ${oldStatus} para ${newStatus}`;

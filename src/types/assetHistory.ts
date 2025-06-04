@@ -4,9 +4,10 @@ import { Asset, AssetType, Client } from "./asset";
 export type OperationType = "ALUGUEL" | "ASSINATURA" | "ASSOCIATION" | "DISASSOCIATION";
 
 // Interface corrigida para alinhar com tabela asset_logs
+// ATUALIZADO: assoc_id agora é nullable devido às melhorias no trigger
 export interface AssetHistoryEntry {
   id: number; // bigint no banco
-  assoc_id?: number; // bigint opcional no banco
+  assoc_id?: number | null; // bigint opcional no banco, PODE SER NULL
   date?: string; // timestamp with time zone
   event?: string; // text
   details?: any; // jsonb

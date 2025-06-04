@@ -135,20 +135,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "asset_histories_assoc_id_fkey"
-            columns: ["assoc_id"]
-            isOneToOne: false
-            referencedRelation: "asset_client_assoc"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "asset_histories_assoc_id_fkey1"
-            columns: ["assoc_id"]
-            isOneToOne: false
-            referencedRelation: "asset_client_assoc"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_asset_history_status_after"
             columns: ["status_after_id"]
             isOneToOne: false
@@ -163,7 +149,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_asset_logs_association"
+            foreignKeyName: "fk_asset_logs_assoc_id"
             columns: ["assoc_id"]
             isOneToOne: false
             referencedRelation: "asset_client_assoc"

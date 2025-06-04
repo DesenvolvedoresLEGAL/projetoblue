@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Interface para logs de asset com dados relacionados
  * Mapeamento baseado na tabela asset_logs com JOINs para dados legíveis
+ * ATUALIZADO: assoc_id agora pode ser NULL devido às melhorias no trigger
  */
 export interface AssetLogWithRelations {
   id: number;
@@ -12,7 +13,7 @@ export interface AssetLogWithRelations {
   details: JSON; // jsonb field
   status_before_id?: number;
   status_after_id?: number;
-  assoc_id?: number;
+  assoc_id?: number | null; // CORRIGIDO: Pode ser NULL agora
   // Dados relacionados via JOINs
   status_before?: { status: string };
   status_after?: { status: string };
@@ -29,19 +30,18 @@ export interface AssetLogWithRelations {
       uuid: string;
       nome: string;
     };
-  };
+  } | null; // Pode ser NULL se assoc_id for NULL
 }
 
 /**
  * Busca logs de assets com dados relacionados usando JOINs
- * Query otimizada para carregar status anterior/posterior, associações, assets e clientes
- * Agora com foreign keys nomeadas para evitar ambiguidade
+ * ATUALIZADO: Query otimizada para lidar com assoc_id nullable
  */
 export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
   try {
     console.log('Buscando logs de assets com relações...');
     
-    // Query atualizada com foreign keys específicas para evitar ambiguidade
+    // Query atualizada com LEFT JOINs para lidar com assoc_id NULL
     const { data, error } = await supabase
       .from('asset_logs')
       .select(`
@@ -54,7 +54,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         assoc_id,
         fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
         fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
-        fk_asset_logs_association:asset_client_assoc!fk_asset_logs_association(
+        fk_asset_logs_assoc_id:asset_client_assoc!left(
           asset:assets!asset_id(
             uuid,
             serial_number,
@@ -87,7 +87,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       return [];
     }
 
-    // Mapear os dados para a interface esperada
+    // Mapear os dados para a interface esperada, lidando com assoc_id NULL
     const mappedData = data.map((log: any) => ({
       id: log.id,
       date: log.date,
@@ -95,10 +95,10 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       details: log.details,
       status_before_id: log.status_before_id,
       status_after_id: log.status_after_id,
-      assoc_id: log.assoc_id,
+      assoc_id: log.assoc_id, // Pode ser NULL agora
       status_before: log.fk_asset_logs_status_before,
       status_after: log.fk_asset_logs_status_after,
-      association: log.fk_asset_logs_association
+      association: log.fk_asset_logs_assoc_id // Pode ser NULL se assoc_id for NULL
     }));
 
     console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
@@ -112,6 +112,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
 
 /**
  * Formata detalhes do log (campo JSONB) para exibição amigável
+ * ATUALIZADO: Melhor tratamento para eventos sem associação
  */
 export const formatLogDetails = (details: any): string => {
   if (!details) return 'Nenhum detalhe disponível';
@@ -128,18 +129,23 @@ export const formatLogDetails = (details: any): string => {
     }
     
     if (parsedDetails.line_number) {
-      formattedParts.push(`${parsedDetails.line_number}`);
+      formattedParts.push(`Linha: ${parsedDetails.line_number}`);
     }
     
     if (parsedDetails.radio) {
-      formattedParts.push(`${parsedDetails.radio}`);
+      formattedParts.push(`Rádio: ${parsedDetails.radio}`);
     }
     
-    if (parsedDetails.solution) {
-      formattedParts.push(`${parsedDetails.solution}`);
+    if (parsedDetails.solution_name || parsedDetails.solution) {
+      formattedParts.push(`Solução: ${parsedDetails.solution_name || parsedDetails.solution}`);
     }
     
-    return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Detalhes do sistema';
+    // Adicionar informação sobre cliente se disponível
+    if (parsedDetails.client_name) {
+      formattedParts.push(`Cliente: ${parsedDetails.client_name}`);
+    }
+    
+    return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Evento do sistema';
   } catch (error) {
     console.warn('Erro ao formatar detalhes do log:', error);
     return 'Detalhes não formatáveis';
@@ -154,8 +160,10 @@ export const formatEventName = (event: string): string => {
     'STATUS_UPDATED': 'Status Atualizado',
     'ASSET_CRIADO': 'Ativo Criado',
     'SOFT_DELETE': 'Ativo Removido',
-    'ASSOCIATION': 'Associação',
-    'DISASSOCIATION': 'Desassociação'
+    'ASSOCIATION_CREATED': 'Associação Criada',
+    'ASSOCIATION_REMOVED': 'Associação Removida',
+    'ASSOCIATION_STATUS_UPDATED': 'Status da Associação Atualizado',
+    'ASSOCIATION_MODIFIED': 'Associação Modificada'
   };
   
   return eventTranslations[event] || event;
