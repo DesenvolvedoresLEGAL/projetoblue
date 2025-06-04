@@ -114,7 +114,7 @@ const AssetsManagement = () => {
         ) : null}
 
         {/* Cards de Ações Principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
           
           {/* Card Registrar Ativo */}
           <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
