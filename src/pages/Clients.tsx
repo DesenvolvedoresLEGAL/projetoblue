@@ -1,450 +1,345 @@
-import { useState } from "react";
-import { useAssets } from "@/context/useAssets";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset } from "@/types/asset";
-import { Download, Filter, MoreHorizontal, Pencil, Search, Smartphone, Wifi, AlertTriangle } from "lucide-react";
-import EditAssetDialog from "@/components/inventory/EditAssetDialog";
-import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
-import AssetStatusDropdown from "@/components/inventory/AssetStatusDropdown";
 
-const Inventory = () => {
-  const { assets, updateAsset, deleteAsset, statusRecords } = useAssets();
-  const [search, setSearch] = useState("");
-  const [phoneSearch, setPhoneSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronRight, Users, Calendar, Mail, Phone, Building, Hash } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatDateForDisplay, formatDateTimeForDisplay } from '@/utils/dateUtils';
 
-  const formatPhoneNumber = (phone: string): string => {
-    // Remove all non-digit characters
-    const digitsOnly = phone.replace(/\D/g, '');
-    return digitsOnly;
-  };
+interface Client {
+  uuid: string;
+  empresa: string;
+  responsavel: string;
+  telefones: string[];
+  cnpj?: string;
+  email?: string;
+  created_at: string;
+  updated_at: string;
+}
 
-  const filteredAssets = assets.filter((asset) => {
-    if (typeFilter !== "all" && asset.type !== typeFilter) {
-      return false;
-    }
-    
-    if (statusFilter !== "all" && asset.status !== statusFilter) {
-      return false;
-    }
-    
-    // Phone number search for chips
-    if (phoneSearch && asset.type === "CHIP") {
-      const chip = asset as ChipAsset;
-      const formattedSearchPhone = formatPhoneNumber(phoneSearch);
-      const formattedAssetPhone = formatPhoneNumber(chip.phoneNumber);
+interface ClientLog {
+  id: string;
+  client_id: string;
+  event_type: string;
+  details: any;
+  old_data?: any;
+  new_data?: any;
+  date: string;
+  performed_by_email?: string;
+}
+
+const Clients = () => {
+  const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
+
+  // Buscar todos os clientes
+  const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
+    queryKey: ['clients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
       
-      // Check if the formatted phone numbers match (ignoring length differences)
-      if (!formattedAssetPhone.endsWith(formattedSearchPhone) && 
-          !formattedSearchPhone.endsWith(formattedAssetPhone)) {
-        return false;
-      }
+      if (error) throw error;
+      return data as Client[];
     }
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      
-      if (asset.type === "CHIP") {
-        const chip = asset as ChipAsset;
-        return (
-          chip.iccid.toLowerCase().includes(searchLower) ||
-          chip.phoneNumber.toLowerCase().includes(searchLower) ||
-          chip.carrier.toLowerCase().includes(searchLower)
-        );
-      } else {
-        const router = asset as EquipamentAsset;
-        return (
-          router.uniqueId.toLowerCase().includes(searchLower) ||
-          router.brand.toLowerCase().includes(searchLower) ||
-          router.model.toLowerCase().includes(searchLower) ||
-          router.ssid.toLowerCase().includes(searchLower)
-        );
-      }
-    }
-    
-    return true;
   });
 
-  const getStatusBadgeStyle = (status: AssetStatus) => {
-    switch (status) {
-      case "DISPONÍVEL":
-        return "bg-green-500";
-      case "ALUGADO":
-      case "ASSINATURA":
-        return "bg-telecom-500";
-      case "SEM DADOS":
-        return "bg-amber-500";
-      case "BLOQUEADO":
-        return "bg-red-500";
-      case "MANUTENÇÃO":
-        return "bg-blue-500";
+  // Buscar logs de todos os clientes
+  const { data: clientLogs = [], isLoading: logsLoading } = useQuery({
+    queryKey: ['client-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_logs')
+        .select('id, client_id, event_type, details, old_data, new_data, date, performed_by_email')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as ClientLog[];
+    }
+  });
+
+  const isLoading = clientsLoading || logsLoading;
+
+  // Agrupar logs por cliente
+  const logsByClient = clientLogs.reduce((acc, log) => {
+    if (!acc[log.client_id]) acc[log.client_id] = [];
+    acc[log.client_id].push(log);
+    return acc;
+  }, {} as Record<string, ClientLog[]>);
+
+  // Função para alternar expansão do cliente
+  const toggleClientExpansion = (clientId: string) => {
+    const newExpanded = new Set(expandedClients);
+    if (newExpanded.has(clientId)) {
+      newExpanded.delete(clientId);
+    } else {
+      newExpanded.add(clientId);
+    }
+    setExpandedClients(newExpanded);
+  };
+
+  // Função para formatar logs em mensagens amigáveis
+  const formatLogMessage = (log: ClientLog): string => {
+    const empresa = log.new_data?.empresa || log.old_data?.empresa || 'Cliente';
+    const date = formatDateTimeForDisplay(log.date);
+
+    switch (log.event_type) {
+      case 'CLIENTE_CRIADO':
+        return `Cliente ${empresa} cadastrado no sistema em ${date}`;
+      
+      case 'CLIENTE_ATUALIZADO':
+        if (log.old_data && log.new_data) {
+          const changes: string[] = [];
+          
+          if (log.old_data.empresa !== log.new_data.empresa) {
+            changes.push(`empresa alterada de '${log.old_data.empresa}' para '${log.new_data.empresa}'`);
+          }
+          if (log.old_data.email !== log.new_data.email) {
+            changes.push(`email alterado de '${log.old_data.email || 'vazio'}' para '${log.new_data.email || 'vazio'}'`);
+          }
+          if (log.old_data.responsavel !== log.new_data.responsavel) {
+            changes.push(`responsável alterado de '${log.old_data.responsavel}' para '${log.new_data.responsavel}'`);
+          }
+          if (JSON.stringify(log.old_data.telefones) !== JSON.stringify(log.new_data.telefones)) {
+            changes.push(`telefones atualizados`);
+          }
+          if (log.old_data.cnpj !== log.new_data.cnpj) {
+            changes.push(`CNPJ alterado de '${log.old_data.cnpj || 'vazio'}' para '${log.new_data.cnpj || 'vazio'}'`);
+          }
+
+          const changesText = changes.length > 0 ? changes.join(', ') : 'dados atualizados';
+          return `Cliente ${empresa}: ${changesText} em ${date}`;
+        }
+        return `Cliente ${empresa} atualizado em ${date}`;
+      
+      case 'CLIENTE_EXCLUIDO':
+        return `Cliente ${empresa} removido do sistema em ${date}`;
+      
       default:
-        return "bg-gray-500";
+        return `Cliente ${empresa}: ${log.event_type} em ${date}`;
     }
   };
 
-  const exportToCSV = () => {
-    let csvContent = "ID,Tipo,Data de Registro,Status,ICCID/ID Único,Número/Marca,Operadora/Modelo,SSID,Senha\n";
-    
-    filteredAssets.forEach((asset) => {
-      const row = [];
-      row.push(asset.id);
-      row.push(asset.type);
-      row.push(asset.registrationDate.split("T")[0]);
-      row.push(asset.status);
-      
-      if (asset.type === "CHIP") {
-        const chip = asset as ChipAsset;
-        row.push(chip.iccid);
-        row.push(chip.phoneNumber);
-        row.push(chip.carrier);
-        row.push("");
-      } else {
-        const router = asset as EquipamentAsset;
-        row.push(router.uniqueId);
-        row.push(router.brand);
-        row.push(router.model);
-        row.push(router.ssid);
-        row.push(router.password);
-      }
-      
-      csvContent += row.join(",") + "\n";
-    });
-    
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `inventario-${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Função para formatar telefones
+  const formatPhones = (telefones: string[]): string => {
+    if (!telefones || telefones.length === 0) return '-';
+    if (telefones.length === 1) return telefones[0];
+    return `${telefones[0]} (+${telefones.length - 1})`;
   };
 
-  const handleEditAsset = (asset: Asset) => {
-    setSelectedAsset(asset);
-    setIsEditDialogOpen(true);
-  };
+  // Renderizar estado de loading
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+          <p className="text-muted-foreground">Carregando clientes...</p>
+        </div>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const handleViewAssetDetails = (asset: Asset) => {
-    setSelectedAsset(asset);
-    setIsDetailsDialogOpen(true);
-  };
+  // Renderizar estado de erro
+  if (clientsError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+          <p className="text-muted-foreground">Gerencie os clientes cadastrados no sistema</p>
+        </div>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-10">
+              <p className="text-red-500 mb-4">Erro ao carregar clientes. Tente novamente.</p>
+              <p className="text-sm text-muted-foreground">{clientsError.message}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-    setSelectedAsset(null);
-  };
-
-  const handleCloseDetailsDialog = () => {
-    setIsDetailsDialogOpen(false);
-    setSelectedAsset(null);
-  };
-
-  // Helper function to map status names to filter values
-  function mapStatusToFilter(statusName: string): string {
-    switch (statusName) {
-      case 'Disponível': return 'DISPONÍVEL';
-      case 'Alugado': return 'ALUGADO';
-      case 'Assinatura': return 'ASSINATURA';
-      case 'Sem dados': return 'SEM DADOS';
-      case 'Bloqueado': return 'BLOQUEADO';
-      case 'Em manutenção': return 'MANUTENÇÃO';
-      default: return statusName.toUpperCase();
-    }
+  // Renderizar estado vazio
+  if (clients.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+          <p className="text-muted-foreground">Gerencie os clientes cadastrados no sistema</p>
+        </div>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-10">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-medium mb-2">Nenhum cliente encontrado</p>
+              <p className="text-muted-foreground">Comece cadastrando o primeiro cliente no sistema.</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventário</h1>
-          <p className="text-muted-foreground">
-            Gerencie os ativos cadastrados no sistema
-          </p>
-        </div>
-        
-        <Button onClick={exportToCSV} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          <span>Exportar CSV</span>
-        </Button>
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Clientes</h1>
+        <p className="text-muted-foreground">Gerencie os clientes cadastrados no sistema</p>
       </div>
       
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Filtros</CardTitle>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Lista de Clientes ({clients.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar ativo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  <SelectValue placeholder="Tipo de Ativo" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Tipos</SelectItem>
-                <SelectItem value="CHIP">Chip</SelectItem>
-                <SelectItem value="ROTEADOR">Roteador</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  <SelectValue placeholder="Status" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
-                {statusRecords.map((status) => (
-                  <SelectItem key={status.id} value={mapStatusToFilter(status.status)}>
-                    {status.status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Phone number search for chips */}
-          {(typeFilter === "all" || typeFilter === "CHIP") && (
-            <div className="relative max-w-md">
-              <Smartphone className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar por número do chip (com ou sem DDD)..."
-                value={phoneSearch}
-                onChange={(e) => setPhoneSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="pt-6">
-          {filteredAssets.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Tipo</TableHead>
-                    <TableHead>ID / ICCID</TableHead>
-                    <TableHead>Detalhes</TableHead>
-                    <TableHead>Registro</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAssets.map((asset) => (
-                    <TableRow 
-                      key={asset.id}
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleViewAssetDetails(asset)}
-                    >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        {asset.type === "CHIP" ? (
-                          <div className="flex items-center gap-2">
-                            <Smartphone className="h-4 w-4" />
-                            <span>Chip</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Wifi className="h-4 w-4" />
-                            <span>Roteador</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {asset.type === "CHIP"
-                          ? (asset as ChipAsset).iccid
-                          : (asset as EquipamentAsset).uniqueId
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {asset.type === "CHIP" ? (
-                          <div>
-                            <div>{(asset as ChipAsset).phoneNumber}</div>
-                            <div className="text-xs text-gray-500">
-                              {(asset as ChipAsset).carrier}
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="flex items-center gap-2">
-                              {(asset as EquipamentAsset).brand} {(asset as EquipamentAsset).model}
-                              {(asset as EquipamentAsset).hasWeakPassword && (
-                                <div className="flex items-center text-orange-500 text-xs">
-                                  <AlertTriangle className="h-4 w-4" />
-                                  <span className="ml-1">Senha fraca</span>
-                                </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Empresa
+                    </div>
+                  </TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Telefones
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-4 w-4" />
+                      CNPJ
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Criado em
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clients.map((client) => {
+                  const clientLogsData = logsByClient[client.uuid] || [];
+                  const recentLogs = clientLogsData.slice(0, 3);
+                  const isExpanded = expandedClients.has(client.uuid);
+                  
+                  return (
+                    <React.Fragment key={client.uuid}>
+                      <TableRow className="group">
+                        <TableCell>
+                          <Collapsible>
+                            <CollapsibleTrigger
+                              onClick={() => toggleClientExpansion(client.uuid)}
+                              className="flex items-center justify-center w-8 h-8 rounded hover:bg-muted transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
                               )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              SSID: {(asset as EquipamentAsset).ssid}
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(asset.registrationDate).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Badge className={getStatusBadgeStyle(asset.status)}>
-                          {asset.status}
-                        </Badge>
-                        {/* Novo dropdown para atualizar status */}
-                        <div className="mt-1">
-                          <AssetStatusDropdown 
-                            asset={asset} 
-                            statusRecords={statusRecords} 
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-white">
-                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem
-                              className="flex items-center gap-2"
-                              onClick={() => handleEditAsset(asset)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                              Editar ativo
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem
-                              onClick={() => 
-                                updateAsset(asset.id, { status: "DISPONÍVEL", statusId: 1 })
-                              }
-                            >
-                              Marcar como Disponível
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => 
-                                updateAsset(asset.id, { status: "SEM DADOS", statusId: 4 })
-                              }
-                            >
-                              Marcar como Sem Dados
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => 
-                                updateAsset(asset.id, { status: "BLOQUEADO", statusId: 5 })
-                              }
-                            >
-                              Marcar como Bloqueado
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => 
-                                updateAsset(asset.id, { status: "MANUTENÇÃO", statusId: 6 })
-                              }
-                            >
-                              Marcar como Em Manutenção
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem
-                              onClick={() => deleteAsset(asset.id)}
-                              className="text-red-500 focus:text-red-500"
-                            >
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10">
-              <p className="text-center text-gray-500 mb-4">
-                Nenhum ativo encontrado com os filtros atuais.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearch("");
-                  setPhoneSearch("");
-                  setTypeFilter("all");
-                  setStatusFilter("all");
-                }}
-              >
-                Limpar Filtros
-              </Button>
-            </div>
-          )}
+                            </CollapsibleTrigger>
+                          </Collapsible>
+                        </TableCell>
+                        <TableCell className="font-medium">{client.empresa}</TableCell>
+                        <TableCell>{client.responsavel}</TableCell>
+                        <TableCell>{client.email || '-'}</TableCell>
+                        <TableCell>{formatPhones(client.telefones)}</TableCell>
+                        <TableCell>{client.cnpj || '-'}</TableCell>
+                        <TableCell>{formatDateForDisplay(client.created_at)}</TableCell>
+                      </TableRow>
+                      
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="bg-muted/30 p-0">
+                            <Collapsible open={isExpanded}>
+                              <CollapsibleContent>
+                                <div className="p-4 space-y-3">
+                                  <h4 className="font-medium text-sm text-muted-foreground mb-3">
+                                    Histórico de Alterações
+                                  </h4>
+                                  
+                                  {clientLogsData.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground italic">
+                                      Nenhum histórico para este cliente
+                                    </p>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      {(isExpanded ? clientLogsData : recentLogs).map((log) => (
+                                        <div
+                                          key={log.id}
+                                          className="text-sm p-3 bg-background rounded border border-border/50"
+                                        >
+                                          <p className="text-foreground">{formatLogMessage(log)}</p>
+                                          {log.performed_by_email && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                              Por: {log.performed_by_email}
+                                            </p>
+                                          )}
+                                        </div>
+                                      ))}
+                                      
+                                      {!isExpanded && clientLogsData.length > 3 && (
+                                        <p className="text-xs text-muted-foreground text-center pt-2">
+                                          +{clientLogsData.length - 3} registro(s) mais antigo(s)
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
-
-      <EditAssetDialog 
-        asset={selectedAsset}
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseEditDialog}
-      />
-      
-      <AssetDetailsDialog
-        asset={selectedAsset}
-        isOpen={isDetailsDialogOpen}
-        onClose={handleCloseDetailsDialog}
-      />
     </div>
   );
 };
 
-export default Inventory;
+export default Clients;
