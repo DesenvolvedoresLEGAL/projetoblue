@@ -173,7 +173,7 @@ const AssetsManagement = () => {
         ) : null}
 
         {/* Cards de Ações Principais - Agora em carrossel */}
-        <div className="relative w-full">
+        <div className="relative max-w-full">
           <div
             ref={scrollContainerRef}
             className="flex space-x-4 sm:space-x-6 overflow-x-auto px-2 sm:px-4"
@@ -184,7 +184,7 @@ const AssetsManagement = () => {
             } as React.CSSProperties}
           >
             {/* Card Registrar Ativo */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/register')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -221,7 +221,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/associations')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -265,7 +265,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Listar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/associations-list')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -302,7 +302,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Histórico */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/assets/history')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -346,7 +346,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Clientes */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="max-w-12 min-h-full legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
               onClick={() => navigate('/clients')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
