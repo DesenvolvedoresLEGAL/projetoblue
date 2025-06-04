@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,19 +19,78 @@ import {
   AlertTriangle,
   Info,
   Loader2,
-  FileUser
+  FileUser,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
 
 const AssetsManagement = () => {
-
   const navigate = useNavigate();
   const dashboard = useDashboardAssets();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const [isAtStart, setIsAtStart] = useState(true);
+  const [isAtEnd, setIsAtEnd] = useState(false);
 
   const isLoading = dashboard.problemAssets.isLoading;
 
   const [lastSync] = useState(new Date(Date.now() - 5 * 60 * 1000)); // 5 minutes ago
   
+  // Check scroll position to enable/disable arrows
+  const checkScrollPosition = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const container = scrollContainerRef.current;
+    const scrollLeft = container.scrollLeft;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    
+    setIsAtStart(scrollLeft <= 0);
+    setIsAtEnd(scrollLeft >= maxScroll - 1); // -1 for floating point precision
+  };
+
+  // Handle scroll left
+  const handleScrollLeft = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
+    scrollContainerRef.current.scrollBy({
+      left: -scrollAmount,
+      behavior: 'smooth'
+    });
+  };
+
+  // Handle scroll right
+  const handleScrollRight = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
+    scrollContainerRef.current.scrollBy({
+      left: scrollAmount,
+      behavior: 'smooth'
+    });
+  };
+
+  // Set up scroll listener
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Initial check
+    checkScrollPosition();
+
+    // Add scroll listener
+    container.addEventListener('scroll', checkScrollPosition);
+    
+    // Add resize listener to recheck when window resizes
+    window.addEventListener('resize', checkScrollPosition);
+
+    return () => {
+      container.removeEventListener('scroll', checkScrollPosition);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, []);
+
   const getSyncStatus = () => {
     const minutesAgo = Math.floor((Date.now() - lastSync.getTime()) / (1000 * 60));
     
@@ -113,206 +172,245 @@ const AssetsManagement = () => {
           </Alert>
         ) : null}
 
-        {/* Cards de Ações Principais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
-          
-          {/* Card Registrar Ativo */}
-          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
-            onClick={() => navigate('/assets/register')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+        {/* Cards de Ações Principais - Agora em carrossel */}
+        <div className="relative w-full">
+          <div
+            ref={scrollContainerRef}
+            className="flex space-x-4 sm:space-x-6 overflow-x-auto scrollbar-none px-2 sm:px-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {/* Card Registrar Ativo */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+              onClick={() => navigate('/assets/register')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                    <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                  </div>
+                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                    Novo Ativo
+                  </CardTitle>
                 </div>
-                <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                  Novo Ativo
-                </CardTitle>
-              </div>
-              <CardDescription className="legal-text text-sm">
-                Cadastre equipamentos e chips no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='flex flex-col flex-1'>
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                Adicione roteadores, switches, cartões SIM e outros equipamentos 
-                com todas as informações técnicas necessárias.
-              </p>
-              <div className="mt-auto">
-                <Button 
-                  variant='outline'
-                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/assets/register');
-                  }}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Cadastrar Novo
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <CardDescription className="legal-text text-sm">
+                  Cadastre equipamentos e chips no sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Adicione roteadores, switches, cartões SIM e outros equipamentos 
+                  com todas as informações técnicas necessárias.
+                </p>
+                <div className="mt-auto">
+                  <Button 
+                    variant='outline'
+                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/register');
+                    }}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Cadastrar Novo
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Card Gerenciar Associações */}
-          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full"
-            onClick={() => navigate('/assets/associations')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                  <LinkIcon className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+            {/* Card Gerenciar Associações */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+              onClick={() => navigate('/assets/associations')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                    <LinkIcon className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                        Associar Ativos
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Vincule ativos disponíveis aos clientes</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
-                      Associar Ativos
-                    </CardTitle>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Vincule ativos disponíveis aos clientes</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <CardDescription className="legal-text text-sm">
-                Conecte ativos aos seus clientes
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col flex-1">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                Faça a associação entre equipamentos disponíveis e clientes,
-                controlando alocações e devoluções de forma organizada.
-              </p>           
-              <div className="mt-auto">
-                <Button 
-                  variant="outline"
-                  className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/assets/associations');
-                  }}
-                >
-                  <LinkIcon className="h-4 w-4 mr-2" />
-                  Associar Ativos
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <CardDescription className="legal-text text-sm">
+                  Conecte ativos aos seus clientes
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Faça a associação entre equipamentos disponíveis e clientes,
+                  controlando alocações e devoluções de forma organizada.
+                </p>           
+                <div className="mt-auto">
+                  <Button 
+                    variant="outline"
+                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/associations');
+                    }}
+                  >
+                    <LinkIcon className="h-4 w-4 mr-2" />
+                    Associar Ativos
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Card Listar Associações */}
-          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
-            onClick={() => navigate('/assets/associations-list')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <List className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+            {/* Card Listar Associações */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+              onClick={() => navigate('/assets/associations-list')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                    <List className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                  </div>
+                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                    Histórico de Associações
+                  </CardTitle>
                 </div>
-                <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                  Histórico de Associações
-                </CardTitle>
-              </div>
-              <CardDescription className="legal-text text-sm">
-                Visualize todas as associações ativas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col flex-1">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                Acesse a lista completa de equipamentos associados, 
-                com status detalhado e opções de gerenciamento.
-              </p>           
-              <div className="mt-auto">
-                <Button 
-                  variant="outline"
-                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/assets/associations-list');
-                  }}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Ver Lista Completa
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <CardDescription className="legal-text text-sm">
+                  Visualize todas as associações ativas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Acesse a lista completa de equipamentos associados, 
+                  com status detalhado e opções de gerenciamento.
+                </p>           
+                <div className="mt-auto">
+                  <Button 
+                    variant="outline"
+                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/associations-list');
+                    }}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Ver Lista Completa
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Card Histórico */}
-          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full"
-            onClick={() => navigate('/assets/history')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                  <History className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+            {/* Card Histórico */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+              onClick={() => navigate('/assets/history')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                    <History className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                        Histórico de Movimentações
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Rastreie todas as alterações e movimentações dos ativos</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
-                      Histórico de Movimentações
-                    </CardTitle>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Rastreie todas as alterações e movimentações dos ativos</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <CardDescription className="legal-text text-sm">
-                Acompanhe todas as alterações realizadas
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='flex flex-col flex-1'>
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                Visualize o histórico completo de movimentações, alterações de status
-                e associações dos equipamentos registrados.
-              </p>
-              <div className="mt-auto">
-                <Button 
-                  variant="outline"
-                  className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/assets/history');
-                  }}
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Ver Histórico
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <CardDescription className="legal-text text-sm">
+                  Acompanhe todas as alterações realizadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Visualize o histórico completo de movimentações, alterações de status
+                  e associações dos equipamentos registrados.
+                </p>
+                <div className="mt-auto">
+                  <Button 
+                    variant="outline"
+                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/history');
+                    }}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    Ver Histórico
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Card Gerenciar Clientes */}
-          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
-            onClick={() => navigate('/clients')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                  <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+            {/* Card Gerenciar Clientes */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full flex-shrink-0 min-w-[85vw] sm:min-w-[45vw] md:min-w-[30vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+              onClick={() => navigate('/clients')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                    <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                  </div>
+                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                    Gerenciar clientes
+                  </CardTitle>
                 </div>
-                <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                  Gerenciar clientes
-                </CardTitle>
-              </div>
-              <CardDescription className="legal-text text-sm">
-                Gerencie os clientes cadastrados
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='flex flex-col flex-1'>
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                Vizualise e/ou atualize informações dos clientes de forma prática.
-              </p>
-              <div className="mt-auto">
-                <Button 
-                  variant='outline'
-                  className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/clients');
-                  }}
-                >
-                  <FileUser className="h-4 w-4 mr-2" />
-                  Ver Clientes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <CardDescription className="legal-text text-sm">
+                  Gerencie os clientes cadastrados
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Vizualise e/ou atualize informações dos clientes de forma prática.
+                </p>
+                <div className="mt-auto">
+                  <Button 
+                    variant='outline'
+                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/clients');
+                    }}
+                  >
+                    <FileUser className="h-4 w-4 mr-2" />
+                    Ver Clientes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Seta Esquerda */}
+          <button
+            onClick={handleScrollLeft}
+            disabled={isAtStart}
+            className={`
+              absolute top-1/2 left-0 transform -translate-y-1/2 z-10
+              bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
+              hover:bg-white hover:shadow-lg
+              rounded-full p-2 sm:p-3
+              transition-all duration-200
+              ${isAtStart ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
+            `}
+            aria-label="Scroll para esquerda"
+          >
+            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+
+          {/* Seta Direita */}
+          <button
+            onClick={handleScrollRight}
+            disabled={isAtEnd}
+            className={`
+              absolute top-1/2 right-0 transform -translate-y-1/2 z-10
+              bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
+              hover:bg-white hover:shadow-lg
+              rounded-full p-2 sm:p-3
+              transition-all duration-200
+              ${isAtEnd ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
+            `}
+            aria-label="Scroll para direita"
+          >
+            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
         </div>
 
         {/* Informações de Ajuda */}
@@ -352,6 +450,12 @@ const AssetsManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      <style jsx>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </TooltipProvider>
   );
 };
