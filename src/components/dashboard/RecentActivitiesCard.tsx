@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, ExternalLink } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { capitalize } from '@/utils/stringUtils';
 
 interface RecentActivity {
   id: number;
@@ -169,7 +170,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                         {getStatusBadge(activity.details)}
                       </Badge>
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {getEventTypeBadge(activity.type)}
+                        {capitalize(getEventTypeBadge(activity.type))}
                       </Badge>
                     </div>
                   </div>
