@@ -18,7 +18,8 @@ import {
   Activity,
   AlertTriangle,
   Info,
-  Loader2
+  Loader2,
+  FileUser
 } from "lucide-react";
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
 
@@ -272,6 +273,42 @@ const AssetsManagement = () => {
                 >
                   <Activity className="h-4 w-4 mr-2" />
                   Ver Histórico
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card Registrar Ativo */}
+          <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col h-full"
+            onClick={() => navigate('/clients')}>
+            <CardHeader className="pb-4">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                  <FileUser className="h-6 w-6 text-legal-primary" />
+                </div>
+                <CardTitle className="legal-subtitle text-xl">
+                  Gerenciar clientes
+                </CardTitle>
+              </div>
+              <CardDescription className="legal-text">
+                Gerencie os clientes cadastrados
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='flex flex-col flex-1'>
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                Vizualise e/ou atualize informações dos clientes de forma prática.
+              </p>
+              <div className="mt-auto">
+                <Button 
+                  variant='outline'
+                  className="w-full border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/clients');
+                  }}
+                >
+                  <FileUser className="h-4 w-4 mr-2" />
+                  Cadastrar Novo
                 </Button>
               </div>
             </CardContent>
