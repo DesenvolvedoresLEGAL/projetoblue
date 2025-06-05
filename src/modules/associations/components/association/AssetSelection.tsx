@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -107,28 +106,15 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       updated_at: new Date().toISOString(),
       manufacturer: {
         id: selectedAsset.manufacturer_id || 0,
-        name: selectedAsset.marca || selectedAsset.brand || '',
-        country: null,
-        description: '',
-        website: null,
-        created_at: new Date().toISOString(),
-        updated_at: null,
-        deleted_at: null
+        name: selectedAsset.marca || selectedAsset.brand || ''
       },
       status: {
         id: selectedAsset.statusId || 1,
-        status: selectedAsset.status,
-        association: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        deleted_at: null
+        status: selectedAsset.status
       },
       solucao: selectedAsset.solucao ? {
         id: selectedAsset.solution_id || 0,
-        solution: selectedAsset.solucao,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        deleted_at: null
+        solution: selectedAsset.solucao
       } : undefined
     };
   };
