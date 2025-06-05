@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -32,7 +31,7 @@ import {
   History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAssetHistory } from "@/hooks/useAssetHistory";
+import { useAssetHistory } from "@/modules/assets/hooks/useAssetHistory";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
