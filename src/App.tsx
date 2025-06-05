@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,6 +43,18 @@ import BitsMyReferrals from "@modules/bits/pages/BitsMyReferrals";
 import BitsPointsAndRewards from "@modules/bits/pages/BitsPointsAndRewards";
 import BitsSettings from "@modules/bits/pages/BitsSettings";
 import BitsHelpAndSupport from "@modules/bits/pages/BitsHelpAndSupport";
+
+// Tickets Pages
+import TicketsOverview from "@modules/tickets/pages/TicketsOverview";
+import TicketsInbox from "@modules/tickets/pages/TicketsInbox";
+import MyTickets from "@modules/tickets/pages/MyTickets";
+import NewTicket from "@modules/tickets/pages/NewTicket";
+import KnowledgeBase from "@modules/tickets/pages/KnowledgeBase";
+import TicketsAutomation from "@modules/tickets/pages/TicketsAutomation";
+import TicketsAnalytics from "@modules/tickets/pages/TicketsAnalytics";
+import QualityAudit from "@modules/tickets/pages/QualityAudit";
+import AgentCopilot from "@modules/tickets/pages/AgentCopilot";
+import TicketsIntegrations from "@modules/tickets/pages/TicketsIntegrations";
 
 // Configure React Query client with global settings
 const queryClient = new QueryClient({
@@ -102,6 +115,21 @@ const App = () => (
                       <Route path="associations" element={<AssetAssociation />} />
                       <Route path="associations-list" element={<AssociationsList />} />
                       <Route path="history" element={<History />} />
+                    </Route>
+                    
+                    {/* Tickets module routes */}
+                    <Route path="tickets">
+                      <Route index element={<TicketsOverview />} />
+                      <Route path="overview" element={<TicketsOverview />} />
+                      <Route path="inbox" element={<TicketsInbox />} />
+                      <Route path="my-tickets" element={<MyTickets />} />
+                      <Route path="new" element={<NewTicket />} />
+                      <Route path="knowledge-base" element={<KnowledgeBase />} />
+                      <Route path="automation" element={<TicketsAutomation />} />
+                      <Route path="analytics" element={<TicketsAnalytics />} />
+                      <Route path="quality" element={<QualityAudit />} />
+                      <Route path="copilot" element={<AgentCopilot />} />
+                      <Route path="integrations" element={<TicketsIntegrations />} />
                     </Route>
                     
                     {/* Topology module routes */}
