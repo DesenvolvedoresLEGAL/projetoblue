@@ -4,7 +4,7 @@ import { Asset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { AssetCreateParams, AssetUpdateParams } from "./types";
 import { handleAssetError } from "./utils";
-import { assetQueries } from "./queries";
+import { getAssetById } from "./queries";
 
 // Functions for mutating assets
 export const assetMutations = {
@@ -49,7 +49,7 @@ export const assetMutations = {
       toast.success(assetData.type === "CHIP" ? "Chip cadastrado com sucesso" : "Roteador cadastrado com sucesso");
       
       // Fetch the complete asset data including relations
-      return assetQueries.getAssetById(data.uuid);
+      return getAssetById(data.uuid);
     } catch (error) {
       handleAssetError(error, "Error in createAsset");
       return null;
@@ -114,7 +114,7 @@ export const assetMutations = {
       toast.success("Ativo atualizado com sucesso");
       
       // Fetch the updated asset
-      return assetQueries.getAssetById(id);
+      return getAssetById(id);
     } catch (error) {
       console.error('Exception in updateAsset:', error);
       handleAssetError(error, `Error in updateAsset ${id}`);
@@ -157,7 +157,7 @@ export const assetMutations = {
       }
       
       toast.success("Status do ativo atualizado com sucesso");
-      return assetQueries.getAssetById(id);
+      return getAssetById(id);
     } catch (error) {
       handleAssetError(error, `Error in updateAssetStatus ${id}`);
       return null;

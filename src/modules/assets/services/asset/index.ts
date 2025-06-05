@@ -1,5 +1,16 @@
 
-import { assetQueries } from './queries';
+import {
+  getAssets,
+  getAssetLogs,
+  getStatus,
+  getManufacturerById,
+  getAssetById,
+  getAssetsByStatus,
+  getAssetsByType,
+  getAssetsByMultipleStatus,
+  listProblemAssets,
+  statusByType
+} from './queries';
 import { assetMutations } from './mutations';
 import { associationQueries } from './associationQueries';
 import { AssetListParams, AssetCreateParams, AssetUpdateParams, AssetStatusByType, ProblemAsset } from './types';
@@ -20,16 +31,16 @@ export { PROBLEM_STATUS_IDS };
 // Combine all asset service functionality
 export const assetService = {
   // Queries
-  getAssets: assetQueries.getAssets,
-  getAssetLogs: assetQueries.getAssetLogs,
-  getStatus: assetQueries.getStatus,
-  getManufacturerById: assetQueries.getManufacturerById,
-  getAssetById: assetQueries.getAssetById,
-  getAssetsByStatus: assetQueries.getAssetsByStatus,
-  getAssetsByType: assetQueries.getAssetsByType,
-  getAssetsByMultipleStatus: assetQueries.getAssetsByMultipleStatus,
-  listProblemAssets: assetQueries.listProblemAssets,
-  statusByType: assetQueries.statusByType,
+  getAssets,
+  getAssetLogs,
+  getStatus,
+  getManufacturerById,
+  getAssetById,
+  getAssetsByStatus,
+  getAssetsByType,
+  getAssetsByMultipleStatus,
+  listProblemAssets,
+  statusByType,
 
   // Association queries
   checkActiveAssociations: associationQueries.checkActiveAssociations,
