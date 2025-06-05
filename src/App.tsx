@@ -21,6 +21,7 @@ import AssetsManagement from "@modules/assets/pages/AssetsManagement";
 import AssetAssociation from "@modules/associations/pages/AssetAssociation";
 import AssociationsList from "@modules/associations/pages/AssociationsList";
 import Clients from "@modules/clients/pages/Clients";
+import RegisterClient from "@modules/clients/pages/RegisterClient";
 import Association from "@modules/associations/pages/Association";
 import Subscriptions from "./pages/Subscriptions";
 import Monitoring from "./pages/Monitoring";
@@ -135,6 +136,7 @@ const App = () => (
                     <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
                     <Route path="/history" element={<Navigate to="/assets/history" replace />} />
                     <Route path="/clients" element={<Clients />} />
+                    <Route path="/clients/register" element={<RegisterClient />} />
                     <Route path="/suppliers" element={<Suppliers />} />
                     <Route path="/association" element={<Navigate to="/assets/association" replace />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
