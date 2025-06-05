@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ReferralForm } from '@modules/bits/components/ReferralForm';
-import { ReferralLink } from '@modules/bits/components/ReferralLink';
+import { ReferralForm } from '@modules/bits/components/components/ReferralForm';
+import { ReferralLink } from '@modules/bits/components/components/ReferralLink';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

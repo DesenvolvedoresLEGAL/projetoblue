@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDashboardStats, DashboardStats } from '@modules/dashboard/hooks/useDashboardStats';
-import { AssetFilterValues } from '@modules/dashboard/components/AssetFilters';
+import { AssetFilterValues } from '@modules/dashboard/components/dashboard/AssetFilters';
 
 interface UseDashboardWithFiltersResult {
   dashboardStats: DashboardStats | undefined;

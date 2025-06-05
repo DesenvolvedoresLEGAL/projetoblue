@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Gift, AlertCircle } from 'lucide-react';
 import { Reward } from '../types';
-import { useRewards, usePoints } from '../hooks/useBits';
+import { useRewards, usePoints } from '../../hooks/useBits';
 
 interface RewardsListProps {
   className?: string;

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAssetSolutions } from '@/hooks/useAssetSolutions';
+import { useAssetSolutions } from '@modules/assets/hooks/useAssetSolutions';
 
 interface AssetsSearchFormProps {
   searchTerm: string;

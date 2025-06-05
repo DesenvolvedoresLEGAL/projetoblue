@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { RegisterAssetForm } from "@/pages/assets/register";
+import { RegisterAssetForm } from "@modules/assets/pages/assets/register";
 
 export default function RegisterAsset() {
   const navigate = useNavigate();

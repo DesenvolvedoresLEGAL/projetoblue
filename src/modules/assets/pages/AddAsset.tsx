@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PackagePlus, Smartphone, Wifi, ArrowLeft } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import ChipForm from '@modules/assets/components/ChipForm';
-import EquipmentForm from '@modules/assets/components/EquipmentForm';
+import ChipForm from '@modules/assets/components/assets/ChipForm';
+import EquipmentForm from '@modules/assets/components/assets/EquipmentForm';
 
 const AddAsset = () => {
   const [selectedType, setSelectedType] = useState<'chip' | 'equipment' | null>(null);
