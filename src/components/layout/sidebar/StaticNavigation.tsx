@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Package, 
@@ -27,7 +27,6 @@ interface StaticNavigationProps {
 
 export function StaticNavigation({ isMobile = false, onClose }: StaticNavigationProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   
   // Expandable sections state
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -45,22 +44,14 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
     }));
   };
 
-  const handleItemClick = (path: string) => {
-    navigate(path);
-    if (isMobile && onClose) {
-      onClose();
-    }
-  };
-
   return (
     <div className="space-y-2">
       {/* Dashboard Principal */}
       <NavigationItem
+        to="/"
         icon={LayoutDashboard}
         label="Dashboard"
-        path="/"
-        isActive={location.pathname === "/"}
-        onClick={() => handleItemClick("/")}
+        onClose={onClose}
       />
 
       {/* Módulo de Ativos */}
@@ -89,39 +80,34 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
         </CollapsibleTrigger>
         <CollapsibleContent className="ml-4 space-y-1">
           <NavigationItem
+            to="/assets/management"
+            icon={Package}
             label="Gerenciamento"
-            path="/assets/management"
-            isActive={location.pathname === "/assets/management" || location.pathname === "/assets"}
-            onClick={() => handleItemClick("/assets/management")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/assets/inventory"
+            icon={Package}
             label="Inventário"
-            path="/assets/inventory"
-            isActive={location.pathname === "/assets/inventory"}
-            onClick={() => handleItemClick("/assets/inventory")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/assets/register"
+            icon={Package}
             label="Registrar Ativo"
-            path="/assets/register"
-            isActive={location.pathname === "/assets/register"}
-            onClick={() => handleItemClick("/assets/register")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/assets/associations"
+            icon={Package}
             label="Associações"
-            path="/assets/associations"
-            isActive={location.pathname === "/assets/associations"}
-            onClick={() => handleItemClick("/assets/associations")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/assets/history"
+            icon={Package}
             label="Histórico"
-            path="/assets/history"
-            isActive={location.pathname === "/assets/history"}
-            onClick={() => handleItemClick("/assets/history")}
-            isSubItem
+            onClose={onClose}
           />
         </CollapsibleContent>
       </Collapsible>
@@ -152,112 +138,98 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
         </CollapsibleTrigger>
         <CollapsibleContent className="ml-4 space-y-1">
           <NavigationItem
+            to="/tickets/overview"
+            icon={Ticket}
             label="Visão Geral"
-            path="/tickets/overview"
-            isActive={location.pathname === "/tickets/overview" || location.pathname === "/tickets"}
-            onClick={() => handleItemClick("/tickets/overview")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/inbox"
+            icon={Ticket}
             label="Caixa de Entrada"
-            path="/tickets/inbox"
-            isActive={location.pathname === "/tickets/inbox"}
-            onClick={() => handleItemClick("/tickets/inbox")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/my-tickets"
+            icon={Ticket}
             label="Meus Tickets"
-            path="/tickets/my-tickets"
-            isActive={location.pathname === "/tickets/my-tickets"}
-            onClick={() => handleItemClick("/tickets/my-tickets")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/new"
+            icon={Ticket}
             label="Novo Ticket"
-            path="/tickets/new"
-            isActive={location.pathname === "/tickets/new"}
-            onClick={() => handleItemClick("/tickets/new")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/knowledge-base"
+            icon={Ticket}
             label="Base de Conhecimento"
-            path="/tickets/knowledge-base"
-            isActive={location.pathname === "/tickets/knowledge-base"}
-            onClick={() => handleItemClick("/tickets/knowledge-base")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/automation"
+            icon={Ticket}
             label="Automação"
-            path="/tickets/automation"
-            isActive={location.pathname === "/tickets/automation"}
-            onClick={() => handleItemClick("/tickets/automation")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/analytics"
+            icon={Ticket}
             label="Análises"
-            path="/tickets/analytics"
-            isActive={location.pathname === "/tickets/analytics"}
-            onClick={() => handleItemClick("/tickets/analytics")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/quality"
+            icon={Ticket}
             label="Qualidade"
-            path="/tickets/quality"
-            isActive={location.pathname === "/tickets/quality"}
-            onClick={() => handleItemClick("/tickets/quality")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/copilot"
+            icon={Ticket}
             label="Copiloto IA"
-            path="/tickets/copilot"
-            isActive={location.pathname === "/tickets/copilot"}
-            onClick={() => handleItemClick("/tickets/copilot")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/tickets/integrations"
+            icon={Ticket}
             label="Integrações"
-            path="/tickets/integrations"
-            isActive={location.pathname === "/tickets/integrations"}
-            onClick={() => handleItemClick("/tickets/integrations")}
-            isSubItem
+            onClose={onClose}
           />
         </CollapsibleContent>
       </Collapsible>
 
       {/* Clientes */}
       <NavigationItem
+        to="/clients"
         icon={Users}
         label="Clientes"
-        path="/clients"
-        isActive={location.pathname.startsWith('/clients')}
-        onClick={() => handleItemClick("/clients")}
+        onClose={onClose}
       />
 
       {/* Associações */}
       <NavigationItem
+        to="/assets/associations-list"
         icon={Link2}
         label="Associações"
-        path="/assets/associations-list"
-        isActive={location.pathname === "/assets/associations-list"}
-        onClick={() => handleItemClick("/assets/associations-list")}
+        onClose={onClose}
       />
 
       {/* Monitoramento */}
       <NavigationItem
+        to="/monitoring"
         icon={BarChart3}
         label="Monitoramento"
-        path="/monitoring"
-        isActive={location.pathname === "/monitoring"}
-        onClick={() => handleItemClick("/monitoring")}
+        onClose={onClose}
       />
 
       {/* Uso de Dados */}
       <NavigationItem
+        to="/data-usage"
         icon={BarChart3}
         label="Uso de Dados"
-        path="/data-usage"
-        isActive={location.pathname === "/data-usage"}
-        onClick={() => handleItemClick("/data-usage")}
+        onClose={onClose}
       />
 
       {/* Topologia */}
@@ -286,11 +258,10 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
         </CollapsibleTrigger>
         <CollapsibleContent className="ml-4 space-y-1">
           <NavigationItem
+            to="/topology/view"
+            icon={Network}
             label="Visualizar"
-            path="/topology/view"
-            isActive={location.pathname === "/topology/view" || location.pathname === "/topology"}
-            onClick={() => handleItemClick("/topology/view")}
-            isSubItem
+            onClose={onClose}
           />
         </CollapsibleContent>
       </Collapsible>
@@ -321,18 +292,16 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
         </CollapsibleTrigger>
         <CollapsibleContent className="ml-4 space-y-1">
           <NavigationItem
+            to="/tools/discovery"
+            icon={Wrench}
             label="Discovery"
-            path="/tools/discovery"
-            isActive={location.pathname === "/tools/discovery" || location.pathname === "/tools"}
-            onClick={() => handleItemClick("/tools/discovery")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/wifi-analyzer"
+            icon={Wrench}
             label="WiFi Analyzer"
-            path="/wifi-analyzer"
-            isActive={location.pathname === "/wifi-analyzer"}
-            onClick={() => handleItemClick("/wifi-analyzer")}
-            isSubItem
+            onClose={onClose}
           />
         </CollapsibleContent>
       </Collapsible>
@@ -363,57 +332,50 @@ export function StaticNavigation({ isMobile = false, onClose }: StaticNavigation
         </CollapsibleTrigger>
         <CollapsibleContent className="ml-4 space-y-1">
           <NavigationItem
+            to="/bits"
+            icon={Gift}
             label="Dashboard"
-            path="/bits"
-            isActive={location.pathname === "/bits"}
-            onClick={() => handleItemClick("/bits")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/bits/indicate"
+            icon={Gift}
             label="Indicar Agora"
-            path="/bits/indicate"
-            isActive={location.pathname === "/bits/indicate"}
-            onClick={() => handleItemClick("/bits/indicate")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/bits/my-referrals"
+            icon={Gift}
             label="Meus Indicados"
-            path="/bits/my-referrals"
-            isActive={location.pathname === "/bits/my-referrals"}
-            onClick={() => handleItemClick("/bits/my-referrals")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/bits/rewards"
+            icon={Gift}
             label="Pontos & Recompensas"
-            path="/bits/rewards"
-            isActive={location.pathname === "/bits/rewards"}
-            onClick={() => handleItemClick("/bits/rewards")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/bits/settings"
+            icon={Gift}
             label="Configurações"
-            path="/bits/settings"
-            isActive={location.pathname === "/bits/settings"}
-            onClick={() => handleItemClick("/bits/settings")}
-            isSubItem
+            onClose={onClose}
           />
           <NavigationItem
+            to="/bits/help"
+            icon={Gift}
             label="Ajuda & Suporte"
-            path="/bits/help"
-            isActive={location.pathname === "/bits/help"}
-            onClick={() => handleItemClick("/bits/help")}
-            isSubItem
+            onClose={onClose}
           />
         </CollapsibleContent>
       </Collapsible>
 
       {/* Outros */}
       <NavigationItem
+        to="/subscriptions"
         icon={HeadphonesIcon}
         label="Assinaturas"
-        path="/subscriptions"
-        isActive={location.pathname === "/subscriptions"}
-        onClick={() => handleItemClick("/subscriptions")}
+        onClose={onClose}
       />
     </div>
   );
