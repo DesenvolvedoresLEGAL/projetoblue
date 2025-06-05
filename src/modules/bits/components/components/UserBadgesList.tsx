@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserBadge } from '../types';
+import { UserBadge } from '@modules/bits/types';
 import { format } from 'date-fns';
 
 interface UserBadgesListProps {

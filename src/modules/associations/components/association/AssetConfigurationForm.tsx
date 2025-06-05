@@ -1,250 +1,183 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Checkbox } from "@/components/ui/checkbox";
-import { SelectedAsset } from '@/pages/AssetAssociation';
-import { Settings, Calendar, Wifi, Smartphone } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Trash2, Settings } from 'lucide-react';
+import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetConfiguration } from '@modules/associations/types';
 
 interface AssetConfigurationFormProps {
-  asset: SelectedAsset;
-  onUpdate: (updates: Partial<SelectedAsset>) => void;
+  asset: AssetWithRelations;
+  onRemove: (assetId: string) => void;
+  onConfigurationChange: (assetId: string, config: any) => void;
+  initialConfiguration?: AssetConfiguration;
 }
 
 export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   asset,
-  onUpdate
+  onRemove,
+  onConfigurationChange,
+  initialConfiguration
 }) => {
-  const [associationType, setAssociationType] = useState(asset.associationType || 'ALUGUEL');
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    asset.startDate ? new Date(asset.startDate) : new Date()
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    asset.endDate ? new Date(asset.endDate) : undefined
-  );
-  const [rentedDays, setRentedDays] = useState(asset.rented_days || 30);
-  const [notes, setNotes] = useState(asset.notes || '');
-  
-  // Campos de rede (apenas para equipamentos)
-  const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
-  const [passAtual, setPassAtual] = useState(asset.pass_atual || '');
+  const [gb, setGb] = React.useState(initialConfiguration?.configuration?.gb || 0);
+  const [notes, setNotes] = React.useState(initialConfiguration?.configuration?.notes || '');
+  const [planId, setPlanId] = React.useState(initialConfiguration?.configuration?.planId || 1);
+  const [associationType, setAssociationType] = React.useState(initialConfiguration?.configuration?.associationType || 'ALUGUEL');
+  const [startDate, setStartDate] = React.useState(initialConfiguration?.configuration?.startDate || new Date().toISOString());
+  const [endDate, setEndDate] = React.useState(initialConfiguration?.configuration?.endDate || '');
+  const [ssid_atual, setSsidAtual] = React.useState(initialConfiguration?.configuration?.ssid_atual || '');
+  const [pass_atual, setPassAtual] = React.useState(initialConfiguration?.configuration?.pass_atual || '');
+  const [isPrincipalChip, setIsPrincipalChip] = React.useState(initialConfiguration?.configuration?.isPrincipalChip || false);
 
-  // Campo para controlar se o chip é principal
-  const [isPrincipalChip, setIsPrincipalChip] = useState(asset.isPrincipalChip || false);
-
-  // Verificar se é equipamento (não CHIP)
-  const isEquipment = asset.solution_id !== 11 && asset.type !== 'CHIP';
-  
-  // Verificar se é CHIP
-  const isChip = asset.solution_id === 11 || asset.type === 'CHIP';
-
-  // Validação de datas
-  const isEndDateValid = !endDate || !startDate || endDate >= startDate;
-
-  // Atualizar o asset quando os valores mudarem
-  useEffect(() => {
-    const updates: Partial<SelectedAsset> = {
+  React.useEffect(() => {
+    onConfigurationChange(asset.uuid, {
+      gb,
+      notes,
+      planId,
       associationType,
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-      rented_days: rentedDays,
-      notes: isChip ? (isPrincipalChip ? 'principal' : 'backup') : notes,
+      startDate,
+      endDate,
+      ssid_atual,
+      pass_atual,
       isPrincipalChip
-    };
-
-    // Adicionar campos de rede apenas para equipamentos
-    if (isEquipment) {
-      updates.ssid_atual = ssidAtual;
-      updates.pass_atual = passAtual;
-    }
-
-    onUpdate(updates);
-  }, [associationType, startDate, endDate, rentedDays, notes, ssidAtual, passAtual, isPrincipalChip, onUpdate, isEquipment, isChip]);
+    });
+  }, [gb, notes, planId, associationType, startDate, endDate, onConfigurationChange, asset.uuid, ssid_atual, pass_atual, isPrincipalChip]);
 
   return (
-    <div className="space-y-4">
-      {/* Seção: Configuração da Associação (sempre visível) */}
-      <Card className="border-[#4D2BFB]/20">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Settings className="h-4 w-4 text-[#03F9FF]" />
-            Configuração da Associação
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Configure os detalhes da associação deste ativo
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Tipo de Associação */}
-            <div className="space-y-2">
-              <Label htmlFor="association-type" className="text-sm">Tipo de Associação *</Label>
-              <Select 
-                value={associationType} 
-                onValueChange={(value: 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO') => setAssociationType(value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALUGUEL">Aluguel</SelectItem>
-                  <SelectItem value="ASSINATURA">Assinatura</SelectItem>
-                  <SelectItem value="EMPRESTIMO">Empréstimo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Data de Início */}
-            <div className="space-y-2">
-              <Label className="text-sm flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                Data de Início *
-              </Label>
-              <DatePicker
-                date={startDate}
-                setDate={setStartDate}
-                placeholder="Selecionar data de início"
-              />
-            </div>
-
-            {/* Data de Fim */}
-            <div className="space-y-2">
-              <Label className="text-sm flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                Data de Fim
-              </Label>
-              <DatePicker
-                date={endDate}
-                setDate={setEndDate}
-                placeholder="Selecionar data de fim (opcional)"
-              />
-              {!isEndDateValid && (
-                <p className="text-xs text-red-500">
-                  A data de fim deve ser posterior à data de início
-                </p>
-              )}
-            </div>
-
-            {/* Dias de Aluguel (apenas para equipamentos quando tipo = ALUGUEL) */}
-            {isEquipment && associationType === 'ALUGUEL' && (
-              <div className="space-y-2">
-                <Label htmlFor="rented-days" className="text-sm">Dias de Aluguel</Label>
-                <Input
-                  id="rented-days"
-                  type="number"
-                  value={rentedDays}
-                  onChange={(e) => setRentedDays(parseInt(e.target.value) || 30)}
-                  placeholder="30"
-                  min="1"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Observações (apenas para equipamentos) */}
-          {isEquipment && (
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm">Observações</Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Observações sobre esta associação..."
-                rows={2}
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Seção: Configuração do CHIP (apenas para CHIPs) */}
-      {isChip && (
-        <Card className="border-[#4D2BFB]/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Smartphone className="h-4 w-4 text-[#03F9FF]" />
-              Configuração do CHIP
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Defina se este CHIP será principal ou backup na associação
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="principal-chip"
-                checked={isPrincipalChip}
-                onCheckedChange={(checked) => setIsPrincipalChip(checked === true)}
-              />
-              <Label htmlFor="principal-chip" className="text-sm font-medium">
-                Este chip é principal?
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {isPrincipalChip 
-                ? 'Este CHIP será marcado como principal na associação.'
-                : 'Este CHIP será marcado como backup na associação.'
-              }
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Seção: Configurações de Rede (apenas para equipamentos) */}
-      {isEquipment && (
-        <Card className="border-[#4D2BFB]/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Wifi className="h-4 w-4 text-[#03F9FF]" />
-              Configurações de Rede
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Configure as credenciais de rede para este equipamento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+    <Card className="border-legal-primary/20 shadow-md">
+      <CardHeader className="flex items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="h-4 w-4" />
+          Configurar Ativo
+        </CardTitle>
+        <Button
+          variant="destructive"
+          size="icon"
+          onClick={() => onRemove(asset.uuid)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        {/* Campos específicos para CHIP */}
+        {asset.solution_id === 11 && (
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* SSID da Rede */}
               <div className="space-y-2">
-                <Label htmlFor="ssid-atual" className="text-sm">SSID da Rede</Label>
+                <Label htmlFor="plan">Plano</Label>
+                <Select value={planId.toString()} onValueChange={(value) => setPlanId(Number(value))}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue placeholder="Selecione o plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Plano 1</SelectItem>
+                    <SelectItem value="2">Plano 2</SelectItem>
+                    <SelectItem value="3">Plano 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gb">Tamanho GB</Label>
                 <Input
-                  id="ssid-atual"
-                  value={ssidAtual}
+                  type="number"
+                  id="gb"
+                  value={gb}
+                  onChange={(e) => setGb(Number(e.target.value))}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="isPrincipalChip" className="flex items-center space-x-2">
+                <Input
+                  type="checkbox"
+                  id="isPrincipalChip"
+                  checked={isPrincipalChip}
+                  onChange={(e) => setIsPrincipalChip(e.target.checked)}
+                  className="text-sm"
+                />
+                <span>Chip Principal</span>
+              </Label>
+            </div>
+          </>
+        )}
+
+        {/* Campos específicos para Roteador */}
+        {asset.solution_id !== 11 && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ssid_atual">SSID Atual</Label>
+                <Input
+                  type="text"
+                  id="ssid_atual"
+                  value={ssid_atual}
                   onChange={(e) => setSsidAtual(e.target.value)}
-                  placeholder="Nome da rede WiFi"
+                  className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Nome da rede WiFi que será configurada para o cliente
-                </p>
               </div>
-
-              {/* Senha da Rede */}
               <div className="space-y-2">
-                <Label htmlFor="pass-atual" className="text-sm">Senha da Rede</Label>
+                <Label htmlFor="pass_atual">Senha Atual</Label>
                 <Input
-                  id="pass-atual"
-                  type="password"
-                  value={passAtual}
+                  type="text"
+                  id="pass_atual"
+                  value={pass_atual}
                   onChange={(e) => setPassAtual(e.target.value)}
-                  placeholder="Senha da rede WiFi"
+                  className="text-sm"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Senha que será configurada para acesso à rede
-                </p>
               </div>
             </div>
+          </>
+        )}
 
-            <div className="text-xs text-blue-600 bg-blue-50 p-3 rounded border-l-4 border-blue-400">
-              <strong>💡 Importante:</strong> Estas configurações serão aplicadas especificamente para esta associação e não alterarão as configurações originais do equipamento.
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {/* Campos genéricos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="associationType">Tipo de Associação</Label>
+            <Select value={associationType} onValueChange={setAssociationType}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALUGUEL">Aluguel</SelectItem>
+                <SelectItem value="COMODATO">Comodato</SelectItem>
+                <SelectItem value="VENDA">Venda</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Data de Início</Label>
+            <Input
+              type="date"
+              id="startDate"
+              value={startDate.split('T')[0]}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="text-sm"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="endDate">Data de Término</Label>
+          <Input
+            type="date"
+            id="endDate"
+            value={endDate.split('T')[0]}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">Observações</Label>
+          <Input
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="text-sm"
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserProfileStats, Level } from '../types';
+import { UserProfileStats, Level } from '@modules/bits/types';
 
 interface LevelProgressProps {
   stats: UserProfileStats | null;

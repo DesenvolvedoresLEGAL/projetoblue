@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAssets } from "@/context/useAssets";
 import { Asset } from "@/types/asset";
@@ -11,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import AssetDialogHeader from "./parts/AssetDialogHeader";
 import ChipForm from "./forms/ChipForm";
 import RouterForm from "./forms/RouterForm";
-import { useAssetFormValidation } from "./hooks/useAssetFormValidation";
+import { useAssetFormValidation } from "../../hooks/useAssetFormValidation";
 
 interface EditAssetDialogProps {
   asset: Asset | null;

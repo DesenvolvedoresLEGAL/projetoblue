@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Table, 
@@ -11,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { PointTransaction } from '../types';
+import { PointTransaction } from '@modules/bits/types';
 
 interface PointsHistoryProps {
   transactions: PointTransaction[];

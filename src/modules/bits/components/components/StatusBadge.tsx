@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ReferralStatus } from '../types';
+import { ReferralStatus } from '@modules/bits/types';
 
 interface StatusBadgeProps {
   status: ReferralStatus;

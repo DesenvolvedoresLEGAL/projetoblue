@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from './StatusBadge';
-import { Referral } from '../types';
+import { Referral } from '@modules/bits/types';
 import { format } from 'date-fns';
 
 interface ReferralsListProps {

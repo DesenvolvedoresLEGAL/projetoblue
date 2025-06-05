@@ -1,19 +1,14 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SelectedAsset } from '@/pages/AssetAssociation';
-import { Wifi, Smartphone, Package } from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
-import { referenceDataService } from '@modules/assets/services/referenceDataService';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 
 interface AssetSpecificConfigProps {
-  asset: SelectedAsset;
+  asset: AssetWithRelations;
   associationType: 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO';
-  onUpdate: (updates: Partial<SelectedAsset>) => void;
+  onUpdate: (updates: Partial<AssetWithRelations>) => void;
 }
 
 export const AssetSpecificConfig: React.FC<AssetSpecificConfigProps> = ({
@@ -50,7 +45,7 @@ export const AssetSpecificConfig: React.FC<AssetSpecificConfigProps> = ({
 
   // Atualizar o asset quando os valores mudarem
   useEffect(() => {
-    const updates: Partial<SelectedAsset> = {};
+    const updates: Partial<AssetWithRelations> = {};
 
     // Campos específicos para equipamentos
     if (isEquipment) {
