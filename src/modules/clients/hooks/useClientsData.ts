@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,13 +30,14 @@ export const useClientsData = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Buscar todos os clientes (apenas não deletados)
+  // Buscar todos os clientes (apenas não deletados por padrão)
   const { data: clients = [], isLoading: clientsLoading, error: clientsError } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
         .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at, deleted_at')
+        .is('deleted_at', null) // Excluir clientes deletados por padrão
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -69,9 +69,10 @@ export const useClientsData = () => {
       client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.telefones?.some(tel => tel.includes(searchTerm));
     
+    // Como agora já filtramos na query principal, o status filter pode ser mais simples
+    // Mantemos para compatibilidade caso seja necessário ver clientes inativos futuramente
     const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && !client.deleted_at) ||
-      (statusFilter === 'inactive' && !!client.deleted_at);
+      (statusFilter === 'active' && !client.deleted_at);
     
     return matchesSearch && matchesStatus;
   });
