@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -124,6 +123,11 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   const handleAssetFromModal = (asset: AssetWithRelations) => {
     const selectedAsset = convertToSelectedAsset(asset);
     onAssetAdded(selectedAsset);
+  };
+
+  // Handler que recebe SelectedAsset diretamente (compatível com AssetListModal)
+  const handleSelectedAssetFromModal = (asset: SelectedAsset) => {
+    onAssetAdded(asset);
   };
 
   const handleEditAsset = (asset: SelectedAsset) => {
@@ -342,7 +346,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       <AssetListModal
         open={showEquipmentModal}
         onOpenChange={setShowEquipmentModal}
-        onAssetSelected={handleAssetFromModal}
+        onAssetSelected={handleSelectedAssetFromModal}
         selectedAssets={selectedAssets}
         type="equipment"
       />
@@ -350,7 +354,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       <AssetListModal
         open={showChipModal}
         onOpenChange={setShowChipModal}
-        onAssetSelected={handleAssetFromModal}
+        onAssetSelected={handleSelectedAssetFromModal}
         selectedAssets={selectedAssets}
         type="chip"
       />
