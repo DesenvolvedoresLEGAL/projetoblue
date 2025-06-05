@@ -113,7 +113,7 @@ const AssetsManagement = () => {
         ) : null}
 
         {/* Cards de Ações Principais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Card Registrar Ativo */}
             <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/assets/register')}>
