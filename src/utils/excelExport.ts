@@ -1,6 +1,6 @@
 
 import * as XLSX from 'xlsx';
-import { AssetWithRelations } from '@/hooks/useAssetsData';
+import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { format } from 'date-fns';
 
 export interface ExportData {
