@@ -48,7 +48,3 @@ When the API becomes available:
 2. Revert the changes in service files to use API calls instead of Supabase
 3. Remove the temporary mapper utilities if no longer needed
 4. Update documentation to reflect the change
-
-### useAssetHistory Hook
-
-`useAssetHistory(assetId?: string)` retrieves audit logs for assets. When `assetId` is supplied the hook filters the fetched data to only include events for that asset. Without an ID it returns the most recent logs for all assets. Internally it relies on `historyService.getAssetLogsWithRelations` which queries Supabase joining related asset and client data.

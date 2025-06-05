@@ -34,13 +34,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
 import { toast } from "sonner";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function HistoryPage() {
-  const [searchParams] = useSearchParams();
-  const assetId = searchParams.get('assetId') || undefined;
-
   const {
     historyLogs,
     isLoading,
@@ -48,7 +45,7 @@ export default function HistoryPage() {
     refetch,
     formatDate,
     formatEventName
-  } = useAssetHistory(assetId);
+  } = useAssetHistory();
 
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
@@ -290,11 +287,7 @@ export default function HistoryPage() {
               <Label className="text-sm font-medium font-neue-haas">
                 Filtrar por tipo de evento
               </Label>
-              <ToggleGroup 
-                value={eventFilter} 
-                onValueChange={(value) => setEventFilter(value || "all")}
-                type="single"
-              >
+              <ToggleGroup value={eventFilter} onValueChange={setEventFilter}>
                 <ToggleGroupItem value="all">
                   Todos
                 </ToggleGroupItem>
