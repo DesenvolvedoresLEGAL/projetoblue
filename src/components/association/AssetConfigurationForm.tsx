@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { Settings, Calendar, Wifi, Smartphone } from "lucide-react";
 
 interface AssetConfigurationFormProps {

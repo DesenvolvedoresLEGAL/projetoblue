@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Client } from '@/types/client';
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { AssociationGeneralConfig } from '@/components/association/AssociationGeneralConfig';
 
 type Step = 'client' | 'assets' | 'summary';

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { Wifi, Smartphone, Package } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { referenceDataService } from '@/services/api/referenceDataService';

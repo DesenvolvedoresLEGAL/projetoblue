@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { Search, Smartphone, Wifi } from "lucide-react";
 import { toast } from 'sonner';
 

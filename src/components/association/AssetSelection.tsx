@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Trash2, List } from "lucide-react";
 import { Client } from '@/types/client';
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetSpecificConfig } from './AssetSpecificConfig';
 import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';

@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Calendar, Package, Users, AlertCircle } from "lucide-react";
 import { Client } from '@/types/client';
-import { SelectedAsset } from '@/pages/AssetAssociation';
+import { SelectedAsset } from '@/pages/associations/Asset';
 import { AssociationGeneralConfig } from './AssociationGeneralConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
