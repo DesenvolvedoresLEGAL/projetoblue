@@ -9,6 +9,7 @@ import { AssetListModal } from './AssetListModal';
 import { SelectedAssetsList } from './SelectedAssetsList';
 import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';
 import { AssetSpecificConfig } from './AssetSpecificConfig';
+import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { Search, Plus, Wifi, Smartphone, ArrowRight } from 'lucide-react';
@@ -47,13 +48,13 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     onAssetAdded(asset);
   };
 
-  // Convert AssetWithRelations to SelectedAsset
+  // Convert AssetWithRelations to SelectedAsset with proper mapping
   const convertToSelectedAsset = (asset: AssetWithRelations): SelectedAsset => {
     return {
       id: asset.uuid,
       uuid: asset.uuid,
       type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
-      registrationDate: asset.created_at || '',
+      registrationDate: asset.created_at || new Date().toISOString(),
       status: asset.status?.name || 'DISPONÍVEL',
       statusId: asset.status_id,
       solucao: asset.solucao?.name,
@@ -71,15 +72,64 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       line_number: asset.line_number?.toString(),
       ssid_atual: asset.ssid_atual,
       pass_atual: asset.pass_atual,
-      // Add missing required properties
-      brand: asset.manufacturer?.name,
+      // Add missing required properties for compatibility
+      brand: asset.manufacturer?.name || '',
       model: asset.model || '',
-      phoneNumber: asset.line_number?.toString(),
-      carrier: asset.manufacturer?.name,
+      phoneNumber: asset.line_number?.toString() || '',
+      carrier: asset.manufacturer?.name || '',
       uniqueId: asset.uuid,
       ssid: asset.ssid_atual || '',
       password: asset.pass_atual || '',
       serialNumber: asset.serial_number || ''
+    };
+  };
+
+  // Convert SelectedAsset back to AssetWithRelations format for compatibility
+  const convertToAssetWithRelations = (selectedAsset: SelectedAsset): AssetWithRelations => {
+    return {
+      uuid: selectedAsset.uuid,
+      model: selectedAsset.model,
+      serial_number: selectedAsset.serial_number,
+      radio: selectedAsset.radio,
+      solution_id: selectedAsset.solution_id,
+      manufacturer_id: selectedAsset.manufacturer_id,
+      plan_id: selectedAsset.plan_id,
+      rented_days: selectedAsset.rented_days || 0,
+      admin_user: selectedAsset.admin_user || 'admin',
+      admin_pass: selectedAsset.admin_pass || '',
+      iccid: selectedAsset.iccid,
+      line_number: selectedAsset.line_number ? parseInt(selectedAsset.line_number) : undefined,
+      ssid_atual: selectedAsset.ssid_atual,
+      pass_atual: selectedAsset.pass_atual,
+      // Required fields for AssetWithRelations
+      status_id: selectedAsset.statusId || 1,
+      created_at: selectedAsset.registrationDate,
+      updated_at: new Date().toISOString(),
+      manufacturer: {
+        id: selectedAsset.manufacturer_id || 0,
+        name: selectedAsset.marca || selectedAsset.brand || '',
+        country: null,
+        description: '',
+        website: null,
+        created_at: new Date().toISOString(),
+        updated_at: null,
+        deleted_at: null
+      },
+      status: {
+        id: selectedAsset.statusId || 1,
+        status: selectedAsset.status,
+        association: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null
+      },
+      solucao: selectedAsset.solucao ? {
+        id: selectedAsset.solution_id || 0,
+        solution: selectedAsset.solucao,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null
+      } : undefined
     };
   };
 
@@ -257,7 +307,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           {selectedAssets.map((asset) => (
             <AssetSpecificConfig
               key={asset.uuid}
-              asset={asset}
+              asset={convertToAssetWithRelations(asset)}
               associationType={generalConfig.associationType}
               onUpdate={(updates) => handleAssetSpecificUpdate(asset.uuid, updates)}
             />
@@ -317,7 +367,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         type="chip"
       />
 
-      {/* Modal de configuração (se necessário para edição avançada) */}
+      {/* Modal de configuração avançada */}
       {editingAsset && (
         <AssetConfigurationForm
           asset={editingAsset}
