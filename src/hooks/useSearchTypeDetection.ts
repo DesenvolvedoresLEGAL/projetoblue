@@ -19,8 +19,8 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
       return 'iccid';
     }
     
-    // Detecta se é rádio (padrão comum: letras + números)
-    if (/^[A-Za-z\-_]+$/.test(trimmed) && trimmed.length <= 20) {
+    // Detecta nome de cliente quando possui espaços ou excede o tamanho máximo de rádio
+    if (/^[A-Za-z\-_ ]+$/.test(trimmed) && (trimmed.length > 20 || /\s/.test(trimmed))) {
       return 'client_name';
     }
     
