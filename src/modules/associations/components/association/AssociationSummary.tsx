@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, MapPin, Phone, Mail, Building, Hash } from 'lucide-react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { SelectedAsset } from '@modules/associations/types';
 
 interface AssociationSummaryProps {
   client: any; // Replace 'any' with the actual client type
-  assets: AssetWithRelations[];
+  assets: SelectedAsset[];
   generalConfig: any; // Replace 'any' with the actual generalConfig type
   onComplete: () => void;
   onBack: () => void;
@@ -82,16 +83,16 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                         <Calendar className="h-4 w-4" />
                         Data de Registro:
                       </div>
-                      <div className="font-medium">{new Date(asset.created_at).toLocaleDateString()}</div>
+                      <div className="font-medium">{new Date(asset.registrationDate).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Badge className="bg-green-100 text-green-600">
-                          Status: {asset.asset_status?.status}
+                          Status: {asset.status}
                         </Badge>
                       </div>
                       <div className="font-medium">
-                        {asset.asset_solutions?.solution === 'CHIP' ? `ICCID: ${asset.iccid}` : `Radio: ${asset.radio}`}
+                        {asset.type === 'CHIP' ? `ICCID: ${asset.iccid}` : `Radio: ${asset.radio}`}
                       </div>
                     </div>
                   </CardContent>

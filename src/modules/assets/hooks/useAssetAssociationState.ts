@@ -1,11 +1,14 @@
+
 import { useState } from 'react';
 import { AssetAssociationState } from '@modules/associations/types';
 
 export const useAssetAssociationState = () => {
   const [state, setState] = useState<AssetAssociationState>({
     selectedAssets: [],
-    currentStep: 0,
-    isLoading: false
+    currentStep: 'client', // Changed to string
+    isLoading: false,
+    selectedClient: null,
+    generalConfig: null
   });
 
   const setCurrentStep = (step: 'client' | 'assets' | 'summary') => {
@@ -27,9 +30,11 @@ export const useAssetAssociationState = () => {
   const clearState = () => {
     setState({
       selectedAssets: [],
-      currentStep: 0,
-      isLoading: false
-    } as any);
+      currentStep: 'client', // Changed to string
+      isLoading: false,
+      selectedClient: null,
+      generalConfig: null
+    });
   };
   
   return {

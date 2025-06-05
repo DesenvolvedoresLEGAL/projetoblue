@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { useAssets } from "@/context/useAssets";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Asset } from "@/types/asset";
-import EditAssetDialog from "@/components/inventory/EditAssetDialog";
-import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
-import InventoryFilters from "@/components/inventory/InventoryFilters";
-import AssetList from "@/components/inventory/AssetList";
+import EditAssetDialog from "@modules/inventory/components/inventory/EditAssetDialog";
+import AssetDetailsDialog from "@modules/inventory/components/inventory/AssetDetailsDialog";
+import InventoryFilters from "@modules/inventory/components/inventory/InventoryFilters";
+import AssetList from "@modules/inventory/components/inventory/AssetList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/utils/toast";
 

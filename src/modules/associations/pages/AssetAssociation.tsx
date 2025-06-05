@@ -11,44 +11,7 @@ import { AssetSelection } from '@modules/associations/components/association/Ass
 import { AssociationSummary } from '@modules/associations/components/association/AssociationSummary';
 import { Client } from '@/types/client';
 import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
-
-export interface SelectedAsset {
-  id: string;
-  uuid: string;
-  type: 'CHIP' | 'EQUIPMENT';
-  registrationDate: string;
-  status: string;
-  statusId?: number;
-  notes?: string;
-  solucao?: string;
-  marca?: string;
-  modelo?: string;
-  serial_number?: string;
-  model?: string;
-  radio?: string;
-  solution_id?: number;
-  manufacturer_id?: number;
-  plan_id?: number; // Novo campo para plano do CHIP
-  rented_days?: number;
-  admin_user?: string;
-  admin_pass?: string;
-  iccid?: string;
-  line_number?: string;
-  phoneNumber?: string;
-  carrier?: string;
-  uniqueId?: string;
-  brand?: string;
-  ssid?: string;
-  password?: string;
-  serialNumber?: string;
-  gb?: number; // Novo campo para tamanho GB customizado
-  associationType?: string;
-  startDate?: string;
-  endDate?: string;
-  ssid_atual?: string;
-  pass_atual?: string;
-  isPrincipalChip?: boolean; // Novo campo para controlar o checkbox
-}
+import { SelectedAsset } from '@modules/associations/types';
 
 type Step = 'client' | 'assets' | 'summary';
 
@@ -186,9 +149,9 @@ const AssetAssociation = () => {
             <AssetSelection
               client={selectedClient}
               selectedAssets={selectedAssets}
-              onAssetAdded={(asset) => setSelectedAssets(prev => [...prev, asset])}
-              onAssetRemoved={(assetId) => setSelectedAssets(prev => prev.filter(a => a.uuid !== assetId))}
-              onAssetUpdated={(assetId, updates) => setSelectedAssets(prev => prev.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
+              onAssetAdded={(asset) => setSelectedAssets([...selectedAssets, asset])}
+              onAssetRemoved={(assetId) => setSelectedAssets(selectedAssets.filter(a => a.uuid !== assetId))}
+              onAssetUpdated={(assetId, updates) => setSelectedAssets(selectedAssets.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
               onProceed={() => setCurrentStep('summary')}
             />
           )}
