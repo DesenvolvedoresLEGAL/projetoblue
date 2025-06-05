@@ -3,12 +3,12 @@ import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAssetsData } from '@modules/assets/hooks/useAssetsData';
-import AssetsHeader from '@modules/assets/components/AssetsHeader';
-import AssetsSearchForm from '@modules/assets/components/AssetsSearchForm';
-import AssetsTable from '@modules/assets/components/AssetsTable';
-import AssetsPagination from '@modules/assets/components/AssetsPagination';
-import AssetsLoading from '@modules/assets/components/AssetsLoading';
-import AssetsError from '@modules/assets/components/AssetsError';
+import AssetsHeader from '@modules/assets/components/assets/AssetsHeader';
+import AssetsSearchForm from '@modules/assets/components/assets/AssetsSearchForm';
+import AssetsTable from '@modules/assets/components/assets/AssetsTable';
+import AssetsPagination from '@modules/assets/components/assets/AssetsPagination';
+import AssetsLoading from '@modules/assets/components/assets/AssetsLoading';
+import AssetsError from '@modules/assets/components/assets/AssetsError';
 
 const ASSETS_PER_PAGE = 10;
 

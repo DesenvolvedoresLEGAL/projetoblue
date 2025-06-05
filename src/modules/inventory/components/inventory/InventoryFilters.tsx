@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { StatusRecord } from "@/types/asset";
-import { useAssetSolutions } from "@/hooks/useAssetSolutions";
+import { useAssetSolutions } from "@modules/assets/hooks/useAssetSolutions";
 
 interface InventoryFiltersProps {
   search: string;

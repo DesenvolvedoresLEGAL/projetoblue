@@ -4,12 +4,12 @@ import { useDataUsage } from "@/context/DataUsageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ChipWithMetrics, TimeRange, GroupByOption } from "@/types/dataUsage";
-import { UsageFilters } from "@/components/data-usage/UsageFilters";
-import { UsageChart } from "@/components/data-usage/UsageChart";
-import { ChipSummaryCards } from "@/components/data-usage/ChipSummaryCards";
-import { UsageMetricCards } from "@/components/data-usage/UsageMetricCards";
-import { UsageHeader } from "@/components/data-usage/UsageHeader";
-import { useChipDataGrouping } from "@/hooks/useChipDataGrouping";
+import { UsageFilters } from "@modules/data-usage/components/data-usage/UsageFilters";
+import { UsageChart } from "@modules/data-usage/components/data-usage/UsageChart";
+import { ChipSummaryCards } from "@modules/data-usage/components/data-usage/ChipSummaryCards";
+import { UsageMetricCards } from "@modules/data-usage/components/data-usage/UsageMetricCards";
+import { UsageHeader } from "@modules/data-usage/components/data-usage/UsageHeader";
+import { useChipDataGrouping } from "@modules/data-usage/hooks/useChipDataGrouping";
 
 export default function DataUsage() {
   const { 

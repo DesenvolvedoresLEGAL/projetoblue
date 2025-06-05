@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAssetEditForm } from '@/hooks/useAssetEditForm';
+import { useAssetEditForm } from '@modules/assets/hooks/useAssetEditForm';
 import { referenceDataService } from '@modules/assets/services/referenceDataService';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import CommonFormFields from './edit/CommonFormFields';

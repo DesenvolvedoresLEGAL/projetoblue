@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAssets } from "@/context/useAssets";
 import { Asset } from '@/types/asset';
 import { AlertCircle, Clock, Users, Wifi } from 'lucide-react';
-import ProblemAssetsCard from '@modules/dashboard/components/ProblemAssetsCard';
-import AssetsStatusCard from '@modules/dashboard/components/AssetsStatusCard';
+import ProblemAssetsCard from '@modules/dashboard/components/dashboard/ProblemAssetsCard';
+import AssetsStatusCard from '@modules/dashboard/components/dashboard/AssetsStatusCard';
 
 const AssetsDashboard = () => {
   const { assets, loading } = useAssets();

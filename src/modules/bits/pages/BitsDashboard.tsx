@@ -2,11 +2,11 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PointsDisplay } from '@modules/bits/components/PointsDisplay';
-import { LevelProgress } from '@modules/bits/components/LevelProgress';
-import { ReferralLink } from '@modules/bits/components/ReferralLink';
-import { ReferralsList } from '@modules/bits/components/ReferralsList';
-import { UserBadgesList } from '@modules/bits/components/UserBadgesList';
+import { PointsDisplay } from '@modules/bits/components/components/PointsDisplay';
+import { LevelProgress } from '@modules/bits/components/components/LevelProgress';
+import { ReferralLink } from '@modules/bits/components/components/ReferralLink';
+import { ReferralsList } from '@modules/bits/components/components/ReferralsList';
+import { UserBadgesList } from '@modules/bits/components/components/UserBadgesList';
 import { usePoints, useReferrals, useBadges, useLevels } from '@modules/bits/hooks/useBits';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';

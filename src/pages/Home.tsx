@@ -5,14 +5,14 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import { useDashboardAssets } from "@modules/dashboard/hooks/useDashboardAssets";
 import { useDashboardStats } from "@modules/dashboard/hooks/useDashboardStats";
 import { useDashboardRecentActivities } from "@modules/dashboard/hooks/useDashboardRecentActivities";
-import { StatsSummaryCard } from "@modules/dashboard/components/StatsSummaryCard";
-import { StatusCard } from "@modules/dashboard/components/StatusCard";
+import { StatsSummaryCard } from "@modules/dashboard/components/dashboard/StatsSummaryCard";
+import { StatusCard } from "@modules/dashboard/components/dashboard/StatusCard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LeaseAssetsCard } from "@modules/dashboard/components/LeaseAssetsCard";
-import { SubscriptionAssetsCard } from "@modules/dashboard/components/SubscriptionAssetsCard";
-import { RecentActivitiesCard } from "@/components/dashboard/RecentActivitiesCard";
-import { RefactoredAssetStatusDistributionCard } from "@/components/dashboard/RefactoredAssetStatusDistributionCard";
-import { SyncStatusAlert } from "@/components/dashboard/SyncStatusAlert";
+import { LeaseAssetsCard } from "@modules/dashboard/components/dashboard/LeaseAssetsCard";
+import { SubscriptionAssetsCard } from "@modules/dashboard/components/dashboard/SubscriptionAssetsCard";
+import { RecentActivitiesCard } from "@modules/dashboard/components/dashboard/RecentActivitiesCard";
+import { RefactoredAssetStatusDistributionCard } from "@modules/dashboard/components/dashboard/RefactoredAssetStatusDistributionCard";
+import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 /**

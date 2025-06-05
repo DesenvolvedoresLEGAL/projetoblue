@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Copy, RefreshCw } from 'lucide-react';
-import { useBitsProfile } from '../hooks/useBits';
+import { useBitsProfile } from '../../hooks/useBits';
 import { toast } from '@/utils/toast';
 
 interface ReferralLinkProps {
