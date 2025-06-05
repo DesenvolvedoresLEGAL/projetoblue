@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { useAssetSolutions } from '@modules/assets/hooks/useAssetSolutions';
 import { useManufacturers } from '@modules/assets/hooks/useAssetManagement';
+import { capitalize } from '@/utils/stringUtils';
 
 interface AssetsSearchFormProps {
   searchTerm: string;
@@ -165,7 +166,7 @@ const AssetsSearchForm = ({
                     <SelectItem value="all" className="font-neue-haas">Todos os Fabricantes</SelectItem>
                     {manufacturers.map((manu) => (
                       <SelectItem key={manu.id} value={manu.id.toString()} className="font-neue-haas">
-                        {manu.name}
+                        {capitalize(manu.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>
