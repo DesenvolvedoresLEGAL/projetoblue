@@ -53,6 +53,7 @@ export interface UseAssetsDataParams {
   searchTerm?: string;
   filterType?: string;
   filterStatus?: string;
+  filterManufacturer?: string;
   currentPage?: number;
   pageSize?: number;
   enabled?: boolean;
@@ -111,12 +112,13 @@ export const useAssetsData = ({
   searchTerm = '',
   filterType = 'all',
   filterStatus = 'all',
+  filterManufacturer = 'all',
   currentPage = 1,
   pageSize = 10,
   enabled = true
 }: UseAssetsDataParams = {}) => {
   return useQuery({
-    queryKey: ['assets', 'inventory', filterType, filterStatus, searchTerm, currentPage],
+    queryKey: ['assets', 'inventory', filterType, filterStatus, filterManufacturer, searchTerm, currentPage],
     queryFn: async (): Promise<AssetsDataResponse> => {
       try {
         console.log('Iniciando busca de assets com termo:', searchTerm);
@@ -179,6 +181,22 @@ export const useAssetsData = ({
 
           if (statusData) {
             query = query.eq('status_id', statusData.id);
+          }
+        }
+
+        if (filterManufacturer !== 'all') {
+          if (!isNaN(Number(filterManufacturer))) {
+            query = query.eq('manufacturer_id', Number(filterManufacturer));
+          } else {
+            const { data: manufacturerData } = await supabase
+              .from('manufacturers')
+              .select('id')
+              .ilike('name', filterManufacturer)
+              .single();
+
+            if (manufacturerData) {
+              query = query.eq('manufacturer_id', manufacturerData.id);
+            }
           }
         }
 
@@ -287,6 +305,12 @@ export const useAssetsData = ({
 
           if (statusData) {
             countQuery = countQuery.eq('status_id', statusData.id);
+          }
+        }
+
+        if (filterManufacturer !== 'all') {
+          if (!isNaN(Number(filterManufacturer))) {
+            countQuery = countQuery.eq('manufacturer_id', Number(filterManufacturer));
           }
         }
 

@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAssetSolutions } from '@modules/assets/hooks/useAssetSolutions';
+import { useManufacturers } from '@modules/assets/hooks/useAssetManagement';
 
 interface AssetsSearchFormProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   filterType: string;
   filterStatus: string;
+  filterManufacturer: string;
   handleSearch: (e: React.FormEvent) => void;
   handleFilterChange: (type: string, value: string) => void;
   isSearching?: boolean;
@@ -22,6 +24,7 @@ const AssetsSearchForm = ({
   setSearchTerm,
   filterType,
   filterStatus,
+  filterManufacturer,
   handleSearch,
   handleFilterChange,
   isSearching = false
@@ -29,11 +32,14 @@ const AssetsSearchForm = ({
   
   // Hook para buscar soluções dinamicamente
   const { data: assetSolutions = [], isLoading: loadingSolutions } = useAssetSolutions();
+  // Hook para buscar fabricantes dinamicamente
+  const { data: manufacturers = [], isLoading: loadingManufacturers } = useManufacturers();
   
   const handleReset = () => {
     setSearchTerm('');
     handleFilterChange('type', 'all');
     handleFilterChange('status', 'all');
+    handleFilterChange('manufacturer', 'all');
   };
 
   // Placeholder responsivo baseado no tamanho da tela
@@ -80,7 +86,7 @@ const AssetsSearchForm = ({
             </div>
 
             {/* Filtros com grid responsivo */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
               {/* Filtro por Tipo - Dinâmico */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
@@ -136,6 +142,32 @@ const AssetsSearchForm = ({
                     <SelectItem value="SEM DADOS" className="font-neue-haas">⚠️ Sem Dados</SelectItem>
                     <SelectItem value="BLOQUEADO" className="font-neue-haas">🚫 Bloqueado</SelectItem>
                     <SelectItem value="EM MANUTENÇÃO" className="font-neue-haas">🔧 Em Manutenção</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtro por Fabricante */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-legal-secondary" />
+                  <span className="hidden sm:inline">Fabricante</span>
+                  <span className="sm:hidden">Marca</span>
+                </label>
+                <Select
+                  value={filterManufacturer}
+                  onValueChange={(value) => handleFilterChange('manufacturer', value)}
+                  disabled={loadingManufacturers}
+                >
+                  <SelectTrigger className="h-12 border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
+                    <SelectValue placeholder={loadingManufacturers ? 'Carregando...' : 'Todos os fabricantes'} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-legal-secondary/20">
+                    <SelectItem value="all" className="font-neue-haas">Todos os Fabricantes</SelectItem>
+                    {manufacturers.map((manu) => (
+                      <SelectItem key={manu.id} value={manu.id.toString()} className="font-neue-haas">
+                        {manu.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
