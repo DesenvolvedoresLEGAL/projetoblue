@@ -1,183 +1,283 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Trash2, Settings } from 'lucide-react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { AssetConfiguration } from '@modules/associations/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Settings, Wifi, Smartphone, Package } from 'lucide-react';
+import { SelectedAsset } from '@modules/associations/types';
+import { useQuery } from '@tanstack/react-query';
+import { referenceDataService } from '@modules/assets/services/referenceDataService';
 
 interface AssetConfigurationFormProps {
-  asset: AssetWithRelations;
-  onRemove: (assetId: string) => void;
-  onConfigurationChange: (assetId: string, config: any) => void;
-  initialConfiguration?: AssetConfiguration;
+  asset: SelectedAsset;
+  open: boolean;
+  onClose: () => void;
+  onSave: (config: any) => void;
 }
 
 export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   asset,
-  onRemove,
-  onConfigurationChange,
-  initialConfiguration
+  open,
+  onClose,
+  onSave
 }) => {
-  const [gb, setGb] = React.useState(initialConfiguration?.configuration?.gb || 0);
-  const [notes, setNotes] = React.useState(initialConfiguration?.configuration?.notes || '');
-  const [planId, setPlanId] = React.useState(initialConfiguration?.configuration?.planId || 1);
-  const [associationType, setAssociationType] = React.useState(initialConfiguration?.configuration?.associationType || 'ALUGUEL');
-  const [startDate, setStartDate] = React.useState(initialConfiguration?.configuration?.startDate || new Date().toISOString());
-  const [endDate, setEndDate] = React.useState(initialConfiguration?.configuration?.endDate || '');
-  const [ssid_atual, setSsidAtual] = React.useState(initialConfiguration?.configuration?.ssid_atual || '');
-  const [pass_atual, setPassAtual] = React.useState(initialConfiguration?.configuration?.pass_atual || '');
-  const [isPrincipalChip, setIsPrincipalChip] = React.useState(initialConfiguration?.configuration?.isPrincipalChip || false);
+  // Estados para configurações específicas do ativo
+  const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
+  const [passAtual, setPassAtual] = useState(asset.pass_atual || '');
+  const [isPrincipalChip, setIsPrincipalChip] = useState(asset.isPrincipalChip || false);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(asset.plan_id || null);
+  const [customGb, setCustomGb] = useState(asset.gb || 0);
+  const [rentedDays, setRentedDays] = useState(asset.rented_days || 30);
+  const [notes, setNotes] = useState(asset.notes || '');
 
-  React.useEffect(() => {
-    onConfigurationChange(asset.uuid, {
-      gb,
+  // Buscar planos disponíveis
+  const { data: plans = [], isLoading: plansLoading } = useQuery({
+    queryKey: ['plans'],
+    queryFn: () => referenceDataService.getPlans()
+  });
+
+  // Verificar se é equipamento (não CHIP)
+  const isEquipment = asset.solution_id !== 11 && asset.type !== 'CHIP';
+  
+  // Verificar se é CHIP
+  const isChip = asset.solution_id === 11 || asset.type === 'CHIP';
+
+  // Verificar se o plano selecionado é customizado
+  const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+  const isCustomPlan = selectedPlan && (
+    selectedPlan.nome.toLowerCase().includes('customizado') || 
+    selectedPlan.nome.toLowerCase().includes('outro') ||
+    selectedPlan.nome.toLowerCase().includes('personalizado')
+  );
+
+  const handleSave = () => {
+    const config: any = {
       notes,
-      planId,
-      associationType,
-      startDate,
-      endDate,
-      ssid_atual,
-      pass_atual,
-      isPrincipalChip
-    });
-  }, [gb, notes, planId, associationType, startDate, endDate, onConfigurationChange, asset.uuid, ssid_atual, pass_atual, isPrincipalChip]);
+    };
+
+    // Configurações específicas para equipamentos
+    if (isEquipment) {
+      config.ssid_atual = ssidAtual;
+      config.pass_atual = passAtual;
+      config.rented_days = rentedDays;
+    }
+
+    // Configurações específicas para CHIPs
+    if (isChip) {
+      config.isPrincipalChip = isPrincipalChip;
+      config.plan_id = selectedPlanId;
+      config.gb = isCustomPlan ? customGb : 0;
+      config.notes = isPrincipalChip ? 'principal' : 'backup';
+    }
+
+    onSave(config);
+  };
 
   return (
-    <Card className="border-legal-primary/20 shadow-md">
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          Configurar Ativo
-        </CardTitle>
-        <Button
-          variant="destructive"
-          size="icon"
-          onClick={() => onRemove(asset.uuid)}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        {/* Campos específicos para CHIP */}
-        {asset.solution_id === 11 && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="plan">Plano</Label>
-                <Select value={planId.toString()} onValueChange={(value) => setPlanId(Number(value))}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder="Selecione o plano" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Plano 1</SelectItem>
-                    <SelectItem value="2">Plano 2</SelectItem>
-                    <SelectItem value="3">Plano 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gb">Tamanho GB</Label>
-                <Input
-                  type="number"
-                  id="gb"
-                  value={gb}
-                  onChange={(e) => setGb(Number(e.target.value))}
-                  className="text-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="isPrincipalChip" className="flex items-center space-x-2">
-                <Input
-                  type="checkbox"
-                  id="isPrincipalChip"
-                  checked={isPrincipalChip}
-                  onChange={(e) => setIsPrincipalChip(e.target.checked)}
-                  className="text-sm"
-                />
-                <span>Chip Principal</span>
-              </Label>
-            </div>
-          </>
-        )}
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-[#03F9FF]" />
+            Configurar Ativo
+          </DialogTitle>
+          <DialogDescription>
+            Configure as propriedades específicas deste ativo para a associação
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Campos específicos para Roteador */}
-        {asset.solution_id !== 11 && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ssid_atual">SSID Atual</Label>
-                <Input
-                  type="text"
-                  id="ssid_atual"
-                  value={ssid_atual}
-                  onChange={(e) => setSsidAtual(e.target.value)}
-                  className="text-sm"
-                />
+        <div className="space-y-6">
+          {/* Informações do Ativo */}
+          <Card className="border-gray-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                {isChip ? (
+                  <Smartphone className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Wifi className="h-4 w-4 text-blue-600" />
+                )}
+                Informações do Ativo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Tipo:</span> {asset.type}
+                </div>
+                <div>
+                  <span className="font-medium">Solução:</span> {asset.solucao}
+                </div>
+                {asset.marca && (
+                  <div>
+                    <span className="font-medium">Marca:</span> {asset.marca}
+                  </div>
+                )}
+                {asset.modelo && (
+                  <div>
+                    <span className="font-medium">Modelo:</span> {asset.modelo}
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="pass_atual">Senha Atual</Label>
-                <Input
-                  type="text"
-                  id="pass_atual"
-                  value={pass_atual}
-                  onChange={(e) => setPassAtual(e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-            </div>
-          </>
-        )}
+            </CardContent>
+          </Card>
 
-        {/* Campos genéricos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="associationType">Tipo de Associação</Label>
-            <Select value={associationType} onValueChange={setAssociationType}>
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALUGUEL">Aluguel</SelectItem>
-                <SelectItem value="COMODATO">Comodato</SelectItem>
-                <SelectItem value="VENDA">Venda</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Data de Início</Label>
-            <Input
-              type="date"
-              id="startDate"
-              value={startDate.split('T')[0]}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="text-sm"
-            />
-          </div>
+          {/* Configurações específicas para equipamentos */}
+          {isEquipment && (
+            <Card className="border-[#4D2BFB]/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Wifi className="h-4 w-4 text-[#03F9FF]" />
+                  Configurações de Rede
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ssid-atual" className="text-sm">SSID da Rede</Label>
+                    <Input
+                      id="ssid-atual"
+                      value={ssidAtual}
+                      onChange={(e) => setSsidAtual(e.target.value)}
+                      placeholder="Nome da rede WiFi"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Nome da rede WiFi que será configurada
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pass-atual" className="text-sm">Senha da Rede</Label>
+                    <Input
+                      id="pass-atual"
+                      type="password"
+                      value={passAtual}
+                      onChange={(e) => setPassAtual(e.target.value)}
+                      placeholder="Senha da rede WiFi"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Senha para acesso à rede
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rented-days" className="text-sm">Dias de Aluguel</Label>
+                  <Input
+                    id="rented-days"
+                    type="number"
+                    value={rentedDays}
+                    onChange={(e) => setRentedDays(parseInt(e.target.value) || 30)}
+                    placeholder="30"
+                    min="1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Configurações específicas para CHIPs */}
+          {isChip && (
+            <div className="space-y-4">
+              <Card className="border-[#4D2BFB]/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Smartphone className="h-4 w-4 text-[#03F9FF]" />
+                    Configuração do CHIP
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="principal-chip"
+                      checked={isPrincipalChip}
+                      onCheckedChange={(checked) => setIsPrincipalChip(checked === true)}
+                    />
+                    <Label htmlFor="principal-chip" className="text-sm font-medium">
+                      Este chip é principal?
+                    </Label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-[#4D2BFB]/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Package className="h-4 w-4 text-[#03F9FF]" />
+                    Plano do CHIP
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="plan-select" className="text-sm">Plano *</Label>
+                    <Select 
+                      value={selectedPlanId?.toString()} 
+                      onValueChange={(value) => setSelectedPlanId(parseInt(value))}
+                      disabled={plansLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={plansLoading ? "Carregando planos..." : "Selecione o plano"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {plans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id.toString()}>
+                            {plan.nome}
+                            {plan.tamanho_gb && plan.tamanho_gb > 0 && ` (${plan.tamanho_gb}GB)`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {isCustomPlan && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-gb" className="text-sm">Tamanho (GB) *</Label>
+                      <Input
+                        id="custom-gb"
+                        type="number"
+                        value={customGb}
+                        onChange={(e) => setCustomGb(parseInt(e.target.value) || 0)}
+                        placeholder="Ex: 10"
+                        min="1"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Observações */}
+          <Card className="border-gray-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Observações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Observações específicas para este ativo..."
+                rows={3}
+              />
+            </CardContent>
+          </Card>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="endDate">Data de Término</Label>
-          <Input
-            type="date"
-            id="endDate"
-            value={endDate.split('T')[0]}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="text-sm"
-          />
+
+        {/* Ações */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white">
+            Salvar Configurações
+          </Button>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="notes">Observações</Label>
-          <Input
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="text-sm"
-          />
-        </div>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 };

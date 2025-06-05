@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { AssetSearchForm } from './AssetSearchForm';
 import { AssetListModal } from './AssetListModal';
 import { SelectedAssetsList } from './SelectedAssetsList';
-import { AssetConfigurationForm } from './AssetConfigurationForm';
+import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';
+import { AssetSpecificConfig } from './AssetSpecificConfig';
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { Search, Plus, Wifi, Smartphone, ArrowRight } from 'lucide-react';
@@ -33,6 +34,14 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
   const [showChipModal, setShowChipModal] = useState(false);
   const [editingAsset, setEditingAsset] = useState<SelectedAsset | null>(null);
+  
+  // Estado para configuração geral da associação
+  const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
+    associationType: 'ALUGUEL',
+    startDate: new Date(),
+    endDate: undefined,
+    notes: ''
+  });
 
   const handleAssetFound = (asset: SelectedAsset) => {
     onAssetAdded(asset);
@@ -44,7 +53,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       id: asset.uuid,
       uuid: asset.uuid,
       type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
-      registrationDate: asset.created_at,
+      registrationDate: asset.created_at || '',
       status: asset.status?.name || 'DISPONÍVEL',
       statusId: asset.status_id,
       solucao: asset.solucao?.name,
@@ -59,7 +68,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       admin_user: asset.admin_user,
       admin_pass: asset.admin_pass,
       iccid: asset.iccid,
-      line_number: asset.line_number,
+      line_number: asset.line_number?.toString(),
       ssid_atual: asset.ssid_atual,
       pass_atual: asset.pass_atual,
       // Add missing required properties
@@ -88,11 +97,31 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     setEditingAsset(null);
   };
 
+  const handleGeneralConfigUpdate = (updates: Partial<AssociationGeneralConfig>) => {
+    setGeneralConfig(prev => ({ ...prev, ...updates }));
+  };
+
+  const handleAssetSpecificUpdate = (assetId: string, updates: any) => {
+    onAssetUpdated(assetId, updates);
+  };
+
   const handleProceed = () => {
     if (selectedAssets.length === 0) {
       toast.error('Selecione pelo menos um ativo para prosseguir');
       return;
     }
+    
+    // Validar configuração geral
+    if (!generalConfig.startDate) {
+      toast.error('Data de início é obrigatória');
+      return;
+    }
+    
+    if (generalConfig.endDate && generalConfig.endDate < generalConfig.startDate) {
+      toast.error('Data de fim deve ser posterior à data de início');
+      return;
+    }
+    
     onProceed();
   };
 
@@ -211,6 +240,31 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         </div>
       </div>
 
+      {/* Configuração Geral da Associação - sempre visível quando há ativos */}
+      {selectedAssets.length > 0 && (
+        <AssociationGeneralConfigComponent
+          config={generalConfig}
+          onUpdate={handleGeneralConfigUpdate}
+        />
+      )}
+
+      {/* Configurações Específicas dos Ativos */}
+      {selectedAssets.length > 0 && (
+        <div className="space-y-4">
+          <h4 className="text-lg font-semibold text-gray-900">
+            Configurações Específicas dos Ativos
+          </h4>
+          {selectedAssets.map((asset) => (
+            <AssetSpecificConfig
+              key={asset.uuid}
+              asset={asset}
+              associationType={generalConfig.associationType}
+              onUpdate={(updates) => handleAssetSpecificUpdate(asset.uuid, updates)}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Resumo e ações */}
       {selectedAssets.length > 0 && (
         <Card className="border-[#03F9FF]/30 bg-gradient-to-r from-[#03F9FF]/5 to-[#4D2BFB]/5">
@@ -226,6 +280,11 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
                   <span>{equipmentCount} equipamentos</span>
                   <Separator orientation="vertical" className="h-4" />
                   <span>{chipCount} CHIPs</span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Tipo: {generalConfig.associationType} | 
+                  Início: {generalConfig.startDate.toLocaleDateString('pt-BR')}
+                  {generalConfig.endDate && ` | Fim: ${generalConfig.endDate.toLocaleDateString('pt-BR')}`}
                 </div>
               </div>
               <Button
@@ -258,7 +317,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         type="chip"
       />
 
-      {/* Modal de configuração */}
+      {/* Modal de configuração (se necessário para edição avançada) */}
       {editingAsset && (
         <AssetConfigurationForm
           asset={editingAsset}
