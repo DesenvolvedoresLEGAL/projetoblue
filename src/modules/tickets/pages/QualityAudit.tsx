@@ -13,7 +13,9 @@ import {
   Clipboard,
   History,
   Filter,
-  Download
+  Download,
+  Plus,
+  Edit
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
