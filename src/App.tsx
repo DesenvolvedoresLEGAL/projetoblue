@@ -13,19 +13,19 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Pages
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import RegisterAsset from "./pages/RegisterAsset";
-import AssetsDashboard from "./pages/AssetsDashboard";
-import AssetsInventory from "./pages/AssetsInventory";
-import AssetsManagement from "./pages/AssetsManagement";
-import AssetAssociation from "./pages/AssetAssociation";
-import AssociationsList from "./pages/AssociationsList";
-import Clients from "./pages/Clients";
-import Association from "./pages/Association";
+import Dashboard from "@modules/dashboard/pages/Dashboard";
+import RegisterAsset from "@modules/assets/pages/RegisterAsset";
+import AssetsDashboard from "@modules/assets/pages/AssetsDashboard";
+import AssetsInventory from "@modules/assets/pages/AssetsInventory";
+import AssetsManagement from "@modules/assets/pages/AssetsManagement";
+import AssetAssociation from "@modules/associations/pages/AssetAssociation";
+import AssociationsList from "@modules/associations/pages/AssociationsList";
+import Clients from "@modules/clients/pages/Clients";
+import Association from "@modules/associations/pages/Association";
 import Subscriptions from "./pages/Subscriptions";
 import Monitoring from "./pages/Monitoring";
-import History from "./pages/History";
-import DataUsage from "./pages/DataUsage";
+import History from "@modules/assets/pages/AssetHistory";
+import DataUsage from "@modules/data-usage/pages/DataUsage";
 import WifiAnalyzer from "./pages/WifiAnalyzer";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -35,12 +35,12 @@ import Topology from "./pages/Topology";
 import Discovery from "./pages/Discovery";
 
 // BITS™ Pages
-import BitsDashboard from "./pages/bits/BitsDashboard";
-import BitsIndicateNow from "./pages/bits/BitsIndicateNow";
-import BitsMyReferrals from "./pages/bits/BitsMyReferrals";
-import BitsPointsAndRewards from "./pages/bits/BitsPointsAndRewards";
-import BitsSettings from "./pages/bits/BitsSettings";
-import BitsHelpAndSupport from "./pages/bits/BitsHelpAndSupport";
+import BitsDashboard from "@modules/bits/pages/BitsDashboard";
+import BitsIndicateNow from "@modules/bits/pages/BitsIndicateNow";
+import BitsMyReferrals from "@modules/bits/pages/BitsMyReferrals";
+import BitsPointsAndRewards from "@modules/bits/pages/BitsPointsAndRewards";
+import BitsSettings from "@modules/bits/pages/BitsSettings";
+import BitsHelpAndSupport from "@modules/bits/pages/BitsHelpAndSupport";
 
 // Configure React Query client with global settings
 const queryClient = new QueryClient({
