@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { formatDate } from '@/utils/formatDate';
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Wifi } from "lucide-react";
+import { Copy, Eye, EyeOff, Wifi, Smartphone, Router } from "lucide-react";
 import { toast } from "@/utils/toast";
 import AssetStatusBadge from './AssetStatusBadge';
 
@@ -43,7 +43,7 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
     );
   };
 
-  const renderNetworkField = (value: string | undefined, label: string, isPassword = false) => {
+  const renderCopyableField = (value: string | undefined, label: string, isPassword = false) => {
     if (!value) return 'N/A';
     
     return (
@@ -65,15 +65,22 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
 
   if (!asset) return null;
 
-  const isEquipment = asset.solucao.id !== 11; // Não é CHIP
+  const isChip = asset.solucao.id === 11;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-medium flex items-center gap-2">
-            Dados Completos do Ativo
-            {isEquipment && (
+          <DialogTitle className="text-xl font-medium flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {isChip ? (
+                <Smartphone className="h-5 w-5 text-blue-600" />
+              ) : (
+                <Router className="h-5 w-5 text-green-600" />
+              )}
+              Dados Completos do Ativo
+            </div>
+            {!isChip && (
               <Button
                 variant="outline"
                 size="sm"
@@ -88,84 +95,112 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
         </DialogHeader>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          {/* Informações Básicas */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-1">Informações Básicas</h3>
+            <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Informações Básicas
+            </h3>
             
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-medium">Identificador:</span>
-              <span>{asset.uuid}</span>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="font-medium text-sm">Identificador:</span>
+                <span className="text-sm">{asset.uuid}</span>
+              </div>
               
-              <span className="font-medium">Tipo:</span>
-              <span>{asset.solucao.name}</span>
+              <div className="flex justify-between">
+                <span className="font-medium text-sm">Tipo:</span>
+                <span className="text-sm">{asset.solucao.name}</span>
+              </div>
               
-              <span className="font-medium">Status:</span>
-              <AssetStatusBadge status={asset.status.name} />
+              <div className="flex justify-between">
+                <span className="font-medium text-sm">Status:</span>
+                <AssetStatusBadge status={asset.status.name} />
+              </div>
               
-              <span className="font-medium">Fabricante:</span>
-              <span>{asset.manufacturer.name}</span>
+              <div className="flex justify-between">
+                <span className="font-medium text-sm">Fabricante:</span>
+                <span className="text-sm">{asset.manufacturer.name}</span>
+              </div>
               
               {asset.model && (
-                <>
-                  <span className="font-medium">Modelo:</span>
-                  <span>{asset.model}</span>
-                </>
+                <div className="flex justify-between">
+                  <span className="font-medium text-sm">Modelo:</span>
+                  <span className="text-sm">{asset.model}</span>
+                </div>
               )}
 
-              {asset.radio && (
-                <>
-                  <span className="font-medium">Rádio:</span>
-                  <span>{asset.radio}</span>
-                </>
+              {asset.rented_days !== undefined && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-sm">Dias Alugados:</span>
+                  <span className="text-sm">{asset.rented_days}</span>
+                </div>
               )}
             </div>
           </div>
 
+          {/* Detalhes Técnicos - Específicos por Tipo */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold border-b pb-1">Detalhes Técnicos</h3>
+            <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              Detalhes Técnicos
+            </h3>
             
-            <div className="grid grid-cols-2 gap-2">
-              {asset.solucao.id === 11 ? (
+            <div className="space-y-3">
+              {isChip ? (
                 <>
-                  <span className="font-medium">ICCID:</span>
-                  <span>{asset.iccid || 'N/A'}</span>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm">ICCID:</span>
+                    {renderCopyableField(asset.iccid, 'ICCID')}
+                  </div>
                   
                   {asset.line_number && (
-                    <>
-                      <span className="font-medium">Número de Linha:</span>
-                      <span>{asset.line_number}</span>
-                    </>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-sm">Número de Linha:</span>
+                      {renderCopyableField(asset.line_number.toString(), 'Número de Linha')}
+                    </div>
                   )}
                 </>
               ) : (
                 <>
-                  <span className="font-medium">Número de Série:</span>
-                  <span>{asset.serial_number || 'N/A'}</span>
-                </>
-              )}
-              
-              {asset.rented_days !== undefined && (
-                <>
-                  <span className="font-medium">Dias Alugados:</span>
-                  <span>{asset.rented_days}</span>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm">Número de Série:</span>
+                    {renderCopyableField(asset.serial_number, 'Número de Série')}
+                  </div>
+                  
+                  {asset.radio && (
+                    <div className="flex justify-between">
+                      <span className="font-medium text-sm">Rádio:</span>
+                      {renderCopyableField(asset.radio, 'Rádio')}
+                    </div>
+                  )}
                 </>
               )}
             </div>
 
-            {isEquipment && (
+            {/* Acesso Administrativo - Apenas para Equipamentos */}
+            {!isChip && (
               <>
-                <h3 className="text-lg font-semibold border-b pb-1">Acesso Administrativo</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <span className="font-medium">Admin:</span>
-                  <span>{asset.admin_user}</span>
-                  <span className="font-medium">Senha:</span>
-                  {renderPasswordField(asset.admin_pass, 'Senha Admin')}
+                <h4 className="font-semibold text-amber-800 flex items-center gap-2 mt-4">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                  Acesso Administrativo
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm">Admin:</span>
+                    {renderCopyableField(asset.admin_user, 'Usuário Admin')}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-sm">Senha:</span>
+                    {renderPasswordField(asset.admin_pass, 'Senha Admin')}
+                  </div>
                 </div>
               </>
             )}
           </div>
 
-          {/* Nova Seção: Configurações de Rede (apenas para equipamentos) */}
-          {isEquipment && (
+          {/* Configurações de Rede - Apenas para Equipamentos */}
+          {!isChip && (
             <div className="space-y-4 col-span-1 md:col-span-2">
               <div className="flex items-center gap-2 border-b pb-2">
                 <Wifi className="h-5 w-5 text-blue-600" />
@@ -186,19 +221,19 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">SSID:</span>
-                      {renderNetworkField(asset.ssid_fabrica, 'SSID de Fábrica')}
+                      {renderCopyableField(asset.ssid_fabrica, 'SSID de Fábrica')}
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">Senha WiFi:</span>
-                      {renderNetworkField(asset.pass_fabrica, 'Senha WiFi de Fábrica', true)}
+                      {renderCopyableField(asset.pass_fabrica, 'Senha WiFi de Fábrica', true)}
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">Admin:</span>
-                      {renderNetworkField(asset.admin_user_fabrica, 'Usuário Admin de Fábrica')}
+                      {renderCopyableField(asset.admin_user_fabrica, 'Usuário Admin de Fábrica')}
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">Senha Admin:</span>
-                      {renderNetworkField(asset.admin_pass_fabrica, 'Senha Admin de Fábrica', true)}
+                      {renderCopyableField(asset.admin_pass_fabrica, 'Senha Admin de Fábrica', true)}
                     </div>
                   </div>
                 </div>
@@ -216,11 +251,11 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">SSID:</span>
-                      {renderNetworkField(asset.ssid_atual, 'SSID Atual')}
+                      {renderCopyableField(asset.ssid_atual, 'SSID Atual')}
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium text-sm">Senha WiFi:</span>
-                      {renderNetworkField(asset.pass_atual, 'Senha WiFi Atual', true)}
+                      {renderCopyableField(asset.pass_atual, 'Senha WiFi Atual', true)}
                     </div>
                   </div>
                   
@@ -234,28 +269,32 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
             </div>
           )}
 
+          {/* Informações de Sistema */}
           <div className="space-y-4 col-span-1 md:col-span-2">
-            <h3 className="text-lg font-semibold border-b pb-1">Informações de Sistema</h3>
+            <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
+              <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
+              Informações de Sistema
+            </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <span className="font-medium block">Data de Criação:</span>
-                <span>{formatDate(asset.created_at)}</span>
+                <span className="font-medium block text-sm">Data de Criação:</span>
+                <span className="text-sm">{formatDate(asset.created_at)}</span>
               </div>
               
               <div>
-                <span className="font-medium block">Última Atualização:</span>
-                <span>{formatDate(asset.updated_at)}</span>
+                <span className="font-medium block text-sm">Última Atualização:</span>
+                <span className="text-sm">{formatDate(asset.updated_at)}</span>
               </div>
               
               <div>
-                <span className="font-medium block">ID da Solução:</span>
-                <span>{asset.solucao.id}</span>
+                <span className="font-medium block text-sm">ID da Solução:</span>
+                <span className="text-sm">{asset.solucao.id}</span>
               </div>
               
               <div>
-                <span className="font-medium block">ID do Status:</span>
-                <span>{asset.status.id || 'N/A'}</span>
+                <span className="font-medium block text-sm">ID do Status:</span>
+                <span className="text-sm">{asset.status.id || 'N/A'}</span>
               </div>
             </div>
           </div>
