@@ -73,7 +73,6 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     marca: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name,
     modelo: dbAsset.model,
     serial_number: dbAsset.serial_number,
-    dias_alugada: dbAsset.rented_days,
     radio: dbAsset.radio,
     solution_id: dbAsset.solution_id,
     manufacturer_id: dbAsset.manufacturer_id,

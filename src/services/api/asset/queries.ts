@@ -82,7 +82,7 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, dias_alugada, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, client_id, deleted_at,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -122,7 +122,7 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, dias_alugada, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, client_id, deleted_at,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -160,7 +160,7 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, dias_alugada, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, client_id, deleted_at,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
