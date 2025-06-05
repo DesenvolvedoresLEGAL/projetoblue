@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -25,7 +24,7 @@ interface HistoryFilters {
 const AssetHistory = () => {
   const [filters, setFilters] = useState<HistoryFilters>({
     search: '',
-    eventType: '',
+    eventType: 'all',
     dateFrom: '',
     dateTo: ''
   });
@@ -52,7 +51,7 @@ const AssetHistory = () => {
         );
       }
 
-      if (filters.eventType) {
+      if (filters.eventType && filters.eventType !== 'all') {
         query = query.eq('event', filters.eventType);
       }
 
@@ -98,7 +97,7 @@ const AssetHistory = () => {
   const clearFilters = () => {
     setFilters({
       search: '',
-      eventType: '',
+      eventType: 'all',
       dateFrom: '',
       dateTo: ''
     });
@@ -218,7 +217,7 @@ const AssetHistory = () => {
                 <SelectValue placeholder="Todos os eventos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os eventos</SelectItem>
+                <SelectItem value="all">Todos os eventos</SelectItem>
                 {eventTypes.map((eventType) => (
                   <SelectItem key={eventType} value={eventType}>
                     {formatEvent(eventType)}
