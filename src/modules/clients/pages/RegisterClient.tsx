@@ -11,7 +11,7 @@ const RegisterClient: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCancel = () => {
-    navigate('/clients');
+    navigate(-1);
   };
 
   const handleSubmit = (client: Client) => {
