@@ -9,6 +9,7 @@ import { AssetListModal } from './AssetListModal';
 import { SelectedAssetsList } from './SelectedAssetsList';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { SelectedAsset } from '@modules/associations/types';
+import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { Search, Plus, Wifi, Smartphone, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,8 +38,45 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     onAssetAdded(asset);
   };
 
-  const handleAssetFromModal = (asset: SelectedAsset) => {
-    onAssetAdded(asset);
+  // Convert AssetWithRelations to SelectedAsset
+  const convertToSelectedAsset = (asset: AssetWithRelations): SelectedAsset => {
+    return {
+      id: asset.uuid,
+      uuid: asset.uuid,
+      type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
+      registrationDate: asset.created_at,
+      status: asset.status?.name || 'DISPONÍVEL',
+      statusId: asset.status_id,
+      solucao: asset.solucao?.name,
+      marca: asset.manufacturer?.name,
+      modelo: asset.model,
+      serial_number: asset.serial_number,
+      radio: asset.radio,
+      solution_id: asset.solution_id,
+      manufacturer_id: asset.manufacturer_id,
+      plan_id: asset.plan_id,
+      rented_days: asset.rented_days,
+      admin_user: asset.admin_user,
+      admin_pass: asset.admin_pass,
+      iccid: asset.iccid,
+      line_number: asset.line_number,
+      ssid_atual: asset.ssid_atual,
+      pass_atual: asset.pass_atual,
+      // Add missing required properties
+      brand: asset.manufacturer?.name,
+      model: asset.model || '',
+      phoneNumber: asset.line_number?.toString(),
+      carrier: asset.manufacturer?.name,
+      uniqueId: asset.uuid,
+      ssid: asset.ssid_atual || '',
+      password: asset.pass_atual || '',
+      serialNumber: asset.serial_number || ''
+    };
+  };
+
+  const handleAssetFromModal = (asset: AssetWithRelations) => {
+    const selectedAsset = convertToSelectedAsset(asset);
+    onAssetAdded(selectedAsset);
   };
 
   const handleEditAsset = (asset: SelectedAsset) => {
