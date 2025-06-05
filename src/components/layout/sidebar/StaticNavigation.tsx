@@ -63,11 +63,11 @@ export function StaticNavigation({
         <div className="px-3 mb-1">
           <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Tickets</h3>
         </div>
-        <NavLink to="/tickets" className={({
+        <NavLink to="/tickets/dashboard" className={({
         isActive
       }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
           <LayoutDashboard className="h-4 w-4" />
-          <span>Visão Geral</span>
+          <span>Dashboard</span>
         </NavLink>
         
         <NavLink to="/tickets/inbox" className={({
