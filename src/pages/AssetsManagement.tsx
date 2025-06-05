@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,77 +19,16 @@ import {
   AlertTriangle,
   Info,
   Loader2,
-  FileUser,
-  ChevronLeft,
-  ChevronRight
+  FileUser
 } from "lucide-react";
 import { useDashboardAssets } from '@/hooks/useDashboardAssets';
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
   const dashboard = useDashboardAssets();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  const [isAtStart, setIsAtStart] = useState(true);
-  const [isAtEnd, setIsAtEnd] = useState(false);
-
   const isLoading = dashboard.problemAssets.isLoading;
 
   const [lastSync] = useState(new Date(Date.now() - 5 * 60 * 1000)); // 5 minutes ago
-  
-  // Check scroll position to enable/disable arrows
-  const checkScrollPosition = () => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const scrollLeft = container.scrollLeft;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-    
-    setIsAtStart(scrollLeft <= 0);
-    setIsAtEnd(scrollLeft >= maxScroll - 1); // -1 for floating point precision
-  };
-
-  // Handle scroll left
-  const handleScrollLeft = () => {
-    if (!scrollContainerRef.current) return;
-    
-    const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
-    scrollContainerRef.current.scrollBy({
-      left: -scrollAmount,
-      behavior: 'smooth'
-    });
-  };
-
-  // Handle scroll right
-  const handleScrollRight = () => {
-    if (!scrollContainerRef.current) return;
-    
-    const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
-    scrollContainerRef.current.scrollBy({
-      left: scrollAmount,
-      behavior: 'smooth'
-    });
-  };
-
-  // Set up scroll listener
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    // Initial check
-    checkScrollPosition();
-
-    // Add scroll listener
-    container.addEventListener('scroll', checkScrollPosition);
-    
-    // Add resize listener to recheck when window resizes
-    window.addEventListener('resize', checkScrollPosition);
-
-    return () => {
-      container.removeEventListener('scroll', checkScrollPosition);
-      window.removeEventListener('resize', checkScrollPosition);
-    };
-  }, []);
 
   const getSyncStatus = () => {
     const minutesAgo = Math.floor((Date.now() - lastSync.getTime()) / (1000 * 60));
@@ -172,19 +111,10 @@ const AssetsManagement = () => {
           </Alert>
         ) : null}
 
-        {/* Cards de Ações Principais - Carrossel Responsivo */}
-        <div className="relative w-full overflow-hidden">
-          <div
-            ref={scrollContainerRef}
-            className="flex space-x-2 sm:space-x-4 overflow-x-auto px-8 sm:px-10"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitScrollbar: { display: 'none' }
-            } as React.CSSProperties}
-          >
+        {/* Cards de Ações Principais */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {/* Card Registrar Ativo */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/assets/register')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -220,7 +150,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/assets/associations')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -263,7 +193,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Listar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/assets/associations-list')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -300,7 +230,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Histórico */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/assets/history')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -343,7 +273,7 @@ const AssetsManagement = () => {
             </Card>
 
             {/* Card Gerenciar Clientes */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col flex-shrink-0 min-w-[75vw] sm:min-w-[40vw] md:min-w-[28vw] lg:min-w-[18rem] xl:min-w-[20rem]"
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
               onClick={() => navigate('/clients')}>
               <CardHeader className="pb-3 sm:pb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -377,41 +307,6 @@ const AssetsManagement = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Seta Esquerda */}
-          <button
-            onClick={handleScrollLeft}
-            disabled={isAtStart}
-            className={`
-              absolute top-1/2 left-1 sm:left-2 transform -translate-y-1/2 z-10
-              bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
-              hover:bg-white hover:shadow-lg
-              rounded-full p-1.5 sm:p-2
-              transition-all duration-200
-              ${isAtStart ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
-            `}
-            aria-label="Scroll para esquerda"
-          >
-            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
-
-          {/* Seta Direita */}
-          <button
-            onClick={handleScrollRight}
-            disabled={isAtEnd}
-            className={`
-              absolute top-1/2 right-1 sm:right-2 transform -translate-y-1/2 z-10
-              bg-white/90 border border-[#4D2BFB] text-[#4D2BFB]
-              hover:bg-white hover:shadow-lg
-              rounded-full p-1.5 sm:p-2
-              transition-all duration-200
-              ${isAtEnd ? 'opacity-50 cursor-not-allowed' : 'opacity-100 cursor-pointer'}
-            `}
-            aria-label="Scroll para direita"
-          >
-            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-          </button>
         </div>
 
         {/* Informações de Ajuda */}
