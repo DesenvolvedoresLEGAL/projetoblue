@@ -34,10 +34,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAssetHistory } from "@/hooks/useAssetHistory";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function HistoryPage() {
+  const [searchParams] = useSearchParams();
+  const assetId = searchParams.get('assetId') || undefined;
+
   const {
     historyLogs,
     isLoading,
@@ -45,7 +48,7 @@ export default function HistoryPage() {
     refetch,
     formatDate,
     formatEventName
-  } = useAssetHistory();
+  } = useAssetHistory(assetId);
 
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
