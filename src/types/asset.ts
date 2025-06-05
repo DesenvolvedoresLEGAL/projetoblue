@@ -81,7 +81,6 @@ export interface BaseAsset {
   marca?: string; 
   modelo?: string;
   serial_number?: string;
-  dias_alugada?: number;
   radio?: string;
   solution_id?: number;
   manufacturer_id?: number;
