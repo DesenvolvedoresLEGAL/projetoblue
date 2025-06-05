@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
-  PlusCircle, 
-  LinkIcon, 
-  History, 
-  List, 
-  CheckCircle2, 
-  Clock, 
+  PlusCircle,
+  LinkIcon,
+  History,
+  List,
+  CheckCircle2,
+  Clock,
   RefreshCw,
   Shield,
   TrendingUp,
@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Info,
   Loader2,
-  FileUser
+  FileUser,
+  UserPlus
 } from "lucide-react";
 import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets';
 
@@ -267,6 +268,42 @@ const AssetsManagement = () => {
                   >
                     <Activity className="h-4 w-4 mr-2" />
                     Ver Histórico
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card Registrar Cliente */}
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
+              onClick={() => navigate('/clients/register')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                    <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                  </div>
+                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                    Novo Cliente
+                  </CardTitle>
+                </div>
+                <CardDescription className="legal-text text-sm">
+                  Cadastre novos clientes no sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Registre pessoas ou empresas com informações completas de contato e dados fiscais.
+                </p>
+                <div>
+                  <Button
+                    variant='outline'
+                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/clients/register');
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Cadastrar Cliente
                   </Button>
                 </div>
               </CardContent>
