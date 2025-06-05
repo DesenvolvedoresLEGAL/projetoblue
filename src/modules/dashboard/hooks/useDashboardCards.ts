@@ -171,7 +171,7 @@ export const useDashboardCards = () => {
     staleTime: 1000 * 60 * 1, // 1 minute
   });
   
-  // 3. Assets Statistics (chips and equipment counts)
+  // 3. Assets Statistics (chips and equipment counts) - MELHORADA
   const assetsStatsQuery = useQuery({
     queryKey: ["dashboard", "assetsStats"],
     queryFn: async () => {
@@ -198,10 +198,19 @@ export const useDashboardCards = () => {
         
         const availableStatusId = availableStatus?.id || 1;
         
-        // Filter chips (solution_id === 1) and equipment (solution_id !== 1)
+        // CATEGORIZAÇÃO CORRIGIDA BASEADA EM SOLUTION_ID
+        // Chips: solution_id === 11
         const chips = (assets || []).filter(a => a.solution_id === 11);
-        const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
+        // Speedys: solution_id === 1  
         const speedy = (assets || []).filter(a => a.solution_id === 1);
+        // Equipamentos: tudo que não é chip nem speedy
+        const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
+        
+        console.log('Assets categorization debug:');
+        console.log('Total assets:', assets?.length);
+        console.log('Chips (solution_id=11):', chips.length);
+        console.log('Speedys (solution_id=1):', speedy.length);
+        console.log('Equipment (outros):', equipment.length);
         
         // Count available and unavailable assets
         const availableChips = chips.filter(a => a.status_id === availableStatusId);
@@ -217,7 +226,7 @@ export const useDashboardCards = () => {
         const onLeaseSpeedy = speedy.filter(a => a.status_id === 2);
         const onSubscriptionSpeedy = speedy.filter(a => a.status_id === 3);
 
-        return {
+        const result = {
           chipsStats: {
             total: chips.length,
             available: availableChips.length,
@@ -240,6 +249,9 @@ export const useDashboardCards = () => {
             onSubscription: onSubscriptionEquipment.length
           }
         };
+        
+        console.log('Final stats result:', result);
+        return result;
       } catch (error) {
         console.error("Error fetching assets statistics:", error);
         throw error;

@@ -88,6 +88,12 @@ const Home: React.FC = () => {
     };
   }, [dashboard.onSubscriptionAssets.data, dashboard.onSubscriptionAssets.isLoading]);
 
+  // Debug logging para verificar os dados
+  console.log('Dashboard Stats:', dashboard.assetsStats.data);
+  console.log('Chips Total:', dashboard.assetsStats.data.chips.total);
+  console.log('Speedys Total:', dashboard.assetsStats.data.speedys.total);
+  console.log('Equipment Total:', dashboard.assetsStats.data.equipment.total);
+
   // Loading state for the entire dashboard
   if (isLoading) {
     return (
@@ -155,7 +161,7 @@ const Home: React.FC = () => {
             description="Cartões SIM para conectividade móvel"
             data={dashboard.assetsStats.data.chips}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory?type=1"
+            actionLink="/assets/inventory?solution=11"
             actionText="Gerenciar Chips"
           />
 
@@ -164,7 +170,7 @@ const Home: React.FC = () => {
             description="Roteadores 5G de alta velocidade"
             data={dashboard.assetsStats.data.speedys}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory?type=1"
+            actionLink="/assets/inventory?solution=1"
             actionText="Gerenciar Speedys"
           />
 
@@ -173,7 +179,7 @@ const Home: React.FC = () => {
             description="Dispositivos e infraestrutura de rede"
             data={dashboard.assetsStats.data.equipment}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory"
+            actionLink="/assets/inventory?exclude_solutions=1,11"
             actionText="Gerenciar Equipamentos"
           />
         </div>
@@ -190,7 +196,7 @@ const Home: React.FC = () => {
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem"
+            actionLink="/assets/inventory?status=problem&solution=11"
             actionText="Resolver Problemas"
             variant="destructive"
             icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
@@ -208,7 +214,7 @@ const Home: React.FC = () => {
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem"
+            actionLink="/assets/inventory?status=problem&solution=1"
             actionText="Resolver Problemas"
             variant="destructive"
             icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
@@ -226,7 +232,7 @@ const Home: React.FC = () => {
               status: item.status
             }))}
             isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem"
+            actionLink="/assets/inventory?status=problem&exclude_solutions=1,11"
             actionText="Resolver Problemas"
             variant="destructive"
             icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
