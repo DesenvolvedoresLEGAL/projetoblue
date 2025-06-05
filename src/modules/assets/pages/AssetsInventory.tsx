@@ -16,6 +16,7 @@ const AssetsInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterManufacturer, setFilterManufacturer] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
@@ -35,6 +36,7 @@ const AssetsInventory = () => {
     searchTerm: debouncedSearchTerm, // Usa o termo com debounce
     filterType,
     filterStatus,
+    filterManufacturer,
     currentPage,
     pageSize: ASSETS_PER_PAGE,
     enabled: shouldFetch
@@ -66,6 +68,8 @@ const AssetsInventory = () => {
       setFilterType(value);
     } else if (type === 'status') {
       setFilterStatus(value);
+    } else if (type === 'manufacturer') {
+      setFilterManufacturer(value);
     }
   }, []);
 
@@ -90,7 +94,7 @@ const AssetsInventory = () => {
   }, [queryClient, refetch]);
   
   // Mostra loading apenas no carregamento inicial, não durante debounce
-  if (isLoading && !debouncedSearchTerm && filterType === 'all' && filterStatus === 'all') {
+  if (isLoading && !debouncedSearchTerm && filterType === 'all' && filterStatus === 'all' && filterManufacturer === 'all') {
     return <AssetsLoading />;
   }
   
@@ -115,11 +119,12 @@ const AssetsInventory = () => {
     <div className="container mx-auto px-4 md:px-6 space-y-4 md:space-y-6">
       <AssetsHeader />
       
-      <AssetsSearchForm 
+      <AssetsSearchForm
         searchTerm={searchTerm}
         setSearchTerm={handleSearchTermChange}
         filterType={filterType}
         filterStatus={filterStatus}
+        filterManufacturer={filterManufacturer}
         handleSearch={handleSearch}
         handleFilterChange={handleFilterChange}
         isSearching={isSearching}
