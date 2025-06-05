@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { assetService } from "@modules/assets/services/assetService";
@@ -74,7 +75,7 @@ export const useDashboardCards = () => {
         console.log("Transformed problem assets:", items);
         return {
           count: items.length,
-          items: items.slice(0, 5) // Return only the first 5 for the card display
+          items: items.slice(0, 5) // Keep slice only for display items, not count
         };
       } catch (error) {
         console.error("Error fetching problem assets:", error);
@@ -103,8 +104,8 @@ export const useDashboardCards = () => {
         
         console.log("Transformed on-lease assets:", items);
         return {
-          count: items.length,
-          items: items.slice(0, 5) // Return only the first 5 for the card display
+          count: items.length, // Full count for statistics
+          items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
         console.error("Error fetching on-lease assets:", error);
@@ -133,8 +134,8 @@ export const useDashboardCards = () => {
         
         console.log("Transformed subscription assets:", items);
         return {
-          count: items.length,
-          items: items.slice(0, 5) // Return only the first 5 for the card display
+          count: items.length, // Full count for statistics
+          items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
         console.error("Error fetching subscription assets:", error);
