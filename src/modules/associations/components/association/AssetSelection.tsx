@@ -55,9 +55,9 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       uuid: asset.uuid,
       type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
       registrationDate: asset.created_at || new Date().toISOString(),
-      status: asset.status?.status || 'DISPONÍVEL',
+      status: asset.status?.name || 'DISPONÍVEL',
       statusId: asset.status_id,
-      solucao: asset.solucao?.solution,
+      solucao: asset.solucao?.name,
       marca: asset.manufacturer?.name,
       modelo: asset.model,
       serial_number: asset.serial_number,
@@ -111,15 +111,16 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       },
       status: {
         id: selectedAsset.statusId || 1,
-        status: selectedAsset.status
+        name: selectedAsset.status
       },
       solucao: selectedAsset.solucao ? {
         id: selectedAsset.solution_id || 0,
-        solution: selectedAsset.solucao
+        name: selectedAsset.solucao
       } : undefined
     };
   };
 
+  // Handler intermediário para converter AssetWithRelations para SelectedAsset
   const handleAssetFromModal = (asset: AssetWithRelations) => {
     const selectedAsset = convertToSelectedAsset(asset);
     onAssetAdded(selectedAsset);
