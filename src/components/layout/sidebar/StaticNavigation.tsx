@@ -1,382 +1,188 @@
-
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  Link2, 
-  BarChart3,
-  Wrench,
-  Network,
-  HeadphonesIcon,
-  Gift,
-  ChevronDown,
-  ChevronRight,
-  Ticket
-} from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { LayoutDashboard, Package, PackageSearch, PlusCircle, LinkIcon, Network, ActivitySquare, Scan, FileText, Cog, UserCog, ScrollText, BarChart3, Boxes, KeyRound, LogIn, ShieldCheck, Award,
+// Added Award icon
+Users, Gift, Settings2, HelpCircle, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NavigationItem } from "./NavigationItem";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
-interface StaticNavigationProps {
+export function StaticNavigation({
+  isMobile = false,
+  onClose
+}: {
   isMobile?: boolean;
   onClose?: () => void;
-}
+}) {
+  const {
+    profile
+  } = useAuth(); // Get user profile
 
-export function StaticNavigation({ isMobile = false, onClose }: StaticNavigationProps) {
-  const location = useLocation();
-  
-  // Expandable sections state
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    assets: location.pathname.startsWith('/assets'),
-    tickets: location.pathname.startsWith('/tickets'),
-    bits: location.pathname.startsWith('/bits'),
-    tools: location.pathname.startsWith('/tools'),
-    topology: location.pathname.startsWith('/topology'),
-  });
+  return <div className="flex flex-col space-y-6 pt-2">
+      {/* Dashboard Section */}
+      <div className="flex flex-col space-y-2">
+        <div className="px-3 mb-1">
+          
+        </div>
+        <NavLink to="/" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <LayoutDashboard className="h-4 w-4" />
+          <span>Visão Geral</span>
+        </NavLink>
+      </div>
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
+      {/* Assets Section - Updated structure */}
+      <div className="flex flex-col space-y-2">
+        <div className="px-3 mb-1">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Ativos</h3>
+        </div>
+        <NavLink to="/assets/dashboard" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Package className="h-4 w-4" />
+          <span>Dashboard</span>
+        </NavLink>
+        
+        <NavLink to="/assets/inventory" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} end onClick={isMobile ? onClose : undefined}>
+          <PackageSearch className="h-4 w-4" />
+          <span>Inventário</span>
+        </NavLink>
+        
+        <NavLink to="/assets/management" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} end onClick={isMobile ? onClose : undefined}>
+          <PlusCircle className="h-4 w-4" />
+          <span>Gestão</span>
+        </NavLink>
+        
+        {/* <NavLink to="/topology/view" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Network className="h-4 w-4" />
+          <span>Topologia</span>
+        </NavLink>
+        
+        <NavLink to="/tools/discovery" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Scan className="h-4 w-4" />
+          <span>Descoberta</span>
+        </NavLink> */}
+      </div>
 
-  return (
-    <div className="space-y-2">
-      {/* Dashboard Principal */}
-      <NavigationItem
-        to="/"
-        icon={LayoutDashboard}
-        label="Dashboard"
-        onClose={onClose}
-      />
-
-      {/* Módulo de Ativos */}
-      <Collapsible 
-        open={expandedSections.assets} 
-        onOpenChange={() => toggleSection('assets')}
+      {/* BITS™ Section - Conditionally rendered for 'cliente' role (previously 'afiliado')
+      {profile?.role === 'cliente' && <div className="flex flex-col space-y-2">
+          <div className="px-3 mb-1">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS™</h3>
+          </div>
+          <NavLink to="/bits" // Main BITS dashboard
+      className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive || location.pathname.startsWith('/bits/') && location.pathname !== '/bits/indicate' && location.pathname !== '/bits/my-referrals' && location.pathname !== '/bits/rewards' && location.pathname !== '/bits/settings' && location.pathname !== '/bits/help' ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined} end // Ensure only exact match for dashboard
       >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-between h-10 px-3 text-left font-normal",
-              location.pathname.startsWith('/assets') && "bg-accent text-accent-foreground"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Package className="h-4 w-4" />
-              <span>Ativos</span>
-            </div>
-            {expandedSections.assets ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ml-4 space-y-1">
-          <NavigationItem
-            to="/assets/management"
-            icon={Package}
-            label="Gerenciamento"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/assets/inventory"
-            icon={Package}
-            label="Inventário"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/assets/register"
-            icon={Package}
-            label="Registrar Ativo"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/assets/associations"
-            icon={Package}
-            label="Associações"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/assets/history"
-            icon={Package}
-            label="Histórico"
-            onClose={onClose}
-          />
-        </CollapsibleContent>
-      </Collapsible>
+            <Award className="h-4 w-4" />
+            <span>Dashboard</span>
+          </NavLink>
+          <NavLink to="/bits/indicate" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+            <Share2 className="h-4 w-4" />
+            <span>Indicar Agora</span>
+          </NavLink>
+          <NavLink to="/bits/my-referrals" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+            <Users className="h-4 w-4" />
+            <span>Minhas Indicações</span>
+          </NavLink>
+          <NavLink to="/bits/rewards" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+            <Gift className="h-4 w-4" />
+            <span>Pontos & Recompensas</span>
+          </NavLink>
+          <NavLink to="/bits/settings" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+            <Settings2 className="h-4 w-4" />
+            <span>Configurações</span>
+          </NavLink>
+          <NavLink to="/bits/help" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+            <HelpCircle className="h-4 w-4" />
+            <span>Ajuda & Suporte</span>
+          </NavLink>
+        </div>} */}
 
-      {/* Módulo de Tickets */}
-      <Collapsible 
-        open={expandedSections.tickets} 
-        onOpenChange={() => toggleSection('tickets')}
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-between h-10 px-3 text-left font-normal",
-              location.pathname.startsWith('/tickets') && "bg-accent text-accent-foreground"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Ticket className="h-4 w-4" />
-              <span>Tickets</span>
-            </div>
-            {expandedSections.tickets ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ml-4 space-y-1">
-          <NavigationItem
-            to="/tickets/overview"
-            icon={Ticket}
-            label="Visão Geral"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/inbox"
-            icon={Ticket}
-            label="Caixa de Entrada"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/my-tickets"
-            icon={Ticket}
-            label="Meus Tickets"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/new"
-            icon={Ticket}
-            label="Novo Ticket"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/knowledge-base"
-            icon={Ticket}
-            label="Base de Conhecimento"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/automation"
-            icon={Ticket}
-            label="Automação"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/analytics"
-            icon={Ticket}
-            label="Análises"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/quality"
-            icon={Ticket}
-            label="Qualidade"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/copilot"
-            icon={Ticket}
-            label="Copiloto IA"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/tickets/integrations"
-            icon={Ticket}
-            label="Integrações"
-            onClose={onClose}
-          />
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Clientes */}
-      <NavigationItem
-        to="/clients"
-        icon={Users}
-        label="Clientes"
-        onClose={onClose}
-      />
-
-      {/* Associações */}
-      <NavigationItem
-        to="/assets/associations-list"
-        icon={Link2}
-        label="Associações"
-        onClose={onClose}
-      />
-
-      {/* Monitoramento */}
-      <NavigationItem
-        to="/monitoring"
-        icon={BarChart3}
-        label="Monitoramento"
-        onClose={onClose}
-      />
-
-      {/* Uso de Dados */}
-      <NavigationItem
-        to="/data-usage"
-        icon={BarChart3}
-        label="Uso de Dados"
-        onClose={onClose}
-      />
-
-      {/* Topologia */}
-      <Collapsible 
-        open={expandedSections.topology} 
-        onOpenChange={() => toggleSection('topology')}
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-between h-10 px-3 text-left font-normal",
-              location.pathname.startsWith('/topology') && "bg-accent text-accent-foreground"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Network className="h-4 w-4" />
-              <span>Topologia</span>
-            </div>
-            {expandedSections.topology ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ml-4 space-y-1">
-          <NavigationItem
-            to="/topology/view"
-            icon={Network}
-            label="Visualizar"
-            onClose={onClose}
-          />
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Ferramentas */}
-      <Collapsible 
-        open={expandedSections.tools} 
-        onOpenChange={() => toggleSection('tools')}
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-between h-10 px-3 text-left font-normal",
-              location.pathname.startsWith('/tools') && "bg-accent text-accent-foreground"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Wrench className="h-4 w-4" />
-              <span>Ferramentas</span>
-            </div>
-            {expandedSections.tools ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ml-4 space-y-1">
-          <NavigationItem
-            to="/tools/discovery"
-            icon={Wrench}
-            label="Discovery"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/wifi-analyzer"
-            icon={Wrench}
-            label="WiFi Analyzer"
-            onClose={onClose}
-          />
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* BITS™ */}
-      <Collapsible 
-        open={expandedSections.bits} 
-        onOpenChange={() => toggleSection('bits')}
-      >
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-between h-10 px-3 text-left font-normal",
-              location.pathname.startsWith('/bits') && "bg-accent text-accent-foreground"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Gift className="h-4 w-4" />
-              <span>BITS™</span>
-            </div>
-            {expandedSections.bits ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ml-4 space-y-1">
-          <NavigationItem
-            to="/bits"
-            icon={Gift}
-            label="Dashboard"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/bits/indicate"
-            icon={Gift}
-            label="Indicar Agora"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/bits/my-referrals"
-            icon={Gift}
-            label="Meus Indicados"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/bits/rewards"
-            icon={Gift}
-            label="Pontos & Recompensas"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/bits/settings"
-            icon={Gift}
-            label="Configurações"
-            onClose={onClose}
-          />
-          <NavigationItem
-            to="/bits/help"
-            icon={Gift}
-            label="Ajuda & Suporte"
-            onClose={onClose}
-          />
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Outros */}
-      <NavigationItem
-        to="/subscriptions"
-        icon={HeadphonesIcon}
-        label="Assinaturas"
-        onClose={onClose}
-      />
-    </div>
-  );
+      {/* Admin Section - Unchanged
+      <div className="flex flex-col space-y-2">
+        <div className="px-3 mb-1">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Admin</h3>
+        </div>
+        <NavLink to="/admin/settings" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Cog className="h-4 w-4" />
+          <span>Configurações</span>
+        </NavLink>
+        
+        <NavLink to="/admin/team" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <UserCog className="h-4 w-4" />
+          <span>Equipe</span>
+        </NavLink>
+        
+        <NavLink to="/admin/versioning" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <ScrollText className="h-4 w-4" />
+          <span>Versionamento</span>
+        </NavLink>
+        
+        <NavLink to="/admin/logs" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <ScrollText className="h-4 w-4" />
+          <span>Logs</span>
+        </NavLink>
+        
+        <NavLink to="/admin/metrics" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <BarChart3 className="h-4 w-4" />
+          <span>Métricas</span>
+        </NavLink>
+        
+        <NavLink to="/admin/traces" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Boxes className="h-4 w-4" />
+          <span>Traces</span>
+        </NavLink>
+        
+        <NavLink to="/admin/iam" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <KeyRound className="h-4 w-4" />
+          <span>IAM</span>
+        </NavLink>
+        
+        <NavLink to="/admin/access" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <LogIn className="h-4 w-4" />
+          <span>Acessos</span>
+        </NavLink>
+        
+        <NavLink to="/admin/sso-mfa" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <ShieldCheck className="h-4 w-4" />
+          <span>SSO & MFA</span>
+        </NavLink>
+      </div> */}
+    </div>;
 }
