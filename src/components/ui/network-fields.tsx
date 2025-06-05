@@ -36,7 +36,7 @@ export const NetworkFields = ({
   };
 
   return (
-    <div className={`space-y-4 ${isMobile ? 'p-4' : 'p-6'} rounded-lg border`}>
+    <div className={`space-y-4 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
       <div className="flex items-center justify-between">
         <div>
           <h4 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-legal-dark`}>
