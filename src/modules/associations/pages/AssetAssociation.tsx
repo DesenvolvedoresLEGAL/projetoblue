@@ -10,7 +10,7 @@ import { ClientSelectionSimplified } from '@modules/associations/components/asso
 import { AssetSelection } from '@modules/associations/components/association/AssetSelection';
 import { AssociationSummary } from '@modules/associations/components/association/AssociationSummary';
 import { Client } from '@/types/client';
-import { useAssetAssociationState } from '@/hooks/useAssetAssociationState';
+import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
 
 export interface SelectedAsset {
   id: string;

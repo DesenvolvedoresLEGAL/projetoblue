@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AssetFilterValues } from '@modules/dashboard/components/AssetFilters';
+import { AssetFilterValues } from '@modules/dashboard/components/dashboard/AssetFilters';
 import { formatRelativeTime } from '@/utils/dashboardUtils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

@@ -2,10 +2,10 @@
 import React from 'react';
 import { StandardPageHeader } from '@/components/ui/standard-page-header';
 import { FileUser } from 'lucide-react';
-import { ClientsLoadingState } from '@modules/clients/components/ClientsLoadingState';
-import { ClientsErrorState } from '@modules/clients/components/ClientsErrorState';
-import { ClientsActions } from '@modules/clients/components/ClientsActions';
-import { ClientsListView } from '@modules/clients/components/ClientsListView';
+import { ClientsLoadingState } from '@modules/clients/components/clients/ClientsLoadingState';
+import { ClientsErrorState } from '@modules/clients/components/clients/ClientsErrorState';
+import { ClientsActions } from '@modules/clients/components/clients/ClientsActions';
+import { ClientsListView } from '@modules/clients/components/clients/ClientsListView';
 import { useClientsData } from '@modules/clients/hooks/useClientsData';
 
 const Clients = () => {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { ReferralLink } from '@modules/bits/components/ReferralLink';
+import { ReferralLink } from '@modules/bits/components/components/ReferralLink';
 import { useBitsProfile } from '@modules/bits/hooks/useBits';
 import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';

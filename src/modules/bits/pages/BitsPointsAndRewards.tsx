@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PointsDisplay } from '@modules/bits/components/PointsDisplay';
-import { PointsHistory } from '@modules/bits/components/PointsHistory';
-import { RewardsList } from '@modules/bits/components/RewardsList';
-import { LevelProgress } from '@modules/bits/components/LevelProgress';
-import { UserBadgesList } from '@modules/bits/components/UserBadgesList';
+import { PointsDisplay } from '@modules/bits/components/components/PointsDisplay';
+import { PointsHistory } from '@modules/bits/components/components/PointsHistory';
+import { RewardsList } from '@modules/bits/components/components/RewardsList';
+import { LevelProgress } from '@modules/bits/components/components/LevelProgress';
+import { UserBadgesList } from '@modules/bits/components/components/UserBadgesList';
 import { usePoints, useRewards, useBadges, useLevels } from '@modules/bits/hooks/useBits';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';

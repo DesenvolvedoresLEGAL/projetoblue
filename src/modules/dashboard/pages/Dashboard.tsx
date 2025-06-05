@@ -7,12 +7,12 @@ import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets'
 import { useDashboardAssociationsDetailed } from '@modules/dashboard/hooks/useDashboardAssociationsDetailed';
 import { useDashboardStatusByType } from '@modules/dashboard/hooks/useDashboardStatusByType';
 import { useDashboardRecentActivities } from '@modules/dashboard/hooks/useDashboardRecentActivities';
-import { AssetSummaryCard } from '@modules/dashboard/components/AssetSummaryCard';
-import { RentalAssociationsCard } from '@modules/dashboard/components/RentalAssociationsCard';
-import { SubscriptionAssociationsCard } from '@modules/dashboard/components/SubscriptionAssociationsCard';
-import { AssetTypeStatusChart } from '@modules/dashboard/components/AssetTypeStatusChart';
-import { QuickActionsCard } from '@modules/dashboard/components/QuickActionsCard';
-import { RecentActivitiesCard } from '@modules/dashboard/components/RecentActivitiesCard';
+import { AssetSummaryCard } from '@modules/dashboard/components/dashboard/AssetSummaryCard';
+import { RentalAssociationsCard } from '@modules/dashboard/components/dashboard/RentalAssociationsCard';
+import { SubscriptionAssociationsCard } from '@modules/dashboard/components/dashboard/SubscriptionAssociationsCard';
+import { AssetTypeStatusChart } from '@modules/dashboard/components/dashboard/AssetTypeStatusChart';
+import { QuickActionsCard } from '@modules/dashboard/components/dashboard/QuickActionsCard';
+import { RecentActivitiesCard } from '@modules/dashboard/components/dashboard/RecentActivitiesCard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const Dashboard = () => {
