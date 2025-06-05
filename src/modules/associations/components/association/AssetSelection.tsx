@@ -11,7 +11,7 @@ import { AssetSpecificConfig } from './AssetSpecificConfig';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { Wifi, Smartphone, ArrowRight } from 'lucide-react';
+import { Wifi, Smartphone, ArrowRight, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AssetSelectionProps {
@@ -118,106 +118,185 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   const chipCount = selectedAssets.filter(asset => asset.type === 'CHIP').length;
 
   return (
-    <div className="space-y-6">
-      {/* Header da seleção */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Selecionar Ativos para {client?.nome}
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Busque e selecione os ativos que serão associados ao cliente
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-            <Wifi className="h-3 w-3 mr-1" />
-            {equipmentCount} Equipamentos
-          </Badge>
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
-            <Smartphone className="h-3 w-3 mr-1" />
-            {chipCount} CHIPs
-          </Badge>
-        </div>
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Header da seleção - informações do cliente */}
+      <Card className="border-[#4D2BFB]/20 bg-gradient-to-r from-[#4D2BFB]/5 to-[#03F9FF]/5">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-[#4D2BFB]/10 rounded-full flex items-center justify-center">
+                <User className="h-6 w-6 text-[#4D2BFB]" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Associar Ativos para {client?.nome}
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {client?.email && `${client.email} • `}
+                  {client?.telefone && `${client.telefone} • `}
+                  {client?.empresa || 'Cliente Individual'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                <Wifi className="h-3 w-3 mr-1" />
+                {equipmentCount} Equipamentos
+              </Badge>
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Smartphone className="h-3 w-3 mr-1" />
+                {chipCount} CHIPs
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Seção 1: Busca de Ativos */}
+      <div className="space-y-2">
+        <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+          Buscar e Selecionar Ativos
+        </h4>
+        <p className="text-sm text-gray-600 ml-10">
+          Use a busca direta ou os filtros avançados para encontrar e adicionar ativos à associação
+        </p>
+        <UnifiedAssetSearch
+          selectedAssets={selectedAssets}
+          onAssetSelected={onAssetAdded}
+        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Coluna da esquerda: Busca unificada */}
-        <div>
-          <UnifiedAssetSearch
-            selectedAssets={selectedAssets}
-            onAssetSelected={onAssetAdded}
-          />
-        </div>
-
-        {/* Coluna da direita: Ativos selecionados */}
-        <div>
+      {/* Seção 2: Ativos Selecionados */}
+      {selectedAssets.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <span className="w-8 h-8 bg-[#03F9FF] text-[#020CBC] rounded-full flex items-center justify-center text-sm font-bold">2</span>
+            Ativos Selecionados ({selectedAssets.length})
+          </h4>
+          <p className="text-sm text-gray-600 ml-10">
+            Revise os ativos selecionados e faça ajustes se necessário
+          </p>
           <SelectedAssetsGrid
             assets={selectedAssets}
             onRemoveAsset={onAssetRemoved}
             onEditAsset={handleEditAsset}
           />
         </div>
-      </div>
-
-      {/* Configuração Geral da Associação - sempre visível quando há ativos */}
-      {selectedAssets.length > 0 && (
-        <AssociationGeneralConfigComponent
-          config={generalConfig}
-          onUpdate={handleGeneralConfigUpdate}
-        />
       )}
 
-      {/* Configurações Específicas dos Ativos */}
+      {/* Seção 3: Configuração Geral da Associação */}
       {selectedAssets.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold text-gray-900">
-            Configurações Específicas dos Ativos
+        <div className="space-y-2">
+          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+            Configuração da Associação
           </h4>
-          {selectedAssets.map((asset) => (
-            <AssetSpecificConfig
-              key={asset.uuid}
-              asset={convertToAssetWithRelations(asset)}
-              associationType={generalConfig.associationType}
-              onUpdate={(updates) => handleAssetSpecificUpdate(asset.uuid, updates)}
-            />
-          ))}
+          <p className="text-sm text-gray-600 ml-10">
+            Defina os parâmetros gerais que se aplicam a todos os ativos desta associação
+          </p>
+          <AssociationGeneralConfigComponent
+            config={generalConfig}
+            onUpdate={handleGeneralConfigUpdate}
+          />
         </div>
       )}
 
-      {/* Resumo e ações */}
+      {/* Seção 4: Configurações Específicas dos Ativos */}
       {selectedAssets.length > 0 && (
-        <Card className="border-[#03F9FF]/30 bg-gradient-to-r from-[#03F9FF]/5 to-[#4D2BFB]/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h4 className="font-semibold text-gray-900">
-                  Resumo da Seleção
-                </h4>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span>{selectedAssets.length} ativos selecionados</span>
-                  <Separator orientation="vertical" className="h-4" />
-                  <span>{equipmentCount} equipamentos</span>
-                  <Separator orientation="vertical" className="h-4" />
-                  <span>{chipCount} CHIPs</span>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <span className="w-8 h-8 bg-[#03F9FF] text-[#020CBC] rounded-full flex items-center justify-center text-sm font-bold">4</span>
+              Configurações Específicas dos Ativos
+            </h4>
+            <p className="text-sm text-gray-600 ml-10">
+              Configure cada ativo individualmente conforme suas necessidades específicas
+            </p>
+          </div>
+          
+          <div className="space-y-4 ml-10">
+            {selectedAssets.map((asset, index) => (
+              <div key={asset.uuid} className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {index + 1}. {asset.type === 'CHIP' ? 'CHIP' : 'Equipamento'}:
+                  </span>
+                  <span className="text-sm text-gray-900 font-medium">
+                    {asset.type === 'CHIP' 
+                      ? (asset.iccid || asset.line_number || asset.uuid.substring(0, 8))
+                      : (asset.radio || asset.serial_number || asset.uuid.substring(0, 8))
+                    }
+                  </span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Tipo: {generalConfig.associationType} | 
-                  Início: {generalConfig.startDate.toLocaleDateString('pt-BR')}
-                  {generalConfig.endDate && ` | Fim: ${generalConfig.endDate.toLocaleDateString('pt-BR')}`}
-                </div>
+                <AssetSpecificConfig
+                  asset={convertToAssetWithRelations(asset)}
+                  associationType={generalConfig.associationType}
+                  onUpdate={(updates) => handleAssetSpecificUpdate(asset.uuid, updates)}
+                />
               </div>
-              <Button
-                onClick={handleProceed}
-                className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
-                size="lg"
-              >
-                Prosseguir para Resumo
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Seção 5: Resumo e Finalização */}
+      {selectedAssets.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+            Finalizar Associação
+          </h4>
+          <p className="text-sm text-gray-600 ml-10">
+            Revise todas as configurações e confirme a criação da associação
+          </p>
+          
+          <Card className="border-[#03F9FF]/30 bg-gradient-to-r from-[#03F9FF]/5 to-[#4D2BFB]/5 ml-10">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <h5 className="font-semibold text-gray-900">
+                    Resumo da Associação
+                  </h5>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="font-medium">{selectedAssets.length} ativos selecionados</span>
+                    <Separator orientation="vertical" className="h-4" />
+                    <span>{equipmentCount} equipamentos</span>
+                    <Separator orientation="vertical" className="h-4" />
+                    <span>{chipCount} CHIPs</span>
+                  </div>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div>
+                      <strong>Cliente:</strong> {client?.nome} • <strong>Tipo:</strong> {generalConfig.associationType}
+                    </div>
+                    <div>
+                      <strong>Início:</strong> {generalConfig.startDate.toLocaleDateString('pt-BR')}
+                      {generalConfig.endDate && (
+                        <>
+                          {' • '}
+                          <strong>Fim:</strong> {generalConfig.endDate.toLocaleDateString('pt-BR')}
+                        </>
+                      )}
+                    </div>
+                    {generalConfig.notes && (
+                      <div>
+                        <strong>Observações:</strong> {generalConfig.notes}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  onClick={handleProceed}
+                  className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
+                  size="lg"
+                >
+                  Criar Associação
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Modal de configuração avançada */}
