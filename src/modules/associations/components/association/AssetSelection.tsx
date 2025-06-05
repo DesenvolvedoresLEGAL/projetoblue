@@ -1,17 +1,17 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { AssetSearchForm } from './AssetSearchForm';
-import { AssetListModal } from './AssetListModal';
-import { SelectedAssetsList } from './SelectedAssetsList';
+import { UnifiedAssetSearch } from './UnifiedAssetSearch';
+import { SelectedAssetsGrid } from './SelectedAssetsGrid';
 import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';
 import { AssetSpecificConfig } from './AssetSpecificConfig';
 import { AssetConfigurationForm } from './AssetConfigurationForm';
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { Search, Plus, Wifi, Smartphone, ArrowRight } from 'lucide-react';
+import { Wifi, Smartphone, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AssetSelectionProps {
@@ -31,8 +31,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   onAssetUpdated,
   onProceed
 }) => {
-  const [showEquipmentModal, setShowEquipmentModal] = useState(false);
-  const [showChipModal, setShowChipModal] = useState(false);
   const [editingAsset, setEditingAsset] = useState<SelectedAsset | null>(null);
   
   // Estado para configuração geral da associação
@@ -42,46 +40,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     endDate: undefined,
     notes: ''
   });
-
-  const handleAssetFound = (asset: SelectedAsset) => {
-    onAssetAdded(asset);
-  };
-
-  // Convert AssetWithRelations to SelectedAsset with proper mapping
-  const convertToSelectedAsset = (asset: AssetWithRelations): SelectedAsset => {
-    return {
-      id: asset.uuid,
-      uuid: asset.uuid,
-      type: asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT',
-      registrationDate: asset.created_at || new Date().toISOString(),
-      status: asset.status?.name || 'DISPONÍVEL',
-      statusId: asset.status_id,
-      solucao: asset.solucao?.name,
-      marca: asset.manufacturer?.name,
-      modelo: asset.model,
-      serial_number: asset.serial_number,
-      radio: asset.radio,
-      solution_id: asset.solution_id,
-      manufacturer_id: asset.manufacturer_id,
-      plan_id: asset.plan_id,
-      rented_days: asset.rented_days,
-      admin_user: asset.admin_user,
-      admin_pass: asset.admin_pass,
-      iccid: asset.iccid,
-      line_number: asset.line_number?.toString(),
-      ssid_atual: asset.ssid_atual,
-      pass_atual: asset.pass_atual,
-      // Add missing required properties for compatibility
-      brand: asset.manufacturer?.name || '',
-      model: asset.model || '',
-      phoneNumber: asset.line_number?.toString() || '',
-      carrier: asset.manufacturer?.name || '',
-      uniqueId: asset.uuid,
-      ssid: asset.ssid_atual || '',
-      password: asset.pass_atual || '',
-      serialNumber: asset.serial_number || ''
-    };
-  };
 
   // Convert SelectedAsset back to AssetWithRelations format for compatibility
   const convertToAssetWithRelations = (selectedAsset: SelectedAsset): AssetWithRelations => {
@@ -117,17 +75,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         name: selectedAsset.solucao
       } : undefined
     };
-  };
-
-  // Handler intermediário para converter AssetWithRelations para SelectedAsset
-  const handleAssetFromModal = (asset: AssetWithRelations) => {
-    const selectedAsset = convertToSelectedAsset(asset);
-    onAssetAdded(selectedAsset);
-  };
-
-  // Handler que recebe SelectedAsset diretamente (compatível com AssetListModal)
-  const handleSelectedAssetFromModal = (asset: SelectedAsset) => {
-    onAssetAdded(asset);
   };
 
   const handleEditAsset = (asset: SelectedAsset) => {
@@ -195,90 +142,21 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Coluna da esquerda: Busca de ativos */}
-        <div className="space-y-4">
-          {/* Formulário de busca direta */}
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Search className="h-4 w-4" />
-                Busca Direta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AssetSearchForm
-                onAssetFound={handleAssetFound}
-                selectedAssets={selectedAssets}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Botões para modal de listagem */}
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Plus className="h-4 w-4" />
-                Selecionar da Lista
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                onClick={() => setShowEquipmentModal(true)}
-                variant="outline"
-                className="w-full justify-start h-12 border-blue-200 hover:bg-blue-50"
-              >
-                <Wifi className="h-4 w-4 mr-2 text-blue-600" />
-                <div className="text-left">
-                  <div className="font-medium">Equipamentos Disponíveis</div>
-                  <div className="text-xs text-muted-foreground">
-                    Roteadores, Access Points, etc.
-                  </div>
-                </div>
-              </Button>
-
-              <Button
-                onClick={() => setShowChipModal(true)}
-                variant="outline"
-                className="w-full justify-start h-12 border-green-200 hover:bg-green-50"
-              >
-                <Smartphone className="h-4 w-4 mr-2 text-green-600" />
-                <div className="text-left">
-                  <div className="font-medium">CHIPs Disponíveis</div>
-                  <div className="text-xs text-muted-foreground">
-                    Cartões SIM para conectividade
-                  </div>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Coluna da esquerda: Busca unificada */}
+        <div>
+          <UnifiedAssetSearch
+            selectedAssets={selectedAssets}
+            onAssetSelected={onAssetAdded}
+          />
         </div>
 
         {/* Coluna da direita: Ativos selecionados */}
         <div>
-          <Card className="border-[#4D2BFB]/20 h-fit">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">
-                Ativos Selecionados ({selectedAssets.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedAssets.length > 0 ? (
-                <SelectedAssetsList
-                  assets={selectedAssets}
-                  onRemoveAsset={onAssetRemoved}
-                  onEditAsset={handleEditAsset}
-                />
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Nenhum ativo selecionado</p>
-                  <p className="text-sm">
-                    Use a busca ou os botões acima para adicionar ativos
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <SelectedAssetsGrid
+            assets={selectedAssets}
+            onRemoveAsset={onAssetRemoved}
+            onEditAsset={handleEditAsset}
+          />
         </div>
       </div>
 
@@ -341,23 +219,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           </CardContent>
         </Card>
       )}
-
-      {/* Modais */}
-      <AssetListModal
-        open={showEquipmentModal}
-        onOpenChange={setShowEquipmentModal}
-        onAssetSelected={handleSelectedAssetFromModal}
-        selectedAssets={selectedAssets}
-        type="equipment"
-      />
-
-      <AssetListModal
-        open={showChipModal}
-        onOpenChange={setShowChipModal}
-        onAssetSelected={handleSelectedAssetFromModal}
-        selectedAssets={selectedAssets}
-        type="chip"
-      />
 
       {/* Modal de configuração avançada */}
       {editingAsset && (
