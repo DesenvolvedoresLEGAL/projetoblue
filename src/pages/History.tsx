@@ -290,7 +290,11 @@ export default function HistoryPage() {
               <Label className="text-sm font-medium font-neue-haas">
                 Filtrar por tipo de evento
               </Label>
-              <ToggleGroup value={eventFilter} onValueChange={setEventFilter}>
+              <ToggleGroup 
+                value={eventFilter} 
+                onValueChange={(value) => setEventFilter(value || "all")}
+                type="single"
+              >
                 <ToggleGroupItem value="all">
                   Todos
                 </ToggleGroupItem>
