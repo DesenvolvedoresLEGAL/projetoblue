@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +9,9 @@ import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Upload, X, AlertCircle, Clock, User, Tag } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const NewTicket = () => {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
@@ -102,21 +100,14 @@ const NewTicket = () => {
     e.preventDefault();
     
     if (!formData.subject || !formData.description || !formData.priority || !formData.category) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     // Simular criação do ticket
     const ticketId = `T-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
     
-    toast({
-      title: "Ticket criado com sucesso!",
-      description: `Ticket ${ticketId} foi criado e será processado em breve.`,
-    });
+    toast.success(`Ticket ${ticketId} foi criado e será processado em breve.`);
 
     // Reset form
     setFormData({

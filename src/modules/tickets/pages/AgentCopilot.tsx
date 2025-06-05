@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,14 +7,13 @@ import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import {
   Bot, MessageSquare, Zap, Lightbulb, History, Copy, Send, RefreshCcw, Download,
   FileText, Settings, Clock, ArrowRight
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const AgentCopilot = () => {
-  const { toast } = useToast();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState([
@@ -157,10 +155,7 @@ const AgentCopilot = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copiado para a área de transferência",
-      description: "O texto foi copiado com sucesso."
-    });
+    toast("Copiado para a área de transferência");
   };
 
   return (

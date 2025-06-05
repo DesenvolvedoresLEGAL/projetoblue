@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,10 +11,9 @@ import {
   Puzzle, Check, X, ArrowUpRight, Webhook, Link2, Slack, Mail, Loader2,
   PlusCircle, Globe, MessageSquare, BellRing, FileCode, RefreshCcw, Settings2
 } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const TicketIntegrations = () => {
-  const { toast } = useToast();
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -110,11 +108,7 @@ const TicketIntegrations = () => {
     e.preventDefault();
     
     if (!webhookUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL de webhook válida",
-        variant: "destructive",
-      });
+      toast.error("Por favor, insira uma URL de webhook válida");
       return;
     }
 
@@ -123,18 +117,11 @@ const TicketIntegrations = () => {
     try {
       // Simulating the API call
       setTimeout(() => {
-        toast({
-          title: "Webhook enviado com sucesso",
-          description: "O webhook foi acionado com sucesso",
-        });
+        toast.success("O webhook foi acionado com sucesso");
         setIsLoading(false);
       }, 1500);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao acionar o webhook",
-        variant: "destructive",
-      });
+      toast.error("Falha ao acionar o webhook");
       setIsLoading(false);
     }
   };

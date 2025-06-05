@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -233,7 +232,12 @@ const QualityAudit = () => {
                       {criterion.score}%
                     </span>
                   </div>
-                  <Progress value={criterion.score} className="h-2" indicatorClassName={getScoreProgressColor(criterion.score)} />
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${getScoreProgressColor(criterion.score)}`}
+                      style={{ width: `${criterion.score}%` }}
+                    ></div>
+                  </div>
                 </div>
               ))}
             </div>
