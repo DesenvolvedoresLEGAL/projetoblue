@@ -273,191 +273,94 @@ export const getAssetsByMultipleStatus = async (
   }
 };
 
-export const assetQueries = {
-  getAssets,
-  getManufacturerById: async (id: number): Promise<any | null> => {
-    try {
-      const { data, error } = await supabase
-        .from("manufacturers")
-        .select("*")
-        .eq("id", id)
-        .single();
+/**
+ * Retrieve manufacturer information by id.
+ */
+export const getManufacturerById = async (
+  id: number
+): Promise<any | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("manufacturers")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-      if (error) {
-        console.error(`Error fetching manufacturer with id ${id}`);
-        throw error;
-      }
-
-      if (!data) {
-        console.error(`Manufacturer with ID ${id} not found`);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.log("queries.tx > assetQueries > getManufacturerById : " + error);
+    if (error) {
+      console.error(`Error fetching manufacturer with id ${id}`);
+      throw error;
     }
-  },
-  getAssetById: async (id: string): Promise<Asset | null> => {
-    try {
-      const { data, error } = await supabase
-        .from("assets")
-        .select(
-          `
-          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
-          manufacturers(id, name),
-          asset_status(id, status),
-          asset_solutions(id, solution)
-        `
-        )
-        .eq("uuid", id)
-        .is("deleted_at", null)
-        .single();
 
-      if (error) {
-        console.error(`Error fetching asset with ID ${id}:`, error);
-        throw error;
-      }
-
-      if (!data) {
-        console.log(`Asset with ID ${id} not found.`);
-        return null;
-      }
-
-      const asset = mapAssetFromDb(data);
-      return asset;
-    } catch (error) {
-      console.error(`Error in getAssetById for ID ${id}:`, error);
+    if (!data) {
+      console.error(`Manufacturer with ID ${id} not found`);
       return null;
     }
-  },
-  getStatus: async (): Promise<StatusRecord[]> => {
-    try {
-      const { data, error } = await supabase.from("asset_status").select("*");
 
-      if (error) {
-        console.error("Erro fetching asset status:", error);
-        return [];
-      }
-
-      console.log(data);
-
-      const statusArray: StatusRecord[] = (data || []).map(mapStatusFromDb);
-
-      return statusArray;
-    } catch (error) {
-      console.error("Erro fetching asset status (catch):", error);
-      return [];
-    }
-  },
-
-  // Função para buscar logs dos assets
-  getAssetLogs: async (params?: AssetListParams): Promise<AssetLog[]> => {
-    try {
-      let query = supabase
-        .from("asset_logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      // Paginação
-      if (params?.limit) {
-        query = query.range(0, params.limit - 1);
-      }
-
-      // Aqui sim, execute a query
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching asset logs:", error);
-        return [];
-      }
-
-      if (!data) {
-        console.log("Asset logs not found");
-        return [];
-      }
-
-      // Mapeia o resultado, protegendo contra null/undefined
-      const assetLogs: AssetLog[] = data.map(mapAssetLogFromDb);
-
-      return assetLogs;
-    } catch (error) {
-      console.error("Error in getAssetLogs:", error);
-      return [];
-    }
-  },
-  getAssetsByStatus: async (statusId: number): Promise<Asset[]> => {
-    try {
-      console.log(`Fetching assets with status ID: ${statusId}`);
-
-      const { data, error } = await supabase
-        .from("assets")
-        .select(
-          `
-          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
-          manufacturers(id, name),
-          asset_status(id, status),
-          asset_solutions(id, solution)
-        `
-        )
-        .eq("status_id", statusId)
-        .is("deleted_at", null);
-
-      if (error) {
-        console.error(
-          `Error fetching assets with status ID ${statusId}:`,
-          error
-        );
-        throw error;
-      }
-
-      const assets: Asset[] = (data || []).map(mapAssetFromDb);
-      console.log(
-        `Retrieved ${assets.length} assets with status ID ${statusId}`
-      );
-      return assets;
-    } catch (error) {
-      console.error(
-        `Error in getAssetsByStatus for status ID ${statusId}:`,
-        error
-      );
-      return [];
-    }
-  },
-  getAssetsByType: async (typeId: number): Promise<Asset[]> => {
-    try {
-      console.log(`Fetching assets with type ID: ${typeId}`);
-
-      const { data, error } = await supabase
-        .from("assets")
-        .select(
-          `
-          uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-          manufacturer_id, created_at, updated_at, rented_days, deleted_at,
-          manufacturers(id, name),
-          asset_status(id, status),
-          asset_solutions(id, solution)
-        `
-        )
-        .eq("solution_id", typeId)
-        .is("deleted_at", null);
-
-      if (error) {
-        console.error(`Error fetching assets with type ID ${typeId}:`, error);
-        throw error;
-      }
-
-      const assets: Asset[] = (data || []).map(mapAssetFromDb);
-      console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
-      return assets;
-    } catch (error) {
-      console.error(`Error in getAssetsByType for type ID ${typeId}:`, error);
-      return [];
-    }
-  },
-  getAssetsByMultipleStatus,
-  listProblemAssets,
-  statusByType,
+    return data;
+  } catch (error) {
+    console.log("queries.ts > getManufacturerById : " + error);
+    return null;
+  }
 };
+
+/**
+ * Retrieve available asset status records.
+ */
+export const getStatus = async (): Promise<StatusRecord[]> => {
+  try {
+    const { data, error } = await supabase.from("asset_status").select("*");
+
+    if (error) {
+      console.error("Erro fetching asset status:", error);
+      return [];
+    }
+
+    console.log(data);
+
+    const statusArray: StatusRecord[] = (data || []).map(mapStatusFromDb);
+
+    return statusArray;
+  } catch (error) {
+    console.error("Erro fetching asset status (catch):", error);
+    return [];
+  }
+};
+
+/**
+ * Fetch asset log entries with optional pagination.
+ */
+export const getAssetLogs = async (
+  params?: AssetListParams
+): Promise<AssetLog[]> => {
+  try {
+    let query = supabase
+      .from("asset_logs")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Paginação
+    if (params?.limit) {
+      query = query.range(0, params.limit - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching asset logs:", error);
+      return [];
+    }
+
+    if (!data) {
+      console.log("Asset logs not found");
+      return [];
+    }
+
+    const assetLogs: AssetLog[] = data.map(mapAssetLogFromDb);
+
+    return assetLogs;
+  } catch (error) {
+    console.error("Error in getAssetLogs:", error);
+    return [];
+  }
+};
+
