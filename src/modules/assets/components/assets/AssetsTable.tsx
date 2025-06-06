@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronDown, ChevronRight, Package, Calendar, Hash, Radio, Smartphone, Router, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface AssetsTableProps {
   assets: AssetWithRelations[];
+  totalCount?: number;
   onAssetUpdated: () => void;
   onAssetDeleted: () => void;
   currentPage: number;
@@ -25,6 +25,7 @@ interface AssetsTableProps {
 
 const AssetsTable = ({ 
   assets, 
+  totalCount,
   onAssetUpdated, 
   onAssetDeleted, 
   currentPage, 
@@ -83,7 +84,7 @@ const AssetsTable = ({
       <CardHeader className="border-b border-gray-200 bg-gray-50/50 p-3 sm:p-6">
         <CardTitle className="flex items-center gap-2 text-[#020CBC] text-lg sm:text-xl">
           <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-          Lista de Ativos ({assets.length})
+          Lista de Ativos ({totalCount ?? assets.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">

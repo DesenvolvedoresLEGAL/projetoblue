@@ -145,6 +145,7 @@ const AssetsInventory = () => {
       {assetsData?.assets && (
         <AssetsTable 
           assets={assetsData.assets} 
+          totalCount={assetsData.totalCount}
           onAssetUpdated={handleAssetUpdated}
           onAssetDeleted={handleAssetDeleted}
           currentPage={currentPage}
