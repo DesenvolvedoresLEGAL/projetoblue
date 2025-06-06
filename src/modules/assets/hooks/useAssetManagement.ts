@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -28,8 +27,15 @@ interface CreateAssetData {
   // Common fields
   rented_days?: number;
   
-  // Campos removidos que não existem no banco:
-  // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
+  // Campos de configurações de rede - Fábrica (obrigatórios para equipamentos)
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  
+  // Campos de configurações de rede - Atuais (opcionais)
+  ssid_atual?: string;
+  pass_atual?: string;
 }
 
 interface UpdateAssetData {
@@ -53,7 +59,7 @@ interface UpdateAssetData {
   rented_days?: number;
   
   // Campos removidos que não existem no banco:
-  // phoneNumber, carrier, brand, ssid, password, serialNumber
+  // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
 }
 
 interface AssetFilters {
@@ -181,6 +187,16 @@ export function useAssetManagement() {
         
         // Common fields
         rented_days: assetData.rented_days || 0,
+        
+        // Campos de configurações de rede - Fábrica
+        ssid_fabrica: assetData.ssid_fabrica,
+        pass_fabrica: assetData.pass_fabrica,
+        admin_user_fabrica: assetData.admin_user_fabrica,
+        admin_pass_fabrica: assetData.admin_pass_fabrica,
+        
+        // Campos de configurações de rede - Atuais
+        ssid_atual: assetData.ssid_atual,
+        pass_atual: assetData.pass_atual,
       };
 
       const { data, error } = await supabase
