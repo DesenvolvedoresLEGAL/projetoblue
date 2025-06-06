@@ -14,6 +14,7 @@ import { AssetTypeStatusChart } from '@modules/dashboard/components/dashboard/As
 import { QuickActionsCard } from '@modules/dashboard/components/dashboard/QuickActionsCard';
 import { RecentActivitiesCard } from '@modules/dashboard/components/dashboard/RecentActivitiesCard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { StandardPageHeader } from '@/components/ui/standard-page-header';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,18 +33,13 @@ const Dashboard = () => {
 
   return (
     <ErrorBoundary>
-      <div className="space-y-6 pb-6 px-4 md:px-0">
-        {/* Header */}
-        <div className="flex flex-col space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black legal-title flex items-center gap-2">
-              Dashboard INVENTÁRIO
-            </h1>
-            <div className="text-xs sm:text-sm text-muted-foreground legal-text">
-              Sistema de Gestão Avançada de Ativos
-            </div>
-          </div>
-        </div>
+      
+      <StandardPageHeader
+        icon={LayoutDashboard}
+        title="Dashboard INVENTÁRIO"
+        description="Sistema de Gestão Avançada de Ativos"
+      >
+      </StandardPageHeader>
 
         {/* Asset Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
