@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -18,7 +19,6 @@ const AssetsInventory = () => {
   const [filterManufacturer, setFilterManufacturer] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
-  const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
   
   // Implementa debounce de 500ms para o termo de busca
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -41,18 +41,6 @@ const AssetsInventory = () => {
     pageSize: ASSETS_PER_PAGE,
     enabled: shouldFetch
   });
-  
-  const handleToggleExpansion = useCallback((assetId: string) => {
-    setExpandedAssets(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(assetId)) {
-        newSet.delete(assetId);
-      } else {
-        newSet.add(assetId);
-      }
-      return newSet;
-    });
-  }, []);
   
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -151,8 +139,6 @@ const AssetsInventory = () => {
           currentPage={currentPage}
           pageSize={ASSETS_PER_PAGE}
           isLoading={isSearching}
-          expandedAssets={expandedAssets}
-          onToggleExpansion={handleToggleExpansion}
         />
       )}
       
