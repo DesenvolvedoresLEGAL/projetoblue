@@ -95,7 +95,7 @@ export const RentedAssetsCard = () => {
                   <div
                     key={asset.uuid}
                     className={cn(
-                      "p-3 rounded-md transition-colors border h-full",
+                      "relative p-4 rounded-md transition-colors border h-full",
                       isOverThirtyDays 
                         ? "border-l-4 border-legal-primary bg-legal-primary/5 dark:bg-legal-primary/10 border-l-legal-primary" 
                         : "border-border hover:bg-muted/50"
@@ -130,12 +130,12 @@ export const RentedAssetsCard = () => {
             </div>
 
             {/* View All Button */}
-            <div className="pt-2 border-t">
+            <div className="pt-3 border-t border-gray-100">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handleViewAll}
-                className="w-full"
+                className="w-full h-10 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver todos os ativos alugados

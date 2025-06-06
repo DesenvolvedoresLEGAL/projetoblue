@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, ExternalLink } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { capitalize } from '@/utils/stringUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface RecentActivity {
   id: number;
@@ -27,6 +28,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   isLoading = false
 }) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const getAssetTypeBadge = (description: string, details?: any): string => {
     // Usar detalhes da solução se disponível
@@ -178,7 +180,9 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
               ))}
             </div>
             <div className="pt-3 border-t border-gray-100">
-              <Button variant="outline" className="w-full border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5">
+              <Button variant="outline"
+              onClick={() => navigate('/assets/history')}
+              className="w-full h-10 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver Histórico Completo
               </Button>
