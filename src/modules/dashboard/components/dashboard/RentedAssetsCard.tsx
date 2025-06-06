@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, ExternalLink, Loader2 } from "lucide-react";
+import { Bell, Calendar, ExternalLink, Loader2 } from "lucide-react";
 import { useRentedAssets } from '@modules/dashboard/hooks/useRentedAssets';
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { Badge } from '@/components/ui/badge';
 
 export const RentedAssetsCard = () => {
   const { data: rentedAssets, isLoading, error } = useRentedAssets();
@@ -62,19 +63,22 @@ export const RentedAssetsCard = () => {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-legal-primary" />
-            Ativos Alugados
+            <span className="text-legal-primary font-semibold">Ranking de locação</span>
           </div>
-          <span className="text-sm font-normal text-muted-foreground">
+          <Badge variant="secondary" className="bg-[#E3F2FD] text-[#1976D2] text-xs">
             {rentedAssets?.length || 0} ativos
-          </span>
+          </Badge>
         </CardTitle>
+        <CardDescription className="text-sm text-gray-600">
+          Ranking de ativos pelo número de dias alugados
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-1 overflow-y-auto space-y-3">
         {!rentedAssets || rentedAssets.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -83,7 +87,7 @@ export const RentedAssetsCard = () => {
         ) : (
           <>
             {/* Assets List */}
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-80 overflow-y-auto">
               {rentedAssets.slice(0, 10).map((asset) => {
                 const isOverThirtyDays = asset.rented_days > 30;
                 
@@ -91,7 +95,7 @@ export const RentedAssetsCard = () => {
                   <div
                     key={asset.uuid}
                     className={cn(
-                      "p-3 rounded-md transition-colors border",
+                      "p-3 rounded-md transition-colors border h-full",
                       isOverThirtyDays 
                         ? "border-l-4 border-legal-primary bg-legal-primary/5 dark:bg-legal-primary/10 border-l-legal-primary" 
                         : "border-border hover:bg-muted/50"
@@ -118,11 +122,6 @@ export const RentedAssetsCard = () => {
                         )}>
                           {asset.rented_days} dias
                         </div>
-                        {isOverThirtyDays && (
-                          <div className="text-xs text-legal-primary/80">
-                            Crítico
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
