@@ -33,6 +33,20 @@ export function useRegisterAsset() {
 
   const equipmentPassword = equipmentForm.watch("admin_pass");
 
+  // Reset mutation state when asset type changes
+  useEffect(() => {
+    console.log('[useRegisterAsset] Asset type changed to:', assetType);
+    
+    // Reset success state when changing asset type
+    setShowSuccess(false);
+    
+    // Reset mutation state to prevent interference
+    if (formHandlers.createAssetMutation.isSuccess || formHandlers.createAssetMutation.isError) {
+      console.log('[useRegisterAsset] Resetting mutation state due to asset type change');
+      formHandlers.createAssetMutation.reset();
+    }
+  }, [assetType]);
+
   // Sync form data with state management
   useEffect(() => {
     if (assetType === "CHIP") {
@@ -54,10 +68,26 @@ export function useRegisterAsset() {
 
   // Update success state when mutation succeeds
   useEffect(() => {
+    console.log('[useRegisterAsset] Mutation status:', {
+      isSuccess: formHandlers.createAssetMutation.isSuccess,
+      isError: formHandlers.createAssetMutation.isError,
+      isPending: formHandlers.createAssetMutation.isPending,
+      assetType
+    });
+
     if (formHandlers.createAssetMutation.isSuccess) {
+      console.log('[useRegisterAsset] Setting showSuccess to true for asset type:', assetType);
       setShowSuccess(true);
     }
-  }, [formHandlers.createAssetMutation.isSuccess]);
+  }, [formHandlers.createAssetMutation.isSuccess, assetType]);
+
+  // Reset success state when starting a new submission
+  useEffect(() => {
+    if (formHandlers.createAssetMutation.isPending) {
+      console.log('[useRegisterAsset] Mutation is pending, resetting showSuccess');
+      setShowSuccess(false);
+    }
+  }, [formHandlers.createAssetMutation.isPending]);
 
   return {
     showSuccess,

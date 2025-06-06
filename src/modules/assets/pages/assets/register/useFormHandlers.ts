@@ -40,6 +40,8 @@ export function useFormHandlers(
   };
 
   const onSubmitChip = (formData: ChipFormValues) => {
+    console.log('[onSubmitChip] Starting chip submission with data:', formData);
+    
     const createData = {
       type: "CHIP" as const,
       solution_id: 11,
@@ -50,18 +52,28 @@ export function useFormHandlers(
       status_id: formData.status_id,
     };
 
+    console.log('[onSubmitChip] Calling mutation with:', createData);
+
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
+        console.log('[onSubmitChip] Success callback executed');
         clearState();
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => navigate("/assets/management"), 2000);
+      },
+      onError: (error) => {
+        console.error('[onSubmitChip] Error callback executed:', error);
       }
     });
   };
 
   const onSubmitEquipment = (formData: EquipmentFormValues) => {
+    console.log('[onSubmitEquipment] Starting equipment submission with data:', formData);
+    console.log('[onSubmitEquipment] Password strength:', passwordStrength, 'Allow weak:', allowWeakPassword);
+
     if (passwordStrength === "weak" && !allowWeakPassword) {
+      console.log('[onSubmitEquipment] Blocking submission due to weak password');
       equipmentForm.setError("admin_pass", { 
         type: "manual", 
         message: "Use uma senha mais forte ou marque para permitir senha fraca." 
@@ -88,12 +100,23 @@ export function useFormHandlers(
       pass_atual: formData.pass_atual,
     };
 
+    console.log('[onSubmitEquipment] Calling mutation with:', createData);
+    console.log('[onSubmitEquipment] Mutation state before call:', {
+      isSuccess: createAssetMutation.isSuccess,
+      isError: createAssetMutation.isError,
+      isPending: createAssetMutation.isPending
+    });
+
     createAssetMutation.mutate(createData, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('[onSubmitEquipment] Success callback executed with data:', data);
         clearState();
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => navigate("/assets/management"), 2000);
+      },
+      onError: (error) => {
+        console.error('[onSubmitEquipment] Error callback executed:', error);
       }
     });
   };
