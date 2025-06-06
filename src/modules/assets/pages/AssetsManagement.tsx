@@ -23,6 +23,7 @@ import {
   UserPlus
 } from "lucide-react";
 import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets';
+import { StandardPageHeader } from '@/components/ui/standard-page-header';
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
@@ -80,22 +81,16 @@ const AssetsManagement = () => {
   const hasProblems = (dashboard.problemAssets.data.length > 0); // Demo: set to true to show problem cards
 
   return (
+    
     <TooltipProvider>
       <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-4 sm:p-6 lg:p-8">
         {/* Header com identidade Legal */}
-        <div className="bg-gradient-to-r from-legal-primary to-legal-dark rounded-lg sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white">
-          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-legal-secondary" />
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black legal-title text-white mb-1">
-                Gestão de Ativos
-              </h1>
-              <p className="text-sm sm:text-base lg:text-lg text-legal-secondary/90 font-medium">
-                Central de controle para equipamentos e chips
-              </p>
-            </div>
-          </div>
-        </div>
+        <StandardPageHeader
+          icon={Shield}
+          title='Gestão de Ativos'
+          description='Central de controle para equipamentos e chips'
+        >
+        </StandardPageHeader>
 
         {/* Cards de Problemas - Apenas se houver */}
         {hasProblems ? (
