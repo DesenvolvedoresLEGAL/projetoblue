@@ -52,31 +52,6 @@ export const AssetTechnicalDetails: React.FC<AssetTechnicalDetailsProps> = ({
           </>
         )}
       </div>
-
-      {/* Acesso Administrativo - Apenas para Equipamentos */}
-      {!isChip && (
-        <>
-          <h4 className="font-semibold text-amber-800 flex items-center gap-2 mt-4">
-            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-            Acesso Administrativo
-          </h4>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="font-medium text-sm">Admin:</span>
-              <CopyableField value={asset.admin_user} label="Usuário Admin" />
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium text-sm">Senha:</span>
-              <CopyableField 
-                value={asset.admin_pass} 
-                label="Senha Admin" 
-                isPassword={true}
-                showPasswords={showPasswords}
-              />
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 };
