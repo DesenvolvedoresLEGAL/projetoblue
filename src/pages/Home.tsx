@@ -11,7 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LeaseAssetsCard } from "@modules/dashboard/components/dashboard/LeaseAssetsCard";
 import { SubscriptionAssetsCard } from "@modules/dashboard/components/dashboard/SubscriptionAssetsCard";
 import { RecentActivitiesCard } from "@modules/dashboard/components/dashboard/RecentActivitiesCard";
-import { RefactoredAssetStatusDistributionCard } from "@modules/dashboard/components/dashboard/RefactoredAssetStatusDistributionCard";
+import { RentedAssetsCard } from "@modules/dashboard/components/dashboard/RentedAssetsCard";
 import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -260,7 +260,7 @@ const Home: React.FC = () => {
             activities={recentActivities.data || []}
             isLoading={recentActivities.isLoading}
           />
-          <RefactoredAssetStatusDistributionCard dashboardStats={dashboardStats} />
+          <RentedAssetsCard />
         </div>
       </div>
     </ErrorBoundary>
