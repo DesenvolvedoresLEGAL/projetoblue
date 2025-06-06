@@ -34,15 +34,19 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
 }) => {
   const { totalAssociations, totalTimestampGroups, totalCompanyGroups } = getTimestampGroupStats(timestampGroups);
 
+  console.log(`Total de associações -> ${totalAssociations}`);
+  console.log(`Total de grupos por data de criação -> ${totalTimestampGroups}`);
+  console.log(`Total de grupos por cliente -> ${totalCompanyGroups}`);
+
   return (
     <div className="space-y-4">
       {/* Estatísticas */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span>{totalAssociations} associações</span>
+        {/* <span>{totalAssociations} associações</span>
         <span>•</span>
         <span>{totalTimestampGroups} grupos por timestamp</span>
         <span>•</span>
-        <span>{totalCompanyGroups} grupos por empresa</span>
+        <span>{totalCompanyGroups} grupos por empresa</span> */}
         {operationProgress && (
           <>
             <span>•</span>
