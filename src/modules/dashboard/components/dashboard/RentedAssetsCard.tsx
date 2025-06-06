@@ -107,9 +107,6 @@ export const RentedAssetsCard = () => {
                           <span className="font-medium text-sm truncate">
                             {getAssetIdentifier(asset)}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {getAssetTypeDisplay(asset)}
-                          </span>
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Status: {asset.status?.status}
