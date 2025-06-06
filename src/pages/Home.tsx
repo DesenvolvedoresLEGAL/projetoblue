@@ -1,7 +1,7 @@
 
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, LayoutDashboard } from "lucide-react";
 import { useDashboardAssets } from "@modules/dashboard/hooks/useDashboardAssets";
 import { useDashboardStats } from "@modules/dashboard/hooks/useDashboardStats";
 import { useDashboardRecentActivities } from "@modules/dashboard/hooks/useDashboardRecentActivities";
@@ -14,6 +14,7 @@ import { RecentActivitiesCard } from "@modules/dashboard/components/dashboard/Re
 import { RentedAssetsCard } from "@modules/dashboard/components/dashboard/RentedAssetsCard";
 import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { StandardPageHeader } from "@/components/ui/standard-page-header";
 
 /**
  * Home dashboard component
@@ -134,16 +135,18 @@ const Home: React.FC = () => {
 
   return (
     <ErrorBoundary>
+
+      <StandardPageHeader
+        icon={LayoutDashboard}
+        title="Dashboard LEGAL"
+        description="Sistema de Gestão de Ativos"
+      >
+      </StandardPageHeader>
+
       <div className="space-y-4 md:space-y-6 pb-6 md:pb-10 px-4 md:px-0">
         {/* Header with Sync Status */}
         <div className="flex flex-col space-y-3 md:space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black legal-title">
-              Dashboard LEGAL
-            </h1>
-            <div className="text-xs sm:text-sm text-muted-foreground legal-text">
-              Sistema de Gestão de Ativos
-            </div>
           </div>
           
           {/* Sync Status Alert - High Priority UX Improvement */}
