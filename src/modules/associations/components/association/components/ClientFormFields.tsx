@@ -6,7 +6,7 @@ import { ClientRegistrationFormData } from '@/modules/clients/hooks/useClientReg
 
 interface ClientFormFieldsProps {
   formData: ClientRegistrationFormData;
-  onUpdateField: (field: keyof ClientRegistrationFormData, value: string) => void;
+  onUpdateField: (field: keyof ClientRegistrationFormData, value: string | string[]) => void;
 }
 
 export const ClientFormFields: React.FC<ClientFormFieldsProps> = ({

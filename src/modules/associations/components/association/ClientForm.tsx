@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
 import { toast } from 'sonner';
 import { mapDatabaseClientToFrontend, normalizePhoneForStorage } from '@/utils/clientMappers';
-import { useClientRegistrationState, ClientRegistrationFormData } from '@/modules/clients/hooks/useClientRegistrationState';
-import { usePhoneFields } from './hooks/usePhoneFields';
+import { useClientRegistrationState } from '@/modules/clients/hooks/useClientRegistrationState';
 import { useClientFormValidation } from './hooks/useClientFormValidation';
 import { PhoneFields } from './components/PhoneFields';
 import { ClientFormFields } from './components/ClientFormFields';
@@ -23,35 +22,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
   const {
     formData,
     isFormDataLoaded,
-    updateFormData,
-    clearState
+    updateField,
+    clearState,
+    addPhoneField,
+    removePhoneField,
+    updatePhone
   } = useClientRegistrationState();
 
-  const [localFormData, setLocalFormData] = useState<ClientRegistrationFormData>(formData);
-  const { phones, setPhones, addPhoneField, removePhoneField, updatePhone } = usePhoneFields(localFormData.telefones);
-  const { isFormValid } = useClientFormValidation({ ...localFormData, telefones: phones });
-
-  // Sync local form data with sessionStorage data when loaded
-  useEffect(() => {
-    if (isFormDataLoaded) {
-      console.log('[ClientForm] Setting form data from sessionStorage:', formData);
-      setLocalFormData(formData);
-      setPhones(formData.telefones);
-    }
-  }, [formData, isFormDataLoaded, setPhones]);
-
-  // Update sessionStorage when local form data changes
-  useEffect(() => {
-    if (isFormDataLoaded) {
-      const updatedFormData = { ...localFormData, telefones: phones };
-      updateFormData(updatedFormData);
-    }
-  }, [localFormData, phones, updateFormData, isFormDataLoaded]);
-
-  const handleFieldUpdate = (field: keyof ClientRegistrationFormData, value: string) => {
-    if (field === 'telefones') return; // Phones are handled separately
-    setLocalFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const { isFormValid } = useClientFormValidation(formData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,18 +43,18 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
 
     try {
       // Limpar e normalizar telefones para array de strings sem formatação
-      const cleanPhones = phones
+      const cleanPhones = formData.telefones
         .filter(tel => tel.trim())
         .map(tel => normalizePhoneForStorage(tel));
 
       const dbData = {
-        empresa: localFormData.empresa.trim(),
-        responsavel: localFormData.responsavel.trim(),
+        empresa: formData.empresa.trim(),
+        responsavel: formData.responsavel.trim(),
         telefones: cleanPhones,
-        email: localFormData.email?.trim() || null,
-        cnpj: localFormData.cnpj?.trim() || null,
+        email: formData.email?.trim() || null,
+        cnpj: formData.cnpj?.trim() || null,
         // Campos legados para compatibilidade
-        nome: localFormData.empresa.trim(),
+        nome: formData.empresa.trim(),
         contato: cleanPhones.length > 0 ? parseInt(cleanPhones[0]) || 0 : 0
       };
 
@@ -122,12 +100,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <ClientFormFields 
-        formData={localFormData}
-        onUpdateField={handleFieldUpdate}
+        formData={formData}
+        onUpdateField={updateField}
       />
 
       <PhoneFields
-        phones={phones}
+        phones={formData.telefones}
         onAddPhone={addPhoneField}
         onRemovePhone={removePhoneField}
         onUpdatePhone={updatePhone}
