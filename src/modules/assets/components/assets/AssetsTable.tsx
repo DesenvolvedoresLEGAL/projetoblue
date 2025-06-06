@@ -140,23 +140,13 @@ const AssetsTable = ({
                 <TableHeader>
                   <TableRow className="bg-gray-50 border-b border-gray-200">
                     <TableHead className="w-16 px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Nº</TableHead>
-                    <TableHead className="min-w-[120px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">
-                      <div className="flex items-center gap-2">
-                        <Radio className="h-4 w-4" />
-                        Radio/Número
-                      </div>
-                    </TableHead>
+                    <TableHead className="min-w-[120px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Radio/Número</TableHead>
                     <TableHead className="min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">ICCID / SN</TableHead>
                     <TableHead className="min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Status</TableHead>
                     <TableHead className="hidden md:table-cell min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Fabricante</TableHead>
                     <TableHead className="hidden lg:table-cell min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Modelo</TableHead>
                     <TableHead className="hidden lg:table-cell min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Tipo</TableHead>
-                    <TableHead className="hidden xl:table-cell min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Criado em
-                      </div>
-                    </TableHead>
+                    <TableHead className="hidden xl:table-cell min-w-[100px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Criado em</TableHead>
                     <TableHead className="text-right min-w-[80px] px-2 sm:px-4 py-3 text-sm font-medium text-[#020CBC]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
