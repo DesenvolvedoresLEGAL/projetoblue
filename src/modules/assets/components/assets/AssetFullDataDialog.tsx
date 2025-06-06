@@ -40,7 +40,7 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPasswords(!showPasswords)}
-                className="ml-auto"
+                className="mr-1"
               >
                 {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 {showPasswords ? 'Ocultar' : 'Mostrar'} Senhas
