@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,15 +7,20 @@ import { StandardPageHeader } from '@/components/ui/standard-page-header';
 import { StandardFiltersCard } from '@/components/ui/standard-filters-card';
 import { ClientForm } from '@modules/associations/components/association/ClientForm';
 import { Client } from '@/types/client';
+import { useClientRegistrationState } from '@modules/clients/hooks/useClientRegistrationState';
 
 const RegisterClient: React.FC = () => {
   const navigate = useNavigate();
+  const { clearState } = useClientRegistrationState();
 
   const handleCancel = () => {
+    // Optionally clear state on cancel - uncomment if desired
+    // clearState();
     navigate(-1);
   };
 
   const handleSubmit = (client: Client) => {
+    // State is already cleared in ClientForm after successful submission
     navigate('/clients');
   };
 
