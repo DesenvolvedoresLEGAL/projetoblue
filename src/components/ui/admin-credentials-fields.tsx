@@ -4,39 +4,34 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy } from "lucide-react";
 import { UseFormReturn } from 'react-hook-form';
 import { toast } from "@/utils/toast";
 
-interface NetworkFieldsProps {
+interface AdminCredentialsFieldsProps {
   form: UseFormReturn<any>;
   isLoading: boolean;
   isMobile: boolean;
-  fieldPrefix: 'fabrica' | 'atual';
   title: string;
   description: string;
   showCopyButton?: boolean;
   onCopyFromFactory?: () => void;
 }
 
-export const NetworkFields = ({ 
+export const AdminCredentialsFields = ({ 
   form, 
   isLoading, 
   isMobile, 
-  fieldPrefix, 
   title, 
   description,
   showCopyButton = false,
   onCopyFromFactory
-}: NetworkFieldsProps) => {
+}: AdminCredentialsFieldsProps) => {
   const copyToClipboard = (value: string, label: string) => {
     navigator.clipboard.writeText(value).then(() => {
       toast.success(`${label} copiado para a área de transferência`);
     });
   };
-
-  const isRequired = fieldPrefix === 'fabrica';
-  const requiredMark = isRequired ? ' *' : '';
 
   return (
     <div className={`space-y-4 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
@@ -46,11 +41,9 @@ export const NetworkFields = ({
             {title}
           </h4>
           <p className="text-xs text-muted-foreground">{description}</p>
-          {!isRequired && (
-            <p className="text-xs text-blue-600 mt-1">
-              Se não preenchido, usará as configurações de fábrica
-            </p>
-          )}
+          <p className="text-xs text-blue-600 mt-1">
+            Se não preenchido, usará as credenciais de fábrica
+          </p>
         </div>
         {showCopyButton && onCopyFromFactory && (
           <Button
@@ -69,89 +62,11 @@ export const NetworkFields = ({
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-4'}`}>
         <FormField
           control={form.control}
-          name={`ssid_${fieldPrefix}`}
+          name="admin_user"
           render={({ field }) => (
             <FormItem>
               <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                SSID (Nome da Rede){requiredMark}
-              </FormLabel>
-              <div className="flex gap-2">
-                <FormControl>
-                  <Input
-                    placeholder="Ex: TP-Link_2.4GHz"
-                    disabled={isLoading}
-                    {...field}
-                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                  />
-                </FormControl>
-                {field.value && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(field.value, 'SSID')}
-                    className="px-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Nome da rede WiFi {fieldPrefix === 'fabrica' ? 'original' : 'atual'}
-              </p>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`pass_${fieldPrefix}`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                Senha WiFi{requiredMark}
-              </FormLabel>
-              <div className="flex gap-2">
-                <FormControl>
-                  <div className="relative">
-                    <PasswordInput
-                      id={`pass_${fieldPrefix}`}
-                      placeholder="Digite a senha da rede"
-                      disabled={isLoading}
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                      className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                    />
-                  </div>
-                </FormControl>
-                {field.value && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(field.value, 'Senha WiFi')}
-                    className="px-2"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Senha para conectar na rede WiFi
-              </p>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`admin_user_${fieldPrefix}`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                Usuário Admin{requiredMark}
+                Usuário Admin Atual
               </FormLabel>
               <div className="flex gap-2">
                 <FormControl>
@@ -175,7 +90,7 @@ export const NetworkFields = ({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Usuário para acessar o painel administrativo
+                Usuário atual para acessar o painel administrativo
               </p>
               <FormMessage />
             </FormItem>
@@ -184,17 +99,17 @@ export const NetworkFields = ({
 
         <FormField
           control={form.control}
-          name={`admin_pass_${fieldPrefix}`}
+          name="admin_pass"
           render={({ field }) => (
             <FormItem>
               <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                Senha Admin{requiredMark}
+                Senha Admin Atual
               </FormLabel>
               <div className="flex gap-2">
                 <FormControl>
                   <PasswordInput
-                    id={`admin_pass_${fieldPrefix}`}
-                    placeholder="Digite a senha admin"
+                    id="admin_pass"
+                    placeholder="Digite a senha admin atual"
                     disabled={isLoading}
                     value={field.value || ''}
                     onChange={field.onChange}
@@ -214,7 +129,7 @@ export const NetworkFields = ({
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Senha para acessar o painel administrativo
+                Senha atual para acessar o painel administrativo
               </p>
               <FormMessage />
             </FormItem>

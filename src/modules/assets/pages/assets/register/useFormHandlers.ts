@@ -23,13 +23,15 @@ export function useFormHandlers(
   const handlePasswordChange = (value: string) => {
     const strength = checkPasswordStrength(value);
     setPasswordStrength(strength);
-    equipmentForm.setValue("admin_pass", value);
+    equipmentForm.setValue("admin_pass_fabrica", value);
   };
 
   const copyFactoryToCurrentFields = () => {
     const factoryData = {
       ssid_atual: equipmentForm.getValues("ssid_fabrica"),
       pass_atual: equipmentForm.getValues("pass_fabrica"),
+      admin_user: equipmentForm.getValues("admin_user_fabrica"),
+      admin_pass: equipmentForm.getValues("admin_pass_fabrica"),
     };
     Object.entries(factoryData).forEach(([key, value]) => {
       if (value) {
@@ -70,11 +72,21 @@ export function useFormHandlers(
 
   const onSubmitEquipment = (formData: EquipmentFormValues) => {
     console.log('[onSubmitEquipment] Starting equipment submission with data:', formData);
-    console.log('[onSubmitEquipment] Password strength:', passwordStrength, 'Allow weak:', allowWeakPassword);
 
+    // Inherit factory values for current fields if they are empty
+    const currentData = {
+      ssid_atual: formData.ssid_atual || formData.ssid_fabrica,
+      pass_atual: formData.pass_atual || formData.pass_fabrica,
+      admin_user: formData.admin_user || formData.admin_user_fabrica,
+      admin_pass: formData.admin_pass || formData.admin_pass_fabrica,
+    };
+
+    console.log('[onSubmitEquipment] Current credentials after inheritance:', currentData);
+
+    // Check password strength for factory password (which is mandatory)
     if (passwordStrength === "weak" && !allowWeakPassword) {
-      console.log('[onSubmitEquipment] Blocking submission due to weak password');
-      equipmentForm.setError("admin_pass", { 
+      console.log('[onSubmitEquipment] Blocking submission due to weak factory password');
+      equipmentForm.setError("admin_pass_fabrica", { 
         type: "manual", 
         message: "Use uma senha mais forte ou marque para permitir senha fraca." 
       });
@@ -90,22 +102,19 @@ export function useFormHandlers(
       radio: formData.radio,
       status_id: formData.status_id,
       manufacturer_id: formData.manufacturer_id,
-      admin_user: formData.admin_user,
-      admin_pass: formData.admin_pass,
+      // Factory credentials (mandatory)
       ssid_fabrica: formData.ssid_fabrica,
       pass_fabrica: formData.pass_fabrica,
       admin_user_fabrica: formData.admin_user_fabrica,
       admin_pass_fabrica: formData.admin_pass_fabrica,
-      ssid_atual: formData.ssid_atual,
-      pass_atual: formData.pass_atual,
+      // Current credentials (with inheritance from factory)
+      ssid_atual: currentData.ssid_atual,
+      pass_atual: currentData.pass_atual,
+      admin_user: currentData.admin_user,
+      admin_pass: currentData.admin_pass,
     };
 
     console.log('[onSubmitEquipment] Calling mutation with:', createData);
-    console.log('[onSubmitEquipment] Mutation state before call:', {
-      isSuccess: createAssetMutation.isSuccess,
-      isError: createAssetMutation.isError,
-      isPending: createAssetMutation.isPending
-    });
 
     createAssetMutation.mutate(createData, {
       onSuccess: (data) => {

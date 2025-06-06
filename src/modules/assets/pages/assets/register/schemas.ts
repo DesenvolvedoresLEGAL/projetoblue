@@ -16,14 +16,14 @@ export const equipmentSchema = z.object({
   status_id: z.number().min(1, "Status é obrigatório"),
   manufacturer_id: z.number().min(1, "Fabricante é obrigatório"),
   solution_id: z.number().min(1, "Solução é obrigatória"),
-  admin_user: z.string().min(1, "Usuário admin é obrigatório"),
-  admin_pass: z.string().min(1, "Senha admin é obrigatória"),
   // Campos de configurações de rede - Fábrica (obrigatórios)
   ssid_fabrica: z.string().min(1, "SSID de fábrica é obrigatório"),
   pass_fabrica: z.string().min(1, "Senha WiFi de fábrica é obrigatória"),
   admin_user_fabrica: z.string().min(1, "Usuário admin de fábrica é obrigatório"),
   admin_pass_fabrica: z.string().min(1, "Senha admin de fábrica é obrigatória"),
-  // Campos de configurações de rede - Atuais (opcionais)
+  // Campos de configurações de rede - Atuais (opcionais - herdam de fábrica se vazios)
   ssid_atual: z.string().optional(),
   pass_atual: z.string().optional(),
+  admin_user: z.string().optional(),
+  admin_pass: z.string().optional(),
 });
