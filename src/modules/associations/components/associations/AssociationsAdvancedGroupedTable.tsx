@@ -47,7 +47,7 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
         <span>{totalTimestampGroups} grupos por timestamp</span>
         <span>•</span>
         <span>{totalCompanyGroups} grupos por empresa</span> */}
-        {operationProgress && (
+        {/* {operationProgress && (
           <>
             <span>•</span>
             <span className="flex items-center gap-2">
@@ -55,7 +55,7 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
               {operationProgress.current}/{operationProgress.total}
             </span>
           </>
-        )}
+        )} */}
       </div>
 
       {/* Grupos por Timestamp */}
