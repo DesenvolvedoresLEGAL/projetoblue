@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { assetService } from "@modules/assets/services/asset";
@@ -20,12 +19,13 @@ export function useDashboardAssets() {
     staleTime: 30000,
   });
 
-  // Fetch assets statistics with safe data handling
+  // Fetch assets statistics with safe data handling - FIXED: Fetch all assets for accurate counts
   const assetsStats = useQuery({
     queryKey: ['dashboard', 'assets-stats'],
     queryFn: async () => {
       try {
-        const assetsResult = await assetService.getAssets();
+        // Fetch ALL assets for accurate statistics by setting a high limit
+        const assetsResult = await assetService.getAssets({ limit: 10000 });
         const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
         
         // Work with safe data mapping
