@@ -13,7 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
+      const savedTheme = localStorage.getItem('legal-theme');
       return (savedTheme as Theme) || 
         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     }
@@ -24,7 +24,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     if (typeof window !== 'undefined') {
       // Salvamos o tema antes de iniciar a animação
       setTheme(newTheme);
-      localStorage.setItem('theme', newTheme);
+      localStorage.setItem('legal-theme', newTheme);
+      
+      // Log para debugging
+      console.log(`🎨 LEGAL Theme changed to: ${newTheme}`);
       
       // Se temos um evento (clique no botão), criamos um efeito de onda
       if (event) {
@@ -42,13 +45,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const y = buttonRect.top + buttonRect.height / 2;
     
     // Calculamos o tamanho máximo necessário para cobrir toda a tela
-    const maxWidth = Math.max(
-      x,
-      window.innerWidth - x,
-      y,
-      window.innerHeight - y
-    );
-    const size = Math.max(window.innerWidth, window.innerHeight) * 3;
+    const size = Math.max(window.innerWidth, window.innerHeight) * 2.5;
     
     // Criamos o elemento de animação
     const ripple = document.createElement('div');
@@ -61,11 +58,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     document.body.appendChild(ripple);
     
     // Iniciamos a animação
-    ripple.style.animation = `ripple 0.8s ease-out forwards`;
+    ripple.style.animation = `ripple 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards`;
     
     // Removemos o elemento após a animação
     setTimeout(() => {
-      document.body.removeChild(ripple);
+      if (document.body.contains(ripple)) {
+        document.body.removeChild(ripple);
+      }
     }, 1000);
   };
 
@@ -82,14 +81,46 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       // Adiciona a nova classe de tema
       root.classList.add(theme);
       
+      // Adiciona meta tag para status bar no mobile
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', theme === 'dark' ? '#121212' : '#ffffff');
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = theme === 'dark' ? '#121212' : '#ffffff';
+        document.head.appendChild(meta);
+      }
+      
       // Remove a classe de animação após a transição
       const timeoutId = setTimeout(() => {
         root.classList.remove('theme-transition');
-      }, 500);
+      }, 300);
       
       return () => clearTimeout(timeoutId);
     }
   }, [theme]);
+
+  // Adiciona listener para mudanças de preferência do sistema
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+        // Só muda automaticamente se não há preferência salva
+        const savedTheme = localStorage.getItem('legal-theme');
+        if (!savedTheme) {
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      };
+      
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      
+      return () => {
+        mediaQuery.removeEventListener('change', handleSystemThemeChange);
+      };
+    }
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme: handleThemeChange }}>
@@ -104,4 +135,10 @@ export const useTheme = () => {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
+};
+
+// Hook utilitário para verificar se está em modo escuro
+export const useIsDarkMode = () => {
+  const { theme } = useTheme();
+  return theme === 'dark';
 };
