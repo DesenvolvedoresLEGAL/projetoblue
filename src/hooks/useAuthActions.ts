@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/constants/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,27 +20,60 @@ export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
+  
+  // Refs para controlar operações em andamento e permitir cancelamento
+  const authOperationRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
-    // Prevent duplicate operations
-    if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
-      return { success: false, message: 'Operation in progress' };
+  // Função utilitária para timeout de operações
+  const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, operation: string): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error(`Timeout: ${operation} demorou mais que ${timeoutMs}ms`));
+        }, timeoutMs);
+      })
+    ]);
+  };
+
+  // Função para limpar recursos e resetar estado
+  const cleanupAuthOperation = useCallback(() => {
+    console.log('🧹 Limpando recursos de autenticação');
+    
+    if (authOperationRef.current) {
+      authOperationRef.current.abort();
+      authOperationRef.current = null;
     }
     
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    setIsAuthProcessing(false);
+    console.log('✅ Estado isAuthProcessing resetado para false');
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
+    // Verificação preventiva contra operações paralelas
+    if (isAuthProcessing) {
+      console.warn('⚠️ Tentativa de signup bloqueada - operação já em andamento');
+      return { success: false, message: 'Operação já em andamento. Aguarde...' };
+    }
+    
+    console.log('🚀 Iniciando processo de cadastro');
+    setIsAuthProcessing(true);
+    authOperationRef.current = new AbortController();
+    
     try {
-      setIsAuthProcessing(true);
-      console.log('AuthContext: Iniciando processo de cadastro');
       updateState({ isLoading: true, error: null });
-      
-      // Limpar erro técnico anterior
       setTechnicalError(null);
       
       const validation = authService.validateSignUpData({ email, password });
       if (!validation.isValid) {
-        console.error('Erro de validação:', validation.error);
+        console.error('❌ Erro de validação:', validation.error);
         
-        // Armazenar informações de erro técnico para diagnóstico
         const techError = {
           message: validation.error || 'Erro de validação desconhecido',
           category: validation.category || AuthErrorCategory.UNKNOWN,
@@ -49,74 +82,67 @@ export function useAuthActions(updateState: (state: any) => void) {
         };
         
         setTechnicalError(techError);
-        
         updateState({ error: validation.error, isLoading: false });
         toast.error(validation.error);
         return { success: false, message: validation.error, technicalError: techError };
       }
 
-      console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
-        email, 
-        roleType: typeof role, 
-        role 
-      });
+      console.log('✅ Dados validados, enviando para o serviço de autenticação');
       
       // Ensure we have a valid role
       if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
-        console.warn(`Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
+        console.warn(`⚠️ Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
         role = DEFAULT_USER_ROLE as UserRole;
       }
       
-      // Melhorado: captura erros da camada de serviço mais detalhadamente
-      try {
-        const { data, error, profileCreated } = await authService.signUp(email, password, role);
+      // Aplicar timeout na operação de signup
+      const signupPromise = authService.signUp(email, password, role);
+      const { data, error, profileCreated } = await withTimeout(
+        signupPromise, 
+        15000, 
+        'cadastro de usuário'
+      );
 
-        if (error) {
-          throw error; // Será capturado pelo catch abaixo
-        }
+      if (error) {
+        throw error;
+      }
 
-        if (data?.user) {
-          if (!profileCreated) {
-            console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
-            
-            // NOVO: Tentar criar perfil manualmente se o trigger falhou
-            const profileResult = await createProfileManually(data.user.id, email, role);
-            if (profileResult.success) {
-              console.log('Perfil criado manualmente com sucesso após falha do trigger');
-              toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
-            } else {
-              // Exibir aviso não-bloqueante sobre problema com o perfil
-              console.warn('Falha ao criar perfil manualmente:', profileResult.error);
-              toast.warning("Cadastro realizado, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
-            }
-          } else {
-            console.log('Usuário e perfil criados com sucesso:', data.user.id);
+      if (data?.user) {
+        if (!profileCreated) {
+          console.log('🔄 Tentando criar perfil manualmente após falha do trigger');
+          
+          const profileResult = await createProfileManually(data.user.id, email, role);
+          if (profileResult.success) {
+            console.log('✅ Perfil criado manualmente com sucesso');
             toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+          } else {
+            console.warn('⚠️ Falha ao criar perfil manualmente:', profileResult.error);
+            toast.warning("Cadastro realizado, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
           }
-          
-          // Short delay before redirect to ensure the user sees the success message
-          setTimeout(() => {
-            navigate('/login');
-          }, 1500);
-          
-          return { success: true, message: 'Cadastro realizado com sucesso' };
         } else {
-          console.error('Usuário não foi criado, dados incompletos:', data);
-          const techError = {
-            message: 'Falha ao criar usuário: dados incompletos retornados',
-            category: AuthErrorCategory.UNKNOWN,
-            timestamp: new Date().toISOString(),
-            context: { data }
-          };
-          setTechnicalError(techError);
-          throw new Error('Falha ao criar usuário: dados incompletos retornados');
+          console.log('✅ Usuário e perfil criados com sucesso');
+          toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
         }
-      } catch (serviceError: any) {
-        // Repassa o erro para ser tratado no catch externo
-        throw serviceError;
+        
+        // Delay before redirect to ensure the user sees the success message
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
+        
+        return { success: true, message: 'Cadastro realizado com sucesso' };
+      } else {
+        console.error('❌ Usuário não foi criado, dados incompletos:', data);
+        const techError = {
+          message: 'Falha ao criar usuário: dados incompletos retornados',
+          category: AuthErrorCategory.UNKNOWN,
+          timestamp: new Date().toISOString(),
+          context: { data }
+        };
+        setTechnicalError(techError);
+        throw new Error('Falha ao criar usuário: dados incompletos retornados');
       }
     } catch (error: any) {
-      console.error('Erro não tratado no processo de cadastro:', error);
+      console.error('❌ Erro durante o cadastro:', error);
       
       // Categorizar e formatar a mensagem de erro
       const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
@@ -131,21 +157,21 @@ export function useAuthActions(updateState: (state: any) => void) {
       };
       
       setTechnicalError(techError);
-      
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
       return { success: false, message: errorMessage, technicalError: techError };
     } finally {
+      console.log('🧹 Finalizando operação de cadastro');
       updateState({ isLoading: false });
-      setIsAuthProcessing(false);
+      cleanupAuthOperation();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [isAuthProcessing, navigate, updateState, cleanupAuthOperation]);
 
-  // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
+  // NOVA FUNÇÃO: Cria perfil manualmente com retry logic e timeout
   const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
-    console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
+    console.log('🔧 Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
     
-    const maxRetries = 3;
+    const maxRetries = 2; // Reduzido para evitar loops longos
     let attempt = 0;
     
     while (attempt < maxRetries) {
@@ -153,35 +179,42 @@ export function useAuthActions(updateState: (state: any) => void) {
         // Delay exponencial entre tentativas
         if (attempt > 0) {
           const delayMs = Math.pow(2, attempt) * 1000;
-          console.log(`Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
+          console.log(`⏳ Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
         
-        // Usar RPC para maior garantia de execução
-        const { data, error } = await supabase.rpc('ensure_user_profile', {
+        // Usar RPC com timeout
+        const rpcPromise = supabase.rpc('ensure_user_profile', {
           user_id: userId,
           user_email: userEmail,
           user_role: userRole
         });
         
+        const { data, error } = await withTimeout(rpcPromise, 5000, 'criação de perfil');
+        
         if (error) {
-          console.error(`Tentativa ${attempt+1} falhou:`, error);
+          console.error(`❌ Tentativa ${attempt+1} falhou:`, error);
           attempt++;
           continue;
         }
         
         // Verificar se o perfil foi realmente criado
-        const profileCheck = await profileService.fetchUserProfile(userId);
+        const profileCheckPromise = profileService.fetchUserProfile(userId);
+        const profileCheck = await withTimeout(profileCheckPromise, 3000, 'verificação de perfil');
+        
         if (profileCheck) {
-          console.log('Perfil verificado após criação manual:', profileCheck);
+          console.log('✅ Perfil verificado após criação manual:', profileCheck);
           return { success: true };
         } else {
-          console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
+          console.warn(`⚠️ Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
           attempt++;
           continue;
         }
-      } catch (err) {
-        console.error(`Erro na tentativa ${attempt+1} de criar perfil:`, err);
+      } catch (err: any) {
+        console.error(`❌ Erro na tentativa ${attempt+1} de criar perfil:`, err);
+        if (err.message?.includes('Timeout')) {
+          console.error('⏰ Timeout na criação de perfil');
+        }
         attempt++;
       }
     }
@@ -193,14 +226,17 @@ export function useAuthActions(updateState: (state: any) => void) {
   };
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Prevent duplicate operations
+    // Verificação preventiva contra operações paralelas
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      console.warn('⚠️ Tentativa de login bloqueada - operação já em andamento');
       return;
     }
     
+    console.log('🚀 Iniciando processo de login');
+    setIsAuthProcessing(true);
+    authOperationRef.current = new AbortController();
+    
     try {
-      setIsAuthProcessing(true);
       updateState({ isLoading: true, error: null });
       setTechnicalError(null);
       
@@ -208,8 +244,11 @@ export function useAuthActions(updateState: (state: any) => void) {
         throw { message: 'Email e senha são obrigatórios', category: AuthErrorCategory.INVALID_EMAIL };
       }
       
-      console.log('AuthContext: Iniciando login para:', email);
-      const { data, error } = await authService.signIn(email, password);
+      console.log('🔑 Tentando autenticar usuário:', email);
+      
+      // Aplicar timeout na operação de login
+      const loginPromise = authService.signIn(email, password);
+      const { data, error } = await withTimeout(loginPromise, 10000, 'login de usuário');
       
       if (error) {
         // Categorizar o erro
@@ -226,26 +265,45 @@ export function useAuthActions(updateState: (state: any) => void) {
       }
 
       if (data.user) {
-        console.log('Login bem-sucedido para:', email);
+        console.log('✅ Login autenticado para:', email);
+        
         try {
-          let userProfile = await profileService.fetchUserProfile(data.user.id);
-          console.log('Perfil obtido após login:', userProfile);
+          // Buscar perfil com timeout
+          const profilePromise = profileService.fetchUserProfile(data.user.id);
+          let userProfile = await withTimeout(profilePromise, 8000, 'busca de perfil');
+          
+          console.log('📋 Perfil obtido após login:', userProfile);
           
           // MELHORADO: Se não conseguir obter o perfil, não bloquear o login
           if (!userProfile) {
-            console.warn('Perfil não encontrado, tentando criar via RPC');
+            console.warn('⚠️ Perfil não encontrado, tentando criar via RPC');
             
-            // Tentar criar o perfil manualmente
-            const { data: rpcData, error: rpcError } = await supabase
-              .rpc('ensure_user_profile', {
+            try {
+              const rpcPromise = supabase.rpc('ensure_user_profile', {
                 user_id: data.user.id,
                 user_email: data.user.email || email,
                 user_role: DEFAULT_USER_ROLE
               });
+              
+              const { data: rpcData, error: rpcError } = await withTimeout(rpcPromise, 5000, 'criação de perfil via RPC');
+              
+              if (rpcError) {
+                console.error('❌ Falha ao criar perfil via RPC:', rpcError);
+              } else {
+                // Tentar obter o perfil novamente
+                const retryProfilePromise = profileService.fetchUserProfile(data.user.id);
+                const profileRetry = await withTimeout(retryProfilePromise, 3000, 'retry busca de perfil');
+                
+                if (profileRetry) {
+                  userProfile = profileRetry;
+                }
+              }
+            } catch (rpcError) {
+              console.error('❌ Erro ao tentar criar perfil via RPC:', rpcError);
+            }
             
-            if (rpcError) {
-              console.error('Falha ao criar perfil via RPC:', rpcError);
-              // NÃO fazer logout - continuar com perfil mínimo
+            // Usar perfil mínimo se ainda não conseguiu
+            if (!userProfile) {
               userProfile = {
                 id: data.user.id,
                 email: data.user.email || email,
@@ -255,30 +313,13 @@ export function useAuthActions(updateState: (state: any) => void) {
                 is_active: true,
                 is_approved: true
               };
-              console.log('Usando perfil mínimo para continuar o login');
-            } else {
-              // Tentar obter o perfil novamente
-              const profileRetry = await profileService.fetchUserProfile(data.user.id);
-              if (profileRetry) {
-                userProfile = profileRetry;
-              } else {
-                // Usar perfil mínimo
-                userProfile = {
-                  id: data.user.id,
-                  email: data.user.email || email,
-                  role: DEFAULT_USER_ROLE as UserRole,
-                  created_at: data.user.created_at || new Date().toISOString(),
-                  last_login: new Date().toISOString(),
-                  is_active: true,
-                  is_approved: true
-                };
-              }
+              console.log('📝 Usando perfil mínimo para continuar o login');
             }
           }
           
-          // Verificar se o perfil está ativo (se temos essa informação)
+          // Verificar se o perfil está ativo
           if (userProfile.is_active === false) {
-            console.log('Perfil inativo, fazendo logout:', userProfile);
+            console.log('🚫 Perfil inativo, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
               message: 'Sua conta está desativada. Entre em contato com o administrador.',
@@ -304,12 +345,12 @@ export function useAuthActions(updateState: (state: any) => void) {
           navigate(from, { replace: true });
           
         } catch (profileError: any) {
-          console.error('Erro ao verificar perfil após login:', profileError);
+          console.error('❌ Erro ao verificar perfil após login:', profileError);
           
           // Se o erro é relacionado a perfil mas o login funcionou, 
           // vamos continuar com dados mínimos
-          if (profileError?.message?.includes('403') || profileError?.message?.includes('profile')) {
-            console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
+          if (profileError?.message?.includes('403') || profileError?.message?.includes('Timeout') || profileError?.message?.includes('profile')) {
+            console.warn('⚠️ Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
             
             const basicProfile = {
               id: data.user.id,
@@ -343,7 +384,7 @@ export function useAuthActions(updateState: (state: any) => void) {
             context: { userId: data.user.id, email: data.user.email }
           });
           
-          console.warn('Erro no perfil, mas mantendo usuário logado');
+          console.warn('⚠️ Erro no perfil, mas mantendo usuário logado');
           updateState({ 
             user: data.user,
             profile: null,
@@ -352,7 +393,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           });
         }
       } else {
-        console.error('Login falhou, dados incompletos:', data);
+        console.error('❌ Login falhou, dados incompletos:', data);
         throw {
           message: 'Falha no login: dados incompletos retornados',
           category: AuthErrorCategory.UNKNOWN
@@ -360,7 +401,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       }
       
     } catch (error: any) {
-      console.error('Erro durante o login:', error);
+      console.error('❌ Erro durante o login:', error);
       
       // Formatar mensagem de erro amigável
       const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
@@ -369,23 +410,28 @@ export function useAuthActions(updateState: (state: any) => void) {
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     } finally {
-      if (isAuthProcessing) {
-        setIsAuthProcessing(false);
-      }
+      console.log('🧹 Finalizando operação de login');
+      cleanupAuthOperation();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [isAuthProcessing, navigate, updateState, cleanupAuthOperation]);
 
   const signOut = useCallback(async () => {
-    // Prevent duplicate operations
+    // Verificação preventiva contra operações paralelas
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      console.warn('⚠️ Tentativa de logout bloqueada - operação já em andamento');
       return;
     }
     
+    console.log('🚪 Iniciando processo de logout');
+    setIsAuthProcessing(true);
+    authOperationRef.current = new AbortController();
+    
     try {
-      setIsAuthProcessing(true);
       updateState({ isLoading: true });
-      await authService.signOut();
+      
+      // Aplicar timeout na operação de logout
+      const logoutPromise = authService.signOut();
+      await withTimeout(logoutPromise, 5000, 'logout de usuário');
       
       // Limpa o estado de autenticação
       updateState({
@@ -395,16 +441,24 @@ export function useAuthActions(updateState: (state: any) => void) {
         isLoading: false
       });
       
+      console.log('✅ Logout realizado com sucesso');
       toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
     } catch (error: any) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ Erro ao fazer logout:', error);
       toast.error(error.message || 'Ocorreu um erro ao tentar sair.');
       updateState({ isLoading: false });
     } finally {
-      setIsAuthProcessing(false);
+      console.log('🧹 Finalizando operação de logout');
+      cleanupAuthOperation();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [isAuthProcessing, navigate, updateState, cleanupAuthOperation]);
 
-  return { signIn, signUp, signOut, technicalError };
+  return { 
+    signIn, 
+    signUp, 
+    signOut, 
+    technicalError, 
+    isAuthProcessing // Exposição do estado para debug
+  };
 }

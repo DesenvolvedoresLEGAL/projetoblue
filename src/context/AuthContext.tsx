@@ -11,7 +11,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { state, updateState } = useAuthState();
-  const { signIn, signUp, signOut, technicalError } = useAuthActions(updateState);
+  const { signIn, signUp, signOut, technicalError, isAuthProcessing } = useAuthActions(updateState);
   
   // Set up auth session check and subscription
   useAuthSession(updateState);
@@ -25,15 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Log auth state changes to help with debugging
   useEffect(() => {
-    console.log('Auth state updated:', { 
+    console.log('🔍 Auth state updated:', { 
       isAuthenticated: !!state.user && !!state.profile,
       hasUser: !!state.user,
       hasProfile: !!state.profile,
       userRole,
       isLoading: state.isLoading,
+      isAuthProcessing, // Novo log para debug
       hasError: !!state.error
     });
-  }, [state.user, state.profile, state.isLoading, state.error, userRole]);
+  }, [state.user, state.profile, state.isLoading, state.error, userRole, isAuthProcessing]);
 
   return (
     <AuthContext.Provider
@@ -45,7 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!state.user && !!state.profile,
         technicalError,
         userRole,
-        hasMinimumRole: hasMinimumRoleForUser
+        hasMinimumRole: hasMinimumRoleForUser,
+        isAuthProcessing // Exposição do estado para componentes
       }}
     >
       {children}
