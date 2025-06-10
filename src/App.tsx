@@ -16,7 +16,7 @@ import AssetsDashboard from '@/modules/assets/pages/AssetsDashboard';
 import AssetsInventory from '@/modules/inventory/pages/Inventory';
 import AssetsManagement from '@/modules/assets/pages/AssetsManagement';
 import AssetsRegister from '@/modules/assets/pages/RegisterAsset';
-import AssetsAssociations from '@/modules/associations/pages/AssociationsList';
+import AssociationsList from '@/modules/associations/pages/AssociationsList';
 import TicketsDashboard from '@/modules/tickets/pages/TicketsDashboard';
 import TicketsInbox from '@/modules/tickets/pages/TicketsInbox';
 import TicketsMyTickets from '@/modules/tickets/pages/MyTickets';
@@ -78,7 +78,7 @@ function App() {
                 <Route path="/assets/inventory" element={<AssetsInventory />} />
                 <Route path="/assets/management" element={<AssetsManagement />} />
                 <Route path="/assets/register" element={<AssetsRegister />} />
-                <Route path="/assets/associations" element={<AssetsAssociations />} />
+                <Route path="/assets/associations" element={<AssociationsList />} />
                 
                 {/* Tickets Routes */}
                 <Route path="/tickets" element={<TicketsDashboard />} />
