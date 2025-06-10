@@ -1,0 +1,208 @@
+
+/* LEGAL Theme - Dark Mode Enhancements */
+/* Melhorias específicas para modo escuro baseadas na análise das imagens */
+
+.dark {
+  /* Enhanced contrast tokens for better readability */
+  --background: 220 15% 6%;  /* Darker background - #0F0F0F */
+  --foreground: 210 20% 98%; /* Higher contrast text - #FAFAFA */
+  
+  --card: 220 15% 9%;  /* More contrasted cards - #161618 */
+  --card-foreground: 210 20% 98%;
+  
+  --popover: 220 15% 9%;
+  --popover-foreground: 210 20% 98%;
+  
+  --muted: 220 15% 15%;  /* Better muted backgrounds - #262629 */
+  --muted-foreground: 210 15% 85%; /* Higher contrast muted text - #D9D9DA */
+  
+  --secondary: 220 15% 12%;  /* Enhanced secondary - #1F1F23 */
+  --secondary-foreground: 210 20% 98%;
+  
+  --border: 220 15% 20%;  /* More visible borders - #333336 */
+  --input: 220 15% 12%;   /* Better input contrast - #1F1F23 */
+  
+  /* Enhanced LEGAL colors for dark mode */
+  --legal-primary: 245 85% 65%;    /* Brighter primary - #6B46FC */
+  --legal-primary-light: 247 87% 72%; /* Even brighter hover - #8B5FFF */
+  --legal-secondary: 186 100% 58%;   /* Brighter cyan - #1DFFFF */
+  --legal-secondary-light: 186 100% 65%; /* Brighter cyan hover - #52FFFF */
+  
+  /* Table and list improvements */
+  --table-header-bg: 220 15% 12%;
+  --table-row-hover: 220 15% 15%;
+  --table-border: 220 15% 18%;
+  
+  /* Status colors with better contrast */
+  --status-success-bg: 142 76% 15%;
+  --status-success-text: 142 76% 80%;
+  --status-warning-bg: 48 96% 15%;
+  --status-warning-text: 48 96% 80%;
+  --status-error-bg: 0 84% 15%;
+  --status-error-text: 0 84% 80%;
+  
+  /* Enhanced focus and interaction states */
+  --focus-ring: 245 85% 65% / 0.4;
+  --hover-overlay: 0 0% 100% / 0.08;
+  --active-overlay: 0 0% 100% / 0.12;
+}
+
+/* Enhanced table styling for dark mode */
+.dark .enhanced-table {
+  @apply border border-table-border;
+}
+
+.dark .enhanced-table th {
+  @apply bg-[hsl(var(--table-header-bg))] text-foreground font-semibold border-b border-table-border;
+}
+
+.dark .enhanced-table td {
+  @apply border-b border-table-border;
+}
+
+.dark .enhanced-table tr:hover {
+  @apply bg-[hsl(var(--table-row-hover))];
+}
+
+/* Enhanced form styling for dark mode */
+.dark .enhanced-form-field {
+  @apply space-y-2;
+}
+
+.dark .enhanced-form-field label {
+  @apply text-foreground font-medium;
+}
+
+.dark .enhanced-form-field input,
+.dark .enhanced-form-field select,
+.dark .enhanced-form-field textarea {
+  @apply bg-input border-border text-foreground placeholder:text-muted-foreground;
+  @apply focus:border-legal-primary focus:ring-2 focus:ring-[hsl(var(--focus-ring))];
+}
+
+/* Enhanced status badges for dark mode */
+.dark .status-badge-success {
+  @apply bg-[hsl(var(--status-success-bg))] text-[hsl(var(--status-success-text))] border border-[hsl(var(--status-success-text))] border-opacity-30;
+}
+
+.dark .status-badge-warning {
+  @apply bg-[hsl(var(--status-warning-bg))] text-[hsl(var(--status-warning-text))] border border-[hsl(var(--status-warning-text))] border-opacity-30;
+}
+
+.dark .status-badge-error {
+  @apply bg-[hsl(var(--status-error-bg))] text-[hsl(var(--status-error-text))] border border-[hsl(var(--status-error-text))] border-opacity-30;
+}
+
+/* Enhanced card styling for dark mode */
+.dark .enhanced-card {
+  @apply bg-card border border-border shadow-lg;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.dark .enhanced-card:hover {
+  @apply border-legal-primary/30;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced navigation for dark mode */
+.dark .enhanced-nav-item {
+  @apply text-muted-foreground hover:text-foreground hover:bg-[hsl(var(--hover-overlay))] transition-all duration-200;
+}
+
+.dark .enhanced-nav-item.active {
+  @apply text-legal-primary bg-legal-primary/10 border-r-2 border-legal-primary;
+}
+
+/* Enhanced button styling for dark mode */
+.dark .enhanced-button-primary {
+  @apply bg-legal-primary hover:bg-legal-primary-light text-white shadow-lg;
+  box-shadow: 0 2px 8px rgba(107, 70, 252, 0.3);
+}
+
+.dark .enhanced-button-primary:hover {
+  box-shadow: 0 4px 12px rgba(107, 70, 252, 0.4);
+}
+
+.dark .enhanced-button-secondary {
+  @apply bg-legal-secondary hover:bg-legal-secondary-light text-legal-dark shadow-lg;
+  box-shadow: 0 2px 8px rgba(29, 255, 255, 0.3);
+}
+
+.dark .enhanced-button-secondary:hover {
+  box-shadow: 0 4px 12px rgba(29, 255, 255, 0.4);
+}
+
+/* Enhanced scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--legal-primary) / 0.6);
+  border-radius: 5px;
+  transition: background 0.2s ease;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--legal-primary) / 0.8);
+}
+
+/* Enhanced typography for dark mode */
+.dark .enhanced-title {
+  @apply text-foreground font-bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.dark .enhanced-subtitle {
+  @apply text-legal-primary font-semibold;
+}
+
+.dark .enhanced-body-text {
+  @apply text-muted-foreground leading-relaxed;
+}
+
+/* Enhanced modal/dialog styling for dark mode */
+.dark .enhanced-modal {
+  @apply bg-card border border-border;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark .enhanced-modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* Enhanced separator for dark mode */
+.dark .enhanced-separator {
+  @apply bg-border opacity-60;
+}
+
+/* Enhanced dropdown styling for dark mode */
+.dark .enhanced-dropdown {
+  @apply bg-popover border border-border shadow-xl;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .enhanced-dropdown-item {
+  @apply text-popover-foreground hover:bg-[hsl(var(--hover-overlay))] hover:text-legal-primary;
+}
+
+/* Enhanced search and filter styling */
+.dark .enhanced-search-input {
+  @apply bg-input border-border text-foreground placeholder:text-muted-foreground;
+  @apply focus:border-legal-primary focus:ring-2 focus:ring-[hsl(var(--focus-ring))];
+}
+
+.dark .enhanced-filter-button {
+  @apply bg-secondary text-secondary-foreground border border-border hover:bg-muted;
+}
+
+.dark .enhanced-filter-button.active {
+  @apply bg-legal-primary text-white border-legal-primary;
+}

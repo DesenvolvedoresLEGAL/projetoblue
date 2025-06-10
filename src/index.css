@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import theme optimizations */
+/* Import theme optimizations and dark mode enhancements */
 @import './styles/theme-optimizations.css';
+@import './styles/dark-mode-enhancements.css';
 
 @layer base {
   :root {
@@ -78,42 +79,49 @@
   }
 
   .dark {
-    --background: 220 13% 8%;  /* LEGAL dark background - #121212 */
-    --foreground: 210 17% 96%; /* #F5F5F5 */
+    /* Enhanced dark mode tokens with better contrast */
+    --background: 220 15% 6%;  /* Darker background for better contrast */
+    --foreground: 210 20% 98%; /* Higher contrast text */
 
-    --card: 220 13% 12%;  /* LEGAL dark card - #1E1E1E */
-    --card-foreground: 210 17% 96%; /* #F5F5F5 */
+    --card: 220 15% 9%;  /* More contrasted cards */
+    --card-foreground: 210 20% 98%;
 
-    --popover: 220 13% 12%;  /* LEGAL dark popover - #1E1E1E */
-    --popover-foreground: 210 17% 96%; /* #F5F5F5 */
+    --popover: 220 15% 9%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 245 79% 57%; /* LEGAL primary color */
+    --primary: 245 85% 65%; /* Brighter primary for dark mode */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 13% 14%;  /* LEGAL dark secondary - #242424 */
-    --secondary-foreground: 210 17% 96%; /* #F5F5F5 */
+    --secondary: 220 15% 12%;  /* Enhanced secondary */
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 220 9% 17%;  /* LEGAL dark muted - #2A2A2A */
-    --muted-foreground: 210 9% 80%; /* #CCCCCC */
+    --muted: 220 15% 15%;  /* Better muted backgrounds */
+    --muted-foreground: 210 15% 85%; /* Higher contrast muted text */
 
-    --accent: 186 100% 51%; /* LEGAL ciano color */
-    --accent-foreground: 220 13% 8%; /* Dark background for contrast */
+    --accent: 186 100% 58%; /* Brighter cyan for dark mode */
+    --accent-foreground: 220 15% 6%;
 
     --destructive: 0 85% 60%;
-    --destructive-foreground: 210 17% 96%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 220 9% 17%;  /* LEGAL dark border - #2A2A2A */
-    --input: 220 9% 17%;  /* LEGAL dark input - #2A2A2A */
-    --ring: 186 100% 51%; /* LEGAL ciano for focus rings */
+    --border: 220 15% 20%;  /* More visible borders */
+    --input: 220 15% 12%;   /* Better input contrast */
+    --ring: 245 85% 65%;    /* Brighter focus rings */
 
-    --sidebar-background: 220 13% 10%; /* LEGAL dark sidebar - #1A1A1A */
-    --sidebar-foreground: 210 17% 96%;
-    --sidebar-primary: 245 79% 57%; /* LEGAL primary color */
+    --sidebar-background: 220 15% 8%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 245 85% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 14%;  /* LEGAL dark accent */
-    --sidebar-accent-foreground: 210 17% 96%;
-    --sidebar-border: 220 9% 17%;  /* LEGAL dark border */
-    --sidebar-ring: 245 79% 57%; /* LEGAL primary color */
+    --sidebar-accent: 220 15% 12%;
+    --sidebar-accent-foreground: 210 20% 98%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 245 85% 65%;
+
+    /* Enhanced LEGAL colors for dark mode */
+    --legal-primary: 245 85% 65%;    /* Brighter primary */
+    --legal-primary-light: 247 87% 72%; /* Even brighter hover */
+    --legal-secondary: 186 100% 58%;   /* Brighter cyan */
+    --legal-secondary-light: 186 100% 65%; /* Brighter cyan hover */
   }
 
   /* High contrast mode */
@@ -151,26 +159,26 @@
   }
 
   .dark ::selection {
-    background-color: hsl(186 100% 51% / 0.3); /* LEGAL ciano with opacity */
-    color: hsl(220 13% 8%);
+    background-color: hsl(186 100% 58% / 0.3); /* Enhanced ciano with opacity */
+    color: hsl(220 15% 6%);
   }
 
-  /* LEGAL Typography Classes - Enhanced for Dark Mode */
+  /* Enhanced LEGAL Typography Classes for Dark Mode */
   .legal-title {
-    @apply font-neue-haas font-black text-legal-dark dark:text-legal-primary;
+    @apply font-neue-haas font-black text-legal-dark dark:text-foreground;
   }
 
   .legal-subtitle {
-    @apply font-neue-haas font-bold text-legal-primary dark:text-legal-secondary;
+    @apply font-neue-haas font-bold text-legal-primary dark:text-legal-primary;
   }
 
   .legal-text {
     @apply font-neue-haas font-medium text-foreground;
   }
 
-  /* Focus States for Accessibility */
+  /* Enhanced Focus States for Accessibility */
   .legal-focus {
-    @apply focus:outline-none focus:ring-2 focus:ring-legal-primary dark:focus:ring-legal-secondary focus:ring-offset-2 focus:ring-offset-background;
+    @apply focus:outline-none focus:ring-2 focus:ring-legal-primary dark:focus:ring-legal-primary focus:ring-offset-2 focus:ring-offset-background;
   }
 }
 
@@ -180,15 +188,15 @@
   }
   
   .telecom-card {
-    @apply bg-white dark:bg-card rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300;
+    @apply bg-white dark:bg-card rounded-lg shadow-md border border-gray-200 dark:border-border p-6 hover:shadow-lg transition-shadow duration-300;
   }
   
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 dark:border-muted rounded-md shadow-sm legal-focus dark:bg-muted dark:text-foreground;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-border rounded-md shadow-sm legal-focus dark:bg-input dark:text-foreground;
   }
   
   .form-label {
-    @apply block text-sm font-medium text-gray-700 dark:text-muted-foreground mb-1;
+    @apply block text-sm font-medium text-gray-700 dark:text-foreground mb-1;
   }
   
   .form-error {
@@ -199,33 +207,33 @@
     @apply bg-white/10 dark:bg-black/20 backdrop-blur-lg border border-white/20 dark:border-white/10 rounded-xl;
   }
 
-  /* LEGAL Specific Components - Enhanced Dark Mode */
+  /* Enhanced LEGAL Specific Components for Dark Mode */
   .legal-card {
-    @apply bg-white dark:bg-card border border-legal-primary/20 dark:border-legal-secondary/30 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:border-legal-primary/40 dark:hover:border-legal-secondary/50;
+    @apply bg-white dark:bg-card border border-legal-primary/20 dark:border-border rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:border-legal-primary/40 dark:hover:border-legal-primary/30;
   }
 
   .legal-button {
-    @apply bg-legal-primary hover:bg-legal-primary/90 dark:bg-legal-primary dark:hover:bg-legal-primary-light text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 legal-focus;
+    @apply bg-legal-primary hover:bg-legal-primary-light dark:bg-legal-primary dark:hover:bg-legal-primary-light text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 legal-focus shadow-lg;
   }
 
   .legal-button-secondary {
-    @apply bg-legal-secondary hover:bg-legal-secondary/90 dark:bg-legal-secondary dark:hover:bg-legal-secondary-light text-legal-dark dark:text-background font-semibold py-2 px-4 rounded-lg transition-colors duration-200 legal-focus;
+    @apply bg-legal-secondary hover:bg-legal-secondary-light dark:bg-legal-secondary dark:hover:bg-legal-secondary-light text-legal-dark dark:text-background font-semibold py-2 px-4 rounded-lg transition-all duration-200 legal-focus shadow-lg;
   }
 
   .legal-badge {
-    @apply bg-legal-secondary/20 dark:bg-legal-secondary/30 text-legal-dark dark:text-legal-secondary font-medium px-2 py-1 rounded-full text-xs;
+    @apply bg-legal-secondary/20 dark:bg-legal-secondary/30 text-legal-dark dark:text-legal-secondary font-medium px-2 py-1 rounded-full text-xs border border-legal-secondary/30;
   }
 
-  /* Input Components with Legal Branding */
+  /* Enhanced Input Components with Legal Branding */
   .legal-input {
-    @apply form-input border-border dark:border-muted focus:border-legal-primary dark:focus:border-legal-secondary;
+    @apply form-input border-border dark:border-border focus:border-legal-primary dark:focus:border-legal-primary transition-colors duration-200;
   }
 
   .legal-select {
     @apply legal-input cursor-pointer;
   }
 
-  /* Card Variants */
+  /* Enhanced Card Variants */
   .legal-card-primary {
     @apply legal-card border-legal-primary/30 dark:border-legal-primary/40 bg-legal-primary/5 dark:bg-legal-primary/10;
   }
@@ -234,17 +242,17 @@
     @apply legal-card border-legal-secondary/30 dark:border-legal-secondary/40 bg-legal-secondary/5 dark:bg-legal-secondary/10;
   }
 
-  /* Status Indicators */
+  /* Enhanced Status Indicators */
   .legal-status-available {
-    @apply bg-legal-primary text-white dark:bg-legal-primary dark:text-white;
+    @apply bg-legal-primary text-white dark:bg-legal-primary dark:text-white shadow-sm;
   }
 
   .legal-status-rented {
-    @apply bg-legal-secondary text-legal-dark dark:bg-legal-secondary dark:text-background;
+    @apply bg-legal-secondary text-legal-dark dark:bg-legal-secondary dark:text-background shadow-sm;
   }
 
   .legal-status-maintenance {
-    @apply bg-legal-dark text-white dark:bg-legal-dark-light dark:text-white;
+    @apply bg-legal-dark text-white dark:bg-legal-dark-light dark:text-white shadow-sm;
   }
 
   /* Enhanced LEGAL Components with QA improvements */
@@ -276,13 +284,13 @@
     height: 300px;
   }
 
-  /* QA validated form components */
+  /* Enhanced QA validated form components */
   .legal-form-field {
     @apply space-y-2;
   }
 
   .legal-form-field label {
-    @apply text-sm font-medium text-legal-dark dark:text-text-primary-dark;
+    @apply text-sm font-medium text-foreground;
   }
 
   .legal-form-field input,
@@ -292,28 +300,28 @@
   }
 
   .legal-form-field .error {
-    @apply text-destructive text-xs mt-1;
+    @apply text-destructive text-xs mt-1 font-medium;
   }
 
-  /* Status indicators with improved accessibility */
+  /* Enhanced status indicators with improved accessibility */
   .legal-status {
-    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium;
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border;
   }
 
   .legal-status-success {
-    @apply legal-status bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+    @apply legal-status bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800;
   }
 
   .legal-status-warning {
-    @apply legal-status bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+    @apply legal-status bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800;
   }
 
   .legal-status-error {
-    @apply legal-status bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
+    @apply legal-status bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800;
   }
 
   .legal-status-info {
-    @apply legal-status bg-legal-primary/10 text-legal-primary dark:bg-legal-primary/20 dark:text-legal-secondary;
+    @apply legal-status bg-legal-primary/10 text-legal-primary border-legal-primary/20 dark:bg-legal-primary/20 dark:text-legal-primary dark:border-legal-primary/30;
   }
 }
 
