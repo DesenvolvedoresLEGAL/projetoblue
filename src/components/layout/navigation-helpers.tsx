@@ -1,163 +1,58 @@
 
-import { NavigationItemProps } from './sidebar/NavigationItem';
-import { NavigationModuleProps } from './sidebar/NavigationModule';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  Ticket, 
-  Star, 
-  Network, 
-  Search,
-  Settings,
-  PlusCircle,
-  PackageSearch,
-  Link as LinkIcon,
-  ActivitySquare,
-  FileText,
-  Scan,
-  HelpCircle,
-  Book,
-  ClipboardList,
-  Laptop
-} from 'lucide-react';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed' | 'isExpanded' | 'onToggle'>[] => [
-  {
-    title: 'Principal',
-    items: [
-      {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/dashboard'
-      }
-    ]
-  },
-  {
-    title: 'Gestão de Ativos',
-    requiredRole: 'suporte',
-    items: [
-      {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/assets/dashboard',
-        requiredRole: 'suporte'
-      },
-      {
-        icon: PackageSearch,
-        label: 'Inventário',
-        href: '/assets/inventory',
-        requiredRole: 'suporte'
-      },
-      {
-        icon: PlusCircle,
-        label: 'Registrar Ativo',
-        href: '/assets/register',
-        requiredRole: 'suporte'
-      },
-      {
-        icon: LinkIcon,
-        label: 'Vincular Ativo',
-        href: '/link-asset',
-        requiredRole: 'suporte'
-      },
-      {
-        icon: ActivitySquare,
-        label: 'Status',
-        href: '/assets/status',
-        requiredRole: 'suporte'
-      }
-    ]
-  },
-  {
-    title: 'Atendimento',
-    items: [
-      {
-        icon: LayoutDashboard,
-        label: 'Dashboard',
-        href: '/tickets/dashboard'
-      },
-      {
-        icon: Ticket,
-        label: 'Tickets',
-        href: '/tickets/inbox'
-      },
-      {
-        icon: Laptop,
-        label: 'Acesso Remoto',
-        href: '/support/remote-access'
-      },
-      {
-        icon: Book,
-        label: 'Playbooks',
-        href: '/support/playbooks'
-      },
-      {
-        icon: ClipboardList,
-        label: 'Auditoria',
-        href: '/support/audit'
-      }
-    ]
-  },
-  {
-    title: 'Clientes',
-    requiredRole: 'suporte',
-    items: [
-      {
-        icon: Users,
-        label: 'Gerenciar Clientes',
-        href: '/clients',
-        requiredRole: 'suporte'
-      }
-    ]
-  },
-  {
-    title: 'BITS™',
-    requiredRole: 'cliente',
-    items: [
-      {
-        icon: Star,
-        label: 'Programa BITS™',
-        href: '/bits',
-        requiredRole: 'cliente'
-      }
-    ]
-  },
-  {
-    title: 'Rede',
-    items: [
-      {
-        icon: Network,
-        label: 'Topologia',
-        href: '/topology/view'
-      }
-    ]
-  },
-  {
-    title: 'Ferramentas',
-    items: [
-      {
-        icon: Search,
-        label: 'Descoberta',
-        href: '/tools/discovery'
-      },
-      {
-        icon: FileText,
-        label: 'Exportar',
-        href: '/tools/export'
-      }
-    ]
-  },
-  {
-    title: 'Administração',
-    requiredRole: 'gestor',
-    items: [
-      {
-        icon: Settings,
-        label: 'Fornecedores',
-        href: '/suppliers',
-        requiredRole: 'gestor'
-      }
-    ]
-  }
-];
+interface BreadcrumbItem {
+  label: string;
+  href: string;
+}
+
+interface BreadcrumbsProps {
+  items: BreadcrumbItem[];
+  className?: string;
+}
+
+export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => {
+  return (
+    <nav aria-label="Breadcrumbs" className={cn("flex items-center text-sm", className)}>
+      <ol className="flex items-center space-x-2">
+        {items.map((item, index) => (
+          <React.Fragment key={item.href}>
+            {index > 0 && (
+              <li aria-hidden="true" className="text-muted-foreground mx-1">/</li>
+            )}
+            <li className={cn(
+              index === items.length - 1 
+                ? "text-foreground font-medium" 
+                : "text-muted-foreground hover:text-foreground"
+            )}>
+              {index === items.length - 1 ? (
+                <span>{item.label}</span>
+              ) : (
+                <Link to={item.href}>{item.label}</Link>
+              )}
+            </li>
+          </React.Fragment>
+        ))}
+      </ol>
+    </nav>
+  );
+};
+
+interface PageTitleProps {
+  title: string;
+  description?: string;
+  className?: string;
+}
+
+export const PageTitle: React.FC<PageTitleProps> = ({ title, description, className }) => {
+  return (
+    <div className={cn("mb-6", className)}>
+      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      {description && (
+        <p className="text-muted-foreground mt-1">{description}</p>
+      )}
+    </div>
+  );
+};

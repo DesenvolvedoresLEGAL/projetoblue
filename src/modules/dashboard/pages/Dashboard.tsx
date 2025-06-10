@@ -1,152 +1,130 @@
+
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  BarChart, 
-  TrendingUp, 
-  Users, 
-  Package, 
-  AlertTriangle,
-  CheckCircle,
-  Loader2
-} from "lucide-react";
-import { useDashboardData } from '../hooks/useDashboardData';
-import { useDashboardAssets } from '../hooks/useDashboardAssets';
-import { QuickActionsCard } from '../components/dashboard/QuickActionsCard';
-import { ClientsActions } from '@/modules/clients/components/clients/ClientsActions';
-import { TicketsNavigation } from '@/modules/tickets/components/tickets/TicketsNavigation';
-import { RoleGuard } from '@/components/auth/RoleGuard';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useNavigate } from "react-router-dom";
+import { Smartphone, Wifi, Zap, LayoutDashboard } from "lucide-react";
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets';
+import { useDashboardAssociationsDetailed } from '@modules/dashboard/hooks/useDashboardAssociationsDetailed';
+import { useDashboardStatusByType } from '@modules/dashboard/hooks/useDashboardStatusByType';
+import { useDashboardRecentActivities } from '@modules/dashboard/hooks/useDashboardRecentActivities';
+import { AssetSummaryCard } from '@modules/dashboard/components/dashboard/AssetSummaryCard';
+import { RentalAssociationsCard } from '@modules/dashboard/components/dashboard/RentalAssociationsCard';
+import { SubscriptionAssociationsCard } from '@modules/dashboard/components/dashboard/SubscriptionAssociationsCard';
+import { AssetTypeStatusChart } from '@modules/dashboard/components/dashboard/AssetTypeStatusChart';
+import { QuickActionsCard } from '@modules/dashboard/components/dashboard/QuickActionsCard';
+import { RecentActivitiesCard } from '@modules/dashboard/components/dashboard/RecentActivitiesCard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { StandardPageHeader } from '@/components/ui/standard-page-header';
 
 const Dashboard = () => {
-  const permissions = usePermissions();
-  const dashboard = useDashboardData();
-  const assetsDashboard = useDashboardAssets();
-  const isLoading = dashboard.isLoading || assetsDashboard.problemAssets.isLoading;
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-muted-foreground">Carregando painel...</p>
-        </div>
-      </div>
-    );
-  }
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
+  // Data hooks
+  const dashboardAssets = useDashboardAssets();
+  const associationsDetailed = useDashboardAssociationsDetailed();
+  const statusByType = useDashboardStatusByType();
+  const recentActivities = useDashboardRecentActivities();
+  
+  // Check loading states
+  const isLoading = dashboardAssets.assetsStats.isLoading || 
+                   associationsDetailed.isLoading || 
+                   statusByType.isLoading;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <p className="text-muted-foreground">Visão geral do seu negócio</p>
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline" size="sm">
-            Filtrar
-          </Button>
-          <Button size="sm">Relatórios</Button>
-        </div>
-      </div>
+    <ErrorBoundary>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Quick Actions - Show if user has asset permissions */}
-        <RoleGuard requiredRole="suporte">
-          <div className="xl:col-span-2">
+      <StandardPageHeader
+        icon={LayoutDashboard}
+        title="Dashboard INVENTÁRIO"
+        description="Sistema de Gestão Avançada de Ativos"
+      >
+      </StandardPageHeader>
+
+        <div className="space-y-6 mt-6">
+          {/* Asset Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <AssetSummaryCard
+              title="CHIPs"
+              description="SIMCARD's para conectividade móvel"
+              total={dashboardAssets.assetsStats.data.chips.total}
+              available={dashboardAssets.assetsStats.data.chips.available}
+              inUse={dashboardAssets.assetsStats.data.chips.unavailable}
+              icon={<Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              actionLink="/assets/inventory?type=11"
+              isLoading={dashboardAssets.assetsStats.isLoading}
+            />
+            <AssetSummaryCard
+              title="Speedys 5G"
+              description="Roteadores 5G de alta velocidade"
+              total={dashboardAssets.assetsStats.data.speedys.total}
+              available={dashboardAssets.assetsStats.data.speedys.available}
+              inUse={dashboardAssets.assetsStats.data.speedys.unavailable}
+              icon={<Zap className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              actionLink="/assets/inventory?type=1"
+              isLoading={dashboardAssets.assetsStats.isLoading}
+            />
+            <AssetSummaryCard
+              title="Equipamentos"
+              description="Dispositivos e infraestrutura de rede"
+              total={dashboardAssets.assetsStats.data.equipment.total}
+              available={dashboardAssets.assetsStats.data.equipment.available}
+              inUse={dashboardAssets.assetsStats.data.equipment.unavailable}
+              icon={<Wifi className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              actionLink="/assets/inventory"
+              isLoading={dashboardAssets.assetsStats.isLoading}
+            />
+          </div>
+          {/* Associations and Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            <RentalAssociationsCard
+              totalActive={associationsDetailed.data?.rental.totalActive || 0}
+              recentAssets={associationsDetailed.data?.rental.recentAssets || []}
+              distributionByType={associationsDetailed.data?.rental.distributionByType || { chips: 0, speedys: 0, equipment: 0 }}
+              isLoading={associationsDetailed.isLoading}
+            />
+          
+            <SubscriptionAssociationsCard
+              totalActive={associationsDetailed.data?.subscription.totalActive || 0}
+              recentAssets={associationsDetailed.data?.subscription.recentAssets || []}
+              distributionByType={associationsDetailed.data?.subscription.distributionByType || { chips: 0, speedys: 0, equipment: 0 }}
+              isLoading={associationsDetailed.isLoading}
+            />
+          
             <QuickActionsCard />
           </div>
-        </RoleGuard>
-
-        {/* Clients Actions - Show if user has client permissions */}
-        <RoleGuard requiredRole="suporte">
-          <ClientsActions />
-        </RoleGuard>
-      </div>
-
-      {/* Tickets Navigation - Available to all authenticated users */}
-      <div className="grid grid-cols-1">
-        <TicketsNavigation />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Receita Total</CardTitle>
-            <CardDescription>Todos os seus ganhos até agora</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R$ 12.456,00</div>
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
-              <TrendingUp className="h-4 w-4 mr-2 text-green-500" />
-              <span>+20% em relação ao mês passado</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Clientes Ativos</CardTitle>
-            <CardDescription>Clientes com assinaturas ativas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">67</div>
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
-              <Users className="h-4 w-4 mr-2 text-blue-500" />
-              <span>Clientes totais: 120</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Ativos Conectados</CardTitle>
-            <CardDescription>Equipamentos e chips em operação</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">245</div>
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
-              <Package className="h-4 w-4 mr-2 text-orange-500" />
-              <span>Em operação</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Alertas Críticos</CardTitle>
-            <CardDescription>Problemas que precisam de atenção</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">3</div>
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
-              <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
-              <span>Verificar</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Gráfico de Desempenho
-            </CardTitle>
-            <CardDescription>
-              Análise detalhada do desempenho mensal
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <BarChart className="h-6 w-6 text-gray-500 mb-4" />
-            {/* Aqui você pode adicionar um componente de gráfico */}
-            <div className="text-sm text-muted-foreground">
-              Dados atualizados até o momento.
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          {/* Asset Type Status Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            <AssetTypeStatusChart
+              title="Status - CHIPs"
+              icon={<Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              data={statusByType.data?.chips || []}
+              isLoading={statusByType.isLoading}
+            />
+          
+            <AssetTypeStatusChart
+              title="Status - Speedys 5G"
+              icon={<Zap className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              data={statusByType.data?.speedys || []}
+              isLoading={statusByType.isLoading}
+            />
+          
+            <AssetTypeStatusChart
+              title="Status - Equipamentos"
+              icon={<Wifi className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
+              data={statusByType.data?.equipment || []}
+              isLoading={statusByType.isLoading}
+            />
+          </div>
+          {/* Recent Activities */}
+          <div className="grid grid-cols-1 gap-4 md:gap-6">
+            <RecentActivitiesCard
+              activities={recentActivities.data || []}
+              isLoading={recentActivities.isLoading}
+            />
+          </div>
+        </div>
+    </ErrorBoundary>
   );
 };
 

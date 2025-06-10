@@ -42,7 +42,7 @@ const Clients = () => {
         title="Clientes"
         description="Gerencie os clientes cadastrados no sistema"
       >
-        <ClientsActions />
+        <ClientsActions clients={clients} filteredClients={filteredClients} />
       </StandardPageHeader>
 
       {/* Lista de Clientes */}
