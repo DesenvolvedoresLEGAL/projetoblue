@@ -27,31 +27,28 @@ export const usePermissions = () => {
     canViewClients: hasMinimumRole('suporte'),
     canCreateClients: hasMinimumRole('suporte'),
     canEditClients: hasMinimumRole('suporte'),
-    canDeleteClients: hasMinimumRole('suporte'),
+    canDeleteClients: hasMinimumRole('consultor'),
     
     // Gestão de ativos
     canViewAssets: hasMinimumRole('suporte'),
     canCreateAssets: hasMinimumRole('suporte'),
     canEditAssets: hasMinimumRole('suporte'),
-    canDeleteAssets: hasMinimumRole('suporte'),
+    canDeleteAssets: hasMinimumRole('consultor'),
     canManageAssociations: hasMinimumRole('suporte'),
     
     // Relatórios e análises
-    canViewReports: hasMinimumRole('suporte'),
-    canExportData: hasMinimumRole('suporte'),
+    canViewReports: hasMinimumRole('consultor'),
+    canExportData: hasMinimumRole('consultor'),
     
     // Administração
-    canManageUsers: hasMinimumRole('admin'),
+    canManageUsers: hasMinimumRole('gestor'),
     canAccessAdminPanel: hasMinimumRole('admin'),
     canModifySystemSettings: hasMinimumRole('admin'),
     
     // Suporte técnico
     canProvideSupport: hasMinimumRole('suporte'),
     canAccessTickets: hasMinimumRole('suporte'),
-    canManageTickets: hasMinimumRole('suporte'),
-    
-    // BITS - Referrals
-    canGenerateReferrals: hasMinimumRole('cliente')
+    canManageTickets: hasMinimumRole('suporte')
   };
 
   return {

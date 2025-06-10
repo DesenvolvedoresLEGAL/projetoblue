@@ -1,9 +1,10 @@
 
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Package, PackageSearch, PlusCircle, LinkIcon, Network, ActivitySquare, Scan, FileText, Cog, UserCog, ScrollText, BarChart3, Boxes, KeyRound, LogIn, ShieldCheck, Award, Users, Gift, Settings2, HelpCircle, Share2, Ticket, Inbox, User, Plus, BookOpen, Bot, Zap, TrendingUp, Shield, Puzzle } from "lucide-react";
+import { LayoutDashboard, Package, PackageSearch, PlusCircle, LinkIcon, Network, ActivitySquare, Scan, FileText, Cog, UserCog, ScrollText, BarChart3, Boxes, KeyRound, LogIn, ShieldCheck, Award,
+// Added Award icon
+Users, Gift, Settings2, HelpCircle, Share2, Ticket, Inbox, User, Plus, BookOpen, Bot, Zap, TrendingUp, Shield, Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
-import { NavigationItem } from "./NavigationItem";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 export function StaticNavigation({
   isMobile = false,
@@ -12,193 +13,125 @@ export function StaticNavigation({
   isMobile?: boolean;
   onClose?: () => void;
 }) {
-  const { profile } = useAuth();
+  const {
+    profile
+  } = useAuth(); // Get user profile
 
-  return (
-    <div className="flex flex-col space-y-6 pt-2">
+  return <div className="flex flex-col space-y-6 pt-2">
       {/* Dashboard Section */}
       <div className="flex flex-col space-y-2">
         <div className="px-3 mb-1">
+          
         </div>
-        <NavigationItem
-          to="/"
-          icon={LayoutDashboard}
-          label="Visão Geral"
-          onClose={isMobile ? onClose : undefined}
-        />
+        <NavLink to="/" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <LayoutDashboard className="h-4 w-4" />
+          <span>Visão Geral</span>
+        </NavLink>
       </div>
 
-      {/* Assets Section - Requires suporte or above */}
+      {/* Assets Section - Updated structure */}
       <div className="flex flex-col space-y-2">
         <div className="px-3 mb-1">
           <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Ativos</h3>
         </div>
-        <NavigationItem
-          to="/assets/dashboard"
-          icon={Package}
-          label="Dashboard"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/assets/inventory"
-          icon={PackageSearch}
-          label="Inventário"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/assets/management"
-          icon={PlusCircle}
-          label="Gestão"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
+        <NavLink to="/assets/dashboard" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Package className="h-4 w-4" />
+          <span>Dashboard</span>
+        </NavLink>
+        
+        <NavLink to="/assets/inventory" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} end onClick={isMobile ? onClose : undefined}>
+          <PackageSearch className="h-4 w-4" />
+          <span>Inventário</span>
+        </NavLink>
+        
+        <NavLink to="/assets/management" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} end onClick={isMobile ? onClose : undefined}>
+          <PlusCircle className="h-4 w-4" />
+          <span>Gestão</span>
+        </NavLink>
       </div>
 
-      {/* Tickets Section - Requires suporte or above */}
+      {/* Tickets Section */}
       <div className="flex flex-col space-y-2">
         <div className="px-3 mb-1">
           <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Tickets</h3>
         </div>
-        <NavigationItem
-          to="/tickets/dashboard"
-          icon={LayoutDashboard}
-          label="Dashboard"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/inbox"
-          icon={Inbox}
-          label="Caixa de Entrada"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/my-tickets"
-          icon={User}
-          label="Meus Tickets"
-          onClose={isMobile ? onClose : undefined}
-        />
-        <NavigationItem
-          to="/tickets/new"
-          icon={Plus}
-          label="Novo Ticket"
-          onClose={isMobile ? onClose : undefined}
-        />
-        <NavigationItem
-          to="/tickets/knowledge-base"
-          icon={BookOpen}
-          label="Base de Conhecimento"
-          onClose={isMobile ? onClose : undefined}
-        />
-        <NavigationItem
-          to="/tickets/automation"
-          icon={Zap}
-          label="Automação e Regras"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/analytics"
-          icon={TrendingUp}
-          label="Análises & Relatórios"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/quality"
-          icon={Shield}
-          label="Qualidade & Auditoria"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/copilot"
-          icon={Bot}
-          label="Copiloto do Agente (IA)"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-        <NavigationItem
-          to="/tickets/integrations"
-          icon={Puzzle}
-          label="Integrações"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
+        <NavLink to="/tickets/dashboard" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <LayoutDashboard className="h-4 w-4" />
+          <span>Dashboard</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/inbox" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Inbox className="h-4 w-4" />
+          <span>Caixa de Entrada</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/my-tickets" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <User className="h-4 w-4" />
+          <span>Meus Tickets</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/new" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Plus className="h-4 w-4" />
+          <span>Novo Ticket</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/knowledge-base" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <BookOpen className="h-4 w-4" />
+          <span>Base de Conhecimento</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/automation" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Zap className="h-4 w-4" />
+          <span>Automação e Regras</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/analytics" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <TrendingUp className="h-4 w-4" />
+          <span>Análises & Relatórios</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/quality" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Shield className="h-4 w-4" />
+          <span>Qualidade & Auditoria</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/copilot" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Bot className="h-4 w-4" />
+          <span>Copiloto do Agente (IA)</span>
+        </NavLink>
+        
+        <NavLink to="/tickets/integrations" className={({
+        isActive
+      }) => cn("flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors", isActive ? "bg-[#4D2BFB]/10 text-[#4D2BFB] font-medium" : "text-sidebar-foreground hover:bg-[#4D2BFB]/5 hover:text-sidebar-foreground")} onClick={isMobile ? onClose : undefined}>
+          <Puzzle className="h-4 w-4" />
+          <span>Integrações</span>
+        </NavLink>
       </div>
-
-      {/* BITS Section - Available to cliente or above */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS Legal™</h3>
-        </div>
-        <NavigationItem
-          to="/bits"
-          icon={Gift}
-          label="Dashboard"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
-        />
-        <NavigationItem
-          to="/bits/indicate"
-          icon={Share2}
-          label="Indicar Agora"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
-        />
-        <NavigationItem
-          to="/bits/my-referrals"
-          icon={Users}
-          label="Minhas Indicações"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
-        />
-        <NavigationItem
-          to="/bits/rewards"
-          icon={Award}
-          label="Recompensas"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
-        />
-      </div>
-
-      {/* Clients Section - Requires suporte or above */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Clientes</h3>
-        </div>
-        <NavigationItem
-          to="/clients"
-          icon={Users}
-          label="Gerenciar Clientes"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
-        />
-      </div>
-
-      {/* Admin Section - Requires admin */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Administração</h3>
-        </div>
-        <NavigationItem
-          to="/suppliers"
-          icon={Boxes}
-          label="Fornecedores"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-        <NavigationItem
-          to="/admin/config"
-          icon={Cog}
-          label="Configurações"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-      </div>
-    </div>
-  );
+    </div>;
 }

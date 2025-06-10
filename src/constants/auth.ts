@@ -1,6 +1,6 @@
 
 // Valores padrão para autenticação
-export const DEFAULT_USER_ROLE = 'user';
+export const DEFAULT_USER_ROLE = 'cliente';
 
 // Categorias de erros para melhor tratamento
 export enum AuthErrorCategory {
@@ -26,7 +26,9 @@ export const AUTH_ERROR_MESSAGES = {
 
 // Hierarquia de roles para controle de acesso
 export const ROLE_HIERARCHY = {
-  admin: 3,
+  admin: 5,
+  gestor: 4,
+  consultor: 3,
   suporte: 2,
   cliente: 1,
   user: 0
@@ -35,6 +37,8 @@ export const ROLE_HIERARCHY = {
 // Labels amigáveis para os roles
 export const ROLE_LABELS = {
   admin: 'Administrador',
+  gestor: 'Gestor',
+  consultor: 'Consultor',
   suporte: 'Suporte',
   cliente: 'Cliente',
   user: 'Usuário'
@@ -43,6 +47,8 @@ export const ROLE_LABELS = {
 // Descrições dos roles
 export const ROLE_DESCRIPTIONS = {
   admin: 'Acesso total ao sistema, incluindo configurações avançadas',
+  gestor: 'Gerenciamento de equipes e recursos do sistema',
+  consultor: 'Consultoria e análise de dados dos clientes',
   suporte: 'Suporte técnico e atendimento ao cliente',
   cliente: 'Acesso aos recursos básicos do sistema',
   user: 'Acesso limitado ao sistema'
@@ -51,6 +57,8 @@ export const ROLE_DESCRIPTIONS = {
 // Cores para badges de role
 export const ROLE_COLORS = {
   admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  gestor: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  consultor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   suporte: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
   cliente: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   user: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'

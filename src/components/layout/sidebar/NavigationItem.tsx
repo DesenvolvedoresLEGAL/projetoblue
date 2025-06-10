@@ -2,8 +2,6 @@
 import { NavLink } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
-import { UserRole } from "@/types/auth";
 
 interface NavigationItemProps {
   to: string;
@@ -11,7 +9,6 @@ interface NavigationItemProps {
   label: string;
   onClose?: () => void;
   ariaLabel?: string;
-  requiredRole?: UserRole;
 }
 
 export function NavigationItem({ 
@@ -19,16 +16,8 @@ export function NavigationItem({
   icon: Icon, 
   label, 
   onClose, 
-  ariaLabel,
-  requiredRole 
+  ariaLabel 
 }: NavigationItemProps) {
-  const { hasMinimumRole } = useAuth();
-
-  // Se há role requerido e usuário não tem permissão, não renderizar
-  if (requiredRole && !hasMinimumRole(requiredRole)) {
-    return null;
-  }
-
   return (
     <NavLink
       to={to}

@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useAuth } from "@/context/AuthContext";
 import { ThemeToggle } from "../auth/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { 
@@ -27,8 +26,6 @@ interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function Header({ children, className, ...props }: HeaderProps) {
-  const { signOut } = useAuth();
-
   return (
     <header 
       className={cn(
@@ -83,10 +80,7 @@ export function Header({ children, className, ...props }: HeaderProps) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-legal-primary/20 dark:bg-legal-secondary/20" />
-            <DropdownMenuItem
-              onClick={signOut}
-              className="hover:bg-destructive/10 focus:bg-destructive/10 text-destructive"
-            >
+            <DropdownMenuItem className="hover:bg-destructive/10 focus:bg-destructive/10 text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sair</span>
             </DropdownMenuItem>

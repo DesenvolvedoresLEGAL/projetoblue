@@ -6,8 +6,6 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAuthActions } from '@/hooks/useAuthActions';
 import { UserRole } from '@/types/auth';
 import { hasMinimumRole } from '@/utils/roleUtils';
-import { DEFAULT_USER_ROLE } from '@/constants/auth';
-import { adminService, ProfileUpdateData } from '@/services/adminService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,78 +16,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Set up auth session check and subscription
   useAuthSession(updateState);
   
-  // Get user role from profile with safety check
-  const userRole: UserRole = state.profile?.role || DEFAULT_USER_ROLE;
+  // Get user role from profile
+  const userRole: UserRole = state.profile?.role || 'cliente';
   
-  // Create hasMinimumRole function bound to current user role with safety check
-  const hasMinimumRoleForUser = (requiredRole: UserRole) => {
-    try {
-      if (!state.user || !state.profile) {
-        return false;
-      }
-      return hasMinimumRole(userRole, requiredRole);
-    } catch (error) {
-      console.warn('Error checking role permissions:', error);
-      return false;
-    }
-  };
-
-  const createUser = async (
-    email: string,
-    password: string,
-    role: UserRole = DEFAULT_USER_ROLE
-  ) => {
-    await signUp(email, password, role);
-  };
-
-  const deleteUser = async (userId: string) => {
-    await adminService.deleteUser(userId);
-  };
-
-  const updateUserRole = async (userId: string, role: UserRole) => {
-    await adminService.updateUserRole(userId, role);
-  };
-
-  const updateUserProfile = async (
-    userId: string,
-    profileData: ProfileUpdateData
-  ) => {
-    await adminService.updateUserProfile(userId, profileData);
-  };
-  
-  // Calculate isAuthenticated with safety checks
-  const isAuthenticated = Boolean(state.user && state.profile && !state.isLoading);
+  // Create hasMinimumRole function bound to current user role
+  const hasMinimumRoleForUser = (requiredRole: UserRole) => 
+    hasMinimumRole(userRole, requiredRole);
   
   // Log auth state changes to help with debugging
   useEffect(() => {
     console.log('Auth state updated:', { 
-      isAuthenticated,
+      isAuthenticated: !!state.user && !!state.profile,
       hasUser: !!state.user,
       hasProfile: !!state.profile,
       userRole,
       isLoading: state.isLoading,
       hasError: !!state.error
     });
-  }, [state.user, state.profile, state.isLoading, state.error, userRole, isAuthenticated]);
-
-  // Create safe context value
-  const contextValue: AuthContextType = {
-    ...state,
-    signIn,
-    signUp,
-    signOut,
-    deleteUser,
-    updateUserRole,
-    updateUserProfile,
-    createUser,
-    isAuthenticated,
-    technicalError,
-    userRole,
-    hasMinimumRole: hasMinimumRoleForUser
-  };
+  }, [state.user, state.profile, state.isLoading, state.error, userRole]);
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        signIn,
+        signUp,
+        signOut,
+        isAuthenticated: !!state.user && !!state.profile,
+        technicalError,
+        userRole,
+        hasMinimumRole: hasMinimumRoleForUser
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

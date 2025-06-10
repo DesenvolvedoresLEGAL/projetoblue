@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types/auth';
-import { DEFAULT_USER_ROLE } from '@/constants/auth';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -26,8 +25,8 @@ export const profileService = {
         // Validate the role to ensure it's one of the valid values
         const role = data.role as UserRole;
         if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(role)) {
-          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to '${DEFAULT_USER_ROLE}'`);
-          data.role = DEFAULT_USER_ROLE;
+          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
+          data.role = 'cliente';
         }
         
         // Map the profiles table fields to the UserProfile type
@@ -44,78 +43,63 @@ export const profileService = {
         };
       }
       
-      console.warn(`No profile found for user ${userId}, attempting to create profile`);
+      console.warn(`No profile found for user ${userId}, attempting to fetch user data instead`);
       
-      // MELHORADO: Tentar criar perfil sem depender de auth.getUser()
-      try {
-        console.log(`Tentando criar perfil via ensure_user_profile RPC para usuário ${userId}`);
-        
-        // FALLBACK: Não tentar obter userData se temos problemas de auth
-        // Em vez disso, usar o email da sessão atual se disponível
-        const session = await supabase.auth.getSession();
-        const userEmail = session.data.session?.user?.email;
-        
-        if (!userEmail) {
-          console.error('Não foi possível obter email do usuário da sessão');
-          return null;
-        }
-        
-        // Chamar a função RPC para garantir a criação do perfil
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('ensure_user_profile', {
-            user_id: userId,
-            user_email: userEmail,
-            user_role: DEFAULT_USER_ROLE
-          });
-          
-        if (rpcError) {
-          console.error('Falha ao criar perfil via RPC:', rpcError);
-        } else {
-          console.log('RPC ensure_user_profile executado:', rpcData);
-          
-          // Tentar buscar o perfil novamente após criação
-          const { data: newProfileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .maybeSingle();
-            
-          if (newProfileData) {
-            console.log('Perfil encontrado após criação via RPC');
-            return {
-              id: newProfileData.id,
-              email: newProfileData.email,
-              role: newProfileData.role as UserRole,
-              created_at: newProfileData.created_at,
-              last_login: newProfileData.last_login || new Date().toISOString(),
-              is_active: newProfileData.is_active !== false,
-              is_approved: newProfileData.is_approved !== false,
-              bits_referral_code: newProfileData.bits_referral_code,
-              updated_at: newProfileData.updated_at
-            };
-          }
-        }
-        
-        // Fallback final: criar um perfil mínimo se não conseguiu via RPC
-        if (userEmail) {
-          return {
-            id: userId,
-            email: userEmail,
-            role: DEFAULT_USER_ROLE,
-            created_at: new Date().toISOString(),
-            last_login: new Date().toISOString(),
-            is_active: true,
-            is_approved: true
-          };
-        }
-        
+      // Fallback: try to get at least the user data if profile doesn't exist
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+      
+      if (userError || !userData?.user) {
+        console.error('Error fetching user data as fallback:', userError);
         return null;
+      }
+      
+      // Try to create the profile automatically
+      try {
+        const defaultRole: UserRole = 'cliente';
+        const profileData = {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: defaultRole,
+          is_active: true,
+          is_approved: true
+        };
+        
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert(profileData);
+          
+        if (insertError) {
+          console.error('Failed to create missing profile:', insertError);
+        } else {
+          console.log(`Created missing profile for user ${userData.user.id}`);
+        }
+        
+        // Create a minimal profile from user data
+        return {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: defaultRole,
+          created_at: userData.user.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          is_active: true,
+          is_approved: true
+        };
       } catch (createError) {
         console.error('Error creating missing profile:', createError);
-        return null;
+        // Still return a minimal profile to avoid interrupting the flow
+        return {
+          id: userData.user.id,
+          email: userData.user.email || '',
+          role: 'cliente', 
+          created_at: userData.user.created_at || new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          is_active: true,
+          is_approved: true
+        };
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      // Don't throw, just return null to let calling code handle it
       return null;
     }
   },

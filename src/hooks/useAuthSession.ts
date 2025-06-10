@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { profileService } from '@/services/profileService';
 import { toast } from '@/utils/toast';
-import { DEFAULT_USER_ROLE } from '@/constants/auth';
 
 // Debounce function to prevent multiple redirects
 const debounce = (fn: Function, ms = 300) => {
@@ -20,8 +19,8 @@ export function useAuthSession(updateState: (state: any) => void) {
     
     // Track retries for profile fetch
     let profileRetries = 0;
-    const maxRetries = 2; // Reduzido de 3 para 2
-    const retryDelay = 1500; // Aumentado de 1000 para 1500
+    const maxRetries = 3;
+    const retryDelay = 1000;
 
     // Fetch profile with retry mechanism
     const fetchProfileWithRetry = async (userId: string) => {
@@ -35,15 +34,14 @@ export function useAuthSession(updateState: (state: any) => void) {
         if (profile) {
           console.log('Profile fetched successfully:', profile.email);
           // Verificar se o role está entre os valores esperados
-          if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(profile.role)) {
-            console.warn(`Invalid role detected: ${profile.role}, defaulting to '${DEFAULT_USER_ROLE}'`);
-            profile.role = DEFAULT_USER_ROLE;
+          if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(profile.role)) {
+            console.warn(`Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
+            profile.role = 'cliente';
           }
           
           updateState({ 
             profile,
-            isLoading: false,
-            error: null
+            isLoading: false 
           });
           
           // Atualizar último login
@@ -55,52 +53,30 @@ export function useAuthSession(updateState: (state: any) => void) {
           if (profileRetries < maxRetries) {
             profileRetries++;
             console.log(`Profile fetch attempt ${profileRetries} failed, retrying in ${retryDelay * profileRetries}ms`);
-            setTimeout(() => {
-              if (isMounted) {
-                fetchProfileWithRetry(userId);
-              }
-            }, retryDelay * profileRetries);
+            setTimeout(() => fetchProfileWithRetry(userId), retryDelay * profileRetries);
           } else {
             console.error('Failed to fetch profile after multiple attempts');
             updateState({ 
               profile: null,
               isLoading: false,
-              error: 'Failed to load user profile'
+              error: 'Failed to load user profile' 
             });
-            
-            // Não mostrar toast de erro em caso de falha do perfil
-            // O usuário conseguiu fazer login, então vamos deixar passar
-            console.warn('Profile fetch failed but continuing with basic auth state');
+            toast.error("Erro ao carregar seu perfil. Por favor, tente novamente ou contate o suporte.");
           }
         }
-      } catch (error: any) {
+      } catch (error) {
         if (!isMounted) return;
         
         console.error('Error fetching profile:', error);
-        
-        // Se o erro é relacionado a auth (403, token issues), não fazer retry
-        if (error?.message?.includes('403') || error?.message?.includes('Forbidden')) {
-          console.warn('Auth error detected, stopping retries and continuing with basic state');
-          updateState({ 
-            isLoading: false,
-            error: null // Não mostrar erro para o usuário
-          });
-          return;
-        }
-        
         if (profileRetries < maxRetries) {
           profileRetries++;
-          setTimeout(() => {
-            if (isMounted) {
-              fetchProfileWithRetry(userId);
-            }
-          }, retryDelay * profileRetries);
+          setTimeout(() => fetchProfileWithRetry(userId), retryDelay * profileRetries);
         } else {
-          console.warn('Profile loading failed after max retries, continuing without profile');
           updateState({ 
             isLoading: false,
-            error: null // Não bloquear o usuário por problemas de perfil
+            error: 'Failed to load user profile' 
           });
+          toast.error("Não foi possível carregar os dados do seu perfil. Entre em contato com o suporte.");
         }
       }
     };
@@ -116,7 +92,7 @@ export function useAuthSession(updateState: (state: any) => void) {
             console.log('Auth session check timed out');
             updateState({ isLoading: false });
           }
-        }, 8000); // Aumentado de 5000 para 8000
+        }, 5000);
 
         // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -150,7 +126,7 @@ export function useAuthSession(updateState: (state: any) => void) {
                 if (isMounted) {
                   fetchProfileWithRetry(currentSession.user.id);
                 }
-              }, 500); // Aumentado de 0 para 500ms
+              }, 0);
             }
           }
         );
@@ -191,7 +167,7 @@ export function useAuthSession(updateState: (state: any) => void) {
       } catch (error) {
         console.error('Critical error in auth setup:', error);
         if (isMounted) {
-          updateState({ isLoading: false, error: null }); // Não mostrar erro crítico
+          updateState({ isLoading: false, error: 'Authentication system failed to initialize' });
         }
       }
     };

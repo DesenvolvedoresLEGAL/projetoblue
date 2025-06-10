@@ -11,10 +11,9 @@ import { usePoints, useReferrals, useBadges, useLevels } from '@modules/bits/hoo
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ChevronRight, Award, UserPlus } from 'lucide-react';
-import { RoleGuard } from '@/components/auth/RoleGuard';
 
 const BitsDashboard: React.FC = () => {
-  const { isAuthenticated, hasMinimumRole } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { stats, isLoadingStats } = usePoints();
   const { referrals, isLoadingReferrals } = useReferrals();
   const { userBadges, isLoadingUserBadges } = useBadges();
@@ -36,30 +35,16 @@ const BitsDashboard: React.FC = () => {
     );
   }
 
-  // Verificar se usuário tem permissão mínima para BITS
-  if (!hasMinimumRole('cliente')) {
-    return (
-      <Card className="mx-auto max-w-md">
-        <CardHeader>
-          <CardTitle>Acesso não autorizado</CardTitle>
-          <CardDescription>Você precisa ter permissões de cliente ou superior para acessar o BITS LEGAL™</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">BITS LEGAL™ Dashboard</h1>
-        <RoleGuard requiredRole="cliente">
-          <Link to="/bits/indicate">
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Indicar agora
-            </Button>
-          </Link>
-        </RoleGuard>
+        <Link to="/bits/indicate">
+          <Button>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Indicar agora
+          </Button>
+        </Link>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -84,9 +69,7 @@ const BitsDashboard: React.FC = () => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RoleGuard requiredRole="cliente">
-          <ReferralLink />
-        </RoleGuard>
+        <ReferralLink />
         
         <Card>
           <CardHeader>
@@ -112,43 +95,37 @@ const BitsDashboard: React.FC = () => {
               <span className="font-bold">{userBadges?.length || 0}</span>
             </div>
             
-            <RoleGuard requiredRole="cliente">
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <Link to="/bits/my-referrals" className="text-primary">
-                    Ver todas as indicações
-                  </Link>
-                  <ChevronRight className="h-4 w-4 text-primary" />
-                </div>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between items-center">
+                <Link to="/bits/my-referrals" className="text-primary">
+                  Ver todas as indicações
+                </Link>
+                <ChevronRight className="h-4 w-4 text-primary" />
               </div>
-            </RoleGuard>
+            </div>
           </CardContent>
         </Card>
       </div>
       
       <div className="grid grid-cols-1 gap-6">
-        <RoleGuard requiredRole="cliente">
-          <ReferralsList 
-            referrals={referrals?.slice(0, 5) || []}
-            isLoading={isLoadingReferrals} 
-          />
-        </RoleGuard>
+        <ReferralsList 
+          referrals={referrals?.slice(0, 5) || []}
+          isLoading={isLoadingReferrals} 
+        />
         
         <UserBadgesList 
           badges={userBadges || []} 
           isLoading={isLoadingUserBadges}
         />
         
-        <RoleGuard requiredRole="cliente">
-          <div className="flex justify-center mt-6">
-            <Link to="/bits/rewards">
-              <Button>
-                Ver todas as recompensas disponíveis
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </RoleGuard>
+        <div className="flex justify-center mt-6">
+          <Link to="/bits/rewards">
+            <Button>
+              Ver todas as recompensas disponíveis
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
