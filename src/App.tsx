@@ -102,34 +102,90 @@ const App = () => (
                       </ErrorBoundary>
                     } />
                     
-                    {/* Dashboard routes - Redirect to Home for consistent experience */}
+                    {/* Dashboard routes - Available to all authenticated users */}
                     <Route path="dashboard" element={<Dashboard />} />
                     
-                    {/* Assets module routes */}
+                    {/* Assets module routes - Requires suporte or above */}
                     <Route path="assets">
-                      <Route index element={<AssetsManagement />} />
+                      <Route index element={
+                        <AuthRoute requiredRole="suporte">
+                          <AssetsManagement />
+                        </AuthRoute>
+                      } />
                       <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="inventory" element={<AssetsInventory />} />
-                      <Route path="management" element={<AssetsManagement />} />
-                      <Route path="register" element={<RegisterAsset />} />
-                      <Route path="associations" element={<AssetAssociation />} />
-                      <Route path="associations-list" element={<AssociationsList />} />
-                      <Route path="history" element={<History />} />
+                      <Route path="inventory" element={
+                        <AuthRoute requiredRole="suporte">
+                          <AssetsInventory />
+                        </AuthRoute>
+                      } />
+                      <Route path="management" element={
+                        <AuthRoute requiredRole="suporte">
+                          <AssetsManagement />
+                        </AuthRoute>
+                      } />
+                      <Route path="register" element={
+                        <AuthRoute requiredRole="suporte">
+                          <RegisterAsset />
+                        </AuthRoute>
+                      } />
+                      <Route path="associations" element={
+                        <AuthRoute requiredRole="suporte">
+                          <AssetAssociation />
+                        </AuthRoute>
+                      } />
+                      <Route path="associations-list" element={
+                        <AuthRoute requiredRole="suporte">
+                          <AssociationsList />
+                        </AuthRoute>
+                      } />
+                      <Route path="history" element={
+                        <AuthRoute requiredRole="suporte">
+                          <History />
+                        </AuthRoute>
+                      } />
                     </Route>
                     
-                    {/* Tickets module routes */}
+                    {/* Tickets module routes - Requires suporte or above */}
                     <Route path="tickets">
                       <Route index element={<Navigate to="/tickets/dashboard" replace />} />
-                      <Route path="dashboard" element={<TicketsDashboard />} />
-                      <Route path="inbox" element={<TicketsInbox />} />
+                      <Route path="dashboard" element={
+                        <AuthRoute requiredRole="suporte">
+                          <TicketsDashboard />
+                        </AuthRoute>
+                      } />
+                      <Route path="inbox" element={
+                        <AuthRoute requiredRole="suporte">
+                          <TicketsInbox />
+                        </AuthRoute>
+                      } />
                       <Route path="my-tickets" element={<MyTickets />} />
                       <Route path="new" element={<NewTicket />} />
                       <Route path="knowledge-base" element={<KnowledgeBase />} />
-                      <Route path="automation" element={<TicketAutomation />} />
-                      <Route path="analytics" element={<TicketAnalytics />} />
-                      <Route path="quality" element={<QualityAudit />} />
-                      <Route path="copilot" element={<AgentCopilot />} />
-                      <Route path="integrations" element={<TicketIntegrations />} />
+                      <Route path="automation" element={
+                        <AuthRoute requiredRole="consultor">
+                          <TicketAutomation />
+                        </AuthRoute>
+                      } />
+                      <Route path="analytics" element={
+                        <AuthRoute requiredRole="consultor">
+                          <TicketAnalytics />
+                        </AuthRoute>
+                      } />
+                      <Route path="quality" element={
+                        <AuthRoute requiredRole="suporte">
+                          <QualityAudit />
+                        </AuthRoute>
+                      } />
+                      <Route path="copilot" element={
+                        <AuthRoute requiredRole="suporte">
+                          <AgentCopilot />
+                        </AuthRoute>
+                      } />
+                      <Route path="integrations" element={
+                        <AuthRoute requiredRole="gestor">
+                          <TicketIntegrations />
+                        </AuthRoute>
+                      } />
                     </Route>
                     
                     {/* Topology module routes */}
@@ -144,15 +200,58 @@ const App = () => (
                       <Route path="discovery" element={<Discovery />} />
                     </Route>
                     
-                    {/* BITS™ module routes */}
+                    {/* BITS™ module routes - Available to cliente or above */}
                     <Route path="bits">
-                      <Route index element={<BitsDashboard />} />
-                      <Route path="indicate" element={<BitsIndicateNow />} />
-                      <Route path="my-referrals" element={<BitsMyReferrals />} />
-                      <Route path="rewards" element={<BitsPointsAndRewards />} />
-                      <Route path="settings" element={<BitsSettings />} />
-                      <Route path="help" element={<BitsHelpAndSupport />} />
+                      <Route index element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsDashboard />
+                        </AuthRoute>
+                      } />
+                      <Route path="indicate" element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsIndicateNow />
+                        </AuthRoute>
+                      } />
+                      <Route path="my-referrals" element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsMyReferrals />
+                        </AuthRoute>
+                      } />
+                      <Route path="rewards" element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsPointsAndRewards />
+                        </AuthRoute>
+                      } />
+                      <Route path="settings" element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsSettings />
+                        </AuthRoute>
+                      } />
+                      <Route path="help" element={
+                        <AuthRoute requiredRole="cliente">
+                          <BitsHelpAndSupport />
+                        </AuthRoute>
+                      } />
                     </Route>
+                    
+                    {/* Client management routes - Requires suporte or above */}
+                    <Route path="/clients" element={
+                      <AuthRoute requiredRole="suporte">
+                        <Clients />
+                      </AuthRoute>
+                    } />
+                    <Route path="/clients/register" element={
+                      <AuthRoute requiredRole="suporte">
+                        <RegisterClient />
+                      </AuthRoute>
+                    } />
+                    
+                    {/* Admin/Management routes - Requires gestor or above */}
+                    <Route path="/suppliers" element={
+                      <AuthRoute requiredRole="gestor">
+                        <Suppliers />
+                      </AuthRoute>
+                    } />
                     
                     {/* Direct shortcuts */}
                     <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
@@ -163,9 +262,6 @@ const App = () => (
                     <Route path="/associations" element={<Navigate to="/assets/associations" replace />} />
                     <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
                     <Route path="/history" element={<Navigate to="/assets/history" replace />} />
-                    <Route path="/clients" element={<Clients />} />
-                    <Route path="/clients/register" element={<RegisterClient />} />
-                    <Route path="/suppliers" element={<Suppliers />} />
                     <Route path="/association" element={<Navigate to="/assets/association" replace />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/monitoring" element={<Monitoring />} />

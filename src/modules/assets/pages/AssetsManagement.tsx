@@ -24,10 +24,14 @@ import {
 } from "lucide-react";
 import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets';
 import { StandardPageHeader } from '@/components/ui/standard-page-header';
+import { usePermissions } from '@/hooks/usePermissions';
+import { PermissionButton } from '@/components/auth/PermissionButton';
+import { RoleGuard } from '@/components/auth/RoleGuard';
 
 const AssetsManagement = () => {
   const navigate = useNavigate();
   const dashboard = useDashboardAssets();
+  const permissions = usePermissions();
   const isLoading = dashboard.problemAssets.isLoading;
 
   const [lastSync] = useState(new Date(Date.now() - 5 * 60 * 1000)); // 5 minutes ago
@@ -109,236 +113,260 @@ const AssetsManagement = () => {
 
         {/* Cards de Ações Principais */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {/* Card Registrar Ativo */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/assets/register')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                    <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+            {/* Card Registrar Ativo - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/assets/register')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                      <PlusCircle className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                    </div>
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                      Novo Ativo
+                    </CardTitle>
                   </div>
-                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                    Novo Ativo
-                  </CardTitle>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Cadastre equipamentos e chips no sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col flex-1'>
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Adicione roteadores, switches, cartões SIM e outros equipamentos com todas as informações técnicas necessárias.
-                </p>
-                <div>
-                  <Button 
-                    variant='outline'
-                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/assets/register');
-                    }}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Cadastrar Novo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Cadastre equipamentos e chips no sistema
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col flex-1'>
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Adicione roteadores, switches, cartões SIM e outros equipamentos com todas as informações técnicas necessárias.
+                  </p>
+                  <div>
+                    <PermissionButton 
+                      requiredRole="suporte"
+                      variant='outline'
+                      className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/assets/register');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para cadastrar ativos"
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Cadastrar Novo
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
 
-            {/* Card Gerenciar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/assets/associations')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                    <LinkIcon className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+            {/* Card Gerenciar Associações - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/assets/associations')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                      <LinkIcon className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                          Associar Ativos
+                        </CardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Vincule ativos disponíveis aos clientes</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
-                        Associar Ativos
-                      </CardTitle>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Vincule ativos disponíveis aos clientes</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Conecte ativos aos seus clientes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col flex-1">
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Faça a associação entre equipamentos disponíveis e clientes, de forma organizada.
-                </p>           
-                <div>
-                  <Button 
-                    variant="outline"
-                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/assets/associations');
-                    }}
-                  >
-                    <LinkIcon className="h-4 w-4 mr-2" />
-                    Associar Ativos
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Conecte ativos aos seus clientes
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1">
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Faça a associação entre equipamentos disponíveis e clientes, de forma organizada.
+                  </p>           
+                  <div>
+                    <PermissionButton
+                      requiredRole="suporte"
+                      variant="outline"
+                      className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/assets/associations');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para associar ativos"
+                    >
+                      <LinkIcon className="h-4 w-4 mr-2" />
+                      Associar Ativos
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
 
-            {/* Card Listar Associações */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/assets/associations-list')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                    <List className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+            {/* Card Listar Associações - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/assets/associations-list')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                      <List className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                    </div>
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                      Histórico de Associações
+                    </CardTitle>
                   </div>
-                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                    Histórico de Associações
-                  </CardTitle>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Visualize todas as associações ativas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col flex-1">
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Acesse a lista completa de equipamentos associados, 
-                  com status detalhado e opções de gerenciamento.
-                </p>           
-                <div>
-                  <Button 
-                    variant="outline"
-                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/assets/associations-list');
-                    }}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Ver Lista Completa
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Visualize todas as associações ativas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-1">
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Acesse a lista completa de equipamentos associados, 
+                    com status detalhado e opções de gerenciamento.
+                  </p>           
+                  <div>
+                    <PermissionButton
+                      requiredRole="suporte"
+                      variant="outline"
+                      className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/assets/associations-list');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para ver associações"
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Ver Lista Completa
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
 
-            {/* Card Histórico */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/assets/history')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
-                    <History className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+            {/* Card Histórico - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/assets/history')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                      <History className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                          Histórico de Movimentações
+                        </CardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Rastreie todas as alterações e movimentações dos ativos</p>
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
-                        Histórico de Movimentações
-                      </CardTitle>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Rastreie todas as alterações e movimentações dos ativos</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Acompanhe todas as alterações realizadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col flex-1'>
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Visualize o histórico completo de movimentações, status e associações dos equipamentos registrados.
-                </p>
-                <div>
-                  <Button 
-                    variant="outline"
-                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/assets/history');
-                    }}
-                  >
-                    <Activity className="h-4 w-4 mr-2" />
-                    Ver Histórico
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Acompanhe todas as alterações realizadas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col flex-1'>
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Visualize o histórico completo de movimentações, status e associações dos equipamentos registrados.
+                  </p>
+                  <div>
+                    <PermissionButton
+                      requiredRole="suporte"
+                      variant="outline"
+                      className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/assets/history');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para ver o histórico"
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Ver Histórico
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
 
-            {/* Card Registrar Cliente */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/clients/register')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                    <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+            {/* Card Registrar Cliente - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-primary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/clients/register')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                      <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-legal-primary" />
+                    </div>
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl">
+                      Novo Cliente
+                    </CardTitle>
                   </div>
-                  <CardTitle className="legal-subtitle text-lg sm:text-xl">
-                    Novo Cliente
-                  </CardTitle>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Cadastre novos clientes no sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col flex-1'>
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Registre pessoas ou empresas com informações completas de contato e dados fiscais.
-                </p>
-                <div>
-                  <Button
-                    variant='outline'
-                    className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/clients/register');
-                    }}
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Cadastrar Cliente
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Cadastre novos clientes no sistema
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col flex-1'>
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Registre pessoas ou empresas com informações completas de contato e dados fiscais.
+                  </p>
+                  <div>
+                    <PermissionButton
+                      requiredRole="suporte"
+                      variant='outline'
+                      className="w-full h-10 sm:h-9 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white font-bold transition-all duration-200 text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/clients/register');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para cadastrar clientes"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Cadastrar Cliente
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
 
-            {/* Card Gerenciar Clientes */}
-            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
-              onClick={() => navigate('/clients')}>
-              <CardHeader className="pb-3 sm:pb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                  <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
-                    <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+            {/* Card Gerenciar Clientes - Requer suporte ou superior */}
+            <RoleGuard requiredRole="suporte">
+              <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
+                onClick={() => navigate('/clients')}>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                    <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
+                      <FileUser className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                    </div>
+                    <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                      Gerenciar clientes
+                    </CardTitle>
                   </div>
-                  <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
-                    Gerenciar clientes
-                  </CardTitle>
-                </div>
-                <CardDescription className="legal-text text-sm">
-                  Gerencie os clientes cadastrados
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col flex-1'>
-                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                  Visualize e/ou atualize informações dos clientes ativo e inativos de forma prática.
-                </p>
-                <div>
-                  <Button 
-                    variant='outline'
-                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/clients');
-                    }}
-                  >
-                    <FileUser className="h-4 w-4 mr-2" />
-                    Ver Clientes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  <CardDescription className="legal-text text-sm">
+                    Gerencie os clientes cadastrados
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col flex-1'>
+                  <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                    Visualize e/ou atualize informações dos clientes ativo e inativos de forma prática.
+                  </p>
+                  <div>
+                    <PermissionButton
+                      requiredRole="suporte"
+                      variant='outline'
+                      className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/clients');
+                      }}
+                      tooltip="Você precisa ser suporte ou superior para gerenciar clientes"
+                    >
+                      <FileUser className="h-4 w-4 mr-2" />
+                      Ver Clientes
+                    </PermissionButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </RoleGuard>
         </div>
 
         {/* Informações de Ajuda */}
@@ -373,6 +401,21 @@ const AssetsManagement = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Alerta de permissões para usuários com role insuficiente */}
+                <RoleGuard 
+                  requiredRole="suporte" 
+                  inverse={true} 
+                  fallback={null}
+                >
+                  <Alert className="mt-4 bg-amber-50 border-amber-200">
+                    <Shield className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-700">
+                      <strong>Acesso Limitado:</strong> Algumas funcionalidades requerem permissões de suporte ou superior. 
+                      Entre em contato com um administrador para solicitar acesso.
+                    </AlertDescription>
+                  </Alert>
+                </RoleGuard>
               </div>
             </div>
           </CardContent>
