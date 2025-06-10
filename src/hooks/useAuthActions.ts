@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -62,62 +61,58 @@ export function useAuthActions(updateState: (state: any) => void) {
       });
       
       // Ensure we have a valid role
-      if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
+      if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(role)) {
         console.warn(`Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
         role = DEFAULT_USER_ROLE as UserRole;
       }
       
-      const { data, error, profileCreated } = await authService.signUp(email, password, role);
+      // Melhorado: captura erros da camada de serviço mais detalhadamente
+      try {
+        const { data, error, profileCreated } = await authService.signUp(email, password, role);
 
-      if (error) {
-        console.error('Erro no cadastro de usuário:', error);
-        
-        // Categorizar e formatar a mensagem de erro
-        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
-        const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Falha ao criar usuário';
-        
-        // Armazenar informações de erro técnico para diagnóstico
-        const techError = {
-          message: error.message || 'Erro desconhecido durante o cadastro',
-          category: errorCategory,
-          timestamp: new Date().toISOString(),
-          context: { email, role, originalError: error }
-        };
-        
-        setTechnicalError(techError);
-        
-        console.error('Erro traduzido:', errorMessage);
-        updateState({ error: errorMessage, isLoading: false });
-        toast.error(errorMessage);
-        return { success: false, message: errorMessage, technicalError: techError };
-      }
-
-      if (data?.user) {
-        if (!profileCreated) {
-          // Exibir aviso não-bloqueante sobre possível problema com o perfil
-          toast.warning("Cadastro realizado, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
-          console.warn('Cadastro concluído, mas não foi possível confirmar a criação do perfil');
-        } else {
-          console.log('Usuário e perfil criados com sucesso:', data.user.id);
-          toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+        if (error) {
+          throw error; // Será capturado pelo catch abaixo
         }
-        
-        // Short delay before redirect to ensure the user sees the success message
-        setTimeout(() => {
-          navigate('/login');
-        }, 1500);
-        
-        return { success: true, message: 'Cadastro realizado com sucesso' };
-      } else {
-        console.error('Usuário não foi criado, dados incompletos:', data);
-        const techError = {
-          message: 'Falha ao criar usuário: dados incompletos retornados',
-          category: AuthErrorCategory.UNKNOWN,
-          timestamp: new Date().toISOString(),
-          context: { data }
-        };
-        setTechnicalError(techError);
-        throw new Error('Falha ao criar usuário: dados incompletos retornados');
+
+        if (data?.user) {
+          if (!profileCreated) {
+            console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
+            
+            // NOVO: Tentar criar perfil manualmente se o trigger falhou
+            const profileResult = await createProfileManually(data.user.id, email, role);
+            if (profileResult.success) {
+              console.log('Perfil criado manualmente com sucesso após falha do trigger');
+              toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+            } else {
+              // Exibir aviso não-bloqueante sobre problema com o perfil
+              console.warn('Falha ao criar perfil manualmente:', profileResult.error);
+              toast.warning("Cadastro realizado, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
+            }
+          } else {
+            console.log('Usuário e perfil criados com sucesso:', data.user.id);
+            toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
+          }
+          
+          // Short delay before redirect to ensure the user sees the success message
+          setTimeout(() => {
+            navigate('/login');
+          }, 1500);
+          
+          return { success: true, message: 'Cadastro realizado com sucesso' };
+        } else {
+          console.error('Usuário não foi criado, dados incompletos:', data);
+          const techError = {
+            message: 'Falha ao criar usuário: dados incompletos retornados',
+            category: AuthErrorCategory.UNKNOWN,
+            timestamp: new Date().toISOString(),
+            context: { data }
+          };
+          setTechnicalError(techError);
+          throw new Error('Falha ao criar usuário: dados incompletos retornados');
+        }
+      } catch (serviceError: any) {
+        // Repassa o erro para ser tratado no catch externo
+        throw serviceError;
       }
     } catch (error: any) {
       console.error('Erro não tratado no processo de cadastro:', error);
@@ -144,6 +139,57 @@ export function useAuthActions(updateState: (state: any) => void) {
       setIsAuthProcessing(false);
     }
   }, [isAuthProcessing, navigate, updateState]);
+
+  // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
+  const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
+    console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
+    
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        // Delay exponencial entre tentativas
+        if (attempt > 0) {
+          const delayMs = Math.pow(2, attempt) * 1000;
+          console.log(`Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+        
+        // Usar RPC para maior garantia de execução
+        const { data, error } = await supabase.rpc('ensure_user_profile', {
+          user_id: userId,
+          user_email: userEmail,
+          user_role: userRole
+        });
+        
+        if (error) {
+          console.error(`Tentativa ${attempt+1} falhou:`, error);
+          attempt++;
+          continue;
+        }
+        
+        // Verificar se o perfil foi realmente criado
+        const profileCheck = await profileService.fetchUserProfile(userId);
+        if (profileCheck) {
+          console.log('Perfil verificado após criação manual:', profileCheck);
+          return { success: true };
+        } else {
+          console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
+          attempt++;
+          continue;
+        }
+      } catch (err) {
+        console.error(`Erro na tentativa ${attempt+1} de criar perfil:`, err);
+        attempt++;
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: `Falha ao criar perfil após ${maxRetries} tentativas` 
+    };
+  };
 
   const signIn = useCallback(async (email: string, password: string) => {
     // Prevent duplicate operations
