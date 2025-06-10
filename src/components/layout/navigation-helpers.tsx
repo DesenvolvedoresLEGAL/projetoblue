@@ -1,58 +1,104 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { NavigationItemProps } from './sidebar/NavigationItem';
+import { NavigationModuleProps } from './sidebar/NavigationModule';
+import { 
+  LayoutDashboard, 
+  Package, 
+  Users, 
+  Ticket, 
+  Star, 
+  Network, 
+  Search,
+  Settings
+} from 'lucide-react';
 
-interface BreadcrumbItem {
-  label: string;
-  href: string;
-}
-
-interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
-  className?: string;
-}
-
-export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className }) => {
-  return (
-    <nav aria-label="Breadcrumbs" className={cn("flex items-center text-sm", className)}>
-      <ol className="flex items-center space-x-2">
-        {items.map((item, index) => (
-          <React.Fragment key={item.href}>
-            {index > 0 && (
-              <li aria-hidden="true" className="text-muted-foreground mx-1">/</li>
-            )}
-            <li className={cn(
-              index === items.length - 1 
-                ? "text-foreground font-medium" 
-                : "text-muted-foreground hover:text-foreground"
-            )}>
-              {index === items.length - 1 ? (
-                <span>{item.label}</span>
-              ) : (
-                <Link to={item.href}>{item.label}</Link>
-              )}
-            </li>
-          </React.Fragment>
-        ))}
-      </ol>
-    </nav>
-  );
-};
-
-interface PageTitleProps {
-  title: string;
-  description?: string;
-  className?: string;
-}
-
-export const PageTitle: React.FC<PageTitleProps> = ({ title, description, className }) => {
-  return (
-    <div className={cn("mb-6", className)}>
-      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-      {description && (
-        <p className="text-muted-foreground mt-1">{description}</p>
-      )}
-    </div>
-  );
-};
+export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed' | 'isExpanded' | 'onToggle'>[] => [
+  {
+    title: 'Principal',
+    items: [
+      {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        href: '/dashboard'
+      }
+    ]
+  },
+  {
+    title: 'Gestão de Ativos',
+    requiredRole: 'suporte',
+    items: [
+      {
+        icon: Package,
+        label: 'Gestão de Ativos',
+        href: '/assets',
+        requiredRole: 'suporte'
+      }
+    ]
+  },
+  {
+    title: 'Atendimento',
+    items: [
+      {
+        icon: Ticket,
+        label: 'Tickets',
+        href: '/tickets/dashboard'
+      }
+    ]
+  },
+  {
+    title: 'Clientes',
+    requiredRole: 'suporte',
+    items: [
+      {
+        icon: Users,
+        label: 'Gerenciar Clientes',
+        href: '/clients',
+        requiredRole: 'suporte'
+      }
+    ]
+  },
+  {
+    title: 'BITS™',
+    requiredRole: 'cliente',
+    items: [
+      {
+        icon: Star,
+        label: 'Programa BITS™',
+        href: '/bits',
+        requiredRole: 'cliente'
+      }
+    ]
+  },
+  {
+    title: 'Rede',
+    items: [
+      {
+        icon: Network,
+        label: 'Topologia',
+        href: '/topology/view'
+      }
+    ]
+  },
+  {
+    title: 'Ferramentas',
+    items: [
+      {
+        icon: Search,
+        label: 'Descoberta',
+        href: '/tools/discovery'
+      }
+    ]
+  },
+  {
+    title: 'Administração',
+    requiredRole: 'gestor',
+    items: [
+      {
+        icon: Settings,
+        label: 'Fornecedores',
+        href: '/suppliers',
+        requiredRole: 'gestor'
+      }
+    ]
+  }
+];
