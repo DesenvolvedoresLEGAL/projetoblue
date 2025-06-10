@@ -369,9 +369,9 @@ export function useAuthActions(updateState: (state: any) => void) {
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     } finally {
-      if (isAuthProcessing) {
-        setIsAuthProcessing(false);
-      }
+      // Sempre redefinir o estado de processamento de autenticação
+      // para evitar bloqueios em chamadas subsequentes
+      setIsAuthProcessing(false);
     }
   }, [isAuthProcessing, navigate, updateState]);
 
