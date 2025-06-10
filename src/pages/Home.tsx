@@ -101,8 +101,8 @@ const Home: React.FC = () => {
       <div className="space-y-4 md:space-y-6 p-4 md:p-6 flex flex-col items-center justify-center min-h-[70vh]">
         <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-legal-primary animate-spin" />
         <div className="text-center space-y-2">
-          <p className="text-lg md:text-xl font-semibold legal-title">Carregando Dashboard</p>
-          <p className="text-sm md:text-base text-muted-foreground legal-text">Sincronizando dados do sistema...</p>
+          <p className="text-lg md:text-xl font-semibold text-legal-dark dark:text-text-primary-dark">Carregando Dashboard</p>
+          <p className="text-sm md:text-base text-muted-foreground">Sincronizando dados do sistema...</p>
         </div>
       </div>
     );
@@ -116,15 +116,15 @@ const Home: React.FC = () => {
           <AlertTriangle className="h-12 w-12 md:h-16 md:w-16 text-red-600 dark:text-red-400" />
         </div>
         <div className="text-center space-y-3">
-          <h2 className="text-xl md:text-2xl font-bold legal-title text-red-700 dark:text-red-400">
+          <h2 className="text-xl md:text-2xl font-bold text-red-700 dark:text-red-400">
             Erro ao carregar o dashboard
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground text-center max-w-md legal-text px-4">
+          <p className="text-sm md:text-base text-muted-foreground text-center max-w-md px-4">
             Não foi possível carregar os dados necessários. Verifique sua conexão e tente novamente.
           </p>
           <Button 
             onClick={() => window.location.reload()} 
-            className="mt-4 legal-button"
+            className="mt-4 bg-legal-primary hover:bg-legal-primary-light text-white"
           >
             Tentar Novamente
           </Button>

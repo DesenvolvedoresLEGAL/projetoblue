@@ -50,7 +50,7 @@ const Dashboard = () => {
               total={dashboardAssets.assetsStats.data.chips.total}
               available={dashboardAssets.assetsStats.data.chips.available}
               inUse={dashboardAssets.assetsStats.data.chips.unavailable}
-              icon={<Smartphone className="h-5 w-5 text-[#4D2BFB]" />}
+              icon={<Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               actionLink="/assets/inventory?type=11"
               isLoading={dashboardAssets.assetsStats.isLoading}
             />
@@ -60,7 +60,7 @@ const Dashboard = () => {
               total={dashboardAssets.assetsStats.data.speedys.total}
               available={dashboardAssets.assetsStats.data.speedys.available}
               inUse={dashboardAssets.assetsStats.data.speedys.unavailable}
-              icon={<Zap className="h-5 w-5 text-[#03F9FF]" />}
+              icon={<Zap className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               actionLink="/assets/inventory?type=1"
               isLoading={dashboardAssets.assetsStats.isLoading}
             />
@@ -70,7 +70,7 @@ const Dashboard = () => {
               total={dashboardAssets.assetsStats.data.equipment.total}
               available={dashboardAssets.assetsStats.data.equipment.available}
               inUse={dashboardAssets.assetsStats.data.equipment.unavailable}
-              icon={<Wifi className="h-5 w-5 text-[#020CBC]" />}
+              icon={<Wifi className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               actionLink="/assets/inventory"
               isLoading={dashboardAssets.assetsStats.isLoading}
             />
@@ -97,21 +97,21 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <AssetTypeStatusChart
               title="Status - CHIPs"
-              icon={<Smartphone className="h-5 w-5 text-[#4D2BFB]" />}
+              icon={<Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               data={statusByType.data?.chips || []}
               isLoading={statusByType.isLoading}
             />
           
             <AssetTypeStatusChart
               title="Status - Speedys 5G"
-              icon={<Zap className="h-5 w-5 text-[#03F9FF]" />}
+              icon={<Zap className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               data={statusByType.data?.speedys || []}
               isLoading={statusByType.isLoading}
             />
           
             <AssetTypeStatusChart
               title="Status - Equipamentos"
-              icon={<Wifi className="h-5 w-5 text-[#020CBC]" />}
+              icon={<Wifi className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />}
               data={statusByType.data?.equipment || []}
               isLoading={statusByType.isLoading}
             />

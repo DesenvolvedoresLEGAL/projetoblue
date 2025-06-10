@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAssets } from "@/context/useAssets";
 import { Download } from "lucide-react";
@@ -154,7 +155,7 @@ const Inventory = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventário</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-legal-dark dark:text-text-primary-dark">Inventário</h1>
           <p className="text-muted-foreground">
             Gerencie os ativos cadastrados no sistema
           </p>
@@ -162,7 +163,7 @@ const Inventory = () => {
         
         <Button 
           onClick={exportToCSV} 
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-legal-primary hover:bg-legal-primary-light dark:bg-legal-primary dark:hover:bg-legal-primary-light text-white shadow-legal"
           disabled={exportLoading || loading || filteredAssets.length === 0}
         >
           <Download className="h-4 w-4" />
@@ -172,8 +173,8 @@ const Inventory = () => {
       
       {loading ? (
         <div className="space-y-4">
-          <Skeleton className="h-12 w-full rounded-lg" />
-          <Skeleton className="h-[500px] w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg bg-muted" />
+          <Skeleton className="h-[500px] w-full rounded-lg bg-muted" />
         </div>
       ) : (
         <>

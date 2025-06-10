@@ -68,7 +68,7 @@ const TicketsDashboard = () => {
         title="Dashboard de Tickets"
         description="Visão geral do sistema de tickets e suporte"
       >
-        <Button className="bg-[#4D2BFB] hover:bg-[#020CBC]">
+        <Button className="bg-legal-primary hover:bg-legal-primary-light dark:bg-legal-primary dark:hover:bg-legal-primary-light text-white shadow-legal">
           <Ticket className="h-4 w-4 mr-2" />
           Novo Ticket
         </Button>
@@ -76,20 +76,20 @@ const TicketsDashboard = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total de Tickets</CardTitle>
-              <Ticket className="h-4 w-4 text-[#4D2BFB]" />
+              <Ticket className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#020CBC]">{stats.total}</div>
+            <div className="text-2xl font-bold text-legal-primary dark:text-legal-secondary">{stats.total}</div>
             <p className="text-xs text-muted-foreground">+12% desde o mês passado</p>
           </CardContent>
         </Card>
 
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Tickets Abertos</CardTitle>
@@ -102,7 +102,7 @@ const TicketsDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Em Andamento</CardTitle>
@@ -115,7 +115,7 @@ const TicketsDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-muted-foreground">Resolvidos</CardTitle>
@@ -131,9 +131,9 @@ const TicketsDashboard = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader>
-            <CardTitle className="text-[#020CBC] font-neue-haas">Tickets por Prioridade</CardTitle>
+            <CardTitle className="text-legal-primary dark:text-legal-secondary font-semibold">Tickets por Prioridade</CardTitle>
             <CardDescription>Distribuição de tickets por nível de prioridade</CardDescription>
           </CardHeader>
           <CardContent>
@@ -158,9 +158,9 @@ const TicketsDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-[#4D2BFB]/20">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardHeader>
-            <CardTitle className="text-[#020CBC] font-neue-haas">Tickets da Semana</CardTitle>
+            <CardTitle className="text-legal-primary dark:text-legal-secondary font-semibold">Tickets da Semana</CardTitle>
             <CardDescription>Tickets criados vs resolvidos nos últimos 7 dias</CardDescription>
           </CardHeader>
           <CardContent>
@@ -170,8 +170,8 @@ const TicketsDashboard = () => {
                 <XAxis dataKey="day" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="created" fill="#4D2BFB" name="Criados" />
-                <Bar dataKey="resolved" fill="#03F9FF" name="Resolvidos" />
+                <Bar dataKey="created" fill="rgb(77, 43, 251)" name="Criados" />
+                <Bar dataKey="resolved" fill="rgb(3, 249, 255)" name="Resolvidos" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -179,29 +179,29 @@ const TicketsDashboard = () => {
       </div>
 
       {/* Recent Tickets Table */}
-      <Card className="border-[#4D2BFB]/20">
+      <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
         <CardHeader>
-          <CardTitle className="text-[#020CBC] font-neue-haas">Tickets Recentes</CardTitle>
+          <CardTitle className="text-legal-primary dark:text-legal-secondary font-semibold">Tickets Recentes</CardTitle>
           <CardDescription>Últimos tickets criados ou atualizados</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2 font-medium text-[#020CBC]">ID</th>
-                  <th className="text-left p-2 font-medium text-[#020CBC]">Assunto</th>
-                  <th className="text-left p-2 font-medium text-[#020CBC]">Prioridade</th>
-                  <th className="text-left p-2 font-medium text-[#020CBC]">Status</th>
-                  <th className="text-left p-2 font-medium text-[#020CBC]">Responsável</th>
-                  <th className="text-left p-2 font-medium text-[#020CBC]">Criado</th>
+                <tr className="border-b border-border">
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">ID</th>
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">Assunto</th>
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">Prioridade</th>
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">Status</th>
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">Responsável</th>
+                  <th className="text-left p-2 font-medium text-legal-primary dark:text-legal-secondary">Criado</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTickets.map((ticket) => (
-                  <tr key={ticket.id} className="border-b hover:bg-[#4D2BFB]/5">
-                    <td className="p-2 font-mono text-sm">{ticket.id}</td>
-                    <td className="p-2">{ticket.subject}</td>
+                  <tr key={ticket.id} className="border-b border-border hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
+                    <td className="p-2 font-mono text-sm text-legal-primary dark:text-legal-secondary">{ticket.id}</td>
+                    <td className="p-2 text-legal-dark dark:text-text-primary-dark">{ticket.subject}</td>
                     <td className="p-2">
                       <Badge variant={getPriorityColor(ticket.priority) as any}>
                         {ticket.priority}
@@ -212,7 +212,7 @@ const TicketsDashboard = () => {
                         {ticket.status}
                       </Badge>
                     </td>
-                    <td className="p-2">{ticket.assignee}</td>
+                    <td className="p-2 text-legal-dark dark:text-text-primary-dark">{ticket.assignee}</td>
                     <td className="p-2 text-muted-foreground">{ticket.created}</td>
                   </tr>
                 ))}

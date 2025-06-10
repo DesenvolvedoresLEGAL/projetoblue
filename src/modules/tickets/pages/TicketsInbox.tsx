@@ -116,7 +116,7 @@ const TicketsInbox = () => {
         title="Caixa de Entrada"
         description="Visualize e gerencie todos os tickets recebidos"
       >
-        <Button className="bg-[#4D2BFB] hover:bg-[#020CBC]">
+        <Button className="bg-legal-primary hover:bg-legal-primary-light dark:bg-legal-primary dark:hover:bg-legal-primary-light text-white shadow-legal">
           <Filter className="h-4 w-4 mr-2" />
           Filtros Avançados
         </Button>
@@ -160,18 +160,18 @@ const TicketsInbox = () => {
             </SelectContent>
           </Select>
 
-          <Button variant="outline" className="border-[#4D2BFB] text-[#4D2BFB]">
+          <Button variant="outline" className="border-legal-primary text-legal-primary hover:bg-legal-primary/10 dark:border-legal-secondary dark:text-legal-secondary dark:hover:bg-legal-secondary/10">
             <Filter className="h-4 w-4 mr-2" />
             Aplicar Filtros
           </Button>
         </div>
       </StandardFiltersCard>
 
-      <Card className="border-[#4D2BFB]/20">
+      <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-[#020CBC] font-neue-haas">
+              <CardTitle className="text-legal-primary dark:text-legal-secondary font-semibold">
                 Tickets na Caixa de Entrada ({filteredTickets.length})
               </CardTitle>
               <CardDescription>
@@ -181,7 +181,7 @@ const TicketsInbox = () => {
                 }
               </CardDescription>
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="border-legal-primary text-legal-primary hover:bg-legal-primary/10 dark:border-legal-secondary dark:text-legal-secondary dark:hover:bg-legal-secondary/10">
               Marcar Todos como Lidos
             </Button>
           </div>
@@ -189,12 +189,12 @@ const TicketsInbox = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredTickets.map((ticket) => (
-              <Card key={ticket.id} className="border-l-4 border-l-[#4D2BFB] hover:bg-[#4D2BFB]/5 transition-colors cursor-pointer">
+              <Card key={ticket.id} className="border-l-4 border-l-legal-primary dark:border-l-legal-secondary hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors cursor-pointer shadow-legal-sm dark:shadow-legal-dark">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono text-sm text-[#4D2BFB] font-medium">{ticket.id}</span>
+                        <span className="font-mono text-sm text-legal-primary dark:text-legal-secondary font-medium">{ticket.id}</span>
                         <Badge variant={getPriorityColor(ticket.priority) as any}>
                           {ticket.priority}
                         </Badge>
@@ -203,7 +203,7 @@ const TicketsInbox = () => {
                         </Badge>
                       </div>
                       
-                      <h3 className="font-semibold text-[#020CBC] mb-1">{ticket.subject}</h3>
+                      <h3 className="font-semibold text-legal-dark dark:text-text-primary-dark mb-1">{ticket.subject}</h3>
                       <p className="text-sm text-muted-foreground mb-2">{ticket.description}</p>
                       
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -224,7 +224,7 @@ const TicketsInbox = () => {
                       <div className="flex items-center gap-2 mt-2">
                         <Tag className="h-3 w-3 text-muted-foreground" />
                         {ticket.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
+                          <Badge key={tag} variant="outline" className="text-xs border-legal-primary/30 text-legal-primary dark:border-legal-secondary/30 dark:text-legal-secondary">
                             {tag}
                           </Badge>
                         ))}
@@ -233,16 +233,16 @@ const TicketsInbox = () => {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Visualizar Detalhes</DropdownMenuItem>
-                        <DropdownMenuItem>Assumir Ticket</DropdownMenuItem>
-                        <DropdownMenuItem>Transferir</DropdownMenuItem>
-                        <DropdownMenuItem>Marcar como Resolvido</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Fechar Ticket</DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="bg-background border border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal-lg">
+                        <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">Visualizar Detalhes</DropdownMenuItem>
+                        <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">Assumir Ticket</DropdownMenuItem>
+                        <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">Transferir</DropdownMenuItem>
+                        <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">Marcar como Resolvido</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20">Fechar Ticket</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

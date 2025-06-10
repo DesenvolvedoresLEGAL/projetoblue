@@ -135,9 +135,9 @@ export default function DataUsage() {
         </TabsContent>
         
         <TabsContent value="cards" className="mt-0">
-          <Card>
+          <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
             <CardHeader>
-              <CardTitle>Cartões de Resumo por Chip</CardTitle>
+              <CardTitle className="text-legal-dark dark:text-text-primary-dark">Cartões de Resumo por Chip</CardTitle>
             </CardHeader>
             <CardContent>
               <ChipSummaryCards chips={filteredChips} />
