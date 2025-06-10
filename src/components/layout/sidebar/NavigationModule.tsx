@@ -3,6 +3,8 @@ import { useState, ReactNode } from "react";
 import { ChevronDown, ChevronRight, LucideIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/types/auth";
 
 interface NavigationModuleProps {
   title: string;
@@ -13,6 +15,7 @@ interface NavigationModuleProps {
   onToggle: () => void;
   children: ReactNode;
   id: string;
+  requiredRole?: UserRole;
 }
 
 export function NavigationModule({
@@ -23,8 +26,16 @@ export function NavigationModule({
   isOpen,
   onToggle,
   children,
-  id
+  id,
+  requiredRole
 }: NavigationModuleProps) {
+  const { hasMinimumRole } = useAuth();
+
+  // Se há role requerido e usuário não tem permissão, não renderizar
+  if (requiredRole && !hasMinimumRole(requiredRole)) {
+    return null;
+  }
+
   return (
     <div className="mb-4">
       <Collapsible

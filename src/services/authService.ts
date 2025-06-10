@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
 import { UserRole } from '@/types/auth';
@@ -89,7 +88,9 @@ export const authService = {
         options: {
           data: {
             role // This will be used by the handle_new_user trigger
-          }
+          },
+          // NOVO: Adicionar emailRedirectTo para melhorar fluxo de confirmação
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
       
@@ -114,14 +115,14 @@ export const authService = {
         };
       }
       
-      // Verificação explícita de criação de perfil e tentativa de recuperação
-      const maxRetries = 3;
+      // MELHORADO: Verificação explícita de criação de perfil com timeout mais curto
+      const maxRetries = 2;
       let profileCreated = false;
       
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         if (attempt > 0) {
           console.log(`Verificando criação de perfil: tentativa ${attempt + 1} de ${maxRetries}`);
-          await delay(1000 * attempt); // Backoff exponencial
+          await delay(800); // Delay mais curto para não bloquear o usuário
         }
         
         // Verificar se o perfil foi criado
@@ -134,39 +135,16 @@ export const authService = {
         if (!profileError && profileData) {
           console.log('Perfil confirmado para usuário:', { 
             id: data.user.id,
-            email: data.user.email
+            email: data.user.email,
+            role: profileData.role
           });
           profileCreated = true;
           break;
         }
-        
-        // Se estamos na última tentativa e o perfil ainda não existe, tente criar manualmente
-        if (attempt === maxRetries - 1 && !profileCreated) {
-          console.warn('Perfil não detectado após múltiplas tentativas. Tentando criar manualmente...');
-          
-          const { data: rpcData, error: rpcError } = await supabase
-            .rpc('ensure_user_profile', {
-              user_id: data.user.id,
-              user_email: data.user.email || email,
-              user_role: role
-            });
-          
-          if (rpcError) {
-            console.error('Falha ao criar perfil manualmente:', rpcError);
-          } else if (rpcData) {
-            console.log('Perfil criado manualmente com sucesso');
-            profileCreated = true;
-          }
-        }
       }
       
-      if (!profileCreated) {
-        console.error('Não foi possível confirmar a criação do perfil do usuário após múltiplas tentativas');
-        
-        // Lançamos um aviso, mas não bloqueamos o processo - o perfil pode ter sido criado
-        // mesmo que nossa verificação não tenha conseguido detectá-lo
-        console.warn('Continuando com o processo de registro, mas há risco de perfil ausente');
-      }
+      // Não tentamos criar manualmente aqui, isso será feito no useAuthActions
+      // para dar mais chances ao trigger funcionar assincronamente
       
       console.log('Usuário criado com sucesso:', {
         id: data.user.id,

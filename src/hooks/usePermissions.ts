@@ -48,7 +48,10 @@ export const usePermissions = () => {
     // Suporte técnico
     canProvideSupport: hasMinimumRole('suporte'),
     canAccessTickets: hasMinimumRole('suporte'),
-    canManageTickets: hasMinimumRole('suporte')
+    canManageTickets: hasMinimumRole('suporte'),
+    
+    // BITS - Referrals
+    canGenerateReferrals: hasMinimumRole('cliente')
   };
 
   return {
