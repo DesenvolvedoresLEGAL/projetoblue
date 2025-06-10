@@ -12,8 +12,8 @@ interface EnhancedStatusBadgeProps {
 }
 
 /**
- * Enhanced Status Badge component optimized for dark mode
- * Provides better contrast and visual distinction
+ * Enhanced Status Badge component optimized for dark mode following PRD specifications
+ * Provides better contrast and visual distinction with proper LEGAL brand colors
  */
 export const EnhancedStatusBadge: React.FC<EnhancedStatusBadgeProps> = ({ 
   status, 
@@ -45,17 +45,36 @@ export const EnhancedStatusBadge: React.FC<EnhancedStatusBadgeProps> = ({
   const statusType = type === 'default' ? getStatusType(status) : type;
   
   const statusClasses = {
-    success: 'status-badge-success',
-    warning: 'status-badge-warning',
-    error: 'status-badge-error',
-    info: 'bg-legal-primary/20 text-legal-primary dark:bg-legal-primary/30 dark:text-legal-secondary border border-legal-primary/30',
-    default: 'bg-muted text-muted-foreground border border-border'
+    success: cn(
+      'status-badge-success',
+      'bg-green-100 text-green-800 border border-green-200',
+      'dark:bg-[hsl(var(--status-success-bg))] dark:text-[hsl(var(--status-success-text))] dark:border-green-500/30'
+    ),
+    warning: cn(
+      'status-badge-warning',
+      'bg-yellow-100 text-yellow-800 border border-yellow-200',
+      'dark:bg-[hsl(var(--status-warning-bg))] dark:text-[hsl(var(--status-warning-text))] dark:border-yellow-500/30'
+    ),
+    error: cn(
+      'status-badge-error',
+      'bg-red-100 text-red-800 border border-red-200',
+      'dark:bg-[hsl(var(--status-error-bg))] dark:text-[hsl(var(--status-error-text))] dark:border-red-500/30'
+    ),
+    info: cn(
+      'bg-legal-primary/20 text-legal-primary border border-legal-primary/30',
+      'dark:bg-legal-primary/20 dark:text-legal-primary dark:border-legal-primary/30'
+    ),
+    default: cn(
+      'bg-muted text-muted-foreground border border-border',
+      'dark:bg-muted dark:text-muted-foreground dark:border-border'
+    )
   };
 
   return (
     <Badge 
       className={cn(
         "font-medium px-3 py-1 text-xs rounded-full transition-all duration-200",
+        "shadow-sm hover:shadow-md",
         statusClasses[statusType],
         className
       )}

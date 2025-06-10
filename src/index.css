@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -79,49 +80,49 @@
   }
 
   .dark {
-    /* Enhanced dark mode tokens with better contrast */
-    --background: 220 15% 6%;  /* Darker background for better contrast */
-    --foreground: 210 20% 98%; /* Higher contrast text */
+    /* Enhanced dark mode tokens following PRD specifications */
+    --background: 0 0% 7%;  /* #121212 - Specified in PRD */
+    --foreground: 210 17% 98%; /* #FAFAFA - High contrast text */
 
-    --card: 220 15% 9%;  /* More contrasted cards */
-    --card-foreground: 210 20% 98%;
+    --card: 0 0% 12%;  /* #1E1E1E - PRD specified range */
+    --card-foreground: 210 17% 98%;
 
-    --popover: 220 15% 9%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 210 17% 98%;
 
-    --primary: 245 85% 65%; /* Brighter primary for dark mode */
+    --primary: 247 85% 70%; /* #6B46FC - Brighter version of brand color */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 12%;  /* Enhanced secondary */
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 0 0% 17%;  /* #2A2A2A - PRD specified range */
+    --secondary-foreground: 210 17% 98%;
 
-    --muted: 220 15% 15%;  /* Better muted backgrounds */
-    --muted-foreground: 210 15% 85%; /* Higher contrast muted text */
+    --muted: 0 0% 17%;  /* #2A2A2A */
+    --muted-foreground: 210 9% 80%; /* #CCCCCC - PRD specified */
 
-    --accent: 186 100% 58%; /* Brighter cyan for dark mode */
-    --accent-foreground: 220 15% 6%;
+    --accent: 186 100% 60%; /* #1DFFFF - Brighter cyan for dark mode */
+    --accent-foreground: 0 0% 7%;
 
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 85% 65%;
+    --destructive-foreground: 210 17% 98%;
 
-    --border: 220 15% 20%;  /* More visible borders */
-    --input: 220 15% 12%;   /* Better input contrast */
-    --ring: 245 85% 65%;    /* Brighter focus rings */
+    --border: 0 0% 20%;  /* #333333 - PRD specified */
+    --input: 220 13% 12%;   /* #1F1F23 - Better contrast */
+    --ring: 247 85% 70%;    /* Brighter focus rings */
 
-    --sidebar-background: 220 15% 8%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 245 85% 65%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 210 17% 98%;
+    --sidebar-primary: 247 85% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 12%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 245 85% 65%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 210 17% 98%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 247 85% 70%;
 
-    /* Enhanced LEGAL colors for dark mode */
-    --legal-primary: 245 85% 65%;    /* Brighter primary */
-    --legal-primary-light: 247 87% 72%; /* Even brighter hover */
-    --legal-secondary: 186 100% 58%;   /* Brighter cyan */
-    --legal-secondary-light: 186 100% 65%; /* Brighter cyan hover */
+    /* Enhanced LEGAL colors for dark mode - PRD compliant */
+    --legal-primary: 247 85% 70%;    /* #6B46FC - Brighter for dark mode */
+    --legal-primary-light: 249 87% 78%; /* #8B5FFF - Even brighter hover */
+    --legal-secondary: 186 100% 60%;   /* #1DFFFF - Brighter cyan */
+    --legal-secondary-light: 186 100% 68%; /* #52FFFF - Brighter cyan hover */
   }
 
   /* High contrast mode */
@@ -159,8 +160,8 @@
   }
 
   .dark ::selection {
-    background-color: hsl(186 100% 58% / 0.3); /* Enhanced ciano with opacity */
-    color: hsl(220 15% 6%);
+    background-color: hsl(186 100% 60% / 0.3); /* Enhanced ciano with opacity */
+    color: hsl(0 0% 7%);
   }
 
   /* Enhanced LEGAL Typography Classes for Dark Mode */

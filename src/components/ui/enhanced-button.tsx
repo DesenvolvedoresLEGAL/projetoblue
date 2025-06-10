@@ -11,8 +11,8 @@ interface EnhancedButtonProps extends ButtonProps {
 }
 
 /**
- * Enhanced Button component optimized for dark mode
- * Provides better visual feedback and loading states
+ * Enhanced Button component optimized for dark mode following PRD specifications
+ * Provides better visual feedback and loading states with LEGAL brand colors
  */
 export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   children,
@@ -25,10 +25,10 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   ...props
 }) => {
   const enhancedClasses = {
-    default: enhanced ? 'enhanced-button-primary' : '',
-    secondary: enhanced ? 'enhanced-button-secondary' : '',
+    default: enhanced ? 'enhanced-button-primary shadow-lg hover:shadow-xl' : '',
+    secondary: enhanced ? 'enhanced-button-secondary shadow-lg hover:shadow-xl' : '',
     destructive: enhanced ? 'hover:shadow-lg transition-shadow duration-200' : '',
-    outline: enhanced ? 'hover:shadow-md transition-shadow duration-200' : '',
+    outline: enhanced ? 'hover:shadow-md transition-shadow duration-200 border-legal-primary dark:border-legal-primary text-legal-primary dark:text-legal-primary hover:bg-legal-primary/10' : '',
     ghost: enhanced ? 'hover:bg-muted/50 transition-colors duration-200' : '',
     link: enhanced ? 'hover:text-legal-primary-light transition-colors duration-200' : ''
   };
@@ -38,7 +38,8 @@ export const EnhancedButton: React.FC<EnhancedButtonProps> = ({
       variant={variant}
       className={cn(
         enhanced && enhancedClasses[variant],
-        "transition-all duration-200",
+        "transition-all duration-200 font-semibold",
+        "focus:ring-2 focus:ring-legal-primary/40 focus:ring-offset-2 focus:ring-offset-background",
         className
       )}
       disabled={disabled || isLoading}

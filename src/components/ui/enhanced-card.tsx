@@ -23,8 +23,8 @@ interface EnhancedCardContentProps {
 }
 
 /**
- * Enhanced Card component optimized for dark mode
- * Provides better visual hierarchy and contrast
+ * Enhanced Card component optimized for dark mode following PRD specifications
+ * Provides better visual hierarchy, contrast, and proper shadows
  */
 export const EnhancedCard: React.FC<EnhancedCardProps> = ({ 
   children, 
@@ -34,7 +34,10 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
   return (
     <Card className={cn(
       "enhanced-card transition-all duration-300",
-      hoverable && "hover:scale-[1.02]",
+      "bg-card border border-border",
+      "shadow-md hover:shadow-lg dark:shadow-lg dark:hover:shadow-xl",
+      "dark:bg-card dark:border-border",
+      hoverable && "hover:scale-[1.02] hover:border-legal-primary/30 dark:hover:border-legal-primary/30",
       className
     )}>
       {children}
@@ -54,16 +57,26 @@ export const EnhancedCardHeader: React.FC<EnhancedCardHeaderProps> = ({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="p-2 rounded-lg bg-legal-primary/10 text-legal-primary dark:bg-legal-primary/20 dark:text-legal-secondary">
+            <div className={cn(
+              "p-2 rounded-lg",
+              "bg-legal-primary/10 text-legal-primary",
+              "dark:bg-legal-primary/20 dark:text-legal-primary"
+            )}>
               {icon}
             </div>
           )}
           <div>
-            <CardTitle className="enhanced-title text-lg">
+            <CardTitle className={cn(
+              "enhanced-title text-lg font-bold",
+              "text-foreground dark:text-foreground"
+            )}>
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="enhanced-body-text mt-1">
+              <CardDescription className={cn(
+                "enhanced-body-text mt-1",
+                "text-muted-foreground dark:text-muted-foreground"
+              )}>
                 {description}
               </CardDescription>
             )}

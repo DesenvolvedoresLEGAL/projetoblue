@@ -17,8 +17,8 @@ interface EnhancedFormFieldProps {
 }
 
 /**
- * Enhanced Form Field component optimized for dark mode
- * Provides better contrast and visual feedback
+ * Enhanced Form Field component optimized for dark mode following PRD specifications
+ * Provides better contrast and visual feedback with LEGAL brand colors
  */
 export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
   label,
@@ -32,7 +32,7 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
   className
 }) => {
   return (
-    <div className={cn("enhanced-form-field", className)}>
+    <div className={cn("enhanced-form-field space-y-2", className)}>
       <Label 
         htmlFor={id}
         className="text-sm font-medium text-foreground"
@@ -48,7 +48,9 @@ export const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
         value={value}
         onChange={onChange}
         className={cn(
-          "enhanced-search-input",
+          "enhanced-search-input bg-input border-border text-foreground placeholder:text-muted-foreground",
+          "focus:border-legal-primary dark:focus:border-legal-primary focus:ring-2 focus:ring-legal-primary/20",
+          "transition-colors duration-200",
           error && "border-destructive focus:border-destructive focus:ring-destructive/20"
         )}
       />
