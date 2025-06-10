@@ -1238,6 +1238,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_support_or_above: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       status_by_asset_type: {
         Args: Record<PropertyKey, never>
         Returns: {

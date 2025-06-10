@@ -76,7 +76,7 @@ export const authService = {
     console.log('Iniciando processo de cadastro:', { email, role });
     
     // Ensure role is one of the valid enum values
-    if (!['admin', 'gestor', 'consultor', 'cliente', 'user'].includes(role)) {
+    if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(role)) {
       console.warn(`Valor de role inválido: ${role}, usando '${DEFAULT_USER_ROLE}' como padrão`);
       role = DEFAULT_USER_ROLE as UserRole;
     }

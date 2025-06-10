@@ -459,9 +459,9 @@ export const bitsProfileService = {
         return profile.bits_referral_code;
       }
       
-      // Only generate codes for cliente or higher roles
+      // Only generate codes for cliente or higher roles (including suporte)
       const role = profile?.role as UserRole;
-      if (role !== 'cliente' && role !== 'gestor' && role !== 'admin' && role !== 'consultor') {
+      if (role !== 'cliente' && role !== 'suporte' && role !== 'gestor' && role !== 'admin' && role !== 'consultor') {
         throw new Error("Only 'cliente' or higher roles can generate referral codes");
       }
       
