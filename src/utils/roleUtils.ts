@@ -6,74 +6,137 @@ import { ROLE_HIERARCHY, ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_COLORS } from '@/c
  * Verifica se um role tem permissão mínima necessária
  */
 export const hasMinimumRole = (userRole: UserRole, requiredRole: UserRole): boolean => {
-  const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
-  const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0;
-  return userLevel >= requiredLevel;
+  try {
+    // Safety checks
+    if (!userRole || !requiredRole) {
+      console.warn('hasMinimumRole: Invalid roles provided', { userRole, requiredRole });
+      return false;
+    }
+
+    // Check if roles exist in hierarchy
+    if (!(userRole in ROLE_HIERARCHY) || !(requiredRole in ROLE_HIERARCHY)) {
+      console.warn('hasMinimumRole: Role not found in hierarchy', { userRole, requiredRole });
+      return false;
+    }
+
+    const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
+    const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0;
+    
+    return userLevel >= requiredLevel;
+  } catch (error) {
+    console.error('Error in hasMinimumRole:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica se o usuário é suporte ou superior
  */
 export const isSupportOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'suporte');
+  try {
+    return hasMinimumRole(userRole, 'suporte');
+  } catch (error) {
+    console.error('Error in isSupportOrAbove:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica se o usuário é cliente ou superior
  */
 export const isClienteOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'cliente');
+  try {
+    return hasMinimumRole(userRole, 'cliente');
+  } catch (error) {
+    console.error('Error in isClienteOrAbove:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica se o usuário é consultor ou superior
  */
 export const isConsultorOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'consultor');
+  try {
+    return hasMinimumRole(userRole, 'consultor');
+  } catch (error) {
+    console.error('Error in isConsultorOrAbove:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica se o usuário é gestor ou superior
  */
 export const isGestorOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'gestor');
+  try {
+    return hasMinimumRole(userRole, 'gestor');
+  } catch (error) {
+    console.error('Error in isGestorOrAbove:', error);
+    return false;
+  }
 };
 
 /**
  * Verifica se o usuário é admin
  */
 export const isAdmin = (userRole: UserRole): boolean => {
-  return userRole === 'admin';
+  try {
+    return userRole === 'admin';
+  } catch (error) {
+    console.error('Error in isAdmin:', error);
+    return false;
+  }
 };
 
 /**
  * Obtém o label amigável do role
  */
 export const getRoleLabel = (role: UserRole): string => {
-  return ROLE_LABELS[role] || role;
+  try {
+    return ROLE_LABELS[role] || role;
+  } catch (error) {
+    console.error('Error in getRoleLabel:', error);
+    return role || 'unknown';
+  }
 };
 
 /**
  * Obtém a descrição do role
  */
 export const getRoleDescription = (role: UserRole): string => {
-  return ROLE_DESCRIPTIONS[role] || 'Role não identificado';
+  try {
+    return ROLE_DESCRIPTIONS[role] || 'Role não identificado';
+  } catch (error) {
+    console.error('Error in getRoleDescription:', error);
+    return 'Role não identificado';
+  }
 };
 
 /**
  * Obtém as classes CSS para o badge do role
  */
 export const getRoleColors = (role: UserRole): string => {
-  return ROLE_COLORS[role] || ROLE_COLORS.user;
+  try {
+    return ROLE_COLORS[role] || ROLE_COLORS.user || '';
+  } catch (error) {
+    console.error('Error in getRoleColors:', error);
+    return '';
+  }
 };
 
 /**
  * Obtém todos os roles disponíveis ordenados por hierarquia
  */
 export const getAllRoles = (): UserRole[] => {
-  return Object.keys(ROLE_HIERARCHY).sort(
-    (a, b) => ROLE_HIERARCHY[b as UserRole] - ROLE_HIERARCHY[a as UserRole]
-  ) as UserRole[];
+  try {
+    return Object.keys(ROLE_HIERARCHY).sort(
+      (a, b) => ROLE_HIERARCHY[b as UserRole] - ROLE_HIERARCHY[a as UserRole]
+    ) as UserRole[];
+  } catch (error) {
+    console.error('Error in getAllRoles:', error);
+    return ['cliente'] as UserRole[];
+  }
 };
 
 /**
@@ -81,23 +144,38 @@ export const getAllRoles = (): UserRole[] => {
  * (um usuário só pode atribuir roles de nível igual ou inferior)
  */
 export const getAssignableRoles = (userRole: UserRole): UserRole[] => {
-  const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
-  return getAllRoles().filter(role => ROLE_HIERARCHY[role] <= userLevel);
+  try {
+    const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
+    return getAllRoles().filter(role => ROLE_HIERARCHY[role] <= userLevel);
+  } catch (error) {
+    console.error('Error in getAssignableRoles:', error);
+    return ['cliente'] as UserRole[];
+  }
 };
 
 /**
  * Verifica se um role é válido
  */
 export const isValidRole = (role: string): role is UserRole => {
-  return role in ROLE_HIERARCHY;
+  try {
+    return role in ROLE_HIERARCHY;
+  } catch (error) {
+    console.error('Error in isValidRole:', error);
+    return false;
+  }
 };
 
 /**
  * Converte string para UserRole com validação
  */
 export const toUserRole = (role: string): UserRole => {
-  if (isValidRole(role)) {
-    return role;
+  try {
+    if (isValidRole(role)) {
+      return role;
+    }
+    return 'cliente'; // fallback seguro
+  } catch (error) {
+    console.error('Error in toUserRole:', error);
+    return 'cliente'; // fallback seguro
   }
-  return 'cliente'; // fallback seguro
 };

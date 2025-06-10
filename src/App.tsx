@@ -51,11 +51,23 @@ function App() {
   });
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
+    
+    // Show loading while checking authentication
+    if (isLoading) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            <p className="text-muted-foreground">Verificando autenticação...</p>
+          </div>
+        </div>
+      );
+    }
     
     if (!isAuthenticated) {
       // Redirect to login page if not authenticated
-      return <Navigate to="/login" />;
+      return <Navigate to="/login" replace />;
     }
     
     return <>{children}</>;
