@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -172,16 +173,16 @@ export default function HistoryPage() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center w-8 h-8 p-0 hover:bg-[#4D2BFB]/10 hover:text-[#4D2BFB]"
+              className="flex items-center justify-center w-8 h-8 p-0 hover:bg-legal-primary/10 hover:text-legal-primary dark:hover:bg-legal-secondary/10 dark:hover:text-legal-secondary transition-all duration-200"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </StandardPageHeader>
 
-          <Card className="border-[#4D2BFB]/20">
+          <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center justify-center py-10">
-                <Loader2 className="h-12 w-12 text-[#4D2BFB] animate-spin mb-4" />
+                <Loader2 className="h-12 w-12 text-legal-primary dark:text-legal-secondary animate-spin mb-4" />
                 <p className="text-center text-muted-foreground font-neue-haas">
                   Carregando dados do histórico...
                 </p>
@@ -206,14 +207,14 @@ export default function HistoryPage() {
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center w-8 h-8 p-0 hover:bg-[#4D2BFB]/10 hover:text-[#4D2BFB]"
+              className="flex items-center justify-center w-8 h-8 p-0 hover:bg-legal-primary/10 hover:text-legal-primary dark:hover:bg-legal-secondary/10 dark:hover:text-legal-secondary transition-all duration-200"
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar
             </Button>
           </StandardPageHeader>
 
-          <Card className="border-red-200">
+          <Card className="border-red-200 dark:border-red-800/30 shadow-legal dark:shadow-legal-dark">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center justify-center py-10">
                 <AlertCircle className="h-12 w-12 text-destructive mb-4" />
@@ -226,7 +227,7 @@ export default function HistoryPage() {
                 <Button 
                   onClick={handleRetry} 
                   variant="outline" 
-                  className="mb-2 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
+                  className="mb-2 border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Tentar Novamente
@@ -255,7 +256,7 @@ export default function HistoryPage() {
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-8 h-8 p-0 hover:bg-[#4D2BFB]/10 hover:text-[#4D2BFB]"
+            className="flex items-center justify-center w-8 h-8 p-0 hover:bg-legal-primary/10 hover:text-legal-primary dark:hover:bg-legal-secondary/10 dark:hover:text-legal-secondary transition-all duration-200"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -266,7 +267,7 @@ export default function HistoryPage() {
           <div className="space-y-4">
             {/* Campo de busca */}
             <div className="space-y-2">
-              <Label htmlFor="search" className="text-sm font-medium font-neue-haas">
+              <Label htmlFor="search" className="text-sm font-medium font-neue-haas text-legal-dark dark:text-text-primary-dark">
                 Buscar por cliente, ativo, evento ou detalhes
               </Label>
               <div className="relative">
@@ -276,30 +277,45 @@ export default function HistoryPage() {
                   placeholder="Digite para buscar..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 border-[#4D2BFB]/30 focus:border-[#4D2BFB] focus:ring-[#4D2BFB]/20"
+                  className="pl-8 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
                 />
               </div>
             </div>
 
             {/* Filtro por tipo de evento usando ToggleGroup */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium font-neue-haas">
+              <Label className="text-sm font-medium font-neue-haas text-legal-dark dark:text-text-primary-dark">
                 Filtrar por tipo de evento
               </Label>
               <ToggleGroup value={eventFilter} onValueChange={setEventFilter}>
-                <ToggleGroupItem value="all">
+                <ToggleGroupItem 
+                  value="all"
+                  className="data-[state=on]:bg-legal-primary data-[state=on]:text-white dark:data-[state=on]:bg-legal-secondary dark:data-[state=on]:text-legal-dark hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 transition-all duration-200"
+                >
                   Todos
                 </ToggleGroupItem>
-                <ToggleGroupItem value="creation">
+                <ToggleGroupItem 
+                  value="creation"
+                  className="data-[state=on]:bg-legal-primary data-[state=on]:text-white dark:data-[state=on]:bg-legal-secondary dark:data-[state=on]:text-legal-dark hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 transition-all duration-200"
+                >
                   Criação
                 </ToggleGroupItem>
-                <ToggleGroupItem value="status">
+                <ToggleGroupItem 
+                  value="status"
+                  className="data-[state=on]:bg-legal-primary data-[state=on]:text-white dark:data-[state=on]:bg-legal-secondary dark:data-[state=on]:text-legal-dark hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 transition-all duration-200"
+                >
                   Status
                 </ToggleGroupItem>
-                <ToggleGroupItem value="association">
+                <ToggleGroupItem 
+                  value="association"
+                  className="data-[state=on]:bg-legal-primary data-[state=on]:text-white dark:data-[state=on]:bg-legal-secondary dark:data-[state=on]:text-legal-dark hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 transition-all duration-200"
+                >
                   Associação
                 </ToggleGroupItem>
-                <ToggleGroupItem value="deletion">
+                <ToggleGroupItem 
+                  value="deletion"
+                  className="data-[state=on]:bg-legal-primary data-[state=on]:text-white dark:data-[state=on]:bg-legal-secondary dark:data-[state=on]:text-legal-dark hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 transition-all duration-200"
+                >
                   Exclusão
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -308,19 +324,19 @@ export default function HistoryPage() {
         </StandardFiltersCard>
 
         {/* Card de Resultados */}
-        <Card className="border-[#4D2BFB]/20 shadow-sm">
+        <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-[#4D2BFB]/20 bg-[#F0F3FF]">
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Data e Hora</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Evento</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Ativo</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Cliente</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Usuário</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Status</TableHead>
-                    <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Detalhes</TableHead>
+                  <TableRow className="border-legal-primary/20 dark:border-legal-secondary/20 bg-legal-primary/5 dark:bg-legal-secondary/5">
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Data e Hora</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Evento</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Ativo</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Cliente</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Usuário</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Status</TableHead>
+                    <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Detalhes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -333,14 +349,14 @@ export default function HistoryPage() {
                       return (
                         <TableRow 
                           key={log.id}
-                          className={`hover:bg-[#4D2BFB]/5 transition-colors duration-200 border-[#4D2BFB]/10 ${
-                            isEvenRow ? 'bg-white' : 'bg-[#F8FAFC]'
+                          className={`hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200 border-legal-primary/10 dark:border-legal-secondary/10 ${
+                            isEvenRow ? 'bg-white dark:bg-bg-primary-dark' : 'bg-legal-primary/[0.02] dark:bg-bg-secondary-dark'
                           }`}
                         >
                           <TableCell className="whitespace-nowrap py-4">
                             <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-[#03F9FF]" />
-                              <span className="text-sm font-neue-haas">
+                              <Calendar className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
+                              <span className="text-sm font-neue-haas text-legal-dark dark:text-text-primary-dark">
                                 {formatDate(log.date)}
                               </span>
                             </div>
@@ -367,8 +383,8 @@ export default function HistoryPage() {
 
                           <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <Settings className="h-4 w-4 text-[#03F9FF]" />
-                              <span className="font-mono text-sm font-neue-haas">
+                              <Settings className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
+                              <span className="font-mono text-sm font-neue-haas text-legal-dark dark:text-text-primary-dark">
                                 {log.asset_name || 'N/A'}
                               </span>
                             </div>
@@ -376,17 +392,17 @@ export default function HistoryPage() {
 
                           <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <User2 className="h-4 w-4 text-[#03F9FF]" />
-                              <span className="font-neue-haas">{log.client_name || 'Cliente não identificado'}</span>
+                              <User2 className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
+                              <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">{log.client_name || 'Cliente não identificado'}</span>
                             </div>
                           </TableCell>
 
                           <TableCell className="py-4">
                             <div className="flex items-center gap-2">
-                              <UserCheck className="h-4 w-4 text-[#03F9FF]" />
+                              <UserCheck className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
                               <Tooltip>
                                 <TooltipTrigger>
-                                  <span className="text-sm font-neue-haas text-[#020CBC]">
+                                  <span className="text-sm font-neue-haas text-legal-primary dark:text-legal-secondary">
                                     {responsibleUser}
                                   </span>
                                 </TooltipTrigger>
@@ -425,7 +441,7 @@ export default function HistoryPage() {
                             <div className="max-w-xl">
                               <Tooltip>
                                 <TooltipTrigger>
-                                  <p className="text-sm truncate font-neue-haas" title={log.description}>
+                                  <p className="text-sm truncate font-neue-haas text-legal-dark dark:text-text-primary-dark" title={log.description}>
                                     {log.description || 'Nenhum detalhe disponível'}
                                   </p>
                                 </TooltipTrigger>
@@ -444,11 +460,11 @@ export default function HistoryPage() {
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-12">
                         <div className="space-y-3">
-                          <div className="p-3 bg-[#F0F3FF] rounded-lg w-fit mx-auto">
-                            <Calendar className="h-8 w-8 text-[#4D2BFB]" />
+                          <div className="p-3 bg-legal-primary/5 dark:bg-legal-secondary/5 rounded-lg w-fit mx-auto">
+                            <Calendar className="h-8 w-8 text-legal-primary dark:text-legal-secondary" />
                           </div>
                           <div>
-                            <p className="text-[#020CBC] font-neue-haas font-semibold">
+                            <p className="text-legal-primary dark:text-legal-secondary font-neue-haas font-semibold">
                               {search || eventFilter !== "all"
                                 ? "Nenhum registro encontrado com os filtros aplicados"
                                 : "Nenhum registro encontrado no histórico"
@@ -465,7 +481,7 @@ export default function HistoryPage() {
                             <Button 
                               onClick={handleRetry} 
                               variant="outline"
-                              className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB] hover:text-white transition-all duration-200"
+                              className="border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200"
                             >
                               <RefreshCw className="h-4 w-4 mr-2" />
                               Recarregar Dados
@@ -484,8 +500,8 @@ export default function HistoryPage() {
         {/* Footer com contador de registros */}
         {filteredLogs.length > 0 && (
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground font-neue-haas bg-[#F0F3FF] px-4 py-2 rounded-lg">
-              <Calendar className="h-4 w-4 text-[#4D2BFB]" />
+            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground font-neue-haas bg-legal-primary/5 dark:bg-legal-secondary/5 px-4 py-2 rounded-lg border border-legal-primary/20 dark:border-legal-secondary/20">
+              <Calendar className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
               Mostrando {filteredLogs.length} registro(s) de histórico
             </div>
           </div>

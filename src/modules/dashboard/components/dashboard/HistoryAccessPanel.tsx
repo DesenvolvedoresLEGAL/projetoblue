@@ -73,50 +73,64 @@ export function HistoryAccessPanel() {
   };
 
   return (
-    <Card>
+    <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
       <CardHeader>
-        <CardTitle>Histórico de Movimentações</CardTitle>
+        <CardTitle className="text-legal-primary dark:text-legal-secondary font-neue-haas">Histórico de Movimentações</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="recent" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="recent">Movimentações Recentes</TabsTrigger>
-            <TabsTrigger value="clients">Por Cliente</TabsTrigger>
+          <TabsList className="mb-4 bg-legal-primary/5 dark:bg-legal-secondary/5">
+            <TabsTrigger 
+              value="recent"
+              className="data-[state=active]:bg-legal-primary data-[state=active]:text-white dark:data-[state=active]:bg-legal-secondary dark:data-[state=active]:text-legal-dark font-neue-haas"
+            >
+              Movimentações Recentes
+            </TabsTrigger>
+            <TabsTrigger 
+              value="clients"
+              className="data-[state=active]:bg-legal-primary data-[state=active]:text-white dark:data-[state=active]:bg-legal-secondary dark:data-[state=active]:text-legal-dark font-neue-haas"
+            >
+              Por Cliente
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="recent" className="space-y-4">
             {isLoadingEvents ? (
               <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
+                  <Skeleton key={i} className="h-12 w-full bg-legal-primary/10 dark:bg-legal-secondary/10" />
                 ))}
               </div>
             ) : (
               <>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Evento</TableHead>
-                      <TableHead>Ativo</TableHead>
+                    <TableRow className="border-legal-primary/20 dark:border-legal-secondary/20">
+                      <TableHead className="text-legal-primary dark:text-legal-secondary font-neue-haas">Data</TableHead>
+                      <TableHead className="text-legal-primary dark:text-legal-secondary font-neue-haas">Evento</TableHead>
+                      <TableHead className="text-legal-primary dark:text-legal-secondary font-neue-haas">Ativo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {recentEvents?.map((event) => (
-                      <TableRow key={event.id}>
+                      <TableRow key={event.id} className="hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {formatRelativeTime(new Date(event.date))}
+                            <Calendar className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
+                            <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
+                              {formatRelativeTime(new Date(event.date))}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
                           {formatEventDescription(event.event, event.details)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <PackageCheck className="h-4 w-4 text-blue-600" />
-                            {getAssetIdentifier(event.details)}
+                            <PackageCheck className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
+                            <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
+                              {getAssetIdentifier(event.details)}
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -126,7 +140,10 @@ export function HistoryAccessPanel() {
 
                 <div className="flex justify-end">
                   <Link to="/history">
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      className="border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200 font-neue-haas"
+                    >
                       Ver histórico completo
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -139,23 +156,29 @@ export function HistoryAccessPanel() {
           <TabsContent value="clients" className="space-y-4">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Ações</TableHead>
+                <TableRow className="border-legal-primary/20 dark:border-legal-secondary/20">
+                  <TableHead className="text-legal-primary dark:text-legal-secondary font-neue-haas">Cliente</TableHead>
+                  <TableHead className="text-legal-primary dark:text-legal-secondary font-neue-haas">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {clients?.map((client) => (
-                  <TableRow key={client.uuid}>
+                  <TableRow key={client.uuid} className="hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {client.nome}
+                        <User className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
+                        <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
+                          {client.nome}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Link to={`/history?client=${client.uuid}`}>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200 font-neue-haas"
+                        >
                           Ver movimentações
                         </Button>
                       </Link>

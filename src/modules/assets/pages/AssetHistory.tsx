@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -166,7 +167,7 @@ const AssetHistory = () => {
         />
         <div className="flex items-center justify-center h-64">
           <div className="text-center space-y-2">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-[#4D2BFB]" />
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-legal-primary dark:text-legal-secondary" />
             <p className="text-muted-foreground font-neue-haas">Carregando histórico...</p>
           </div>
         </div>
@@ -185,7 +186,7 @@ const AssetHistory = () => {
           variant="outline"
           size="sm"
           onClick={() => refetch()}
-          className="flex items-center gap-2 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB] hover:text-white font-neue-haas"
+          className="flex items-center gap-2 border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200 shadow-legal"
         >
           <RefreshCw className="h-4 w-4" />
           Atualizar
@@ -196,27 +197,27 @@ const AssetHistory = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Busca geral */}
           <div className="space-y-2">
-            <Label htmlFor="search" className="text-sm font-medium">Buscar</Label>
+            <Label htmlFor="search" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Buscar</Label>
             <Input
               id="search"
               placeholder="Buscar por rádio, linha ou evento..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="h-10"
+              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
             />
           </div>
 
           {/* Tipo de evento */}
           <div className="space-y-2">
-            <Label htmlFor="event-type" className="text-sm font-medium">Tipo de Evento</Label>
+            <Label htmlFor="event-type" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Tipo de Evento</Label>
             <Select
               value={filters.eventType}
               onValueChange={(value) => handleFilterChange('eventType', value)}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20">
                 <SelectValue placeholder="Todos os eventos" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background dark:bg-bg-primary-dark border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
                 <SelectItem value="all">Todos os eventos</SelectItem>
                 {eventTypes.map((eventType) => (
                   <SelectItem key={eventType} value={eventType}>
@@ -229,25 +230,25 @@ const AssetHistory = () => {
 
           {/* Data inicial */}
           <div className="space-y-2">
-            <Label htmlFor="date-from" className="text-sm font-medium">Data Inicial</Label>
+            <Label htmlFor="date-from" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Data Inicial</Label>
             <Input
               id="date-from"
               type="date"
               value={filters.dateFrom}
               onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="h-10"
+              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
             />
           </div>
 
           {/* Data final */}
           <div className="space-y-2">
-            <Label htmlFor="date-to" className="text-sm font-medium">Data Final</Label>
+            <Label htmlFor="date-to" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Data Final</Label>
             <Input
               id="date-to"
               type="date"
               value={filters.dateTo}
               onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="h-10"
+              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
             />
           </div>
         </div>
@@ -258,39 +259,39 @@ const AssetHistory = () => {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+            className="text-legal-primary hover:bg-legal-primary/10 dark:text-legal-secondary dark:hover:bg-legal-secondary/10 font-neue-haas transition-all duration-200"
           >
             Limpar Filtros
           </Button>
         </div>
       </StandardFiltersCard>
 
-      <Card className="border-[#4D2BFB]/20 shadow-sm">
+      <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-[#4D2BFB]/20 bg-[#F0F3FF]">
-                  <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Data/Hora</TableHead>
-                  <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Evento</TableHead>
-                  <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Ativo</TableHead>
-                  <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Usuário</TableHead>
-                  <TableHead className="font-neue-haas text-[#020CBC] font-semibold">Detalhes</TableHead>
+                <TableRow className="border-legal-primary/20 dark:border-legal-secondary/20 bg-legal-primary/5 dark:bg-legal-secondary/5">
+                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Data/Hora</TableHead>
+                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Evento</TableHead>
+                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Ativo</TableHead>
+                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Usuário</TableHead>
+                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Detalhes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log) => (
-                    <TableRow key={log.id} className="border-[#4D2BFB]/10 hover:bg-[#4D2BFB]/5 transition-colors">
+                    <TableRow key={log.id} className="border-legal-primary/10 dark:border-legal-secondary/10 hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
                       <TableCell className="py-4">
                         <div className="space-y-1">
-                          <div className="font-medium font-neue-haas text-[#020CBC]">
+                          <div className="font-medium font-neue-haas text-legal-primary dark:text-legal-secondary">
                             {new Date(log.date).toLocaleDateString('pt-BR')}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {new Date(log.date).toLocaleTimeString('pt-BR')}
                           </div>
-                          <div className="text-xs text-[#03F9FF] font-medium">
+                          <div className="text-xs text-legal-secondary dark:text-legal-secondary font-medium">
                             {formatDistanceToNow(new Date(log.date), { 
                               addSuffix: true, 
                               locale: ptBR 
@@ -300,7 +301,7 @@ const AssetHistory = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">
-                          <div className="p-1 bg-[#03F9FF]/20 rounded">
+                          <div className="p-1 bg-legal-secondary/20 dark:bg-legal-secondary/20 rounded">
                             {getEventIcon(log.event)}
                           </div>
                           <StandardStatusBadge 
@@ -311,7 +312,7 @@ const AssetHistory = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="space-y-1">
-                          <div className="font-medium font-neue-haas text-[#020CBC]">
+                          <div className="font-medium font-neue-haas text-legal-primary dark:text-legal-secondary">
                             {getAssetIdentifier(log.details)}
                           </div>
                           <div className="text-xs text-muted-foreground">
@@ -325,10 +326,10 @@ const AssetHistory = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">
-                          <div className="p-1 bg-[#4D2BFB]/20 rounded">
-                            <User className="h-3 w-3 text-[#4D2BFB]" />
+                          <div className="p-1 bg-legal-primary/20 dark:bg-legal-primary/20 rounded">
+                            <User className="h-3 w-3 text-legal-primary dark:text-legal-secondary" />
                           </div>
-                          <span className="font-neue-haas text-sm font-medium">
+                          <span className="font-neue-haas text-sm font-medium text-legal-dark dark:text-text-primary-dark">
                             {getUserInfo(log.details)}
                           </span>
                         </div>
@@ -347,7 +348,7 @@ const AssetHistory = () => {
                                 status={(log.details as any).old_status_name} 
                                 className="text-xs"
                               />
-                              <span className="text-[#03F9FF] font-bold">→</span>
+                              <span className="text-legal-secondary dark:text-legal-secondary font-bold">→</span>
                               <StandardStatusBadge 
                                 status={(log.details as any).new_status_name} 
                                 className="text-xs"
@@ -362,11 +363,11 @@ const AssetHistory = () => {
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-12">
                       <div className="space-y-3">
-                        <div className="p-3 bg-[#F0F3FF] rounded-lg w-fit mx-auto">
-                          <Settings className="h-8 w-8 text-[#4D2BFB]" />
+                        <div className="p-3 bg-legal-primary/5 dark:bg-legal-secondary/5 rounded-lg w-fit mx-auto">
+                          <Settings className="h-8 w-8 text-legal-primary dark:text-legal-secondary" />
                         </div>
                         <div>
-                          <p className="text-[#020CBC] font-neue-haas font-semibold">
+                          <p className="text-legal-primary dark:text-legal-secondary font-neue-haas font-semibold">
                             Nenhum registro encontrado
                           </p>
                           <p className="text-sm text-muted-foreground mt-1">
@@ -385,8 +386,8 @@ const AssetHistory = () => {
 
       {filteredLogs.length > 0 && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground font-neue-haas bg-[#F0F3FF] px-4 py-2 rounded-lg">
-            <Calendar className="h-4 w-4 text-[#4D2BFB]" />
+          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground font-neue-haas bg-legal-primary/5 dark:bg-legal-secondary/5 px-4 py-2 rounded-lg border border-legal-primary/20 dark:border-legal-secondary/20">
+            <Calendar className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
             Mostrando {filteredLogs.length} registro(s) de histórico
           </div>
         </div>
