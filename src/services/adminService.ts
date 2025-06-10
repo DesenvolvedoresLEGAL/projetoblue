@@ -13,6 +13,7 @@ export interface AdminUser {
 }
 
 export interface ProfileUpdateData {
+  [key: string]: any;
   email?: string;
   is_active?: boolean;
   is_approved?: boolean;
@@ -75,7 +76,7 @@ export const adminService = {
     
     const { data, error } = await supabase.rpc('admin_update_user_profile', {
       user_id: userId,
-      profile_updates: profileData
+      profile_updates: profileData as Record<string, any>
     });
     
     if (error) {

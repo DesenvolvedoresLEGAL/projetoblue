@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -8,39 +9,35 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Layout } from '@/components/layout/Layout';
-import { LoginPage } from '@/pages/auth/LoginPage';
-import { SignupPage } from '@/pages/auth/SignupPage';
-import { Dashboard } from '@/pages/Dashboard';
-import { AssetsDashboard } from '@/pages/assets/AssetsDashboard';
-import { AssetsInventory } from '@/pages/assets/AssetsInventory';
-import { AssetsManagement } from '@/pages/assets/AssetsManagement';
-import { AssetsRegister } from '@/pages/assets/AssetsRegister';
-import { AssetsAssociations } from '@/pages/assets/AssetsAssociations';
-import { TicketsDashboard } from '@/pages/tickets/TicketsDashboard';
-import { TicketsInbox } from '@/pages/tickets/TicketsInbox';
-import { TicketsMyTickets } from '@/pages/tickets/TicketsMyTickets';
-import { TicketsNew } from '@/pages/tickets/TicketsNew';
-import { TicketsKnowledgeBase } from '@/pages/tickets/TicketsKnowledgeBase';
-import { TicketsAutomation } from '@/pages/tickets/TicketsAutomation';
-import { TicketsAnalytics } from '@/pages/tickets/TicketsAnalytics';
-import { TicketsQuality } from '@/pages/tickets/TicketsQuality';
-import { TicketsCopilot } from '@/pages/tickets/TicketsCopilot';
-import { TicketsIntegrations } from '@/pages/tickets/TicketsIntegrations';
-import { BitsDashboard } from '@/pages/bits/BitsDashboard';
-import { BitsIndicate } from '@/pages/bits/BitsIndicate';
-import { BitsMyReferrals } from '@/pages/bits/BitsMyReferrals';
-import { BitsRewards } from '@/pages/bits/BitsRewards';
-import { BitsSettings } from '@/pages/bits/BitsSettings';
-import { BitsHelp } from '@/pages/bits/BitsHelp';
-import { ClientsView } from '@/pages/clients/ClientsView';
-import { ClientsCreate } from '@/pages/clients/ClientsCreate';
-import { ClientsEdit } from '@/pages/clients/ClientsEdit';
-import { ClientsDelete } from '@/pages/clients/ClientsDelete';
-import { AdminSuppliers } from '@/pages/admin/AdminSuppliers';
-import { AdminSettings } from '@/pages/admin/AdminSettings';
-import { AdminUsers } from '@/pages/admin/AdminUsers';
-import { RoleGuard } from '@/guards/RoleGuard';
-import { UserRole } from '@/types/auth';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import { Dashboard } from '@/modules/dashboard/pages/Dashboard';
+import { AssetsDashboard } from '@/modules/assets/pages/AssetsDashboard';
+import { AssetsInventory } from '@/modules/inventory/pages/Inventory';
+import { AssetsManagement } from '@/modules/assets/pages/AssetsManagement';
+import { AssetsRegister } from '@/modules/assets/pages/RegisterAsset';
+import { AssetsAssociations } from '@/modules/associations/pages/AssociationsList';
+import { TicketsDashboard } from '@/modules/tickets/pages/TicketsDashboard';
+import { TicketsInbox } from '@/modules/tickets/pages/TicketsInbox';
+import { TicketsMyTickets } from '@/modules/tickets/pages/MyTickets';
+import { TicketsNew } from '@/modules/tickets/pages/NewTicket';
+import { TicketsKnowledgeBase } from '@/modules/tickets/pages/KnowledgeBase';
+import { TicketsAutomation } from '@/modules/tickets/pages/TicketAutomation';
+import { TicketsAnalytics } from '@/modules/tickets/pages/TicketAnalytics';
+import { TicketsQuality } from '@/modules/tickets/pages/QualityAudit';
+import { TicketsCopilot } from '@/modules/tickets/pages/AgentCopilot';
+import { TicketsIntegrations } from '@/modules/tickets/pages/TicketIntegrations';
+import { BitsDashboard } from '@/modules/bits/pages/BitsDashboard';
+import { BitsIndicate } from '@/modules/bits/pages/BitsIndicateNow';
+import { BitsMyReferrals } from '@/modules/bits/pages/BitsMyReferrals';
+import { BitsRewards } from '@/modules/bits/pages/BitsPointsAndRewards';
+import { BitsSettings } from '@/modules/bits/pages/BitsSettings';
+import { BitsHelp } from '@/modules/bits/pages/BitsHelpAndSupport';
+import { ClientsView } from '@/modules/clients/pages/Clients';
+import { ClientsCreate } from '@/modules/clients/pages/RegisterClient';
+import { ClientsEdit } from '@/modules/clients/pages/Clients';
+import { ClientsDelete } from '@/modules/clients/pages/Clients';
+import { RoleGuard } from '@/components/auth/RoleGuard';
 import { AdminConfig } from './modules/admin/pages/AdminConfig';
 
 function App() {
@@ -70,58 +67,56 @@ function App() {
         <Router>
           <div className="min-h-screen bg-background">
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               
-              <Route path="/" element={<ProtectedRoute />}>
-                <Route path="/" element={<Layout />}>
-                  <Route path="/" element={<Dashboard />} />
-                  
-                  {/* Assets Routes */}
-                  <Route path="/assets" element={<AssetsDashboard />} />
-                  <Route path="/assets/inventory" element={<AssetsInventory />} />
-                  <Route path="/assets/management" element={<AssetsManagement />} />
-                  <Route path="/assets/register" element={<AssetsRegister />} />
-                  <Route path="/assets/associations" element={<AssetsAssociations />} />
-                  
-                  {/* Tickets Routes */}
-                  <Route path="/tickets" element={<TicketsDashboard />} />
-                  <Route path="/tickets/inbox" element={<TicketsInbox />} />
-                  <Route path="/tickets/my-tickets" element={<TicketsMyTickets />} />
-                  <Route path="/tickets/new" element={<TicketsNew />} />
-                  <Route path="/tickets/knowledge-base" element={<TicketsKnowledgeBase />} />
-                  <Route path="/tickets/automation" element={<TicketsAutomation />} />
-                  <Route path="/tickets/analytics" element={<TicketsAnalytics />} />
-                  <Route path="/tickets/quality" element={<TicketsQuality />} />
-                  <Route path="/tickets/copilot" element={<TicketsCopilot />} />
-                  <Route path="/tickets/integrations" element={<TicketsIntegrations />} />
-                  
-                  {/* Bits Routes */}
-                  <Route path="/bits" element={<BitsDashboard />} />
-                  <Route path="/bits/indicate" element={<BitsIndicate />} />
-                  <Route path="/bits/my-referrals" element={<BitsMyReferrals />} />
-                  <Route path="/bits/rewards" element={<BitsRewards />} />
-                  <Route path="/bits/settings" element={<BitsSettings />} />
-                  <Route path="/bits/help" element={<BitsHelp />} />
-                  
-                  {/* Clients Routes */}
-                  <Route path="/clients/view" element={<ClientsView />} />
-                  <Route path="/clients/create" element={<ClientsCreate />} />
-                  <Route path="/clients/edit" element={<ClientsEdit />} />
-                  <Route path="/clients/delete" element={<ClientsDelete />} />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin/config" 
-                    element={
-                      <RoleGuard requiredRole="admin">
-                        <AdminConfig />
-                      </RoleGuard>
-                    } 
-                  />
-                  
-                  {/* 404 Route - Make sure it's the last route */}
-                  <Route path="*" element={<div>Página não encontrada</div>} />
-                </Route>
+              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                <Route path="/" element={<Dashboard />} />
+                
+                {/* Assets Routes */}
+                <Route path="/assets" element={<AssetsDashboard />} />
+                <Route path="/assets/inventory" element={<AssetsInventory />} />
+                <Route path="/assets/management" element={<AssetsManagement />} />
+                <Route path="/assets/register" element={<AssetsRegister />} />
+                <Route path="/assets/associations" element={<AssetsAssociations />} />
+                
+                {/* Tickets Routes */}
+                <Route path="/tickets" element={<TicketsDashboard />} />
+                <Route path="/tickets/inbox" element={<TicketsInbox />} />
+                <Route path="/tickets/my-tickets" element={<TicketsMyTickets />} />
+                <Route path="/tickets/new" element={<TicketsNew />} />
+                <Route path="/tickets/knowledge-base" element={<TicketsKnowledgeBase />} />
+                <Route path="/tickets/automation" element={<TicketsAutomation />} />
+                <Route path="/tickets/analytics" element={<TicketsAnalytics />} />
+                <Route path="/tickets/quality" element={<TicketsQuality />} />
+                <Route path="/tickets/copilot" element={<TicketsCopilot />} />
+                <Route path="/tickets/integrations" element={<TicketsIntegrations />} />
+                
+                {/* Bits Routes */}
+                <Route path="/bits" element={<BitsDashboard />} />
+                <Route path="/bits/indicate" element={<BitsIndicate />} />
+                <Route path="/bits/my-referrals" element={<BitsMyReferrals />} />
+                <Route path="/bits/rewards" element={<BitsRewards />} />
+                <Route path="/bits/settings" element={<BitsSettings />} />
+                <Route path="/bits/help" element={<BitsHelp />} />
+                
+                {/* Clients Routes */}
+                <Route path="/clients/view" element={<ClientsView />} />
+                <Route path="/clients/create" element={<ClientsCreate />} />
+                <Route path="/clients/edit" element={<ClientsEdit />} />
+                <Route path="/clients/delete" element={<ClientsDelete />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/config" 
+                  element={
+                    <RoleGuard requiredRole="admin">
+                      <AdminConfig />
+                    </RoleGuard>
+                  } 
+                />
+                
+                {/* 404 Route - Make sure it's the last route */}
+                <Route path="*" element={<div>Página não encontrada</div>} />
               </Route>
             </Routes>
           </div>
