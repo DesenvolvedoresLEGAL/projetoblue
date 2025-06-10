@@ -55,7 +55,7 @@ export const ClientsActions: React.FC<ClientsActionsProps> = ({
         </Button>
       </RoleGuard>
 
-      <RoleGuard requiredRole="consultor">
+      <RoleGuard requiredRole="suporte">
         <Button 
           variant="outline" 
           className="border-[#03F9FF] text-[#020CBC] hover:bg-[#03F9FF]/10 focus:ring-[#03F9FF] flex items-center gap-2 w-full sm:w-auto h-10 sm:h-9 text-sm"

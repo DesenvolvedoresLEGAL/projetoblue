@@ -98,14 +98,14 @@ export function StaticNavigation({
           icon={Zap}
           label="Automação e Regras"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="consultor"
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/analytics"
           icon={TrendingUp}
           label="Análises & Relatórios"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="consultor"
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/quality"
@@ -126,7 +126,7 @@ export function StaticNavigation({
           icon={Puzzle}
           label="Integrações"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="gestor"
+          requiredRole="admin"
         />
       </div>
 
@@ -179,7 +179,7 @@ export function StaticNavigation({
         />
       </div>
 
-      {/* Admin Section - Requires gestor or above */}
+      {/* Admin Section - Requires admin */}
       <div className="flex flex-col space-y-2">
         <div className="px-3 mb-1">
           <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Administração</h3>
@@ -189,7 +189,7 @@ export function StaticNavigation({
           icon={Boxes}
           label="Fornecedores"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="gestor"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/admin"

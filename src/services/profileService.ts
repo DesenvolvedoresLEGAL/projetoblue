@@ -24,7 +24,7 @@ export const profileService = {
         
         // Validate the role to ensure it's one of the valid values
         const role = data.role as UserRole;
-        if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(role)) {
+        if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
           console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
           data.role = 'cliente';
         }

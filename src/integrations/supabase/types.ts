@@ -1291,11 +1291,9 @@ export type Database = {
         | "LOAD BALANCE"
       user_role_enum:
         | "admin"
-        | "gestor"
-        | "consultor"
-        | "cliente"
-        | "user"
         | "suporte"
+        | "cliente"
+        | "usuario"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1442,11 +1440,9 @@ export const Constants = {
       ],
       user_role_enum: [
         "admin",
-        "gestor",
-        "consultor",
-        "cliente",
-        "user",
         "suporte",
+        "cliente",
+        "usuario",
       ],
     },
   },

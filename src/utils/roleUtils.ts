@@ -26,20 +26,6 @@ export const isClienteOrAbove = (userRole: UserRole): boolean => {
 };
 
 /**
- * Verifica se o usuário é consultor ou superior
- */
-export const isConsultorOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'consultor');
-};
-
-/**
- * Verifica se o usuário é gestor ou superior
- */
-export const isGestorOrAbove = (userRole: UserRole): boolean => {
-  return hasMinimumRole(userRole, 'gestor');
-};
-
-/**
  * Verifica se o usuário é admin
  */
 export const isAdmin = (userRole: UserRole): boolean => {
@@ -64,7 +50,7 @@ export const getRoleDescription = (role: UserRole): string => {
  * Obtém as classes CSS para o badge do role
  */
 export const getRoleColors = (role: UserRole): string => {
-  return ROLE_COLORS[role] || ROLE_COLORS.user;
+  return ROLE_COLORS[role] || ROLE_COLORS.usuario;
 };
 
 /**

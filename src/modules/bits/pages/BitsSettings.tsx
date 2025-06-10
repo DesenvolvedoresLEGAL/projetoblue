@@ -60,7 +60,7 @@ const BitsSettings: React.FC = () => {
                 <Label htmlFor="role">Função</Label>
                 <Input 
                   id="role" 
-                  value={profile?.role || 'user'} 
+                  value={profile?.role || 'usuario'}
                   disabled
                 />
               </div>
