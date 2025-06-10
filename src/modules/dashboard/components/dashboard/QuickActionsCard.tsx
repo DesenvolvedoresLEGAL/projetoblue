@@ -6,22 +6,23 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useNavigate } from "react-router-dom";
 import { Plus, Link, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { usePermissions } from '@/hooks/usePermissions';
+import { RoleGuard } from '@/components/auth/RoleGuard';
 import * as XLSX from 'xlsx';
 import { assetService } from '@modules/assets/services/assetService';
 import useAssetsData from '@modules/assets/hooks/useAssetsData';
-
 
 export const QuickActionsCard: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const assets = useAssetsData();
+  const { canCreateAssets, canManageAssociations, canExportData } = usePermissions();
 
   const handleImportCSV = () => {
     console.log("IMPORT CSV");
   };
 
   const handleExport = (format: 'csv' | 'excel') => {
-
     try {
       const data = assets.data.assets;
       const fileName = "ATIVOS";
@@ -31,7 +32,6 @@ export const QuickActionsCard: React.FC = () => {
         return;
       }
 
-      // Retiradas as colunas uuid, created_at, updated_at e matchedField
       const flattenedData = data.map(asset => ({
         model: asset.model,
         rented_days: asset.rented_days,
@@ -50,7 +50,7 @@ export const QuickActionsCard: React.FC = () => {
       if (format === 'csv') {
         const headers = Object.keys(flattenedData[0]);
         const csvRows = [
-          headers.join(','), // Cabeçalho
+          headers.join(','),
           ...flattenedData.map(row =>
             headers.map(field => {
               let cell = row[field];
@@ -91,51 +91,60 @@ export const QuickActionsCard: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button 
-          onClick={() => navigate('/assets/register')}
-          className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Cadastrar Ativo
-        </Button>
+        <RoleGuard requiredRole="suporte">
+          <Button 
+            onClick={() => navigate('/assets/register')}
+            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Cadastrar Ativo
+          </Button>
+        </RoleGuard>
         
-        <Button 
-          onClick={() => navigate('/association')}
-          className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-          variant="outline"
-        >
-          <Link className="h-4 w-4 mr-2" />
-          Nova Associação
-        </Button>
+        <RoleGuard requiredRole="suporte">
+          <Button 
+            onClick={() => navigate('/association')}
+            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+            variant="outline"
+          >
+            <Link className="h-4 w-4 mr-2" />
+            Nova Associação
+          </Button>
+        </RoleGuard>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-              variant="outline"
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Exportar Dados
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full">
-            <DropdownMenuItem onClick={() => handleExport('csv')}>
-              Exportar CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('excel')}>
-              Exportar Excel
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-            <Button 
-              className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-              variant="outline"
-              onClick={() => handleImportCSV()}
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              Importar Dados (.csv)
-            </Button>
+        <RoleGuard requiredRole="consultor">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+                variant="outline"
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Exportar Dados
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-full">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                Exportar CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                Exportar Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </RoleGuard>
+
+        <RoleGuard requiredRole="suporte">
+          <Button 
+            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+            variant="outline"
+            onClick={() => handleImportCSV()}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Importar Dados (.csv)
+          </Button>
+        </RoleGuard>
       </CardContent>
     </Card>
   );
