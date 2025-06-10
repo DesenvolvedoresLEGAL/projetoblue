@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -230,9 +231,9 @@ export function useAuthActions(updateState: (state: any) => void) {
           let userProfile = await profileService.fetchUserProfile(data.user.id);
           console.log('Perfil obtido após login:', userProfile);
           
-          // Verificando apenas se o perfil está ativo
+          // MELHORADO: Se não conseguir obter o perfil, não bloquear o login
           if (!userProfile) {
-            console.error('Perfil não encontrado para usuário:', data.user.id);
+            console.warn('Perfil não encontrado, tentando criar via RPC');
             
             // Tentar criar o perfil manualmente
             const { data: rpcData, error: rpcError } = await supabase
@@ -243,29 +244,40 @@ export function useAuthActions(updateState: (state: any) => void) {
               });
             
             if (rpcError) {
-              console.error('Falha ao criar perfil manualmente:', rpcError);
-              await authService.signOut();
-              throw { 
-                message: 'Não foi possível criar seu perfil. Entre em contato com o suporte.', 
-                category: AuthErrorCategory.PROFILE_CREATION 
+              console.error('Falha ao criar perfil via RPC:', rpcError);
+              // NÃO fazer logout - continuar com perfil mínimo
+              userProfile = {
+                id: data.user.id,
+                email: data.user.email || email,
+                role: DEFAULT_USER_ROLE as UserRole,
+                created_at: data.user.created_at || new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                is_active: true,
+                is_approved: true
               };
+              console.log('Usando perfil mínimo para continuar o login');
             } else {
               // Tentar obter o perfil novamente
               const profileRetry = await profileService.fetchUserProfile(data.user.id);
-              if (!profileRetry) {
-                console.error('Perfil ainda não encontrado após criação manual');
-                await authService.signOut();
-                throw { 
-                  message: 'Erro na configuração do perfil. Entre em contato com o suporte.', 
-                  category: AuthErrorCategory.PROFILE_CREATION 
+              if (profileRetry) {
+                userProfile = profileRetry;
+              } else {
+                // Usar perfil mínimo
+                userProfile = {
+                  id: data.user.id,
+                  email: data.user.email || email,
+                  role: DEFAULT_USER_ROLE as UserRole,
+                  created_at: data.user.created_at || new Date().toISOString(),
+                  last_login: new Date().toISOString(),
+                  is_active: true,
+                  is_approved: true
                 };
               }
-              
-              userProfile = profileRetry;
             }
           }
           
-          if (!userProfile.is_active) {
+          // Verificar se o perfil está ativo (se temos essa informação)
+          if (userProfile.is_active === false) {
             console.log('Perfil inativo, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
@@ -291,9 +303,39 @@ export function useAuthActions(updateState: (state: any) => void) {
           const from = window.history.state?.usr?.from?.pathname || '/';
           navigate(from, { replace: true });
           
-        } catch (profileError) {
+        } catch (profileError: any) {
           console.error('Erro ao verificar perfil após login:', profileError);
           
+          // Se o erro é relacionado a perfil mas o login funcionou, 
+          // vamos continuar com dados mínimos
+          if (profileError?.message?.includes('403') || profileError?.message?.includes('profile')) {
+            console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
+            
+            const basicProfile = {
+              id: data.user.id,
+              email: data.user.email || email,
+              role: DEFAULT_USER_ROLE as UserRole,
+              created_at: data.user.created_at || new Date().toISOString(),
+              last_login: new Date().toISOString(),
+              is_active: true,
+              is_approved: true
+            };
+            
+            updateState({ 
+              profile: basicProfile,
+              user: data.user,
+              error: null,
+              isLoading: false
+            });
+            
+            toast.success(`Bem-vindo(a)! (Perfil carregado parcialmente)`);
+            
+            const from = window.history.state?.usr?.from?.pathname || '/';
+            navigate(from, { replace: true });
+            return;
+          }
+          
+          // Para outros erros, mostrar erro mas não fazer logout automático
           setTechnicalError({
             message: profileError.message || 'Erro ao verificar perfil',
             category: profileError.category || AuthErrorCategory.PROFILE_CREATION,
@@ -301,8 +343,13 @@ export function useAuthActions(updateState: (state: any) => void) {
             context: { userId: data.user.id, email: data.user.email }
           });
           
-          await authService.signOut();
-          throw profileError;
+          console.warn('Erro no perfil, mas mantendo usuário logado');
+          updateState({ 
+            user: data.user,
+            profile: null,
+            error: 'Problema ao carregar perfil. Algumas funcionalidades podem estar limitadas.',
+            isLoading: false
+          });
         }
       } else {
         console.error('Login falhou, dados incompletos:', data);

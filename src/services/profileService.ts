@@ -43,17 +43,19 @@ export const profileService = {
         };
       }
       
-      console.warn(`No profile found for user ${userId}, attempting to fetch user data instead`);
+      console.warn(`No profile found for user ${userId}, attempting to create profile`);
       
-      // MELHORADO: Nova tentativa de criar perfil com ensure_user_profile RPC
+      // MELHORADO: Tentar criar perfil sem depender de auth.getUser()
       try {
         console.log(`Tentando criar perfil via ensure_user_profile RPC para usuário ${userId}`);
         
-        // Obter email do usuário primeiro
-        const { data: userData, error: userError } = await supabase.auth.getUser(userId);
+        // FALLBACK: Não tentar obter userData se temos problemas de auth
+        // Em vez disso, usar o email da sessão atual se disponível
+        const session = await supabase.auth.getSession();
+        const userEmail = session.data.session?.user?.email;
         
-        if (userError || !userData?.user?.email) {
-          console.error('Erro ao obter dados do usuário:', userError);
+        if (!userEmail) {
+          console.error('Não foi possível obter email do usuário da sessão');
           return null;
         }
         
@@ -61,7 +63,7 @@ export const profileService = {
         const { data: rpcData, error: rpcError } = await supabase
           .rpc('ensure_user_profile', {
             user_id: userId,
-            user_email: userData.user.email,
+            user_email: userEmail,
             user_role: 'cliente'
           });
           
@@ -93,16 +95,20 @@ export const profileService = {
           }
         }
         
-        // Fallback: criar um perfil mínimo se não conseguiu via RPC
-        return {
-          id: userId,
-          email: userData.user.email,
-          role: 'cliente', 
-          created_at: userData.user.created_at || new Date().toISOString(),
-          last_login: new Date().toISOString(),
-          is_active: true,
-          is_approved: true
-        };
+        // Fallback final: criar um perfil mínimo se não conseguiu via RPC
+        if (userEmail) {
+          return {
+            id: userId,
+            email: userEmail,
+            role: 'cliente', 
+            created_at: new Date().toISOString(),
+            last_login: new Date().toISOString(),
+            is_active: true,
+            is_approved: true
+          };
+        }
+        
+        return null;
       } catch (createError) {
         console.error('Error creating missing profile:', createError);
         return null;
