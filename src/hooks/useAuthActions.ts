@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/constants/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,16 +20,46 @@ export function useAuthActions(updateState: (state: any) => void) {
   const navigate = useNavigate();
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
+  
+  // Ref para controlar timeouts e evitar vazamentos de memória
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Função para limpar o estado de processamento com timeout de segurança
+  const clearProcessingState = useCallback(() => {
+    console.log('Limpando estado de processamento...');
+    setIsAuthProcessing(false);
+    
+    // Limpar qualquer timeout pendente
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Timeout de segurança para evitar travamento
+  const setProcessingWithTimeout = useCallback((processing: boolean) => {
+    setIsAuthProcessing(processing);
+    
+    if (processing) {
+      // Timeout de segurança de 30 segundos
+      timeoutRef.current = setTimeout(() => {
+        console.warn('Timeout de auth operation detectado, limpando estado...');
+        clearProcessingState();
+      }, 30000);
+    } else {
+      clearProcessingState();
+    }
+  }, [clearProcessingState]);
 
   const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      console.log('Auth operation already in progress. Ignoring duplicate signup request.');
       return { success: false, message: 'Operation in progress' };
     }
     
     try {
-      setIsAuthProcessing(true);
+      setProcessingWithTimeout(true);
       console.log('AuthContext: Iniciando processo de cadastro');
       updateState({ isLoading: true, error: null });
       
@@ -137,9 +167,9 @@ export function useAuthActions(updateState: (state: any) => void) {
       return { success: false, message: errorMessage, technicalError: techError };
     } finally {
       updateState({ isLoading: false });
-      setIsAuthProcessing(false);
+      clearProcessingState();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [isAuthProcessing, navigate, updateState, setProcessingWithTimeout, clearProcessingState]);
 
   // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
   const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
@@ -195,12 +225,12 @@ export function useAuthActions(updateState: (state: any) => void) {
   const signIn = useCallback(async (email: string, password: string) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      console.log('Auth operation already in progress. Ignoring duplicate signin request.');
       return;
     }
     
     try {
-      setIsAuthProcessing(true);
+      setProcessingWithTimeout(true);
       updateState({ isLoading: true, error: null });
       setTechnicalError(null);
       
@@ -369,22 +399,22 @@ export function useAuthActions(updateState: (state: any) => void) {
       updateState({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     } finally {
-      if (isAuthProcessing) {
-        setIsAuthProcessing(false);
-      }
+      clearProcessingState();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [isAuthProcessing, navigate, updateState, setProcessingWithTimeout, clearProcessingState]);
 
   const signOut = useCallback(async () => {
-    // Prevent duplicate operations
+    // FORÇA limpeza do estado se estiver travado há muito tempo
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
-      return;
+      console.warn('Forçando logout mesmo com operação em progresso...');
+      clearProcessingState();
     }
     
     try {
-      setIsAuthProcessing(true);
+      setProcessingWithTimeout(true);
+      console.log('Iniciando processo de logout...');
       updateState({ isLoading: true });
+      
       await authService.signOut();
       
       // Limpa o estado de autenticação
@@ -395,16 +425,26 @@ export function useAuthActions(updateState: (state: any) => void) {
         isLoading: false
       });
       
+      console.log('Logout realizado com sucesso');
       toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
-      toast.error(error.message || 'Ocorreu um erro ao tentar sair.');
-      updateState({ isLoading: false });
+      
+      // Mesmo com erro, limpar o estado local e redirecionar
+      updateState({
+        user: null,
+        profile: null,
+        error: null,
+        isLoading: false
+      });
+      
+      toast.error('Ocorreu um erro ao tentar sair, mas você foi desconectado.');
+      navigate('/login');
     } finally {
-      setIsAuthProcessing(false);
+      clearProcessingState();
     }
-  }, [isAuthProcessing, navigate, updateState]);
+  }, [navigate, updateState, setProcessingWithTimeout, clearProcessingState, isAuthProcessing]);
 
   return { signIn, signUp, signOut, technicalError };
 }
