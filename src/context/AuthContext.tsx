@@ -6,6 +6,7 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAuthActions } from '@/hooks/useAuthActions';
 import { UserRole } from '@/types/auth';
 import { hasMinimumRole } from '@/utils/roleUtils';
+import { DEFAULT_USER_ROLE } from '@/constants/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -17,7 +18,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useAuthSession(updateState);
   
   // Get user role from profile with safety check
-  const userRole: UserRole = state.profile?.role || 'cliente';
+  const userRole: UserRole = state.profile?.role || DEFAULT_USER_ROLE;
   
   // Create hasMinimumRole function bound to current user role with safety check
   const hasMinimumRoleForUser = (requiredRole: UserRole) => {

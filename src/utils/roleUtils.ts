@@ -1,6 +1,6 @@
 
 import { UserRole } from '@/types/auth';
-import { ROLE_HIERARCHY, ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_COLORS } from '@/constants/auth';
+import { ROLE_HIERARCHY, ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_COLORS, DEFAULT_USER_ROLE } from '@/constants/auth';
 
 /**
  * Verifica se um role tem permissão mínima necessária
@@ -173,9 +173,9 @@ export const toUserRole = (role: string): UserRole => {
     if (isValidRole(role)) {
       return role;
     }
-    return 'cliente'; // fallback seguro
+    return DEFAULT_USER_ROLE; // fallback seguro
   } catch (error) {
     console.error('Error in toUserRole:', error);
-    return 'cliente'; // fallback seguro
+    return DEFAULT_USER_ROLE; // fallback seguro
   }
 };
