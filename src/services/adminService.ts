@@ -16,6 +16,7 @@ export interface ProfileUpdateData {
   email?: string;
   is_active?: boolean;
   is_approved?: boolean;
+  [key: string]: string | boolean | undefined;
 }
 
 const adminService = {
