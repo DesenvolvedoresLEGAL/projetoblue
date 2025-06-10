@@ -7,6 +7,7 @@ import {
   Navigate
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { Layout } from '@/components/layout/Layout';
 import Login from '@/pages/Login';
@@ -43,6 +44,8 @@ import { AdminConfig } from './modules/admin/pages/AdminConfig';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
+  console.log('ProtectedRoute - Auth state:', { isAuthenticated, isLoading });
+  
   // Show loading while checking authentication
   if (isLoading) {
     return (
@@ -56,7 +59,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isAuthenticated) {
-    // Redirect to login page if not authenticated
+    console.log('ProtectedRoute - User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
@@ -135,11 +138,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
