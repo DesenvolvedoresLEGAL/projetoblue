@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { profileService } from '@/services/profileService';
 import { toast } from '@/utils/toast';
+import { DEFAULT_USER_ROLE } from '@/constants/auth';
 
 // Debounce function to prevent multiple redirects
 const debounce = (fn: Function, ms = 300) => {
@@ -35,8 +36,8 @@ export function useAuthSession(updateState: (state: any) => void) {
           console.log('Profile fetched successfully:', profile.email);
           // Verificar se o role está entre os valores esperados
           if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(profile.role)) {
-            console.warn(`Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
-            profile.role = 'cliente';
+            console.warn(`Invalid role detected: ${profile.role}, defaulting to '${DEFAULT_USER_ROLE}'`);
+            profile.role = DEFAULT_USER_ROLE;
           }
           
           updateState({ 

@@ -1,6 +1,6 @@
 
 // Valores padrão para autenticação
-export const DEFAULT_USER_ROLE = 'cliente';
+export const DEFAULT_USER_ROLE = 'user';
 
 // Categorias de erros para melhor tratamento
 export enum AuthErrorCategory {

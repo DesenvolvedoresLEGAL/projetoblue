@@ -46,8 +46,8 @@ const Signup = () => {
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
       
-      // By default, register new users as 'cliente' role
-      const result = await signUp(email, password, 'cliente');
+      // By default, register new users as 'user' role
+      const result = await signUp(email, password, 'user');
       
       // Check for technical error information from the result
       if (result && result.technicalError) {

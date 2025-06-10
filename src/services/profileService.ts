@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types/auth';
+import { DEFAULT_USER_ROLE } from '@/constants/auth';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -25,8 +26,8 @@ export const profileService = {
         // Validate the role to ensure it's one of the valid values
         const role = data.role as UserRole;
         if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(role)) {
-          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
-          data.role = 'cliente';
+          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to '${DEFAULT_USER_ROLE}'`);
+          data.role = DEFAULT_USER_ROLE;
         }
         
         // Map the profiles table fields to the UserProfile type
@@ -64,7 +65,7 @@ export const profileService = {
           .rpc('ensure_user_profile', {
             user_id: userId,
             user_email: userEmail,
-            user_role: 'cliente'
+            user_role: DEFAULT_USER_ROLE
           });
           
         if (rpcError) {
@@ -100,7 +101,7 @@ export const profileService = {
           return {
             id: userId,
             email: userEmail,
-            role: 'cliente', 
+            role: DEFAULT_USER_ROLE,
             created_at: new Date().toISOString(),
             last_login: new Date().toISOString(),
             is_active: true,
