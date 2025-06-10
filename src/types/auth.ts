@@ -1,7 +1,7 @@
 
 import { User } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'gestor' | 'consultor' | 'suporte' | 'cliente' | 'user';
+export type UserRole = 'admin' | 'suporte' | 'cliente' | 'user';
 
 export interface UserProfile {
   id: string;

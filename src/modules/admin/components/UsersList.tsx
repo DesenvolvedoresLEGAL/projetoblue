@@ -86,8 +86,6 @@ export const UsersList: React.FC<UsersListProps> = ({ users, isLoading }) => {
           <SelectContent>
             <SelectItem value="all">Todos os cargos</SelectItem>
             <SelectItem value="admin">Administrador</SelectItem>
-            <SelectItem value="gestor">Gestor</SelectItem>
-            <SelectItem value="consultor">Consultor</SelectItem>
             <SelectItem value="suporte">Suporte</SelectItem>
             <SelectItem value="cliente">Cliente</SelectItem>
             <SelectItem value="user">Usuário</SelectItem>

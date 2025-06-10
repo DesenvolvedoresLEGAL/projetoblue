@@ -6,8 +6,6 @@ import {
   hasMinimumRole, 
   isSupportOrAbove, 
   isClienteOrAbove, 
-  isConsultorOrAbove, 
-  isGestorOrAbove, 
   isAdmin,
   getAssignableRoles
 } from '@/utils/roleUtils';
@@ -19,8 +17,6 @@ export const useRolePermissions = () => {
   const permissions = useMemo(() => ({
     // Verificações básicas de role
     isAdmin: isAdmin(userRole),
-    isGestorOrAbove: isGestorOrAbove(userRole),
-    isConsultorOrAbove: isConsultorOrAbove(userRole),
     isSupportOrAbove: isSupportOrAbove(userRole),
     isClienteOrAbove: isClienteOrAbove(userRole),
     
@@ -34,11 +30,11 @@ export const useRolePermissions = () => {
     currentRole: userRole,
     
     // Permissões específicas do sistema
-    canManageUsers: isGestorOrAbove(userRole),
+    canManageUsers: isAdmin(userRole),
     canAccessAdminPanel: isAdmin(userRole),
     canProvideSupport: isSupportOrAbove(userRole),
-    canManageAssets: isConsultorOrAbove(userRole),
-    canViewReports: isConsultorOrAbove(userRole),
+    canManageAssets: isSupportOrAbove(userRole),
+    canViewReports: isSupportOrAbove(userRole),
     canManageClients: isSupportOrAbove(userRole),
     canAccessBits: isClienteOrAbove(userRole),
     canGenerateReferrals: isClienteOrAbove(userRole)

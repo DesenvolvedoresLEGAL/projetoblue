@@ -1200,18 +1200,6 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
-      admin_list_users: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          role: Database["public"]["Enums"]["user_role_enum"]
-          is_active: boolean
-          is_approved: boolean
-          created_at: string
-          last_login: string
-        }[]
-      }
       admin_update_user_profile: {
         Args: { user_id: string; profile_updates: Json }
         Returns: boolean
@@ -1232,14 +1220,6 @@ export type Database = {
           issue_description: string
           corrected: boolean
         }[]
-      }
-      ensure_user_profile: {
-        Args: {
-          user_id: string
-          user_email: string
-          user_role?: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
       }
       fix_missing_profiles: {
         Args: Record<PropertyKey, never>
@@ -1277,13 +1257,6 @@ export type Database = {
           count: number
         }[]
       }
-      update_user_role: {
-        Args: {
-          user_email: string
-          new_role: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
-      }
       user_has_profile: {
         Args: { user_id: string }
         Returns: boolean
@@ -1316,13 +1289,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
-      user_role_enum:
-        | "admin"
-        | "gestor"
-        | "consultor"
-        | "cliente"
-        | "user"
-        | "suporte"
+      user_role_enum: "admin" | "suporte" | "cliente" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1467,14 +1434,7 @@ export const Constants = {
         "ANTENA",
         "LOAD BALANCE",
       ],
-      user_role_enum: [
-        "admin",
-        "gestor",
-        "consultor",
-        "cliente",
-        "user",
-        "suporte",
-      ],
+      user_role_enum: ["admin", "suporte", "cliente", "user"],
     },
   },
 } as const

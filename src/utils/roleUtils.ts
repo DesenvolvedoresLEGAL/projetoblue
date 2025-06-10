@@ -54,30 +54,6 @@ export const isClienteOrAbove = (userRole: UserRole): boolean => {
 };
 
 /**
- * Verifica se o usuário é consultor ou superior
- */
-export const isConsultorOrAbove = (userRole: UserRole): boolean => {
-  try {
-    return hasMinimumRole(userRole, 'consultor');
-  } catch (error) {
-    console.error('Error in isConsultorOrAbove:', error);
-    return false;
-  }
-};
-
-/**
- * Verifica se o usuário é gestor ou superior
- */
-export const isGestorOrAbove = (userRole: UserRole): boolean => {
-  try {
-    return hasMinimumRole(userRole, 'gestor');
-  } catch (error) {
-    console.error('Error in isGestorOrAbove:', error);
-    return false;
-  }
-};
-
-/**
  * Verifica se o usuário é admin
  */
 export const isAdmin = (userRole: UserRole): boolean => {

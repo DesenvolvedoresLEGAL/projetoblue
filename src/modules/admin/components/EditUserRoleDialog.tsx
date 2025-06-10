@@ -22,7 +22,7 @@ interface EditUserRoleDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const USER_ROLES: UserRole[] = ['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'];
+const USER_ROLES: UserRole[] = ['admin', 'suporte', 'cliente', 'user'];
 
 export const EditUserRoleDialog: React.FC<EditUserRoleDialogProps> = ({
   user,
