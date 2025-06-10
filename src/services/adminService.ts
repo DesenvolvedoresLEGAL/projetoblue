@@ -9,82 +9,96 @@ export interface AdminUser {
   is_active: boolean;
   is_approved: boolean;
   created_at: string;
-  last_login: string | null;
+  last_login?: string;
 }
 
 export interface ProfileUpdateData {
-  [key: string]: any;
   email?: string;
   is_active?: boolean;
   is_approved?: boolean;
 }
 
-export const adminService = {
-  // Listar todos os usuários
+const adminService = {
   async listUsers(): Promise<AdminUser[]> {
-    console.log('Buscando lista de usuários...');
-    
-    const { data, error } = await supabase.rpc('admin_list_users');
-    
-    if (error) {
+    try {
+      const { data, error } = await supabase.rpc('admin_list_users');
+      
+      if (error) {
+        console.error('Erro ao listar usuários:', error);
+        throw new Error(error.message || 'Falha ao carregar usuários');
+      }
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected array from admin_list_users, got:', typeof data);
+        return [];
+      }
+      
+      return data as AdminUser[];
+    } catch (error: any) {
       console.error('Erro ao listar usuários:', error);
-      throw new Error(`Erro ao carregar usuários: ${error.message}`);
+      throw new Error(error.message || 'Não foi possível carregar a lista de usuários');
     }
-    
-    console.log('Usuários carregados:', data?.length || 0);
-    return data || [];
   },
 
-  // Deletar usuário
-  async deleteUser(userId: string): Promise<boolean> {
-    console.log('Deletando usuário:', userId);
-    
-    const { data, error } = await supabase.rpc('admin_delete_user', {
-      user_id: userId
-    });
-    
-    if (error) {
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      const { data, error } = await supabase.rpc('admin_delete_user', {
+        user_id: userId
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Falha ao deletar usuário');
+      }
+
+      if (!data) {
+        throw new Error('Falha ao deletar usuário');
+      }
+    } catch (error: any) {
       console.error('Erro ao deletar usuário:', error);
-      throw new Error(`Erro ao deletar usuário: ${error.message}`);
+      throw new Error(error.message || 'Não foi possível deletar o usuário');
     }
-    
-    console.log('Usuário deletado com sucesso');
-    return data || false;
   },
 
-  // Atualizar role do usuário
-  async updateUserRole(userId: string, role: UserRole): Promise<boolean> {
-    console.log('Atualizando role do usuário:', { userId, role });
-    
-    const { data, error } = await supabase.rpc('admin_update_user_role', {
-      user_id: userId,
-      new_role: role
-    });
-    
-    if (error) {
+  async updateUserRole(userId: string, role: UserRole): Promise<void> {
+    try {
+      const { data, error } = await supabase.rpc('admin_update_user_role', {
+        user_id: userId,
+        new_role: role
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Falha ao atualizar role');
+      }
+
+      if (!data) {
+        throw new Error('Falha ao atualizar role');
+      }
+    } catch (error: any) {
       console.error('Erro ao atualizar role:', error);
-      throw new Error(`Erro ao atualizar cargo: ${error.message}`);
+      throw new Error(error.message || 'Não foi possível atualizar o cargo');
     }
-    
-    console.log('Role atualizado com sucesso');
-    return data || false;
   },
 
-  // Atualizar dados do perfil
-  async updateUserProfile(userId: string, profileData: ProfileUpdateData): Promise<boolean> {
-    console.log('Atualizando perfil do usuário:', { userId, profileData });
-    
-    const { data, error } = await supabase.rpc('admin_update_user_profile', {
-      user_id: userId,
-      profile_updates: profileData as Record<string, any>
-    });
-    
-    if (error) {
+  async updateUserProfile(userId: string, profileData: ProfileUpdateData): Promise<void> {
+    try {
+      const { data, error } = await supabase.rpc('admin_update_user_profile', {
+        user_id: userId,
+        profile_updates: profileData
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Falha ao atualizar perfil');
+      }
+
+      if (!data) {
+        throw new Error('Falha ao atualizar perfil');
+      }
+    } catch (error: any) {
       console.error('Erro ao atualizar perfil:', error);
-      throw new Error(`Erro ao atualizar perfil: ${error.message}`);
+      throw new Error(error.message || 'Não foi possível atualizar o perfil');
     }
-    
-    console.log('Perfil atualizado com sucesso');
-    return data || false;
   }
 };
+
+export { adminService };

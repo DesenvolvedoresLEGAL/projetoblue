@@ -1,150 +1,90 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
-import { Plus, Link, FileSpreadsheet, ChevronDown } from "lucide-react";
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { usePermissions } from '@/hooks/usePermissions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Users, Package, FileText, UserPlus, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { RoleGuard } from '@/components/auth/RoleGuard';
-import * as XLSX from 'xlsx';
-import { assetService } from '@modules/assets/services/assetService';
-import useAssetsData from '@modules/assets/hooks/useAssetsData';
 
-export const QuickActionsCard: React.FC = () => {
+export const QuickActionsCard = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const assets = useAssetsData();
-  const { canCreateAssets, canManageAssociations, canExportData } = usePermissions();
 
-  const handleImportCSV = () => {
-    console.log("IMPORT CSV");
-  };
-
-  const handleExport = (format: 'csv' | 'excel') => {
-    try {
-      const data = assets.data.assets;
-      const fileName = "ATIVOS";
-
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        alert("Não há dados para exportar.");
-        return;
-      }
-
-      const flattenedData = data.map(asset => ({
-        model: asset.model,
-        rented_days: asset.rented_days,
-        serial_number: asset.serial_number,
-        radio: asset.radio,
-        admin_user: asset.admin_user,
-        admin_pass: asset.admin_pass,
-        ssid_atual: asset.ssid_atual,
-        pass_atual: asset.pass_atual,
-        manufacturer_name: asset.manufacturer?.name ?? "",
-        status_name: asset.status?.name ?? "",
-        solucao_name: asset.solucao?.name ?? "",
-        plan_name: asset.plan?.name ?? ""
-      }));
-
-      if (format === 'csv') {
-        const headers = Object.keys(flattenedData[0]);
-        const csvRows = [
-          headers.join(','),
-          ...flattenedData.map(row =>
-            headers.map(field => {
-              let cell = row[field];
-              if (cell == null) cell = "";
-              if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"'))) {
-                cell = `"${cell.replace(/"/g, '""')}"`;
-              }
-              return cell;
-            }).join(',')
-          )
-        ];
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute('download', `${fileName}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-      } else if (format === 'excel') {
-        const ws = XLSX.utils.json_to_sheet(flattenedData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Exportação");
-        XLSX.writeFile(wb, `${fileName}.xlsx`);
-      }
-    } catch (error) {
-      console.log(`ERRO DE EXPORTAÇÃO:===>>>> ${error}`);
+  const actions = [
+    {
+      title: 'Novo Ativo',
+      description: 'Registrar novo equipamento',
+      icon: Plus,
+      onClick: () => navigate('/assets/register'),
+      color: 'bg-blue-500 hover:bg-blue-600',
+      requiredRole: 'suporte' as const
+    },
+    {
+      title: 'Nova Associação',
+      description: 'Associar ativo a cliente',
+      icon: Users,
+      onClick: () => navigate('/associations/association'),
+      color: 'bg-green-500 hover:bg-green-600',
+      requiredRole: 'suporte' as const
+    },
+    {
+      title: 'Novo Cliente',
+      description: 'Cadastrar novo cliente',
+      icon: UserPlus,
+      onClick: () => navigate('/clients/register'),
+      color: 'bg-purple-500 hover:bg-purple-600',
+      requiredRole: 'suporte' as const
+    },
+    {
+      title: 'Inventário',
+      description: 'Visualizar inventário',
+      icon: Package,
+      onClick: () => navigate('/assets/inventory'),
+      color: 'bg-orange-500 hover:bg-orange-600',
+      requiredRole: 'suporte' as const
+    },
+    {
+      title: 'Relatórios',
+      description: 'Gerar relatórios',
+      icon: FileText,
+      onClick: () => navigate('/export'),
+      color: 'bg-indigo-500 hover:bg-indigo-600',
+      requiredRole: 'suporte' as const
+    },
+    {
+      title: 'Exportar Dados',
+      description: 'Exportar informações',
+      icon: Download,
+      onClick: () => navigate('/export'),
+      color: 'bg-teal-500 hover:bg-teal-600',
+      requiredRole: 'suporte' as const
     }
-  };
+  ];
 
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="legal-title">Ações Rápidas</CardTitle>
-        <CardDescription className="legal-text">
-          Acesso direto às funcionalidades principais
-        </CardDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Ações Rápidas
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <RoleGuard requiredRole="suporte">
-          <Button 
-            onClick={() => navigate('/assets/register')}
-            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Cadastrar Ativo
-          </Button>
-        </RoleGuard>
-        
-        <RoleGuard requiredRole="suporte">
-          <Button 
-            onClick={() => navigate('/association')}
-            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-            variant="outline"
-          >
-            <Link className="h-4 w-4 mr-2" />
-            Nova Associação
-          </Button>
-        </RoleGuard>
-
-        <RoleGuard requiredRole="consultor">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {actions.map((action, index) => (
+            <RoleGuard key={index} requiredRole={action.requiredRole}>
+              <Button
                 variant="outline"
+                className={`${action.color} text-white border-none h-20 flex flex-col items-center justify-center gap-2 p-4 transition-all duration-200 hover:scale-105`}
+                onClick={action.onClick}
               >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Exportar Dados
-                <ChevronDown className="h-4 w-4 ml-2" />
+                <action.icon className="h-6 w-6" />
+                <div className="text-center">
+                  <div className="font-medium text-sm">{action.title}</div>
+                  <div className="text-xs opacity-90">{action.description}</div>
+                </div>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full">
-              <DropdownMenuItem onClick={() => handleExport('csv')}>
-                Exportar CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('excel')}>
-                Exportar Excel
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </RoleGuard>
-
-        <RoleGuard requiredRole="suporte">
-          <Button 
-            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-            variant="outline"
-            onClick={() => handleImportCSV()}
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Importar Dados (.csv)
-          </Button>
-        </RoleGuard>
+            </RoleGuard>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
