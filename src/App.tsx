@@ -40,6 +40,89 @@ import ClientsDelete from '@/modules/clients/pages/Clients';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { AdminConfig } from './modules/admin/pages/AdminConfig';
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-muted-foreground">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    // Redirect to login page if not authenticated
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+const AppRoutes = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/" element={<Dashboard />} />
+          
+          {/* Assets Routes */}
+          <Route path="/assets" element={<AssetsDashboard />} />
+          <Route path="/assets/inventory" element={<AssetsInventory />} />
+          <Route path="/assets/management" element={<AssetsManagement />} />
+          <Route path="/assets/register" element={<AssetsRegister />} />
+          <Route path="/assets/associations" element={<AssociationsList />} />
+          
+          {/* Tickets Routes */}
+          <Route path="/tickets" element={<TicketsDashboard />} />
+          <Route path="/tickets/inbox" element={<TicketsInbox />} />
+          <Route path="/tickets/my-tickets" element={<TicketsMyTickets />} />
+          <Route path="/tickets/new" element={<TicketsNew />} />
+          <Route path="/tickets/knowledge-base" element={<TicketsKnowledgeBase />} />
+          <Route path="/tickets/automation" element={<TicketsAutomation />} />
+          <Route path="/tickets/analytics" element={<TicketsAnalytics />} />
+          <Route path="/tickets/quality" element={<TicketsQuality />} />
+          <Route path="/tickets/copilot" element={<TicketsCopilot />} />
+          <Route path="/tickets/integrations" element={<TicketsIntegrations />} />
+          
+          {/* Bits Routes */}
+          <Route path="/bits" element={<BitsDashboard />} />
+          <Route path="/bits/indicate" element={<BitsIndicate />} />
+          <Route path="/bits/my-referrals" element={<BitsMyReferrals />} />
+          <Route path="/bits/rewards" element={<BitsRewards />} />
+          <Route path="/bits/settings" element={<BitsSettings />} />
+          <Route path="/bits/help" element={<BitsHelp />} />
+          
+          {/* Clients Routes */}
+          <Route path="/clients/view" element={<ClientsView />} />
+          <Route path="/clients/create" element={<ClientsCreate />} />
+          <Route path="/clients/edit" element={<ClientsEdit />} />
+          <Route path="/clients/delete" element={<ClientsDelete />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/config" 
+            element={
+              <RoleGuard requiredRole="admin">
+                <AdminConfig />
+              </RoleGuard>
+            } 
+          />
+          
+          {/* 404 Route - Make sure it's the last route */}
+          <Route path="*" element={<div>Página não encontrada</div>} />
+        </Route>
+      </Routes>
+    </div>
+  );
+};
+
 function App() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -50,90 +133,13 @@ function App() {
     },
   });
 
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, isLoading } = useAuth();
-    
-    // Show loading while checking authentication
-    if (isLoading) {
-      return (
-        <div className="flex h-screen w-full items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-            <p className="text-muted-foreground">Verificando autenticação...</p>
-          </div>
-        </div>
-      );
-    }
-    
-    if (!isAuthenticated) {
-      // Redirect to login page if not authenticated
-      return <Navigate to="/login" replace />;
-    }
-    
-    return <>{children}</>;
-  };
-
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-background">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              
-              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                <Route path="/" element={<Dashboard />} />
-                
-                {/* Assets Routes */}
-                <Route path="/assets" element={<AssetsDashboard />} />
-                <Route path="/assets/inventory" element={<AssetsInventory />} />
-                <Route path="/assets/management" element={<AssetsManagement />} />
-                <Route path="/assets/register" element={<AssetsRegister />} />
-                <Route path="/assets/associations" element={<AssociationsList />} />
-                
-                {/* Tickets Routes */}
-                <Route path="/tickets" element={<TicketsDashboard />} />
-                <Route path="/tickets/inbox" element={<TicketsInbox />} />
-                <Route path="/tickets/my-tickets" element={<TicketsMyTickets />} />
-                <Route path="/tickets/new" element={<TicketsNew />} />
-                <Route path="/tickets/knowledge-base" element={<TicketsKnowledgeBase />} />
-                <Route path="/tickets/automation" element={<TicketsAutomation />} />
-                <Route path="/tickets/analytics" element={<TicketsAnalytics />} />
-                <Route path="/tickets/quality" element={<TicketsQuality />} />
-                <Route path="/tickets/copilot" element={<TicketsCopilot />} />
-                <Route path="/tickets/integrations" element={<TicketsIntegrations />} />
-                
-                {/* Bits Routes */}
-                <Route path="/bits" element={<BitsDashboard />} />
-                <Route path="/bits/indicate" element={<BitsIndicate />} />
-                <Route path="/bits/my-referrals" element={<BitsMyReferrals />} />
-                <Route path="/bits/rewards" element={<BitsRewards />} />
-                <Route path="/bits/settings" element={<BitsSettings />} />
-                <Route path="/bits/help" element={<BitsHelp />} />
-                
-                {/* Clients Routes */}
-                <Route path="/clients/view" element={<ClientsView />} />
-                <Route path="/clients/create" element={<ClientsCreate />} />
-                <Route path="/clients/edit" element={<ClientsEdit />} />
-                <Route path="/clients/delete" element={<ClientsDelete />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin/config" 
-                  element={
-                    <RoleGuard requiredRole="admin">
-                      <AdminConfig />
-                    </RoleGuard>
-                  } 
-                />
-                
-                {/* 404 Route - Make sure it's the last route */}
-                <Route path="*" element={<div>Página não encontrada</div>} />
-              </Route>
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
