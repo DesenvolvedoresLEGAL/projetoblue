@@ -6,7 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction, AlertDialogDescription } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogDescription
+} from '@/components/ui/alert-dialog';
+import { Loader2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { UserRole } from '@/types/auth';
 import { formatDateForDisplay } from '@/utils/dateUtils';
@@ -106,10 +117,17 @@ const AdminConfig = () => {
                 <TableCell>{getRoleLabel(u.role)}</TableCell>
                 <TableCell>{formatDateForDisplay(u.created_at)}</TableCell>
                 <TableCell className="space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(u)}>Editar</Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(u)} disabled={updateMutation.isLoading}>
+                    Editar
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="destructive">Excluir</Button>
+                      <Button size="sm" variant="destructive" disabled={deleteMutation.isLoading}>
+                        {deleteMutation.isLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        Excluir
+                      </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -119,8 +137,16 @@ const AdminConfig = () => {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteMutation.mutate(u.id)}>Excluir</AlertDialogAction>
+                        <AlertDialogCancel disabled={deleteMutation.isLoading}>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMutation.mutate(u.id)}
+                          disabled={deleteMutation.isLoading}
+                        >
+                          {deleteMutation.isLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Excluir
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -160,8 +186,19 @@ const AdminConfig = () => {
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={updateMutation.isLoading}>{updateMutation.isLoading ? 'Salvando...' : 'Salvar'}</Button>
+            <Button variant="outline" onClick={() => setEditingUser(null)} disabled={updateMutation.isLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={updateMutation.isLoading}>
+              {updateMutation.isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Salvando...
+                </span>
+              ) : (
+                'Salvar'
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
