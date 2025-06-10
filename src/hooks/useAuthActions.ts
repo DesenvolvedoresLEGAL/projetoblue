@@ -89,7 +89,7 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       console.log('✅ Dados validados, enviando para o serviço de autenticação');
       
-      // Ensure we have a valid role
+      // Ensure we have a valid role - fix the role type issue
       if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
         console.warn(`⚠️ Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
         role = DEFAULT_USER_ROLE as UserRole;
@@ -97,21 +97,21 @@ export function useAuthActions(updateState: (state: any) => void) {
       
       // Aplicar timeout na operação de signup
       const signupPromise = authService.signUp(email, password, role);
-      const { data, error, profileCreated } = await withTimeout(
+      const result = await withTimeout(
         signupPromise, 
         15000, 
         'cadastro de usuário'
       );
 
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw result.error;
       }
 
-      if (data?.user) {
-        if (!profileCreated) {
+      if (result.data?.user) {
+        if (!result.profileCreated) {
           console.log('🔄 Tentando criar perfil manualmente após falha do trigger');
           
-          const profileResult = await createProfileManually(data.user.id, email, role);
+          const profileResult = await createProfileManually(result.data.user.id, email, role);
           if (profileResult.success) {
             console.log('✅ Perfil criado manualmente com sucesso');
             toast.success("Cadastro realizado com sucesso! Você já pode fazer login.");
@@ -131,12 +131,12 @@ export function useAuthActions(updateState: (state: any) => void) {
         
         return { success: true, message: 'Cadastro realizado com sucesso' };
       } else {
-        console.error('❌ Usuário não foi criado, dados incompletos:', data);
+        console.error('❌ Usuário não foi criado, dados incompletos:', result.data);
         const techError = {
           message: 'Falha ao criar usuário: dados incompletos retornados',
           category: AuthErrorCategory.UNKNOWN,
           timestamp: new Date().toISOString(),
-          context: { data }
+          context: { data: result.data }
         };
         setTechnicalError(techError);
         throw new Error('Falha ao criar usuário: dados incompletos retornados');
@@ -248,28 +248,28 @@ export function useAuthActions(updateState: (state: any) => void) {
       
       // Aplicar timeout na operação de login
       const loginPromise = authService.signIn(email, password);
-      const { data, error } = await withTimeout(loginPromise, 10000, 'login de usuário');
+      const result = await withTimeout(loginPromise, 10000, 'login de usuário');
       
-      if (error) {
+      if (result.error) {
         // Categorizar o erro
-        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
+        const errorCategory = result.error.category || AuthErrorCategory.UNKNOWN;
         const errorMessage = AUTH_ERROR_MESSAGES[errorCategory] || 'Erro ao fazer login';
         
         setTechnicalError({
-          message: error.message || 'Erro desconhecido durante login',
+          message: result.error.message || 'Erro desconhecido durante login',
           category: errorCategory,
           timestamp: new Date().toISOString()
         });
         
-        throw { ...error, message: errorMessage, category: errorCategory };
+        throw { ...result.error, message: errorMessage, category: errorCategory };
       }
 
-      if (data.user) {
+      if (result.data.user) {
         console.log('✅ Login autenticado para:', email);
         
         try {
           // Buscar perfil com timeout
-          const profilePromise = profileService.fetchUserProfile(data.user.id);
+          const profilePromise = profileService.fetchUserProfile(result.data.user.id);
           let userProfile = await withTimeout(profilePromise, 8000, 'busca de perfil');
           
           console.log('📋 Perfil obtido após login:', userProfile);
@@ -280,8 +280,8 @@ export function useAuthActions(updateState: (state: any) => void) {
             
             try {
               const rpcPromise = supabase.rpc('ensure_user_profile', {
-                user_id: data.user.id,
-                user_email: data.user.email || email,
+                user_id: result.data.user.id,
+                user_email: result.data.user.email || email,
                 user_role: DEFAULT_USER_ROLE
               });
               
@@ -291,7 +291,7 @@ export function useAuthActions(updateState: (state: any) => void) {
                 console.error('❌ Falha ao criar perfil via RPC:', rpcError);
               } else {
                 // Tentar obter o perfil novamente
-                const retryProfilePromise = profileService.fetchUserProfile(data.user.id);
+                const retryProfilePromise = profileService.fetchUserProfile(result.data.user.id);
                 const profileRetry = await withTimeout(retryProfilePromise, 3000, 'retry busca de perfil');
                 
                 if (profileRetry) {
@@ -305,10 +305,10 @@ export function useAuthActions(updateState: (state: any) => void) {
             // Usar perfil mínimo se ainda não conseguiu
             if (!userProfile) {
               userProfile = {
-                id: data.user.id,
-                email: data.user.email || email,
+                id: result.data.user.id,
+                email: result.data.user.email || email,
                 role: DEFAULT_USER_ROLE as UserRole,
-                created_at: data.user.created_at || new Date().toISOString(),
+                created_at: result.data.user.created_at || new Date().toISOString(),
                 last_login: new Date().toISOString(),
                 is_active: true,
                 is_approved: true
@@ -330,13 +330,13 @@ export function useAuthActions(updateState: (state: any) => void) {
           // Atualiza o estado com os dados do perfil
           updateState({ 
             profile: userProfile,
-            user: data.user,
+            user: result.data.user,
             error: null,
             isLoading: false
           });
           
           // Atualizar o last_login do usuário (operação não crítica)
-          profileService.updateLastLogin(data.user.id).catch(console.error);
+          profileService.updateLastLogin(result.data.user.id).catch(console.error);
           
           toast.success(`Bem-vindo(a)!`);
           
@@ -353,10 +353,10 @@ export function useAuthActions(updateState: (state: any) => void) {
             console.warn('⚠️ Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
             
             const basicProfile = {
-              id: data.user.id,
-              email: data.user.email || email,
+              id: result.data.user.id,
+              email: result.data.user.email || email,
               role: DEFAULT_USER_ROLE as UserRole,
-              created_at: data.user.created_at || new Date().toISOString(),
+              created_at: result.data.user.created_at || new Date().toISOString(),
               last_login: new Date().toISOString(),
               is_active: true,
               is_approved: true
@@ -364,7 +364,7 @@ export function useAuthActions(updateState: (state: any) => void) {
             
             updateState({ 
               profile: basicProfile,
-              user: data.user,
+              user: result.data.user,
               error: null,
               isLoading: false
             });
@@ -381,19 +381,19 @@ export function useAuthActions(updateState: (state: any) => void) {
             message: profileError.message || 'Erro ao verificar perfil',
             category: profileError.category || AuthErrorCategory.PROFILE_CREATION,
             timestamp: new Date().toISOString(),
-            context: { userId: data.user.id, email: data.user.email }
+            context: { userId: result.data.user.id, email: result.data.user.email }
           });
           
           console.warn('⚠️ Erro no perfil, mas mantendo usuário logado');
           updateState({ 
-            user: data.user,
+            user: result.data.user,
             profile: null,
             error: 'Problema ao carregar perfil. Algumas funcionalidades podem estar limitadas.',
             isLoading: false
           });
         }
       } else {
-        console.error('❌ Login falhou, dados incompletos:', data);
+        console.error('❌ Login falhou, dados incompletos:', result.data);
         throw {
           message: 'Falha no login: dados incompletos retornados',
           category: AuthErrorCategory.UNKNOWN
