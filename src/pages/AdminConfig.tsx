@@ -20,7 +20,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { UserRole } from '@/types/auth';
-import { formatDateForDisplay } from '@/utils/dateUtils';
+import { formatDateForDisplay, formatDateTimeForDisplay } from '@/utils/dateUtils';
 import { getRoleLabel } from '@/utils/roleUtils';
 
 interface Profile {
@@ -28,7 +28,7 @@ interface Profile {
   email: string;
   role: UserRole;
   created_at: string;
-  name?: string | null;
+  last_login: string;
 }
 
 const roles: UserRole[] = ['usuario', 'cliente', 'suporte', 'admin'];
@@ -36,14 +36,14 @@ const roles: UserRole[] = ['usuario', 'cliente', 'suporte', 'admin'];
 const AdminConfig = () => {
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
-  const [formState, setFormState] = useState({ name: '', email: '', role: 'usuario' as UserRole });
+  const [formState, setFormState] = useState({ email: '', role: 'usuario' as UserRole });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, role, created_at, name')
+        .select('id, email, role, created_at, last_login')
         .is('deleted_at', null);
       if (error) throw error;
       return data as Profile[];
@@ -54,7 +54,7 @@ const AdminConfig = () => {
     mutationFn: async (user: Profile) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ email: user.email, role: user.role, name: user.name })
+        .update({ email: user.email, role: user.role })
         .eq('id', user.id);
       if (error) throw error;
     },
@@ -81,7 +81,7 @@ const AdminConfig = () => {
   });
 
   const openEdit = (user: Profile) => {
-    setFormState({ name: user.name || '', email: user.email, role: user.role });
+    setFormState({ email: user.email, role: user.role });
     setEditingUser(user);
   };
 
@@ -90,6 +90,8 @@ const AdminConfig = () => {
     updateMutation.mutate({ ...editingUser, ...formState });
     setEditingUser(null);
   };
+
+  console.log("USERS ---> " + users);
 
   return (
     <div className="space-y-6">
@@ -103,9 +105,9 @@ const AdminConfig = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Email</TableHead>
-              <TableHead>Nome</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Criado em</TableHead>
+              <TableHead>Último acesso</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -113,9 +115,9 @@ const AdminConfig = () => {
             {users.map(u => (
               <TableRow key={u.id}>
                 <TableCell>{u.email}</TableCell>
-                <TableCell>{u.name || '-'}</TableCell>
                 <TableCell>{getRoleLabel(u.role)}</TableCell>
                 <TableCell>{formatDateForDisplay(u.created_at)}</TableCell>
+                <TableCell>{formatDateTimeForDisplay(u.last_login)}</TableCell>
                 <TableCell className="space-x-2">
                   <Button size="sm" variant="outline" onClick={() => openEdit(u)} disabled={updateMutation.isLoading}>
                     Editar
@@ -164,11 +166,6 @@ const AdminConfig = () => {
             <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Input
-              placeholder="Nome"
-              value={formState.name}
-              onChange={e => setFormState(s => ({ ...s, name: e.target.value }))}
-            />
             <Input
               placeholder="Email"
               value={formState.email}
