@@ -10,6 +10,7 @@ import { Layout } from "@/components/layout/Layout";
 import { DataUsageProvider } from "@/context/DataUsageContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthRoute } from "@/components/auth/AuthRoute";
+import { PrivateRoute } from "@/components/auth/PrivateRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Pages
@@ -33,6 +34,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
+import AdminConfig from "./pages/AdminConfig";
+import Unauthorized from "./pages/Unauthorized";
 import Topology from "./pages/Topology";
 import Discovery from "./pages/Discovery";
 
@@ -88,6 +91,7 @@ const App = () => (
                   {/* Public authentication routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/unauthorized" element={<Unauthorized />} />
                   
                   {/* Main layout with sidebar and header - Protected routes */}
                   <Route path="/" element={
@@ -247,10 +251,17 @@ const App = () => (
                     } />
                     
                     {/* Admin/Management routes - Requires gestor or above */}
+
                     <Route path="/suppliers" element={
                       <AuthRoute requiredRole="gestor">
                         <Suppliers />
                       </AuthRoute>
+                    } />
+
+                    <Route path="/admin/config" element={
+                      <PrivateRoute requiredRole="admin">
+                        <AdminConfig />
+                      </PrivateRoute>
                     } />
                     
                     {/* Direct shortcuts */}
