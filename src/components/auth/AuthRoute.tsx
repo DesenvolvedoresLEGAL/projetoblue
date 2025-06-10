@@ -2,13 +2,15 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/types/auth';
 
 interface AuthRouteProps {
   children: ReactNode;
+  requiredRole?: UserRole;
 }
 
-export const AuthRoute = ({ children }: AuthRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const AuthRoute = ({ children, requiredRole }: AuthRouteProps) => {
+  const { isAuthenticated, isLoading, hasMinimumRole } = useAuth();
   const location = useLocation();
   const [showLoading, setShowLoading] = useState(false);
   
@@ -48,6 +50,12 @@ export const AuthRoute = ({ children }: AuthRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If authenticated, render the protected content
+  // Check role permissions if required
+  if (requiredRole && !hasMinimumRole(requiredRole)) {
+    console.log('AuthRoute: Insufficient permissions for role:', requiredRole);
+    return <Navigate to="/" replace />;
+  }
+
+  // If authenticated and has required permissions, render the protected content
   return <>{children}</>;
 };
