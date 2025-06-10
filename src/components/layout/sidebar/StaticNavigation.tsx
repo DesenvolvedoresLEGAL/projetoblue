@@ -192,7 +192,7 @@ export function StaticNavigation({
           requiredRole="gestor"
         />
         <NavigationItem
-          to="/admin"
+          to="/admin/config"
           icon={Cog}
           label="Configurações"
           onClose={isMobile ? onClose : undefined}
