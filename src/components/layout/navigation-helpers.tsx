@@ -9,7 +9,17 @@ import {
   Star, 
   Network, 
   Search,
-  Settings
+  Settings,
+  PlusCircle,
+  PackageSearch,
+  Link as LinkIcon,
+  ActivitySquare,
+  FileText,
+  Scan,
+  HelpCircle,
+  Book,
+  ClipboardList,
+  Laptop
 } from 'lucide-react';
 
 export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed' | 'isExpanded' | 'onToggle'>[] => [
@@ -28,9 +38,33 @@ export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed
     requiredRole: 'suporte',
     items: [
       {
-        icon: Package,
-        label: 'Gestão de Ativos',
-        href: '/assets',
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        href: '/assets/dashboard',
+        requiredRole: 'suporte'
+      },
+      {
+        icon: PackageSearch,
+        label: 'Inventário',
+        href: '/assets/inventory',
+        requiredRole: 'suporte'
+      },
+      {
+        icon: PlusCircle,
+        label: 'Registrar Ativo',
+        href: '/assets/register',
+        requiredRole: 'suporte'
+      },
+      {
+        icon: LinkIcon,
+        label: 'Vincular Ativo',
+        href: '/link-asset',
+        requiredRole: 'suporte'
+      },
+      {
+        icon: ActivitySquare,
+        label: 'Status',
+        href: '/assets/status',
         requiredRole: 'suporte'
       }
     ]
@@ -39,9 +73,29 @@ export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed
     title: 'Atendimento',
     items: [
       {
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+        href: '/tickets/dashboard'
+      },
+      {
         icon: Ticket,
         label: 'Tickets',
-        href: '/tickets/dashboard'
+        href: '/tickets/inbox'
+      },
+      {
+        icon: Laptop,
+        label: 'Acesso Remoto',
+        href: '/support/remote-access'
+      },
+      {
+        icon: Book,
+        label: 'Playbooks',
+        href: '/support/playbooks'
+      },
+      {
+        icon: ClipboardList,
+        label: 'Auditoria',
+        href: '/support/audit'
       }
     ]
   },
@@ -86,6 +140,11 @@ export const getNavigationModules = (): Omit<NavigationModuleProps, 'isCollapsed
         icon: Search,
         label: 'Descoberta',
         href: '/tools/discovery'
+      },
+      {
+        icon: FileText,
+        label: 'Exportar',
+        href: '/tools/export'
       }
     ]
   },
