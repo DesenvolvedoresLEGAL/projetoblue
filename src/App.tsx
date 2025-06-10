@@ -1,284 +1,134 @@
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate
+} from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { Layout } from '@/components/layout/Layout';
+import { LoginPage } from '@/pages/auth/LoginPage';
+import { SignupPage } from '@/pages/auth/SignupPage';
+import { Dashboard } from '@/pages/Dashboard';
+import { AssetsDashboard } from '@/pages/assets/AssetsDashboard';
+import { AssetsInventory } from '@/pages/assets/AssetsInventory';
+import { AssetsManagement } from '@/pages/assets/AssetsManagement';
+import { AssetsRegister } from '@/pages/assets/AssetsRegister';
+import { AssetsAssociations } from '@/pages/assets/AssetsAssociations';
+import { TicketsDashboard } from '@/pages/tickets/TicketsDashboard';
+import { TicketsInbox } from '@/pages/tickets/TicketsInbox';
+import { TicketsMyTickets } from '@/pages/tickets/TicketsMyTickets';
+import { TicketsNew } from '@/pages/tickets/TicketsNew';
+import { TicketsKnowledgeBase } from '@/pages/tickets/TicketsKnowledgeBase';
+import { TicketsAutomation } from '@/pages/tickets/TicketsAutomation';
+import { TicketsAnalytics } from '@/pages/tickets/TicketsAnalytics';
+import { TicketsQuality } from '@/pages/tickets/TicketsQuality';
+import { TicketsCopilot } from '@/pages/tickets/TicketsCopilot';
+import { TicketsIntegrations } from '@/pages/tickets/TicketsIntegrations';
+import { BitsDashboard } from '@/pages/bits/BitsDashboard';
+import { BitsIndicate } from '@/pages/bits/BitsIndicate';
+import { BitsMyReferrals } from '@/pages/bits/BitsMyReferrals';
+import { BitsRewards } from '@/pages/bits/BitsRewards';
+import { BitsSettings } from '@/pages/bits/BitsSettings';
+import { BitsHelp } from '@/pages/bits/BitsHelp';
+import { ClientsView } from '@/pages/clients/ClientsView';
+import { ClientsCreate } from '@/pages/clients/ClientsCreate';
+import { ClientsEdit } from '@/pages/clients/ClientsEdit';
+import { ClientsDelete } from '@/pages/clients/ClientsDelete';
+import { AdminSuppliers } from '@/pages/admin/AdminSuppliers';
+import { AdminSettings } from '@/pages/admin/AdminSettings';
+import { AdminUsers } from '@/pages/admin/AdminUsers';
+import { RoleGuard } from '@/guards/RoleGuard';
+import { UserRole } from '@/types/auth';
+import { AdminConfig } from './modules/admin/pages/AdminConfig';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AssetProvider } from "@/context/AssetContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { Layout } from "@/components/layout/Layout";
-import { DataUsageProvider } from "@/context/DataUsageContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { AuthRoute } from "@/components/auth/AuthRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-// Pages
-import Home from "./pages/Home";
-import Dashboard from "@modules/dashboard/pages/Dashboard";
-import RegisterAsset from "@modules/assets/pages/RegisterAsset";
-import AssetsDashboard from "@modules/assets/pages/AssetsDashboard";
-import AssetsInventory from "@modules/assets/pages/AssetsInventory";
-import AssetsManagement from "@modules/assets/pages/AssetsManagement";
-import AssetAssociation from "@modules/associations/pages/AssetAssociation";
-import AssociationsList from "@modules/associations/pages/AssociationsList";
-import Clients from "@modules/clients/pages/Clients";
-import RegisterClient from "@modules/clients/pages/RegisterClient";
-import Association from "@modules/associations/pages/Association";
-import Subscriptions from "./pages/Subscriptions";
-import Monitoring from "./pages/Monitoring";
-import History from "@modules/assets/pages/AssetHistory";
-import DataUsage from "@modules/data-usage/pages/DataUsage";
-import WifiAnalyzer from "./pages/WifiAnalyzer";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import NotFound from "./pages/NotFound";
-import Suppliers from "./pages/Suppliers";
-import Topology from "./pages/Topology";
-import Discovery from "./pages/Discovery";
-
-// BITS™ Pages
-import BitsDashboard from "@modules/bits/pages/BitsDashboard";
-import BitsIndicateNow from "@modules/bits/pages/BitsIndicateNow";
-import BitsMyReferrals from "@modules/bits/pages/BitsMyReferrals";
-import BitsPointsAndRewards from "@modules/bits/pages/BitsPointsAndRewards";
-import BitsSettings from "@modules/bits/pages/BitsSettings";
-import BitsHelpAndSupport from "@modules/bits/pages/BitsHelpAndSupport";
-
-// Tickets Pages
-import TicketsDashboard from "@modules/tickets/pages/TicketsDashboard";
-import TicketsInbox from "@modules/tickets/pages/TicketsInbox";
-import MyTickets from "@modules/tickets/pages/MyTickets";
-import NewTicket from "@modules/tickets/pages/NewTicket";
-import KnowledgeBase from "@modules/tickets/pages/KnowledgeBase";
-import TicketAutomation from "@modules/tickets/pages/TicketAutomation";
-import TicketAnalytics from "@modules/tickets/pages/TicketAnalytics";
-import QualityAudit from "@modules/tickets/pages/QualityAudit";
-import AgentCopilot from "@modules/tickets/pages/AgentCopilot";
-import TicketIntegrations from "@modules/tickets/pages/TicketIntegrations";
-
-// Configure React Query client with global settings
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 60000, // 1 minute
+function App() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        refetchOnWindowFocus: false,
+      },
     },
-  },
-});
+  });
 
-Object.defineProperty(String.prototype, 'capitalize', {
-  value: function() {
-    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
-  },
-  enumerable: false
-});
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated } = useAuth();
+    
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      return <Navigate to="/login" />;
+    }
+    
+    return <>{children}</>;
+  };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <AssetProvider>
-            <DataUsageProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  {/* Public authentication routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              
+              <Route path="/" element={<ProtectedRoute />}>
+                <Route path="/" element={<Layout />}>
+                  <Route path="/" element={<Dashboard />} />
                   
-                  {/* Main layout with sidebar and header - Protected routes */}
-                  <Route path="/" element={
-                    <AuthRoute>
-                      <Layout />
-                    </AuthRoute>
-                  }>
-                    {/* Wrap the main dashboard route with ErrorBoundary */}
-                    <Route index element={
-                      <ErrorBoundary>
-                        <Home />
-                      </ErrorBoundary>
-                    } />
-                    
-                    {/* Dashboard routes - Available to all authenticated users */}
-                    <Route path="dashboard" element={<Dashboard />} />
-                    
-                    {/* Assets module routes - Requires suporte or above */}
-                    <Route path="assets">
-                      <Route index element={
-                        <AuthRoute requiredRole="suporte">
-                          <AssetsManagement />
-                        </AuthRoute>
-                      } />
-                      <Route path="dashboard" element={<Dashboard />} />
-                      <Route path="inventory" element={
-                        <AuthRoute requiredRole="suporte">
-                          <AssetsInventory />
-                        </AuthRoute>
-                      } />
-                      <Route path="management" element={
-                        <AuthRoute requiredRole="suporte">
-                          <AssetsManagement />
-                        </AuthRoute>
-                      } />
-                      <Route path="register" element={
-                        <AuthRoute requiredRole="suporte">
-                          <RegisterAsset />
-                        </AuthRoute>
-                      } />
-                      <Route path="associations" element={
-                        <AuthRoute requiredRole="suporte">
-                          <AssetAssociation />
-                        </AuthRoute>
-                      } />
-                      <Route path="associations-list" element={
-                        <AuthRoute requiredRole="suporte">
-                          <AssociationsList />
-                        </AuthRoute>
-                      } />
-                      <Route path="history" element={
-                        <AuthRoute requiredRole="suporte">
-                          <History />
-                        </AuthRoute>
-                      } />
-                    </Route>
-                    
-                    {/* Tickets module routes - Requires suporte or above */}
-                    <Route path="tickets">
-                      <Route index element={<Navigate to="/tickets/dashboard" replace />} />
-                      <Route path="dashboard" element={
-                        <AuthRoute requiredRole="suporte">
-                          <TicketsDashboard />
-                        </AuthRoute>
-                      } />
-                      <Route path="inbox" element={
-                        <AuthRoute requiredRole="suporte">
-                          <TicketsInbox />
-                        </AuthRoute>
-                      } />
-                      <Route path="my-tickets" element={<MyTickets />} />
-                      <Route path="new" element={<NewTicket />} />
-                      <Route path="knowledge-base" element={<KnowledgeBase />} />
-                      <Route path="automation" element={
-                        <AuthRoute requiredRole="consultor">
-                          <TicketAutomation />
-                        </AuthRoute>
-                      } />
-                      <Route path="analytics" element={
-                        <AuthRoute requiredRole="consultor">
-                          <TicketAnalytics />
-                        </AuthRoute>
-                      } />
-                      <Route path="quality" element={
-                        <AuthRoute requiredRole="suporte">
-                          <QualityAudit />
-                        </AuthRoute>
-                      } />
-                      <Route path="copilot" element={
-                        <AuthRoute requiredRole="suporte">
-                          <AgentCopilot />
-                        </AuthRoute>
-                      } />
-                      <Route path="integrations" element={
-                        <AuthRoute requiredRole="gestor">
-                          <TicketIntegrations />
-                        </AuthRoute>
-                      } />
-                    </Route>
-                    
-                    {/* Topology module routes */}
-                    <Route path="topology">
-                      <Route index element={<Navigate to="/topology/view" replace />} />
-                      <Route path="view" element={<Topology />} />
-                    </Route>
-                    
-                    {/* Tools module routes */}
-                    <Route path="tools">
-                      <Route index element={<Navigate to="/tools/discovery" replace />} />
-                      <Route path="discovery" element={<Discovery />} />
-                    </Route>
-                    
-                    {/* BITS™ module routes - Available to cliente or above */}
-                    <Route path="bits">
-                      <Route index element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsDashboard />
-                        </AuthRoute>
-                      } />
-                      <Route path="indicate" element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsIndicateNow />
-                        </AuthRoute>
-                      } />
-                      <Route path="my-referrals" element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsMyReferrals />
-                        </AuthRoute>
-                      } />
-                      <Route path="rewards" element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsPointsAndRewards />
-                        </AuthRoute>
-                      } />
-                      <Route path="settings" element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsSettings />
-                        </AuthRoute>
-                      } />
-                      <Route path="help" element={
-                        <AuthRoute requiredRole="cliente">
-                          <BitsHelpAndSupport />
-                        </AuthRoute>
-                      } />
-                    </Route>
-                    
-                    {/* Client management routes - Requires suporte or above */}
-                    <Route path="/clients" element={
-                      <AuthRoute requiredRole="suporte">
-                        <Clients />
-                      </AuthRoute>
-                    } />
-                    <Route path="/clients/register" element={
-                      <AuthRoute requiredRole="suporte">
-                        <RegisterClient />
-                      </AuthRoute>
-                    } />
-                    
-                    {/* Admin/Management routes - Requires gestor or above */}
-                    <Route path="/suppliers" element={
-                      <AuthRoute requiredRole="gestor">
-                        <Suppliers />
-                      </AuthRoute>
-                    } />
-                    
-                    {/* Direct shortcuts */}
-                    <Route path="register-asset" element={<Navigate to="/assets/register" replace />} />
-                    <Route path="link-asset" element={<Navigate to="/assets/association" replace />} />
-                    
-                    {/* Legacy routes for backward compatibility */}
-                    <Route path="/assets/association" element={<Navigate to="/assets/associations" replace />} />
-                    <Route path="/associations" element={<Navigate to="/assets/associations" replace />} />
-                    <Route path="/inventory" element={<Navigate to="/assets/inventory" replace />} />
-                    <Route path="/history" element={<Navigate to="/assets/history" replace />} />
-                    <Route path="/association" element={<Navigate to="/assets/association" replace />} />
-                    <Route path="/subscriptions" element={<Subscriptions />} />
-                    <Route path="/monitoring" element={<Monitoring />} />
-                    <Route path="/data-usage" element={<DataUsage />} />
-                    <Route path="/wifi-analyzer" element={<WifiAnalyzer />} />
-                  </Route>
+                  {/* Assets Routes */}
+                  <Route path="/assets" element={<AssetsDashboard />} />
+                  <Route path="/assets/inventory" element={<AssetsInventory />} />
+                  <Route path="/assets/management" element={<AssetsManagement />} />
+                  <Route path="/assets/register" element={<AssetsRegister />} />
+                  <Route path="/assets/associations" element={<AssetsAssociations />} />
                   
-                  {/* Fallback route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </DataUsageProvider>
-          </AssetProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                  {/* Tickets Routes */}
+                  <Route path="/tickets" element={<TicketsDashboard />} />
+                  <Route path="/tickets/inbox" element={<TicketsInbox />} />
+                  <Route path="/tickets/my-tickets" element={<TicketsMyTickets />} />
+                  <Route path="/tickets/new" element={<TicketsNew />} />
+                  <Route path="/tickets/knowledge-base" element={<TicketsKnowledgeBase />} />
+                  <Route path="/tickets/automation" element={<TicketsAutomation />} />
+                  <Route path="/tickets/analytics" element={<TicketsAnalytics />} />
+                  <Route path="/tickets/quality" element={<TicketsQuality />} />
+                  <Route path="/tickets/copilot" element={<TicketsCopilot />} />
+                  <Route path="/tickets/integrations" element={<TicketsIntegrations />} />
+                  
+                  {/* Bits Routes */}
+                  <Route path="/bits" element={<BitsDashboard />} />
+                  <Route path="/bits/indicate" element={<BitsIndicate />} />
+                  <Route path="/bits/my-referrals" element={<BitsMyReferrals />} />
+                  <Route path="/bits/rewards" element={<BitsRewards />} />
+                  <Route path="/bits/settings" element={<BitsSettings />} />
+                  <Route path="/bits/help" element={<BitsHelp />} />
+                  
+                  {/* Clients Routes */}
+                  <Route path="/clients/view" element={<ClientsView />} />
+                  <Route path="/clients/create" element={<ClientsCreate />} />
+                  <Route path="/clients/edit" element={<ClientsEdit />} />
+                  <Route path="/clients/delete" element={<ClientsDelete />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin/config" 
+                    element={
+                      <RoleGuard requiredRole="admin">
+                        <AdminConfig />
+                      </RoleGuard>
+                    } 
+                  />
+                  
+                  {/* 404 Route - Make sure it's the last route */}
+                  <Route path="*" element={<div>Página não encontrada</div>} />
+                </Route>
+              </Route>
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

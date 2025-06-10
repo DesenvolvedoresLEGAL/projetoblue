@@ -1196,6 +1196,33 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      admin_list_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          role: Database["public"]["Enums"]["user_role_enum"]
+          is_active: boolean
+          is_approved: boolean
+          created_at: string
+          last_login: string
+        }[]
+      }
+      admin_update_user_profile: {
+        Args: { user_id: string; profile_updates: Json }
+        Returns: boolean
+      }
+      admin_update_user_role: {
+        Args: {
+          user_id: string
+          new_role: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Returns: boolean
+      }
       detect_association_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {

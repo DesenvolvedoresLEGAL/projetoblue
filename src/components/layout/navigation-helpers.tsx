@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -110,4 +109,95 @@ export const ProtectedPageWrapper: React.FC<ProtectedPageWrapperProps> = ({
   }
 
   return <>{children}</>;
+};
+
+export const getNavigationItems = (permissions: any) => {
+  return [
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      href: '/dashboard',
+      icon: 'dashboard',
+      permission: permissions.canAccessDashboard,
+    },
+    {
+      id: 'assets',
+      title: 'Ativos',
+      href: '/assets',
+      icon: 'briefcase',
+      permission: permissions.canAccessAssets,
+    },
+    {
+      id: 'tickets',
+      title: 'Tickets',
+      href: '/tickets',
+      icon: 'ticket',
+      permission: permissions.canAccessTickets,
+    },
+    {
+      id: 'bits',
+      title: 'Bits',
+      href: '/bits',
+      icon: 'code',
+      permission: permissions.canAccessBits,
+    },
+    {
+      id: 'clients',
+      title: 'Clientes',
+      href: '/clients',
+      icon: 'user',
+      permission: permissions.canAccessClients,
+    },
+    {
+      id: 'suppliers',
+      title: 'Fornecedores',
+      href: '/suppliers',
+      icon: 'truck',
+      permission: permissions.canAccessSuppliers,
+    },
+    {
+      id: 'admin',
+      title: 'Administração',
+      href: '/admin',
+      icon: 'shield',
+      permission: permissions.canAccessAdminPanel,
+      children: [
+        {
+          id: 'admin-config',
+          title: 'Configurações',
+          href: '/admin/config',
+          icon: 'settings',
+          permission: permissions.canAccessAdminPanel,
+        },
+        {
+          id: 'admin-users',
+          title: 'Usuários',
+          href: '/admin/users',
+          icon: 'user',
+          permission: permissions.canAccessAdminPanel,
+        },
+        {
+          id: 'admin-roles',
+          title: 'Permissões',
+          href: '/admin/roles',
+          icon: 'lock',
+          permission: permissions.canAccessAdminPanel,
+        },
+        {
+          id: 'admin-settings',
+          title: 'Configurações Gerais',
+          href: '/admin/settings',
+          icon: 'settings',
+          permission: permissions.canAccessAdminPanel,
+        },
+        {
+          id: 'admin-logs',
+          title: 'Logs',
+          href: '/admin/logs',
+          icon: 'log',
+          permission: permissions.canAccessAdminPanel,
+        },
+      ],
+    },
+  ].filter(item => item.permission);
 };
