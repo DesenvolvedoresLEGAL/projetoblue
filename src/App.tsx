@@ -162,12 +162,12 @@ const App = () => (
                       <Route path="new" element={<NewTicket />} />
                       <Route path="knowledge-base" element={<KnowledgeBase />} />
                       <Route path="automation" element={
-                        <AuthRoute requiredRole="consultor">
+                        <AuthRoute requiredRole="suporte">
                           <TicketAutomation />
                         </AuthRoute>
                       } />
                       <Route path="analytics" element={
-                        <AuthRoute requiredRole="consultor">
+                        <AuthRoute requiredRole="suporte">
                           <TicketAnalytics />
                         </AuthRoute>
                       } />
@@ -182,7 +182,7 @@ const App = () => (
                         </AuthRoute>
                       } />
                       <Route path="integrations" element={
-                        <AuthRoute requiredRole="gestor">
+                        <AuthRoute requiredRole="admin">
                           <TicketIntegrations />
                         </AuthRoute>
                       } />
@@ -246,9 +246,9 @@ const App = () => (
                       </AuthRoute>
                     } />
                     
-                    {/* Admin/Management routes - Requires gestor or above */}
+                    {/* Admin/Management routes - Requires admin */}
                     <Route path="/suppliers" element={
-                      <AuthRoute requiredRole="gestor">
+                      <AuthRoute requiredRole="admin">
                         <Suppliers />
                       </AuthRoute>
                     } />

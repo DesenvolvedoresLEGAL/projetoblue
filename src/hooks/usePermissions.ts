@@ -27,21 +27,21 @@ export const usePermissions = () => {
     canViewClients: hasMinimumRole('suporte'),
     canCreateClients: hasMinimumRole('suporte'),
     canEditClients: hasMinimumRole('suporte'),
-    canDeleteClients: hasMinimumRole('consultor'),
+    canDeleteClients: hasMinimumRole('suporte'),
     
     // Gestão de ativos
     canViewAssets: hasMinimumRole('suporte'),
     canCreateAssets: hasMinimumRole('suporte'),
     canEditAssets: hasMinimumRole('suporte'),
-    canDeleteAssets: hasMinimumRole('consultor'),
+    canDeleteAssets: hasMinimumRole('suporte'),
     canManageAssociations: hasMinimumRole('suporte'),
     
     // Relatórios e análises
-    canViewReports: hasMinimumRole('consultor'),
-    canExportData: hasMinimumRole('consultor'),
+    canViewReports: hasMinimumRole('suporte'),
+    canExportData: hasMinimumRole('suporte'),
     
     // Administração
-    canManageUsers: hasMinimumRole('gestor'),
+    canManageUsers: hasMinimumRole('admin'),
     canAccessAdminPanel: hasMinimumRole('admin'),
     canModifySystemSettings: hasMinimumRole('admin'),
     

@@ -112,7 +112,7 @@ export const QuickActionsCard: React.FC = () => {
           </Button>
         </RoleGuard>
 
-        <RoleGuard requiredRole="consultor">
+        <RoleGuard requiredRole="suporte">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 

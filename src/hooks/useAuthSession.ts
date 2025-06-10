@@ -34,7 +34,7 @@ export function useAuthSession(updateState: (state: any) => void) {
         if (profile) {
           console.log('Profile fetched successfully:', profile.email);
           // Verificar se o role está entre os valores esperados
-          if (!['admin', 'gestor', 'consultor', 'suporte', 'cliente', 'user'].includes(profile.role)) {
+          if (!['admin', 'suporte', 'cliente', 'usuario'].includes(profile.role)) {
             console.warn(`Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
             profile.role = 'cliente';
           }
