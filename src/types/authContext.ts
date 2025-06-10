@@ -16,6 +16,9 @@ export interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   technicalError?: TechnicalErrorInfo | null;
+  // Informações adicionais de role
+  userRole: UserRole;
+  hasMinimumRole: (requiredRole: UserRole) => boolean;
 }
 
 export interface AuthState {
