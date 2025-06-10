@@ -29,7 +29,7 @@ export function Header({ children, className, ...props }: HeaderProps) {
   return (
     <header 
       className={cn(
-        "h-16 border-b bg-background shadow-md flex items-center px-6 py-3",
+        "h-16 border-b border-border bg-background shadow-legal dark:shadow-legal-dark flex items-center px-6 py-3 transition-shadow duration-200",
         className
       )}
       {...props}
@@ -42,9 +42,9 @@ export function Header({ children, className, ...props }: HeaderProps) {
         <ThemeToggle />
         
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+        <Button variant="ghost" size="icon" className="relative hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">
+          <Bell className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+          <span className="absolute -top-1 -right-1 bg-legal-primary dark:bg-legal-secondary text-white dark:text-bg-primary-dark rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">
             3
           </span>
         </Button>
@@ -52,30 +52,37 @@ export function Header({ children, className, ...props }: HeaderProps) {
         {/* User dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10">
+              <Avatar className="h-8 w-8 border-2 border-legal-primary/20 dark:border-legal-secondary/20">
                 <AvatarImage src="/placeholder.svg" alt="User" />
-                <AvatarFallback>LE</AvatarFallback>
+                <AvatarFallback className="bg-legal-primary/10 dark:bg-legal-secondary/10 text-legal-primary dark:text-legal-secondary font-bold">
+                  LE
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent 
+            align="end" 
+            className="w-56 shadow-legal-lg dark:shadow-legal-dark-lg border border-legal-primary/20 dark:border-legal-secondary/20"
+          >
+            <DropdownMenuLabel className="text-legal-primary dark:text-legal-secondary font-semibold">
+              Minha Conta
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-legal-primary/20 dark:bg-legal-secondary/20" />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+              <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 focus:bg-legal-primary/10 dark:focus:bg-legal-secondary/10">
+                <User className="mr-2 h-4 w-4 text-legal-primary dark:text-legal-secondary" />
+                <span>Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem className="hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10 focus:bg-legal-primary/10 dark:focus:bg-legal-secondary/10">
+                <Settings className="mr-2 h-4 w-4 text-legal-primary dark:text-legal-secondary" />
+                <span>Configurações</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-legal-primary/20 dark:bg-legal-secondary/20" />
+            <DropdownMenuItem className="hover:bg-destructive/10 focus:bg-destructive/10 text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Logout</span>
+              <span>Sair</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

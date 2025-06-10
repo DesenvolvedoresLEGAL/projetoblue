@@ -15,21 +15,21 @@ export function Layout() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background transition-colors duration-300">
       {/* Header - fixed at top */}
       <Header className="fixed top-0 left-0 right-0 z-50">
         {/* Mobile menu button */}
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden mr-2"
+          className="md:hidden mr-2 hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10"
           onClick={toggleMobileSidebar}
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           aria-expanded={mobileOpen}
           aria-controls="mobile-sidebar"
         >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
+          <Menu className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+          <span className="sr-only">Alternar menu</span>
         </Button>
       </Header>
 
@@ -42,26 +42,32 @@ export function Layout() {
 
         {/* Mobile Sidebar - shown when mobileOpen is true */}
         <div 
-          className={`fixed inset-0 z-50 md:hidden ${mobileOpen ? "block" : "hidden"}`}
+          className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+            mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         >
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/50" 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300" 
             onClick={toggleMobileSidebar}
             aria-hidden="true"
           />
           
           {/* Sidebar */}
-          <div className="fixed inset-y-0 left-0 w-full max-w-xs">
+          <div 
+            className={`fixed inset-y-0 left-0 w-full max-w-xs transition-transform duration-300 ease-in-out ${
+              mobileOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
             <ModularSidebar isMobile={true} onClose={toggleMobileSidebar} />
           </div>
         </div>
 
         {/* Main content with proper offsets */}
         <main 
-          className="flex-1 md:ml-64 w-full pb-16" 
+          className="flex-1 md:ml-64 w-full pb-16 transition-all duration-300" 
           role="main" 
-          aria-label="Main content"
+          aria-label="Conteúdo principal"
         >
           <div className="container mx-auto py-6 px-4 min-h-[calc(100vh-144px)]">
             <Outlet />

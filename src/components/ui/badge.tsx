@@ -10,17 +10,17 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 
-          "border-transparent bg-[#4d2bfb] text-white hover:bg-[#020cbc]", // Azul LEGAL para o principal, escurecendo no hover
+          "border-transparent bg-legal-primary text-white hover:bg-legal-primary-light dark:bg-legal-primary dark:hover:bg-legal-primary-light shadow-legal-sm",
         secondary:
-          "border-transparent bg-[#03f9ff]/50 text-[#020cbc] hover:bg-[#4d2bfb]/80 hover:text-white", // Ciano LEGAL como base, Azul LEGAL no hover
+          "border-transparent bg-legal-secondary/50 text-legal-dark hover:bg-legal-secondary hover:text-bg-primary-dark dark:bg-legal-secondary/50 dark:text-legal-dark dark:hover:bg-legal-secondary shadow-legal-sm",
         destructive:
-          "border-transparent bg-[#ef4444] text-white hover:bg-[#bc0c0c]", // Vermelho LEGAL
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-legal-sm",
         outline: 
-          "border-[#4d2bfb] text-[#4d2bfb] bg-transparent hover:bg-[#4d2bfb]/10", // Outline LEGAL
+          "border-legal-primary text-legal-primary bg-transparent hover:bg-legal-primary/10 dark:border-legal-secondary dark:text-legal-secondary dark:hover:bg-legal-secondary/10",
         success:
-          "border-transparent bg-[#84cc16] text-white hover:bg-[#6ba60c]", // Verde para sucesso
+          "border-transparent bg-success text-success-foreground hover:bg-success/90 shadow-legal-sm",
         warning:
-          "border-transparent bg-[#f97316] text-white hover:bg-[#bc7202]", // Laranja LEGAL para warning
+          "border-transparent bg-warning text-warning-foreground hover:bg-warning/90 shadow-legal-sm",
       },
     },
     defaultVariants: {

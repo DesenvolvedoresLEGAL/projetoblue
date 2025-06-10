@@ -32,15 +32,15 @@ export const RentedAssetsCard = () => {
 
   if (isLoading) {
     return (
-      <Card className="h-full">
+      <Card className="h-full shadow-legal dark:shadow-legal-dark">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-legal-primary" />
-            Ativos Alugados
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-dark dark:text-text-primary-dark">Ativos Alugados</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-40">
-          <Loader2 className="h-6 w-6 animate-spin text-legal-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-legal-primary dark:text-legal-secondary" />
         </CardContent>
       </Card>
     );
@@ -48,11 +48,11 @@ export const RentedAssetsCard = () => {
 
   if (error) {
     return (
-      <Card className="h-full">
+      <Card className="h-full shadow-legal dark:shadow-legal-dark">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-legal-primary" />
-            Ativos Alugados
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-dark dark:text-text-primary-dark">Ativos Alugados</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-40 text-muted-foreground">
@@ -63,18 +63,18 @@ export const RentedAssetsCard = () => {
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col shadow-legal dark:shadow-legal-dark hover:shadow-legal-lg dark:hover:shadow-legal-dark-lg transition-shadow duration-200">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-legal-primary" />
-            <span className="text-legal-primary font-semibold">Ranking de locação</span>
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-primary dark:text-legal-secondary font-semibold">Ranking de locação</span>
           </div>
-          <Badge variant="secondary" className="bg-[#E3F2FD] text-[#1976D2] text-xs">
+          <Badge variant="secondary" className="bg-legal-secondary/20 text-legal-primary dark:bg-legal-secondary/30 dark:text-legal-secondary text-xs">
             {rentedAssets?.length || 0} ativos
           </Badge>
         </CardTitle>
-        <CardDescription className="text-sm text-gray-600">
+        <CardDescription className="text-sm text-muted-foreground">
           Ranking de ativos pelo número de dias alugados
         </CardDescription>
       </CardHeader>
@@ -95,16 +95,16 @@ export const RentedAssetsCard = () => {
                   <div
                     key={asset.uuid}
                     className={cn(
-                      "relative p-4 rounded-md transition-colors border h-full",
+                      "relative p-4 rounded-md transition-all duration-200 border h-full",
                       isOverThirtyDays 
-                        ? "border-l-4 border-legal-primary bg-legal-primary/5 dark:bg-legal-primary/10 border-l-legal-primary" 
-                        : "border-border hover:bg-muted/50"
+                        ? "border-l-4 border-legal-primary bg-legal-primary/5 dark:bg-legal-primary/10 border-l-legal-primary hover:bg-legal-primary/10 dark:hover:bg-legal-primary/15" 
+                        : "border-border hover:bg-muted/50 hover:border-legal-primary/30 dark:hover:border-legal-secondary/30"
                     )}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm truncate">
+                          <span className="font-medium text-sm truncate text-legal-dark dark:text-text-primary-dark">
                             {getAssetIdentifier(asset)}
                           </span>
                         </div>
@@ -114,8 +114,10 @@ export const RentedAssetsCard = () => {
                       </div>
                       <div className="text-right">
                         <div className={cn(
-                          "text-sm font-medium",
-                          isOverThirtyDays ? "text-legal-primary" : "text-foreground"
+                          "text-sm font-medium transition-colors duration-200",
+                          isOverThirtyDays 
+                            ? "text-legal-primary dark:text-legal-secondary" 
+                            : "text-foreground"
                         )}>
                           {asset.rented_days} dias
                         </div>
@@ -127,12 +129,12 @@ export const RentedAssetsCard = () => {
             </div>
 
             {/* View All Button */}
-            <div className="pt-3 border-t border-gray-100">
+            <div className="pt-3 border-t border-legal-primary/20 dark:border-legal-secondary/20">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handleViewAll}
-                className="w-full h-10 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5"
+                className="w-full h-10 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-bg-primary-dark transition-all duration-200"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver todos os ativos alugados

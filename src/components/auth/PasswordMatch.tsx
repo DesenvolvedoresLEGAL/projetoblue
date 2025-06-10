@@ -12,7 +12,7 @@ export const PasswordMatch = ({ passwordsMatch, confirmPassword }: PasswordMatch
   
   if (!passwordsMatch) {
     return (
-      <p className="text-sm text-red-500 flex items-center mt-1">
+      <p className="text-sm text-destructive flex items-center mt-1 transition-colors duration-200">
         <AlertCircle size={14} className="mr-1" />
         As senhas não coincidem
       </p>
@@ -20,7 +20,7 @@ export const PasswordMatch = ({ passwordsMatch, confirmPassword }: PasswordMatch
   }
   
   return (
-    <p className="text-sm text-green-500 flex items-center mt-1">
+    <p className="text-sm text-success flex items-center mt-1 transition-colors duration-200">
       <Check size={14} className="mr-1" />
       As senhas coincidem
     </p>

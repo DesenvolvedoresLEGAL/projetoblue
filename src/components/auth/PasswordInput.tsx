@@ -12,7 +12,7 @@ interface PasswordInputProps {
   required?: boolean;
   className?: string;
   autoComplete?: string;
-  disabled?: boolean;  // Add the disabled prop to the interface
+  disabled?: boolean;
 }
 
 export const PasswordInput = ({ 
@@ -23,7 +23,7 @@ export const PasswordInput = ({
   required = true,
   className = "",
   autoComplete,
-  disabled = false  // Add default value for the disabled prop
+  disabled = false
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -42,22 +42,22 @@ export const PasswordInput = ({
         required={required}
         className={`pr-10 ${className}`}
         autoComplete={autoComplete}
-        disabled={disabled}  // Pass the disabled prop to the Input component
+        disabled={disabled}
       />
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
+        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-legal-primary dark:hover:text-legal-secondary hover:bg-legal-primary/10 dark:hover:bg-legal-secondary/10"
         onClick={togglePasswordVisibility}
         tabIndex={-1}
-        disabled={disabled}  // Also disable the toggle button when the input is disabled
+        disabled={disabled}
         aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
       >
         {showPassword ? (
-          <Eye size={16} aria-hidden="true" />
+          <Eye size={16} aria-hidden="true" className="text-legal-primary dark:text-legal-secondary" />
         ) : (
-          <EyeOff size={16} aria-hidden="true" />
+          <EyeOff size={16} aria-hidden="true" className="text-legal-primary dark:text-legal-secondary" />
         )}
       </Button>
     </div>
