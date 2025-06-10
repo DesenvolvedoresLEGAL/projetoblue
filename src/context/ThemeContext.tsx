@@ -17,20 +17,20 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       return (savedTheme as Theme) || 
         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     }
-    return 'light'; // Fallback para SSR ou quando window não está disponível
+    return 'light';
   });
 
   const handleThemeChange = (newTheme: Theme, event?: React.MouseEvent<HTMLButtonElement>) => {
     if (typeof window !== 'undefined') {
-      // Salvamos o tema antes de iniciar a animação
       setTheme(newTheme);
       localStorage.setItem('legal-theme', newTheme);
       
-      // Log para debugging
       console.log(`🎨 LEGAL Theme changed to: ${newTheme}`);
       
-      // Se temos um evento (clique no botão), criamos um efeito de onda
-      if (event) {
+      // QA: Verificar se animações estão habilitadas antes de criar ripple
+      const animationsEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      if (event && animationsEnabled) {
         createRippleEffect(event, newTheme);
       }
     }
@@ -40,14 +40,11 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const button = event.currentTarget;
     const buttonRect = button.getBoundingClientRect();
     
-    // Posição central do botão
     const x = buttonRect.left + buttonRect.width / 2;
     const y = buttonRect.top + buttonRect.height / 2;
     
-    // Calculamos o tamanho máximo necessário para cobrir toda a tela
     const size = Math.max(window.innerWidth, window.innerHeight) * 2.5;
     
-    // Criamos o elemento de animação
     const ripple = document.createElement('div');
     ripple.className = `theme-ripple theme-ripple-${newTheme}`;
     ripple.style.left = `${x}px`;
@@ -55,12 +52,14 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     ripple.style.width = `${size}px`;
     ripple.style.height = `${size}px`;
     
+    // QA: Adicionar atributos de acessibilidade
+    ripple.setAttribute('aria-hidden', 'true');
+    ripple.setAttribute('role', 'presentation');
+    
     document.body.appendChild(ripple);
     
-    // Iniciamos a animação
     ripple.style.animation = `ripple 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards`;
     
-    // Removemos o elemento após a animação
     setTimeout(() => {
       if (document.body.contains(ripple)) {
         document.body.removeChild(ripple);
@@ -72,27 +71,36 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     if (typeof window !== 'undefined') {
       const root = window.document.documentElement;
       
-      // Adiciona a classe para a animação antes de mudar o tema
+      // QA: Melhor transição com classes preparatórias
       root.classList.add('theme-transition');
       
-      // Remove as classes de tema
-      root.classList.remove('light', 'dark');
+      // QA: Usar requestAnimationFrame para melhor performance
+      requestAnimationFrame(() => {
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        
+        // QA: Meta tag otimizada para PWA
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        const themeColor = theme === 'dark' ? '#121212' : '#ffffff';
+        
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', themeColor);
+        } else {
+          const meta = document.createElement('meta');
+          meta.name = 'theme-color';
+          meta.content = themeColor;
+          document.head.appendChild(meta);
+        }
+        
+        // QA: Log detalhado para debugging
+        console.log(`🎨 LEGAL Theme applied: ${theme}`, {
+          timestamp: new Date().toISOString(),
+          colorScheme: themeColor,
+          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          highContrast: window.matchMedia('(prefers-contrast: high)').matches
+        });
+      });
       
-      // Adiciona a nova classe de tema
-      root.classList.add(theme);
-      
-      // Adiciona meta tag para status bar no mobile
-      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme === 'dark' ? '#121212' : '#ffffff');
-      } else {
-        const meta = document.createElement('meta');
-        meta.name = 'theme-color';
-        meta.content = theme === 'dark' ? '#121212' : '#ffffff';
-        document.head.appendChild(meta);
-      }
-      
-      // Remove a classe de animação após a transição
       const timeoutId = setTimeout(() => {
         root.classList.remove('theme-transition');
       }, 300);
@@ -101,19 +109,21 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [theme]);
 
-  // Adiciona listener para mudanças de preferência do sistema
+  // QA: Listeners aprimorados para preferências do sistema
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
       const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-        // Só muda automaticamente se não há preferência salva
         const savedTheme = localStorage.getItem('legal-theme');
         if (!savedTheme) {
-          setTheme(e.matches ? 'dark' : 'light');
+          const newTheme = e.matches ? 'dark' : 'light';
+          setTheme(newTheme);
+          console.log(`🎨 LEGAL Theme auto-changed to: ${newTheme} (system preference)`);
         }
       };
       
+      // QA: Usar addEventListener para melhor compatibilidade
       mediaQuery.addEventListener('change', handleSystemThemeChange);
       
       return () => {
@@ -137,8 +147,47 @@ export const useTheme = () => {
   return context;
 };
 
-// Hook utilitário para verificar se está em modo escuro
+// QA: Hook utilitário aprimorado
 export const useIsDarkMode = () => {
   const { theme } = useTheme();
   return theme === 'dark';
+};
+
+// QA: Novo hook para detectar preferências de acessibilidade
+export const useAccessibilityPreferences = () => {
+  const [preferences, setPreferences] = useState({
+    reducedMotion: false,
+    highContrast: false,
+    darkMode: false
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updatePreferences = () => {
+        setPreferences({
+          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          highContrast: window.matchMedia('(prefers-contrast: high)').matches,
+          darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches
+        });
+      };
+
+      updatePreferences();
+
+      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const contrastQuery = window.matchMedia('(prefers-contrast: high)');
+      const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+      motionQuery.addEventListener('change', updatePreferences);
+      contrastQuery.addEventListener('change', updatePreferences);
+      darkQuery.addEventListener('change', updatePreferences);
+
+      return () => {
+        motionQuery.removeEventListener('change', updatePreferences);
+        contrastQuery.removeEventListener('change', updatePreferences);
+        darkQuery.removeEventListener('change', updatePreferences);
+      };
+    }
+  }, []);
+
+  return preferences;
 };

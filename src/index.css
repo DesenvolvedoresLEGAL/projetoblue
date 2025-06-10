@@ -1,7 +1,9 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import theme optimizations */
+@import './styles/theme-optimizations.css';
 
 @layer base {
   :root {
@@ -69,6 +71,10 @@
     --focus-ring-dark: 186 100% 51% / 0.3;
     --hover-overlay-light: 0 0% 0% / 0.05;
     --hover-overlay-dark: 0 0% 100% / 0.1;
+
+    /* Performance and Animation Controls */
+    --legal-animations-enabled: 1;
+    --legal-ripple-enabled: 1;
   }
 
   .dark {
@@ -108,6 +114,20 @@
     --sidebar-accent-foreground: 210 17% 96%;
     --sidebar-border: 220 9% 17%;  /* LEGAL dark border */
     --sidebar-ring: 245 79% 57%; /* LEGAL primary color */
+  }
+
+  /* High contrast mode */
+  .high-contrast {
+    --legal-primary: 0 0% 0%;
+    --legal-secondary: 0 0% 100%;
+    --border: 0 0% 0%;
+  }
+
+  /* Reduced motion */
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -226,6 +246,75 @@
   .legal-status-maintenance {
     @apply bg-legal-dark text-white dark:bg-legal-dark-light dark:text-white;
   }
+
+  /* Enhanced LEGAL Components with QA improvements */
+  .legal-card-enhanced {
+    @apply legal-card legal-hover-enhanced legal-focus-enhanced;
+  }
+
+  .legal-button-enhanced {
+    @apply legal-button legal-focus-enhanced;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .legal-button-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  .legal-button-enhanced:active::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* QA validated form components */
+  .legal-form-field {
+    @apply space-y-2;
+  }
+
+  .legal-form-field label {
+    @apply text-sm font-medium text-legal-dark dark:text-text-primary-dark;
+  }
+
+  .legal-form-field input,
+  .legal-form-field select,
+  .legal-form-field textarea {
+    @apply legal-input legal-focus-enhanced;
+  }
+
+  .legal-form-field .error {
+    @apply text-destructive text-xs mt-1;
+  }
+
+  /* Status indicators with improved accessibility */
+  .legal-status {
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .legal-status-success {
+    @apply legal-status bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+  }
+
+  .legal-status-warning {
+    @apply legal-status bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+  }
+
+  .legal-status-error {
+    @apply legal-status bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
+  }
+
+  .legal-status-info {
+    @apply legal-status bg-legal-primary/10 text-legal-primary dark:bg-legal-primary/20 dark:text-legal-secondary;
+  }
 }
 
 /* Enhanced Animations for Dark Mode */
@@ -285,4 +374,52 @@
 /* Legal Loading Animation */
 .legal-loading {
   animation: pulse-legal 1.5s ease-in-out infinite;
+}
+
+/* Final QA animations with performance optimization */
+@layer utilities {
+  .animate-legal-fade-in {
+    animation: legal-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-legal-scale-in {
+    animation: legal-scale-in 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-legal-slide-up {
+    animation: legal-slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+@keyframes legal-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes legal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes legal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

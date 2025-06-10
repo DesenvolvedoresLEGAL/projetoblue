@@ -1,0 +1,134 @@
+
+/* LEGAL Theme - Performance Optimizations and Refinements */
+
+/* GPU acceleration for smooth animations */
+.theme-transition,
+.legal-card,
+.legal-button,
+.legal-button-secondary {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* Improved focus visibility for accessibility */
+.legal-focus-enhanced {
+  @apply focus:outline-none focus:ring-2 focus:ring-legal-primary dark:focus:ring-legal-secondary focus:ring-offset-2 focus:ring-offset-background;
+  outline-offset: 2px;
+}
+
+/* Enhanced hover states with better performance */
+.legal-hover-enhanced {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.legal-hover-enhanced:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(77, 43, 251, 0.15);
+}
+
+.dark .legal-hover-enhanced:hover {
+  box-shadow: 0 4px 12px rgba(3, 249, 255, 0.15);
+}
+
+/* Improved text selection for better UX */
+::selection {
+  background-color: hsl(245 79% 57% / 0.3);
+  color: hsl(210 17% 96%);
+}
+
+.dark ::selection {
+  background-color: hsl(186 100% 51% / 0.4);
+  color: hsl(220 13% 8%);
+}
+
+/* Enhanced scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--legal-primary) / 0.5);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--legal-primary) / 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--legal-secondary) / 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--legal-secondary) / 0.7);
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .theme-ripple {
+    display: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .legal-card {
+    border-width: 2px;
+  }
+  
+  .legal-button,
+  .legal-button-secondary {
+    border: 2px solid currentColor;
+  }
+  
+  .legal-focus-enhanced:focus {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .legal-card {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  .legal-button,
+  .legal-button-secondary {
+    background: none !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+  }
+}
+
+/* Container queries for responsive design */
+@container (max-width: 640px) {
+  .legal-responsive-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+@container (min-width: 1024px) {
+  .legal-responsive-text {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}
