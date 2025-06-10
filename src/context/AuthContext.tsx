@@ -7,6 +7,7 @@ import { useAuthActions } from '@/hooks/useAuthActions';
 import { UserRole } from '@/types/auth';
 import { hasMinimumRole } from '@/utils/roleUtils';
 import { DEFAULT_USER_ROLE } from '@/constants/auth';
+import { adminService, ProfileUpdateData } from '@/services/adminService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,6 +33,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
   };
+
+  const createUser = async (
+    email: string,
+    password: string,
+    role: UserRole = DEFAULT_USER_ROLE
+  ) => {
+    await signUp(email, password, role);
+  };
+
+  const deleteUser = async (userId: string) => {
+    await adminService.deleteUser(userId);
+  };
+
+  const updateUserRole = async (userId: string, role: UserRole) => {
+    await adminService.updateUserRole(userId, role);
+  };
+
+  const updateUserProfile = async (
+    userId: string,
+    profileData: ProfileUpdateData
+  ) => {
+    await adminService.updateUserProfile(userId, profileData);
+  };
   
   // Calculate isAuthenticated with safety checks
   const isAuthenticated = Boolean(state.user && state.profile && !state.isLoading);
@@ -54,6 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    deleteUser,
+    updateUserRole,
+    updateUserProfile,
+    createUser,
     isAuthenticated,
     technicalError,
     userRole,
