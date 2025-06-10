@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { profileService } from '@/services/profileService';
 import { toast } from '@/utils/toast';
@@ -17,79 +17,25 @@ export function useAuthSession(updateState: (state: any) => void) {
   useEffect(() => {
     let isMounted = true;
     
-    // Refs para controlar operações em andamento
-    const activeOperations = useRef(new Set<string>());
-    const timeoutRefs = useRef(new Map<string, NodeJS.Timeout>());
-    
-    // Track retries for profile fetch (reduzido para evitar loops)
+    // Track retries for profile fetch
     let profileRetries = 0;
     const maxRetries = 2; // Reduzido de 3 para 2
-    const retryDelay = 2000; // Aumentado para 2000ms
+    const retryDelay = 1500; // Aumentado de 1000 para 1500
 
-    // Função para cancelar operação específica
-    const cancelOperation = (operationId: string) => {
-      console.log(`🚫 Cancelando operação: ${operationId}`);
-      activeOperations.current.delete(operationId);
-      
-      const timeout = timeoutRefs.current.get(operationId);
-      if (timeout) {
-        clearTimeout(timeout);
-        timeoutRefs.current.delete(operationId);
-      }
-    };
-
-    // Função para timeout de operações
-    const withOperationTimeout = <T>(
-      promise: Promise<T>, 
-      timeoutMs: number, 
-      operationId: string
-    ): Promise<T> => {
-      return Promise.race([
-        promise,
-        new Promise<never>((_, reject) => {
-          const timeout = setTimeout(() => {
-            console.error(`⏰ Timeout na operação ${operationId} após ${timeoutMs}ms`);
-            cancelOperation(operationId);
-            reject(new Error(`Timeout: ${operationId} demorou mais que ${timeoutMs}ms`));
-          }, timeoutMs);
-          
-          timeoutRefs.current.set(operationId, timeout);
-        })
-      ]);
-    };
-
-    // Fetch profile with retry mechanism e timeout
+    // Fetch profile with retry mechanism
     const fetchProfileWithRetry = async (userId: string) => {
-      const operationId = `fetchProfile-${userId}-${Date.now()}`;
-      
-      // Verificar se já existe uma operação similar em andamento
-      const existingOperation = Array.from(activeOperations.current).find(op => 
-        op.includes(`fetchProfile-${userId}`)
-      );
-      
-      if (existingOperation) {
-        console.log(`⚠️ Operação de busca de perfil já em andamento para ${userId}`);
-        return;
-      }
-      
-      activeOperations.current.add(operationId);
-      
       try {
         if (!isMounted) return;
         
-        console.log(`🔍 Buscando perfil para ${userId} (tentativa ${profileRetries + 1})`);
-        
-        const profilePromise = profileService.fetchUserProfile(userId);
-        const profile = await withOperationTimeout(profilePromise, 8000, operationId);
+        const profile = await profileService.fetchUserProfile(userId);
         
         if (!isMounted) return;
         
         if (profile) {
-          console.log('✅ Profile fetched successfully:', profile.email);
-          
+          console.log('Profile fetched successfully:', profile.email);
           // Verificar se o role está entre os valores esperados
           if (!['admin', 'suporte', 'cliente', 'usuario'].includes(profile.role)) {
-            console.warn(`⚠️ Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
+            console.warn(`Invalid role detected: ${profile.role}, defaulting to 'cliente'`);
             profile.role = 'cliente';
           }
           
@@ -99,48 +45,41 @@ export function useAuthSession(updateState: (state: any) => void) {
             error: null
           });
           
-          // Atualizar último login (operação não crítica)
+          // Atualizar último login
           profileService.updateLastLogin(userId).catch(err => 
-            console.warn('⚠️ Non-critical: Failed to update last_login:', err)
+            console.warn('Non-critical: Failed to update last_login:', err)
           );
-          
-          // Reset retry counter on success
-          profileRetries = 0;
         } else {
           // Retry logic with exponential backoff
           if (profileRetries < maxRetries) {
             profileRetries++;
-            const nextDelay = retryDelay * profileRetries;
-            console.log(`🔄 Profile fetch attempt ${profileRetries} failed, retrying in ${nextDelay}ms`);
-            
-            const timeout = setTimeout(() => {
+            console.log(`Profile fetch attempt ${profileRetries} failed, retrying in ${retryDelay * profileRetries}ms`);
+            setTimeout(() => {
               if (isMounted) {
                 fetchProfileWithRetry(userId);
               }
-            }, nextDelay);
-            
-            timeoutRefs.current.set(`retry-${operationId}`, timeout);
+            }, retryDelay * profileRetries);
           } else {
-            console.error('❌ Failed to fetch profile after multiple attempts');
+            console.error('Failed to fetch profile after multiple attempts');
             updateState({ 
               profile: null,
               isLoading: false,
-              error: null // Não mostrar erro para não bloquear o usuário
+              error: 'Failed to load user profile'
             });
             
-            console.warn('⚠️ Profile fetch failed but continuing with basic auth state');
+            // Não mostrar toast de erro em caso de falha do perfil
+            // O usuário conseguiu fazer login, então vamos deixar passar
+            console.warn('Profile fetch failed but continuing with basic auth state');
           }
         }
       } catch (error: any) {
         if (!isMounted) return;
         
-        console.error('❌ Error fetching profile:', error);
+        console.error('Error fetching profile:', error);
         
         // Se o erro é relacionado a auth (403, token issues), não fazer retry
-        if (error?.message?.includes('403') || 
-            error?.message?.includes('Forbidden') || 
-            error?.message?.includes('Timeout')) {
-          console.warn('⚠️ Auth/timeout error detected, stopping retries and continuing with basic state');
+        if (error?.message?.includes('403') || error?.message?.includes('Forbidden')) {
+          console.warn('Auth error detected, stopping retries and continuing with basic state');
           updateState({ 
             isLoading: false,
             error: null // Não mostrar erro para o usuário
@@ -150,25 +89,18 @@ export function useAuthSession(updateState: (state: any) => void) {
         
         if (profileRetries < maxRetries) {
           profileRetries++;
-          const nextDelay = retryDelay * profileRetries;
-          console.log(`🔄 Retrying profile fetch in ${nextDelay}ms due to error`);
-          
-          const timeout = setTimeout(() => {
+          setTimeout(() => {
             if (isMounted) {
               fetchProfileWithRetry(userId);
             }
-          }, nextDelay);
-          
-          timeoutRefs.current.set(`retry-error-${operationId}`, timeout);
+          }, retryDelay * profileRetries);
         } else {
-          console.warn('⚠️ Profile loading failed after max retries, continuing without profile');
+          console.warn('Profile loading failed after max retries, continuing without profile');
           updateState({ 
             isLoading: false,
             error: null // Não bloquear o usuário por problemas de perfil
           });
         }
-      } finally {
-        cancelOperation(operationId);
       }
     };
 
@@ -178,17 +110,17 @@ export function useAuthSession(updateState: (state: any) => void) {
     const setupAuth = async () => {
       try {
         // Clear loading state if session check takes too long
-        const setupTimeoutId = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (isMounted) {
-            console.log('⏰ Auth session check timed out');
+            console.log('Auth session check timed out');
             updateState({ isLoading: false });
           }
-        }, 10000); // Aumentado para 10 segundos
+        }, 8000); // Aumentado de 5000 para 8000
 
         // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, currentSession) => {
-            console.log('🔄 Auth state changed:', event, currentSession?.user?.email);
+            console.log('Auth state changed:', event, currentSession?.user?.email);
             
             // Update the user state immediately
             debouncedUpdateState({
@@ -197,12 +129,6 @@ export function useAuthSession(updateState: (state: any) => void) {
 
             // Clear profile on sign out
             if (event === 'SIGNED_OUT') {
-              console.log('👋 User signed out, clearing state');
-              
-              // Cancelar todas as operações em andamento
-              activeOperations.current.forEach(cancelOperation);
-              activeOperations.current.clear();
-              
               updateState({ 
                 profile: null,
                 isLoading: false 
@@ -212,8 +138,6 @@ export function useAuthSession(updateState: (state: any) => void) {
 
             // Fetch profile on sign in
             if (event === 'SIGNED_IN' && currentSession?.user) {
-              console.log('👤 User signed in, fetching profile');
-              
               // Set loading to true while fetching profile
               updateState({ isLoading: true });
               
@@ -225,25 +149,19 @@ export function useAuthSession(updateState: (state: any) => void) {
                 if (isMounted) {
                   fetchProfileWithRetry(currentSession.user.id);
                 }
-              }, 1000); // Aumentado para 1 segundo
+              }, 500); // Aumentado de 0 para 500ms
             }
           }
         );
 
         // Then check for an existing session
         try {
-          console.log('🔍 Checking for existing session...');
-          const sessionPromise = supabase.auth.getSession();
-          const { data: { session: currentSession } } = await withOperationTimeout(
-            sessionPromise, 
-            8000, 
-            'getSession'
-          );
-          
-          console.log('📋 Existing session:', currentSession?.user?.email || 'None');
+          console.log('Checking for existing session...');
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          console.log('Existing session:', currentSession?.user?.email || 'None');
           
           // Clear timeout since we got a response
-          clearTimeout(setupTimeoutId);
+          clearTimeout(timeoutId);
           
           // Update user state from existing session
           debouncedUpdateState({
@@ -258,29 +176,19 @@ export function useAuthSession(updateState: (state: any) => void) {
             // No existing session, mark as not loading
             updateState({ isLoading: false });
           }
-        } catch (sessionError) {
-          clearTimeout(setupTimeoutId);
-          console.error('❌ Error checking session:', sessionError);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error('Error checking session:', error);
           updateState({ isLoading: false });
         }
 
         // Return cleanup function
         return () => {
-          console.log('🧹 Cleaning up auth session');
           isMounted = false;
-          
-          // Cancelar todas as operações ativas
-          activeOperations.current.forEach(cancelOperation);
-          activeOperations.current.clear();
-          
-          // Limpar todos os timeouts
-          timeoutRefs.current.forEach(timeout => clearTimeout(timeout));
-          timeoutRefs.current.clear();
-          
           subscription.unsubscribe();
         };
       } catch (error) {
-        console.error('❌ Critical error in auth setup:', error);
+        console.error('Critical error in auth setup:', error);
         if (isMounted) {
           updateState({ isLoading: false, error: null }); // Não mostrar erro crítico
         }
@@ -292,7 +200,6 @@ export function useAuthSession(updateState: (state: any) => void) {
     
     // Return cleanup function
     return () => {
-      console.log('🧹 Component cleanup initiated');
       isMounted = false;
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
