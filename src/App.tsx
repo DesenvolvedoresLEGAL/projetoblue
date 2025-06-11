@@ -116,7 +116,11 @@ const App = () => (
                           <AssetsManagement />
                         </AuthRoute>
                       } />
-                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="dashboard" element={
+                        <AuthRoute requiredRole="suporte">
+                          <Dashboard />
+                        </AuthRoute>
+                      } />
                       <Route path="inventory" element={
                         <AuthRoute requiredRole="suporte">
                           <AssetsInventory />

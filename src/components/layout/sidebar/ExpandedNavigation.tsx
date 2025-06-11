@@ -200,6 +200,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
         isActive={isModuleActive(['/assets', '/inventory', '/register-asset', '/link-asset'])}
         isOpen={openModules.assets}
         onToggle={() => toggleModule('assets')}
+        requiredRole="suporte"
       >
         <NavigationItem
           to="/assets/dashboard"
@@ -207,6 +208,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Assets Dashboard - Asset status and metrics"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -215,6 +217,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Inventário"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Assets Inventory - Complete asset listing"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -223,6 +226,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Registrar Ativo"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Register Asset - Add a new asset"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -231,6 +235,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Vincular Ativo"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Link Asset - Connect asset to a client"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -239,6 +244,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Topologia"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Topology - Network visualization"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -247,6 +253,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Status"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Status - Asset status overview"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -255,6 +262,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Descoberta"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Discovery - SNMP/Netconf network scan"
+          requiredRole="suporte"
         />
 
         <NavigationItem
@@ -263,6 +271,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
           label="Exportar"
           onClose={isMobile ? onClose : undefined}
           ariaLabel="Export - Export inventory data"
+          requiredRole="suporte"
         />
       </NavigationModule>
 
