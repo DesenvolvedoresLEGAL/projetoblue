@@ -50,7 +50,7 @@ export const getRoleDescription = (role: UserRole): string => {
  * Obtém as classes CSS para o badge do role
  */
 export const getRoleColors = (role: UserRole): string => {
-  return ROLE_COLORS[role] || ROLE_COLORS.usuario;
+  return ROLE_COLORS[role] || ROLE_COLORS.user;
 };
 
 /**

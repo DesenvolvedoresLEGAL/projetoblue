@@ -62,7 +62,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       });
       
       // Ensure we have a valid role
-      if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
+      if (!['admin', 'suporte', 'cliente', 'user'].includes(role)) {
         console.warn(`Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
         role = DEFAULT_USER_ROLE as UserRole;
       }
