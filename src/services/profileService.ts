@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types/auth';
+import { toUserRole } from '@/utils/roleUtils';
 
 export const profileService = {
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {
@@ -22,12 +23,8 @@ export const profileService = {
       if (data) {
         console.log('Profile found:', data.email);
         
-        // Validate the role to ensure it's one of the valid values
-        const role = data.role as UserRole;
-        if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
-          console.warn(`Invalid role found for user ${userId}: ${role}, defaulting to 'cliente'`);
-          data.role = 'cliente';
-        }
+        // Normalizar role para garantir valor reconhecido
+        data.role = toUserRole(data.role as string);
         
         // Map the profiles table fields to the UserProfile type
         return {

@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AuthErrorCategory } from '@/constants/auth';
+import { toUserRole } from '@/utils/roleUtils';
 
 interface SignUpData {
   email: string;
@@ -74,11 +75,8 @@ export const authService = {
   async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) {
     console.log('Iniciando processo de cadastro:', { email, role });
     
-    // Ensure role is one of the valid enum values
-    if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
-      console.warn(`Valor de role inválido: ${role}, usando '${DEFAULT_USER_ROLE}' como padrão`);
-      role = DEFAULT_USER_ROLE as UserRole;
-    }
+    // Converter role para valor reconhecido
+    role = toUserRole(role);
     
     try {
       // Register in Supabase Auth - Using signUp instead of signUpWithPassword for compatibility

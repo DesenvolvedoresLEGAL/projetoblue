@@ -32,6 +32,12 @@ export const ROLE_HIERARCHY = {
   usuario: 0
 } as const;
 
+// Mapeamento de sinônimos para os roles
+export const ROLE_SYNONYMS = {
+  suport: 'suporte',
+  support: 'suporte'
+} as const;
+
 // Labels amigáveis para os roles
 export const ROLE_LABELS = {
   admin: 'Administrador',

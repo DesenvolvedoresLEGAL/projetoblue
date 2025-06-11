@@ -6,6 +6,7 @@ import { profileService } from '@/services/profileService';
 import { useState, useCallback } from 'react';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/constants/auth';
+import { toUserRole } from '@/utils/roleUtils';
 import { supabase } from '@/integrations/supabase/client';
 
 // Tipo para armazenar informações técnicas de erro para diagnóstico
@@ -61,11 +62,8 @@ export function useAuthActions(updateState: (state: any) => void) {
         role 
       });
       
-      // Ensure we have a valid role
-      if (!['admin', 'suporte', 'cliente', 'usuario'].includes(role)) {
-        console.warn(`Role inválido '${role}' fornecido, usando '${DEFAULT_USER_ROLE}' como padrão`);
-        role = DEFAULT_USER_ROLE as UserRole;
-      }
+      // Garantir que o role seja válido ou mapear sinônimos
+      role = toUserRole(role);
       
       // Melhorado: captura erros da camada de serviço mais detalhadamente
       try {
