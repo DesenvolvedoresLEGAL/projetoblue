@@ -1,6 +1,12 @@
 
 import { UserRole } from '@/types/auth';
-import { ROLE_HIERARCHY, ROLE_LABELS, ROLE_DESCRIPTIONS, ROLE_COLORS } from '@/constants/auth';
+import {
+  ROLE_HIERARCHY,
+  ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
+  ROLE_COLORS,
+  ROLE_SYNONYMS
+} from '@/constants/auth';
 
 /**
  * Verifica se um role tem permissão mínima necessária
@@ -75,15 +81,18 @@ export const getAssignableRoles = (userRole: UserRole): UserRole[] => {
  * Verifica se um role é válido
  */
 export const isValidRole = (role: string): role is UserRole => {
-  return role in ROLE_HIERARCHY;
+  return role in ROLE_HIERARCHY || role in ROLE_SYNONYMS;
 };
 
 /**
  * Converte string para UserRole com validação
  */
 export const toUserRole = (role: string): UserRole => {
-  if (isValidRole(role)) {
-    return role;
+  if (role in ROLE_HIERARCHY) {
+    return role as UserRole;
+  }
+  if (role in ROLE_SYNONYMS) {
+    return ROLE_SYNONYMS[role as keyof typeof ROLE_SYNONYMS];
   }
   return 'cliente'; // fallback seguro
 };
