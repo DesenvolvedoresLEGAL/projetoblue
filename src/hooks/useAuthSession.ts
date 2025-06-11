@@ -34,6 +34,7 @@ export function useAuthSession(updateState: (state: any) => void) {
         
         if (profile) {
           console.log('Profile fetched successfully:', profile.email);
+          
           // Normalizar role considerando sinônimos
           profile.role = toUserRole(profile.role);
           

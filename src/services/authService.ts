@@ -75,6 +75,7 @@ export const authService = {
   async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) {
     console.log('Iniciando processo de cadastro:', { email, role });
     
+
     // Converter role para valor reconhecido
     role = toUserRole(role);
     
