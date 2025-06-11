@@ -12,7 +12,7 @@ import {
 
 export const useRolePermissions = () => {
   const { profile } = useAuth();
-  const userRole = profile?.role || 'usuario';
+  const userRole = profile?.role || 'user';
 
   const permissions = useMemo(() => ({
     // Verificações básicas de role

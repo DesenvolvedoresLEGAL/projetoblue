@@ -31,12 +31,12 @@ interface Profile {
   last_login: string;
 }
 
-const roles: UserRole[] = ['usuario', 'cliente', 'suporte', 'admin'];
+const roles: UserRole[] = ['user', 'cliente', 'suporte', 'admin'];
 
 const AdminConfig = () => {
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
-  const [formState, setFormState] = useState({ email: '', role: 'usuario' as UserRole });
+  const [formState, setFormState] = useState({ email: '', role: 'user' as UserRole });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
