@@ -36,7 +36,7 @@ const Dashboard = () => {
       
       <StandardPageHeader
         icon={LayoutDashboard}
-        title="Dashboard INVENTÁRIO"
+        title="Dashboard do Inventário"
         description="Sistema de Gestão Avançada de Ativos"
       >
       </StandardPageHeader>
