@@ -105,11 +105,14 @@ export function StaticNavigation({
       </div>
 
       {/* Assets Section - Requires suporte or above */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Ativos</h3>
-        </div>
-        <NavigationItem
+      <NavigationModule
+        id="assets"
+        title="Ativos"
+        icon={Users}
+        isActive={isModuleActive(['/assets'])}
+        isOpen={openModules.assets}
+        onToggle={() => toggleModule('assets')}
+      >          <NavigationItem
           to="/assets/dashboard"
           icon={Package}
           label="Dashboard"
@@ -130,7 +133,7 @@ export function StaticNavigation({
           onClose={isMobile ? onClose : undefined}
           requiredRole="suporte"
         />
-      </div>
+      </NavigationModule>
 
       {/* Tickets Section - Requires suporte or above */}
       <NavigationModule
