@@ -218,7 +218,13 @@ export function useAssetManagement() {
     },
     onError: (error: Error) => {
       console.error('Asset creation failed:', error);
-      toast.error(`Erro ao criar asset: ${error.message}`);
+      if (error.message.includes('assets_iccid_check')) {
+        toast.error(`Erro ao criar asset: ICCID já cadastrado.`);
+      } else if (error.message.includes('chk_assets_rented_days_positive')) {
+        toast.error(`Erro ao criar asset: Número de dias cadastrados precisa ser positivo.`);
+      } else {
+        toast.error(`Erro ao criar asset: ${error.message}`);
+      }
     },
   });
 
