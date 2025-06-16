@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -119,13 +120,13 @@ const AdminConfig = () => {
                 <TableCell>{formatDateForDisplay(u.created_at)}</TableCell>
                 <TableCell>{formatDateTimeForDisplay(u.last_login)}</TableCell>
                 <TableCell className="space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(u)} disabled={updateMutation.isLoading}>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(u)} disabled={updateMutation.isPending}>
                     Editar
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="destructive" disabled={deleteMutation.isLoading}>
-                        {deleteMutation.isLoading ? (
+                      <Button size="sm" variant="destructive" disabled={deleteMutation.isPending}>
+                        {deleteMutation.isPending ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
                         Excluir
@@ -139,12 +140,12 @@ const AdminConfig = () => {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleteMutation.isLoading}>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleteMutation.isPending}>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => deleteMutation.mutate(u.id)}
-                          disabled={deleteMutation.isLoading}
+                          disabled={deleteMutation.isPending}
                         >
-                          {deleteMutation.isLoading ? (
+                          {deleteMutation.isPending ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : null}
                           Excluir
@@ -183,11 +184,11 @@ const AdminConfig = () => {
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)} disabled={updateMutation.isLoading}>
+            <Button variant="outline" onClick={() => setEditingUser(null)} disabled={updateMutation.isPending}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={updateMutation.isLoading}>
-              {updateMutation.isLoading ? (
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Salvando...
