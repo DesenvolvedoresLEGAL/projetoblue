@@ -1,3 +1,4 @@
+
 import { UserRole } from '@/types/auth';
 import {
   ROLE_HIERARCHY,
@@ -80,13 +81,13 @@ export const getAssignableRoles = (userRole: UserRole): UserRole[] => {
  * Verifica se um role é válido
  */
 export const isValidRole = (role: string): role is UserRole => {
-  // LOGS TEMPORÁRIOS DE DEBUG - REMOVER DEPOIS
   console.log('🔍 [DEBUG] isValidRole - Input role:', role);
   console.log('🔍 [DEBUG] isValidRole - ROLE_HIERARCHY keys:', Object.keys(ROLE_HIERARCHY));
   console.log('🔍 [DEBUG] isValidRole - ROLE_SYNONYMS keys:', Object.keys(ROLE_SYNONYMS));
   
-  const inHierarchy = Object.prototype.hasOwnProperty.call(ROLE_HIERARCHY, role);
-  const inSynonyms = Object.prototype.hasOwnProperty.call(ROLE_SYNONYMS, role);
+  // Verificação direta usando 'in' operator que é mais confiável
+  const inHierarchy = role in ROLE_HIERARCHY;
+  const inSynonyms = role in ROLE_SYNONYMS;
   
   console.log('🔍 [DEBUG] isValidRole - Role in ROLE_HIERARCHY:', inHierarchy);
   console.log('🔍 [DEBUG] isValidRole - Role in ROLE_SYNONYMS:', inSynonyms);
@@ -99,14 +100,13 @@ export const isValidRole = (role: string): role is UserRole => {
  * Converte string para UserRole com validação
  */
 export const toUserRole = (role: string): UserRole => {
-  // LOGS TEMPORÁRIOS DE DEBUG - REMOVER DEPOIS
   console.log('🎯 [DEBUG] toUserRole - Starting with input role:', role);
   console.log('🎯 [DEBUG] toUserRole - Type of input role:', typeof role);
   console.log('🎯 [DEBUG] toUserRole - ROLE_HIERARCHY object:', ROLE_HIERARCHY);
   console.log('🎯 [DEBUG] toUserRole - ROLE_SYNONYMS object:', ROLE_SYNONYMS);
   
-  // Primeira verificação: role está diretamente em ROLE_HIERARCHY
-  const roleInHierarchy = Object.prototype.hasOwnProperty.call(ROLE_HIERARCHY, role);
+  // Primeira verificação: role está diretamente em ROLE_HIERARCHY usando 'in' operator
+  const roleInHierarchy = role in ROLE_HIERARCHY;
   console.log('🎯 [DEBUG] toUserRole - Role in ROLE_HIERARCHY check:', roleInHierarchy);
   
   if (roleInHierarchy) {
@@ -114,8 +114,8 @@ export const toUserRole = (role: string): UserRole => {
     return role as UserRole;
   }
   
-  // Segunda verificação: role está em ROLE_SYNONYMS
-  const roleInSynonyms = Object.prototype.hasOwnProperty.call(ROLE_SYNONYMS, role);
+  // Segunda verificação: role está em ROLE_SYNONYMS usando 'in' operator
+  const roleInSynonyms = role in ROLE_SYNONYMS;
   console.log('🎯 [DEBUG] toUserRole - Role in ROLE_SYNONYMS check:', roleInSynonyms);
   
   if (roleInSynonyms) {
