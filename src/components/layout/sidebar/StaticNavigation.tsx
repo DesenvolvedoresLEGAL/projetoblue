@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { Award, BarChart3, BookOpen, Bot, Boxes, Cog, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
+import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";
 import { useLocation } from "react-router-dom";
@@ -210,39 +210,43 @@ export function StaticNavigation({
       </div>
 
       {/* BITS Section - Available to cliente or above */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">BITS Legal™</h3>
-        </div>
-        <NavigationItem
-          to="/bits"
-          icon={Gift}
-          label="Dashboard"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-        <NavigationItem
-          to="/bits/indicate"
-          icon={Share2}
-          label="Indicar Agora"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-        <NavigationItem
-          to="/bits/my-referrals"
-          icon={Users}
-          label="Minhas Indicações"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-        <NavigationItem
-          to="/bits/rewards"
-          icon={Award}
-          label="Recompensas"
-          onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
-        />
-      </div>
+      <NavigationModule
+        id="bits"
+        title="Bits"
+        icon={Gift}
+        isActive={isModuleActive(['/bits'])}
+        isOpen={openModules.bits}
+        onToggle={() => toggleModule('bits')}
+      >
+          <NavigationItem
+            to="/bits"
+            icon={ChartColumn}
+            label="Dashboard"
+            onClose={isMobile ? onClose : undefined}
+            requiredRole="admin"
+          />
+          <NavigationItem
+            to="/bits/indicate"
+            icon={Share2}
+            label="Indicar Agora"
+            onClose={isMobile ? onClose : undefined}
+            requiredRole="admin"
+          />
+          <NavigationItem
+            to="/bits/my-referrals"
+            icon={Users}
+            label="Minhas Indicações"
+            onClose={isMobile ? onClose : undefined}
+            requiredRole="admin"
+          />
+          <NavigationItem
+            to="/bits/rewards"
+            icon={Award}
+            label="Recompensas"
+            onClose={isMobile ? onClose : undefined}
+            requiredRole="admin"
+          />
+        </NavigationModule>
 
       {/* Clients Section - Requires suporte or above */}
       <NavigationModule
