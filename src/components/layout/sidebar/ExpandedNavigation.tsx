@@ -588,6 +588,7 @@ export function ExpandedNavigation({ isMobile, onClose }: ExpandedNavigationProp
         isActive={isModuleActive(['/bits'])}
         isOpen={openModules.bits}
         onToggle={() => toggleModule('bits')}
+        requiredRole="admin"
       >
         <NavigationItem
           to="/bits/dashboard"

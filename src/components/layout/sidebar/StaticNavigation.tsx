@@ -66,60 +66,63 @@ export function StaticNavigation({
           icon={LayoutDashboard}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/inbox"
           icon={Inbox}
           label="Caixa de Entrada"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/my-tickets"
           icon={User}
           label="Meus Tickets"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/new"
           icon={Plus}
           label="Novo Ticket"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/knowledge-base"
           icon={BookOpen}
           label="Base de Conhecimento"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/automation"
           icon={Zap}
           label="Automação e Regras"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/analytics"
           icon={TrendingUp}
           label="Análises & Relatórios"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/quality"
           icon={Shield}
           label="Qualidade & Auditoria"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/copilot"
           icon={Bot}
           label="Copiloto do Agente (IA)"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/integrations"
@@ -140,28 +143,28 @@ export function StaticNavigation({
           icon={Gift}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/indicate"
           icon={Share2}
           label="Indicar Agora"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/my-referrals"
           icon={Users}
           label="Minhas Indicações"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
+          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/rewards"
           icon={Award}
           label="Recompensas"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="cliente"
+          requiredRole="admin"
         />
       </div>
 

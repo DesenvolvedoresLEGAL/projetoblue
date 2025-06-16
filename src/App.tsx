@@ -157,12 +157,12 @@ const App = () => (
                     <Route path="tickets">
                       <Route index element={<Navigate to="/tickets/dashboard" replace />} />
                       <Route path="dashboard" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <TicketsDashboard />
                         </AuthRoute>
                       } />
                       <Route path="inbox" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <TicketsInbox />
                         </AuthRoute>
                       } />
@@ -170,22 +170,22 @@ const App = () => (
                       <Route path="new" element={<NewTicket />} />
                       <Route path="knowledge-base" element={<KnowledgeBase />} />
                       <Route path="automation" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <TicketAutomation />
                         </AuthRoute>
                       } />
                       <Route path="analytics" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <TicketAnalytics />
                         </AuthRoute>
                       } />
                       <Route path="quality" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <QualityAudit />
                         </AuthRoute>
                       } />
                       <Route path="copilot" element={
-                        <AuthRoute requiredRole="suporte">
+                        <AuthRoute requiredRole="admin">
                           <AgentCopilot />
                         </AuthRoute>
                       } />
@@ -211,32 +211,32 @@ const App = () => (
                     {/* BITS™ module routes - Available to cliente or above */}
                     <Route path="bits">
                       <Route index element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsDashboard />
                         </AuthRoute>
                       } />
                       <Route path="indicate" element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsIndicateNow />
                         </AuthRoute>
                       } />
                       <Route path="my-referrals" element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsMyReferrals />
                         </AuthRoute>
                       } />
                       <Route path="rewards" element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsPointsAndRewards />
                         </AuthRoute>
                       } />
                       <Route path="settings" element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsSettings />
                         </AuthRoute>
                       } />
                       <Route path="help" element={
-                        <AuthRoute requiredRole="cliente">
+                        <AuthRoute requiredRole="admin">
                           <BitsHelpAndSupport />
                         </AuthRoute>
                       } />
