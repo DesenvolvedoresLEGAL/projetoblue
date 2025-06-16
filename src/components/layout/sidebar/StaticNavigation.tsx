@@ -1,10 +1,10 @@
 
-import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Package, PackageSearch, PlusCircle, LinkIcon, Network, ActivitySquare, Scan, FileText, Cog, UserCog, ScrollText, BarChart3, Boxes, KeyRound, LogIn, ShieldCheck, Award, Users, Gift, Settings2, HelpCircle, Share2, Ticket, Inbox, User, Plus, BookOpen, Bot, Zap, TrendingUp, Shield, Puzzle } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { Award, BarChart3, BookOpen, Bot, Boxes, Cog, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
-
+import { NavigationModule } from "./NavigationModule";
+import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 export function StaticNavigation({
   isMobile = false,
   onClose
@@ -12,6 +12,82 @@ export function StaticNavigation({
   isMobile?: boolean;
   onClose?: () => void;
 }) {
+  const location = useLocation();
+    const [openModules, setOpenModules] = useState<Record<string, boolean>>({
+      dashboard: true, // Dashboard module starts open by default
+      assets: false,
+      topology: false,
+      tools: false,
+      support: false,
+      wifi: false,
+      portal: false,
+      campaigns: false,
+      ai: false,
+      alerts: false,
+      finance: false,
+      sales: false,
+      bits: false,
+      nps: false,
+      lab: false,
+      integrations: false,
+      admin: false
+    });
+  
+    // Determine which module to open based on the current route
+    useEffect(() => {
+      if (location.pathname === "/" || location.pathname.includes("/dashboard")) {
+        setOpenModules(prev => ({ ...prev, dashboard: true }));
+      } else if (location.pathname.includes("/assets")) {
+        setOpenModules(prev => ({ ...prev, assets: true }));
+      } else if (location.pathname.includes("/topology")) {
+        setOpenModules(prev => ({ ...prev, topology: true }));
+      } else if (
+        location.pathname.includes("/tools") || 
+        location.pathname.includes("/register-asset") || 
+        location.pathname.includes("/discovery") ||
+        location.pathname.includes("/export")
+      ) {
+        setOpenModules(prev => ({ ...prev, tools: true }));
+      } else if (location.pathname.includes("/support")) {
+        setOpenModules(prev => ({ ...prev, support: true }));
+      } else if (location.pathname.includes("/wifi")) {
+        setOpenModules(prev => ({ ...prev, wifi: true }));
+      } else if (location.pathname.includes("/portal")) {
+        setOpenModules(prev => ({ ...prev, portal: true }));
+      } else if (location.pathname.includes("/campaigns")) {
+        setOpenModules(prev => ({ ...prev, campaigns: true }));
+      } else if (location.pathname.includes("/ai")) {
+        setOpenModules(prev => ({ ...prev, ai: true }));
+      } else if (location.pathname.includes("/alerts")) {
+        setOpenModules(prev => ({ ...prev, alerts: true }));
+      } else if (location.pathname.includes("/finance")) {
+        setOpenModules(prev => ({ ...prev, finance: true }));
+      } else if (location.pathname.includes("/sales")) {
+        setOpenModules(prev => ({ ...prev, sales: true }));
+      } else if (location.pathname.includes("/bits")) {
+        setOpenModules(prev => ({ ...prev, bits: true }));
+      } else if (location.pathname.includes("/nps")) {
+        setOpenModules(prev => ({ ...prev, nps: true }));
+      } else if (location.pathname.includes("/lab")) {
+        setOpenModules(prev => ({ ...prev, lab: true }));
+      } else if (location.pathname.includes("/integrations")) {
+        setOpenModules(prev => ({ ...prev, integrations: true }));
+      } else if (location.pathname.includes("/admin")) {
+        setOpenModules(prev => ({ ...prev, admin: true }));
+      }
+    }, [location.pathname]);
+  
+    const toggleModule = (moduleId: string) => {
+      setOpenModules(prev => ({
+        ...prev,
+        [moduleId]: !prev[moduleId]
+      }));
+    };
+  
+    const isModuleActive = (paths: string[]) => {
+      return paths.some(path => location.pathname.includes(path));
+    };
+
   const { profile } = useAuth();
 
   return (
@@ -169,25 +245,33 @@ export function StaticNavigation({
       </div>
 
       {/* Clients Section - Requires suporte or above */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Clientes</h3>
-        </div>
-        <NavigationItem
+      <NavigationModule
+        id="clients"
+        title="Clientes"
+        icon={Users}
+        isActive={isModuleActive(['/clients'])}
+        isOpen={openModules.clients}
+        onToggle={() => toggleModule('clients')}
+      >
+          <NavigationItem
           to="/clients"
-          icon={Users}
+          icon={User}
           label="Gerenciar Clientes"
           onClose={isMobile ? onClose : undefined}
           requiredRole="suporte"
         />
-      </div>
+      </NavigationModule>
 
       {/* Admin Section - Requires admin */}
-      <div className="flex flex-col space-y-2">
-        <div className="px-3 mb-1">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/70">Administração</h3>
-        </div>
-        <NavigationItem
+      <NavigationModule
+        id="admin"
+        title="Admin"
+        icon={Cog}
+        isActive={isModuleActive(['/admin'])}
+        isOpen={openModules.admin}
+        onToggle={() => toggleModule('admin')}
+      >
+         <NavigationItem
           to="/suppliers"
           icon={Boxes}
           label="Fornecedores"
@@ -201,7 +285,7 @@ export function StaticNavigation({
           onClose={isMobile ? onClose : undefined}
           requiredRole="admin"
         />
+      </NavigationModule>
       </div>
-    </div>
   );
 }
