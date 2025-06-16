@@ -1196,6 +1196,33 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      admin_list_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          role: Database["public"]["Enums"]["user_role_enum"]
+          is_active: boolean
+          is_approved: boolean
+          created_at: string
+          last_login: string
+        }[]
+      }
+      admin_update_user_profile: {
+        Args: { user_id: string; profile_updates: Json }
+        Returns: boolean
+      }
+      admin_update_user_role: {
+        Args: {
+          user_id: string
+          new_role: Database["public"]["Enums"]["user_role_enum"]
+        }
+        Returns: boolean
+      }
       detect_association_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1210,7 +1237,7 @@ export type Database = {
         Args: {
           user_id: string
           user_email: string
-          user_role?: Database["public"]["Enums"]["user_role_enum"]
+          user_role: Database["public"]["Enums"]["user_role_enum"]
         }
         Returns: boolean
       }
@@ -1250,13 +1277,6 @@ export type Database = {
           count: number
         }[]
       }
-      update_user_role: {
-        Args: {
-          user_email: string
-          new_role: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
-      }
       user_has_profile: {
         Args: { user_id: string }
         Returns: boolean
@@ -1289,11 +1309,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
-      user_role_enum:
-        | "admin"
-        | "suporte"
-        | "cliente"
-        | "user"
+      user_role_enum: "admin" | "suporte" | "cliente" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1438,12 +1454,7 @@ export const Constants = {
         "ANTENA",
         "LOAD BALANCE",
       ],
-      user_role_enum: [
-        "admin",
-        "suporte",
-        "cliente",
-        "user",
-      ],
+      user_role_enum: ["admin", "suporte", "cliente", "user"],
     },
   },
 } as const
