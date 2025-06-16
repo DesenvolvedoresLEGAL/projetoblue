@@ -24,10 +24,10 @@ export const StandardPageHeader: React.FC<StandardPageHeaderProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-[#03F9FF]/20">
-              <Icon className="h-6 w-6 text-[#4D2BFB]" />
+              <Icon className="h-6 w-6 text-[#4D2BFB] dark:text-[#B9ABFC]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#020CBC] font-neue-haas">
+              <h1 className="text-2xl font-bold tracking-tight dark:text-[#868CFD] text-[#020CBC] font-neue-haas">
                 {title}
               </h1>
               <p className="text-muted-foreground font-neue-haas mt-1">
