@@ -112,26 +112,24 @@ export function StaticNavigation({
         isActive={isModuleActive(['/assets'])}
         isOpen={openModules.assets}
         onToggle={() => toggleModule('assets')}
+        requiredRole="suporte"
       >          <NavigationItem
           to="/assets/dashboard"
           icon={Package}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
         />
         <NavigationItem
           to="/assets/inventory"
           icon={PackageSearch}
           label="Inventário"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
         />
         <NavigationItem
           to="/assets/management"
           icon={PlusCircle}
           label="Gestão"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
         />
       </NavigationModule>
 
@@ -143,76 +141,67 @@ export function StaticNavigation({
         isActive={isModuleActive(['/tickets'])}
         isOpen={openModules.tickets}
         onToggle={() => toggleModule('tickets')}
+        requiredRole="admin"
       >
         <NavigationItem
           to="/tickets/dashboard"
           icon={LayoutDashboard}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/inbox"
           icon={Inbox}
           label="Caixa de Entrada"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/my-tickets"
           icon={User}
           label="Meus Tickets"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/new"
           icon={Plus}
           label="Novo Ticket"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/knowledge-base"
           icon={BookOpen}
           label="Base de Conhecimento"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/automation"
           icon={Zap}
           label="Automação e Regras"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/analytics"
           icon={TrendingUp}
           label="Análises & Relatórios"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/quality"
           icon={Shield}
           label="Qualidade & Auditoria"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/copilot"
           icon={Bot}
           label="Copiloto do Agente (IA)"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/tickets/integrations"
           icon={Puzzle}
           label="Integrações"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
       </NavigationModule>
 
@@ -224,34 +213,31 @@ export function StaticNavigation({
         isActive={isModuleActive(['/bits'])}
         isOpen={openModules.bits}
         onToggle={() => toggleModule('bits')}
+        requiredRole="admin"
       >
         <NavigationItem
           to="/bits"
           icon={ChartColumn}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/indicate"
           icon={Share2}
           label="Indicar Agora"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/my-referrals"
           icon={Users}
           label="Minhas Indicações"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/bits/rewards"
           icon={Award}
           label="Recompensas"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
       </NavigationModule>
 
@@ -263,13 +249,13 @@ export function StaticNavigation({
         isActive={isModuleActive(['/clients'])}
         isOpen={openModules.clients}
         onToggle={() => toggleModule('clients')}
+        requiredRole="suporte"
       >
         <NavigationItem
           to="/clients"
           icon={User}
           label="Gerenciar Clientes"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="suporte"
         />
       </NavigationModule>
 
@@ -281,20 +267,19 @@ export function StaticNavigation({
         isActive={isModuleActive(['/admin'])}
         isOpen={openModules.admin}
         onToggle={() => toggleModule('admin')}
+        requiredRole="admin"
       >
         <NavigationItem
           to="/suppliers"
           icon={Boxes}
           label="Fornecedores"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
         <NavigationItem
           to="/admin/config"
           icon={Cog}
           label="Configurações"
           onClose={isMobile ? onClose : undefined}
-          requiredRole="admin"
         />
       </NavigationModule>
     </div>
