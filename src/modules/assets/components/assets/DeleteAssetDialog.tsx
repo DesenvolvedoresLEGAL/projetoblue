@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   AlertDialog,
@@ -14,7 +15,6 @@ import { toast } from '@/utils/toast';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { AssetAssociation } from '@modules/assets/services/asset/associationQueries';
 import AssetAssociationWarningDialog from './AssetAssociationWarningDialog';
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface DeleteAssetDialogProps {
   isOpen: boolean;
@@ -63,7 +63,7 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
       }
     } catch (error) {
       console.error('Erro ao verificar associações ou excluir ativo:', error);
-      showFriendlyError(error);
+      toast.error("Ocorreu um erro ao processar a solicitação");
     } finally {
       setIsDeleting(false);
       setIsCheckingAssociation(false);

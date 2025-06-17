@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { toast } from '@/utils/toast';
 import { useAuth } from '@/context/AuthContext';
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 const Login = () => {
   const [email, setEmail] = useState('');

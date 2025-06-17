@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   DropdownMenu,
@@ -20,7 +21,6 @@ import { useAssets } from "@/context/useAssets";
 import { StatusRecord, Asset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface AssetStatusDropdownProps {
   asset: Asset;
