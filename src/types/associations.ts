@@ -7,6 +7,10 @@ export interface Association {
   exit_date: string | null;
   association_id: number;
   created_at: string;
+  notes?: string;
+  ssid?: string;
+  pass?: string;
+  gb?: number;
   // Dados dos JOINs
   client_name: string;
   asset_iccid: string | null;
