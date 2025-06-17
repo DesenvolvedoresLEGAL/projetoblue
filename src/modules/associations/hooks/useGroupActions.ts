@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { AssociationGroup } from '@/types/associations';
 
 export const useGroupActions = () => {
@@ -27,19 +27,12 @@ export const useGroupActions = () => {
       return { deletedCount: associationIds.length };
     },
     onSuccess: (data) => {
-      toast({
-        title: "Grupo removido",
-        description: `${data.deletedCount} associações foram removidas com sucesso.`,
-      });
+      toast.success(`${data.deletedCount} associações foram removidas com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ['associations'] });
     },
     onError: (error) => {
       console.error('❌ Error soft deleting group:', error);
-      toast({
-        title: "Erro ao remover grupo",
-        description: "Houve um erro ao remover o grupo de associações.",
-        variant: "destructive",
-      });
+      toast.error("Houve um erro ao remover o grupo de associações.");
     }
   });
 
@@ -60,19 +53,12 @@ export const useGroupActions = () => {
       return { updatedCount: associationIds.length };
     },
     onSuccess: (data) => {
-      toast({
-        title: "Grupo atualizado",
-        description: `${data.updatedCount} associações foram atualizadas com sucesso.`,
-      });
+      toast.success(`${data.updatedCount} associações foram atualizadas com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ['associations'] });
     },
     onError: (error) => {
       console.error('❌ Error bulk updating group:', error);
-      toast({
-        title: "Erro ao atualizar grupo",
-        description: "Houve um erro ao atualizar o grupo de associações.",
-        variant: "destructive",
-      });
+      toast.error("Houve um erro ao atualizar o grupo de associações.");
     }
   });
 
@@ -93,19 +79,12 @@ export const useGroupActions = () => {
       return { updatedCount: associationIds.length };
     },
     onSuccess: (data) => {
-      toast({
-        title: "Tipo de associação alterado",
-        description: `${data.updatedCount} associações tiveram o tipo alterado com sucesso.`,
-      });
+      toast.success(`${data.updatedCount} associações tiveram o tipo alterado com sucesso.`);
       queryClient.invalidateQueries({ queryKey: ['associations'] });
     },
     onError: (error) => {
       console.error('❌ Error changing association type:', error);
-      toast({
-        title: "Erro ao alterar tipo",
-        description: "Houve um erro ao alterar o tipo de associação do grupo.",
-        variant: "destructive",
-      });
+      toast.error("Houve um erro ao alterar o tipo de associação do grupo.");
     }
   });
 

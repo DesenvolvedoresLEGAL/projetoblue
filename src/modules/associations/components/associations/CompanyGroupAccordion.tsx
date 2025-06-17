@@ -11,7 +11,7 @@ import { Building2, Calendar, MapPin, Users } from "lucide-react";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CompanyGroup } from '@/utils/timestampGroupingUtils';
-import { Association } from '@/types/associations';
+import { Association, AssociationGroup } from '@/types/associations';
 import { AssociationTableRow } from './AssociationTableRow';
 import { GroupActionsToolbar } from './GroupActionsToolbar';
 
@@ -58,6 +58,23 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
     return associations.filter(a => !a.exit_date || a.exit_date > today).length;
   };
 
+  // Convert CompanyGroup to AssociationGroup for toolbar
+  const convertToAssociationGroup = (group: CompanyGroup): AssociationGroup => {
+    const activeCount = getActiveAssociationsCount(group.associations);
+    
+    return {
+      groupKey: group.clientId, // Use clientId as groupKey
+      client_name: group.clientName,
+      client_id: group.clientId,
+      entry_date: group.entryDate,
+      exit_date: group.exitDate || null,
+      associations: group.associations,
+      totalAssets: group.associations.length,
+      assetTypes: group.assetTypeDistribution,
+      canEndGroup: activeCount > 0
+    };
+  };
+
   return (
     <Accordion 
       type="multiple" 
@@ -67,11 +84,12 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
     >
       {companyGroups.map((group) => {
         const activeCount = getActiveAssociationsCount(group.associations);
+        const associationGroup = convertToAssociationGroup(group);
         
         return (
           <AccordionItem 
-            key={group.groupKey} 
-            value={group.groupKey}
+            key={group.clientId} 
+            value={group.clientId}
             className="border border-gray-200 rounded-lg px-4"
           >
             <AccordionTrigger className="hover:no-underline py-4">
@@ -80,21 +98,21 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                   <Building2 className="h-5 w-5 text-blue-600" />
                   <div className="text-left">
                     <div className="font-semibold text-gray-900">
-                      {group.client_name}
+                      {group.clientName}
                     </div>
                     <div className="text-sm text-gray-500 flex items-center gap-4">
                       <span className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {group.totalAssets} ativo{group.totalAssets > 1 ? 's' : ''}
+                        {group.associations.length} ativo{group.associations.length > 1 ? 's' : ''}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDateCorrect(group.entry_date)}
+                        {formatDateCorrect(group.entryDate)}
                       </span>
-                      {group.exit_date && (
+                      {group.exitDate && (
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          até {formatDateCorrect(group.exit_date)}
+                          até {formatDateCorrect(group.exitDate)}
                         </span>
                       )}
                     </div>
@@ -103,9 +121,9 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                 
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {getAssetTypesSummary(group.assetTypes)}
+                    {getAssetTypesSummary(group.assetTypeDistribution)}
                   </Badge>
-                  {activeCount > 0 && activeCount < group.totalAssets && (
+                  {activeCount > 0 && activeCount < group.associations.length && (
                     <Badge variant="outline" className="text-xs">
                       {activeCount} ativa{activeCount > 1 ? 's' : ''}
                     </Badge>
@@ -119,7 +137,7 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                 {/* Toolbar de Ações do Grupo */}
                 <div className="flex justify-end border-b pb-3">
                   <GroupActionsToolbar
-                    group={group}
+                    group={associationGroup}
                     onEndGroup={onEndGroup}
                     isEndingGroup={isEndingGroup}
                   />
@@ -134,7 +152,6 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                         onEdit={onEditAssociation}
                         onEndAssociation={onEndAssociation}
                         isEndingAssociation={isEndingAssociation}
-                        compact={true}
                       />
                     </div>
                   ))}

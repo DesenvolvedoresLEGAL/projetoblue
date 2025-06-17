@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { AssociationsPageHeader } from "@modules/associations/components/associations/AssociationsPageHeader";
@@ -75,16 +74,24 @@ export default function AssociationsListContent() {
 
   // Handle group end using existing logic
   const handleEndGroup = (groupKey: string) => {
-    // Extract group data from timestampGroups
-    const group = timestampGroups.flatMap(tg => tg.companyGroups)
-      .find(cg => cg.groupKey === groupKey);
+    // Find the group in timestampGroups and get the associations
+    const allAssociations = timestampGroups.flatMap(tg => 
+      tg.companyGroups.flatMap(cg => cg.associations)
+    );
     
-    if (group) {
-      // Use existing handleEndGroup logic from useAssociationActions
-      const groupedAssociations = { [groupKey]: group };
-      // This will use the existing handleEndGroup from useAssociationActions
-      // which already has the proper logic implemented
-    }
+    // Filter associations for this client (groupKey is clientId)
+    const groupAssociations = allAssociations.filter(a => a.client_id === groupKey);
+    
+    // End each association individually using existing function
+    const today = new Date().toISOString().split('T')[0];
+    const activeAssociations = groupAssociations.filter(a => 
+      !a.exit_date || a.exit_date > today
+    );
+    
+    // Use existing handleEndAssociation for each active association
+    activeAssociations.forEach(association => {
+      handleEndAssociation(association.id);
+    });
   };
 
   // Aplicar filtro multicampo no frontend e agrupar por timestamp e empresa
