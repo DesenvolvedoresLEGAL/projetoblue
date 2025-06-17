@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Asset } from '@/types/asset';
-import { assetReducer, AssetState, AssetAction } from './assetReducer';
-import { createAsset, updateAsset, deleteAsset } from './assetActions';
+import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
 import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface AssetContextProps {
-  state: AssetState;
+  assets: Asset[];
+  loading: boolean;
+  error: string | null;
   createAsset: (assetData: any) => Promise<void>;
   updateAsset: (id: string, updates: any) => Promise<void>;
   deleteAsset: (id: string) => Promise<void>;
@@ -13,68 +15,71 @@ interface AssetContextProps {
 
 const AssetContext = createContext<AssetContextProps | undefined>(undefined);
 
-const initialState: AssetState = {
-  assets: [],
-  loading: false,
-  error: null,
-};
-
 const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(assetReducer, initialState);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCreateAsset = async (assetData: any) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      setLoading(true);
+      setError(null);
       const newAsset = await createAsset(assetData);
       if (newAsset) {
-        dispatch({ type: 'ADD_ASSET', payload: newAsset });
+        setAssets(prevAssets => [...prevAssets, newAsset]);
       }
     } catch (error) {
       console.error('Erro ao criar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
-      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
+      setError(friendlyMessage);
       throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
   const handleUpdateAsset = async (id: string, updates: any) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      setLoading(true);
+      setError(null);
       const updatedAsset = await updateAsset(id, updates);
       if (updatedAsset) {
-        dispatch({ type: 'UPDATE_ASSET', payload: updatedAsset });
+        setAssets(prevAssets => 
+          prevAssets.map(asset => asset.uuid === id ? updatedAsset : asset)
+        );
       }
     } catch (error) {
       console.error('Erro ao atualizar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
-      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
+      setError(friendlyMessage);
       throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
   const handleDeleteAsset = async (id: string) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      setLoading(true);
+      setError(null);
       const success = await deleteAsset(id);
       if (success) {
-        dispatch({ type: 'DELETE_ASSET', payload: id });
+        setAssets(prevAssets => prevAssets.filter(asset => asset.uuid !== id));
       }
     } catch (error) {
       console.error('Erro ao deletar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'delete');
-      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
+      setError(friendlyMessage);
       throw error;
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setLoading(false);
     }
   };
 
   const value: AssetContextProps = {
-    state,
+    assets,
+    loading,
+    error,
     createAsset: handleCreateAsset,
     updateAsset: handleUpdateAsset,
     deleteAsset: handleDeleteAsset,

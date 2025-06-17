@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Asset } from '@/types/asset';
 import { showFriendlyError } from '@/utils/errorTranslator';
+import { mapDatabaseAssetToFrontend } from '@/utils/databaseMappers';
 
 export async function createAsset(assetData: any): Promise<Asset | null> {
   try {
@@ -17,7 +18,7 @@ export async function createAsset(assetData: any): Promise<Asset | null> {
       throw new Error(friendlyMessage);
     }
 
-    return data;
+    return mapDatabaseAssetToFrontend(data);
   } catch (error) {
     console.error('Erro na mutation createAsset:', error);
     const friendlyMessage = showFriendlyError(error, 'create');
@@ -40,7 +41,7 @@ export async function updateAsset(id: string, updates: any): Promise<Asset | nul
       throw new Error(friendlyMessage);
     }
 
-    return data;
+    return mapDatabaseAssetToFrontend(data);
   } catch (error) {
     console.error('Erro na mutation updateAsset:', error);
     const friendlyMessage = showFriendlyError(error, 'update');
