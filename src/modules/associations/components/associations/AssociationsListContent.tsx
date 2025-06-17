@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { AssociationsPageHeader } from "@modules/associations/components/associations/AssociationsPageHeader";
@@ -60,7 +61,7 @@ export default function AssociationsListContent() {
     itemsPerPage
   });
 
-  // Actions com controle melhorado
+  // Individual association actions
   const { 
     handleEndAssociation, 
     isEndingAssociation, 
@@ -69,29 +70,44 @@ export default function AssociationsListContent() {
 
   // Group actions
   const { 
+    endGroup,
     isProcessing: isEndingGroup 
   } = useGroupActions();
 
-  // Handle group end using existing logic
+  // Handle group end using group actions hook
   const handleEndGroup = (groupKey: string) => {
-    // Find the group in timestampGroups and get the associations
+    // Find the group in timestampGroups and convert it to AssociationGroup
     const allAssociations = timestampGroups.flatMap(tg => 
       tg.companyGroups.flatMap(cg => cg.associations)
     );
     
-    // Filter associations for this client (groupKey is clientId)
     const groupAssociations = allAssociations.filter(a => a.client_id === groupKey);
     
-    // End each association individually using existing function
+    if (groupAssociations.length === 0) {
+      console.error('Group not found:', groupKey);
+      return;
+    }
+
     const today = new Date().toISOString().split('T')[0];
-    const activeAssociations = groupAssociations.filter(a => 
+    const activeAssociationsCount = groupAssociations.filter(a => 
       !a.exit_date || a.exit_date > today
-    );
-    
-    // Use existing handleEndAssociation for each active association
-    activeAssociations.forEach(association => {
-      handleEndAssociation(association.id);
-    });
+    ).length;
+
+    // Create AssociationGroup object
+    const associationGroup = {
+      groupKey,
+      client_name: groupAssociations[0].client_name,
+      client_id: groupKey,
+      entry_date: groupAssociations[0].entry_date,
+      exit_date: groupAssociations[0].exit_date,
+      associations: groupAssociations,
+      totalAssets: groupAssociations.length,
+      assetTypes: {},
+      canEndGroup: activeAssociationsCount > 0
+    };
+
+    // Use the endGroup mutation from useGroupActions
+    endGroup.mutate(associationGroup);
   };
 
   // Aplicar filtro multicampo no frontend e agrupar por timestamp e empresa

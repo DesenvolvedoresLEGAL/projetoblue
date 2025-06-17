@@ -10,6 +10,13 @@ export const useGroupActions = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [operationProgress, setOperationProgress] = useState({ current: 0, total: 0 });
 
+  // Função para invalidar cache de forma consistente
+  const invalidateAssociationsCache = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['associations-list-optimized'] });
+    // Aguardar um pouco para garantir que os dados foram atualizados
+    await new Promise(resolve => setTimeout(resolve, 300));
+  };
+
   const softDeleteGroup = useMutation({
     mutationFn: async (group: AssociationGroup) => {
       console.log('🗑️ Soft deleting group:', group.groupKey);
@@ -26,9 +33,9 @@ export const useGroupActions = () => {
       if (error) throw error;
       return { deletedCount: associationIds.length };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(`${data.deletedCount} associações foram removidas com sucesso.`);
-      queryClient.invalidateQueries({ queryKey: ['associations'] });
+      await invalidateAssociationsCache();
     },
     onError: (error) => {
       console.error('❌ Error soft deleting group:', error);
@@ -52,9 +59,9 @@ export const useGroupActions = () => {
       if (error) throw error;
       return { updatedCount: associationIds.length };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(`${data.updatedCount} associações foram atualizadas com sucesso.`);
-      queryClient.invalidateQueries({ queryKey: ['associations'] });
+      await invalidateAssociationsCache();
     },
     onError: (error) => {
       console.error('❌ Error bulk updating group:', error);
@@ -78,9 +85,9 @@ export const useGroupActions = () => {
       if (error) throw error;
       return { updatedCount: associationIds.length };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(`${data.updatedCount} associações tiveram o tipo alterado com sucesso.`);
-      queryClient.invalidateQueries({ queryKey: ['associations'] });
+      await invalidateAssociationsCache();
     },
     onError: (error) => {
       console.error('❌ Error changing association type:', error);
@@ -88,11 +95,53 @@ export const useGroupActions = () => {
     }
   });
 
+  const endGroup = useMutation({
+    mutationFn: async (group: AssociationGroup) => {
+      console.log('⏹️ Ending group:', group.groupKey);
+      const today = new Date().toISOString().split('T')[0];
+      const associationsToEnd = group.associations.filter(a => 
+        !a.exit_date || a.exit_date > today
+      );
+
+      if (associationsToEnd.length === 0) {
+        throw new Error('Não há associações ativas para encerrar neste grupo');
+      }
+
+      const associationIds = associationsToEnd.map(a => a.id);
+      
+      const { error } = await supabase
+        .from('asset_client_assoc')
+        .update({ 
+          exit_date: today,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', associationIds);
+
+      if (error) throw error;
+      return { endedCount: associationIds.length };
+    },
+    onMutate: () => {
+      setIsProcessing(true);
+    },
+    onSuccess: async (data) => {
+      toast.success(`${data.endedCount} associações foram encerradas com sucesso.`);
+      await invalidateAssociationsCache();
+    },
+    onError: (error) => {
+      console.error('❌ Error ending group:', error);
+      toast.error(error.message || "Houve um erro ao encerrar o grupo de associações.");
+    },
+    onSettled: () => {
+      setIsProcessing(false);
+    }
+  });
+
   return {
     softDeleteGroup,
     bulkUpdateGroup,
     changeGroupAssociationType,
-    isProcessing,
+    endGroup,
+    isProcessing: isProcessing || softDeleteGroup.isPending || bulkUpdateGroup.isPending || changeGroupAssociationType.isPending || endGroup.isPending,
     operationProgress,
   };
 };
