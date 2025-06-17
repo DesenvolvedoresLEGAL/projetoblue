@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Asset } from '@/types/asset';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -61,4 +62,75 @@ export const useAssetManagement = () => {
     updateAssetMutation,
     deleteAssetMutation,
   };
+};
+
+// Add missing exports
+export const useManufacturers = () => {
+  return useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+};
+
+export const useAssetSolutions = () => {
+  return useQuery({
+    queryKey: ['asset-solutions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_solutions')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+};
+
+export const useStatusRecords = () => {
+  return useQuery({
+    queryKey: ['status-records'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_status')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+};
+
+export const useCreateAsset = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (assetData: any) => {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert([assetData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      toast.success('Ativo criado com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao criar ativo:', error);
+      showFriendlyError(error);
+    },
+  });
 };

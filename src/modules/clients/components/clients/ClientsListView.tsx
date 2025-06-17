@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { ClientsFilters } from '@modules/clients/components/clients/ClientsFilters';
 import { ClientsTable } from '@modules/clients/components/clients/ClientsTable';
 import { ClientsEmptyState } from '@modules/clients/components/clients/ClientsEmptyState';
-import { ClientEditDialog } from '@modules/clients/components/clients/ClientEditDialog';
+import ClientEditDialog from '@modules/clients/components/clients/ClientEditDialog';
 
 interface Client {
   uuid: string;
