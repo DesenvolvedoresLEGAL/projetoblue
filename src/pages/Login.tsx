@@ -30,16 +30,16 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Email e senha são obrigatórios");
+      toast.error("Por favor, preencha seu email e senha para continuar.");
       return;
     }
 
     try {
       await signIn(email, password);
-      // No need to redirect here as the AuthContext will handle it
+      // Redirecionamento é tratado pelo AuthContext
     } catch (err) {
       console.error("Erro ao fazer login:", err);
-      // Error will be handled by the AuthContext
+      // Erro é tratado pelo AuthContext
     }
   };
 

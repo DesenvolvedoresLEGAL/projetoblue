@@ -1,13 +1,13 @@
-
 import { PostgrestError } from "@supabase/supabase-js";
 import { AssetLog, StatusRecord, Asset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const handleAssetError = (error: PostgrestError | Error | any, context: string) => {
   console.error(`${context}:`, error);
-  const message = error?.message || "Erro desconhecido";
-  toast.error(`${context}: ${message}`);
+  const friendlyMessage = showFriendlyError(error, context.toLowerCase());
+  toast.error(friendlyMessage);
 };
 
 export const mapDatabaseLogToAssetLog = (dbLog: any): AssetLog => {

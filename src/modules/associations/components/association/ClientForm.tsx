@@ -10,6 +10,7 @@ import { useClientFormValidation } from './hooks/useClientFormValidation';
 import { PhoneFields } from './components/PhoneFields';
 import { ClientFormFields } from './components/ClientFormFields';
 import { ClientFormActions } from './components/ClientFormActions';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface ClientFormProps {
   onSubmit: (client: Client) => void;
@@ -35,7 +36,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
     e.preventDefault();
     
     if (!isFormValid) {
-      toast.error('Preencha empresa, responsável e pelo menos um telefone válido');
+      toast.error('Por favor, preencha o nome da empresa, responsável e pelo menos um telefone válido para continuar.');
       return;
     }
 
@@ -68,12 +69,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
 
       if (error) {
         console.error('Erro ao criar cliente:', error);
-        throw error;
+        const friendlyMessage = showFriendlyError(error, 'create');
+        throw new Error(friendlyMessage);
       }
 
       const newClient = mapDatabaseClientToFrontend(data);
       
-      // Clear sessionStorage on successful submission
       if (clearStateOnSuccess) {
         clearState();
       }
@@ -82,7 +83,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
-      toast.error('Erro ao cadastrar cliente. Tente novamente.');
+      const friendlyMessage = showFriendlyError(error, 'create');
+      toast.error(friendlyMessage);
     } finally {
       setIsLoading(false);
     }

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface EquipmentFormProps {
   onSuccess: () => void;
@@ -59,7 +60,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
     e.preventDefault();
     
     if (!formData.radio || !formData.solution_id) {
-      toast.error('Rádio e tipo de equipamento são obrigatórios');
+      toast.error('Por favor, selecione o tipo de equipamento e informe o número do rádio para continuar.');
       return;
     }
 
@@ -80,7 +81,8 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
 
       if (error) {
         console.error('Erro ao criar equipamento:', error);
-        toast.error('Erro ao cadastrar equipamento');
+        const friendlyMessage = showFriendlyError(error, 'create');
+        toast.error(friendlyMessage);
         return;
       }
 
@@ -88,7 +90,8 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro inesperado ao cadastrar equipamento');
+      const friendlyMessage = showFriendlyError(error, 'create');
+      toast.error(friendlyMessage);
     } finally {
       setIsSubmitting(false);
     }

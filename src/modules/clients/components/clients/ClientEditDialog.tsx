@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +7,8 @@ import { Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { mapDatabaseClientToFrontend, normalizePhoneForStorage, formatPhoneForDisplay } from '@/utils/clientMappers';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface Client {
   uuid: string;
@@ -41,6 +42,7 @@ export const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
   client
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
   const [editFormData, setEditFormData] = useState<EditClientFormData>({
@@ -88,52 +90,54 @@ export const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
     }));
   };
 
-  const handleUpdateClient = async () => {
-    if (!client) return;
-
-    if (!editFormData.empresa.trim()) {
-      toast.error("O campo empresa é obrigatório.");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!client || !editFormData.empresa.trim() || !editFormData.responsavel.trim() || editFormData.telefones.length === 0) {
+      toast.error('Por favor, preencha empresa, responsável e pelo menos um telefone para continuar.');
       return;
     }
 
-    if (!editFormData.responsavel.trim()) {
-      toast.error("O campo responsável é obrigatório.");
-      return;
-    }
-
-    const telefonesFiltrados = editFormData.telefones.filter(tel => tel.trim());
-    if (telefonesFiltrados.length === 0) {
-      toast.error("Pelo menos um telefone deve ser informado.");
-      return;
-    }
-
-    setIsUpdating(true);
+    setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      const telefonesFiltrados = editFormData.telefones.filter(tel => tel.trim());
+      if (telefonesFiltrados.length === 0) {
+        toast.error("Pelo menos um telefone deve ser informado.");
+        return;
+      }
+
+      const updateData = {
+        empresa: editFormData.empresa.trim(),
+        responsavel: editFormData.responsavel.trim(),
+        telefones: telefonesFiltrados,
+        email: editFormData.email.trim() || null,
+        cnpj: editFormData.cnpj.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
         .from('clients')
-        .update({
-          empresa: editFormData.empresa.trim(),
-          responsavel: editFormData.responsavel.trim(),
-          telefones: telefonesFiltrados,
-          email: editFormData.email.trim() || null,
-          cnpj: editFormData.cnpj.trim() || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('uuid', client.uuid);
+        .update(updateData)
+        .eq('uuid', client.uuid)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar cliente:', error);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw error;
+      }
 
-      toast.success("Cliente atualizado com sucesso.");
-
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      queryClient.invalidateQueries({ queryKey: ['client-logs'] });
+      toast.success('Cliente atualizado com sucesso!');
       onClose();
+      
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
-      toast.error("Erro ao atualizar cliente. Tente novamente.");
+      const friendlyMessage = showFriendlyError(error, 'update');
+      toast.error(friendlyMessage);
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
 
@@ -239,7 +243,7 @@ export const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
             Cancelar
           </Button>
           <Button
-            onClick={handleUpdateClient}
+            onClick={handleSubmit}
             disabled={isUpdating}
             className="bg-[#4D2BFB] text-white hover:bg-[#3a1ecc]"
           >

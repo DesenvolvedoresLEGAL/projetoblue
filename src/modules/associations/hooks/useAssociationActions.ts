@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
 import { AssociationGroup } from '@/types/associations';
 import { useState } from 'react';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const useAssociationActions = () => {
   const queryClient = useQueryClient();
@@ -47,18 +47,19 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-        toast.error('Erro ao encerrar associação');
+        const friendlyMessage = showFriendlyError(error, 'update');
+        toast.error(friendlyMessage);
         return;
       }
 
       console.log('[handleEndAssociation] Associação encerrada com sucesso');
       toast.success('Associação encerrada com sucesso');
       
-      // Forçar refresh completo dos dados
       await forceRefreshAssociationsData();
     } catch (error) {
       console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-      toast.error('Erro ao encerrar associação');
+      const friendlyMessage = showFriendlyError(error, 'update');
+      toast.error(friendlyMessage);
     } finally {
       setIsEndingAssociation(false);
     }
@@ -76,11 +77,10 @@ export const useAssociationActions = () => {
       
       if (!group) {
         console.error('[handleEndGroup] Grupo não encontrado:', groupKey);
-        toast.error('Grupo não encontrado');
+        toast.error('Grupo de associações não encontrado. Recarregue a página e tente novamente.');
         return;
       }
 
-      // Filtrar apenas associações que podem ser encerradas
       const today = new Date().toISOString().split('T')[0];
       const associationsToEnd = group.associations.filter(a => 
         !a.exit_date || a.exit_date > today
@@ -101,10 +101,8 @@ export const useAssociationActions = () => {
         associationIds
       });
 
-      // Toast de progresso
       const progressToastId = toast.loading(`Encerrando ${associationsToEnd.length} associações...`);
       
-      // Operação em lote com melhor controle
       const { error } = await supabase
         .from('asset_client_assoc')
         .update({ 
@@ -113,19 +111,18 @@ export const useAssociationActions = () => {
         })
         .in('id', associationIds);
 
-      // Dismiss do toast de progresso
       toast.dismiss(progressToastId);
 
       if (error) {
         console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-        toast.error('Erro ao encerrar grupo de associações');
+        const friendlyMessage = showFriendlyError(error, 'update');
+        toast.error(friendlyMessage);
         return;
       }
 
       console.log('[handleEndGroup] Grupo de associações encerrado com sucesso');
       toast.success(`Grupo de ${associationsToEnd.length} associações encerrado com sucesso`);
       
-      // Forçar refresh completo dos dados com retry
       let retryCount = 0;
       const maxRetries = 3;
       
@@ -139,9 +136,8 @@ export const useAssociationActions = () => {
           
           if (retryCount >= maxRetries) {
             console.error('[handleEndGroup] Falha ao fazer refresh após múltiplas tentativas');
-            toast.warning('Dados podem levar alguns segundos para atualizar. Recarregue a página se necessário.');
+            toast.warning('Os dados podem levar alguns segundos para atualizar. Recarregue a página se necessário.');
           } else {
-            // Aguardar antes de tentar novamente
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
           }
         }
@@ -149,7 +145,8 @@ export const useAssociationActions = () => {
 
     } catch (error) {
       console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-      toast.error('Erro ao encerrar grupo de associações');
+      const friendlyMessage = showFriendlyError(error, 'update');
+      toast.error(friendlyMessage);
     } finally {
       setIsEndingGroup(false);
       setOperationProgress({ current: 0, total: 0 });

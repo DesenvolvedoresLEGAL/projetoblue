@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +6,7 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { SignupForm } from '@/components/auth/SignupForm';
 import { ThemeToggle } from '@/components/auth/ThemeToggle';
 import { toast } from '@/utils/toast';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 const Signup = () => {
   const { signUp, isAuthenticated, error, isLoading } = useAuth();
@@ -39,28 +39,22 @@ const Signup = () => {
       const confirmPassword = (form.elements.namedItem('confirm-password') as HTMLInputElement).value;
       
       if (password !== confirmPassword) {
-        setSignupError('Senhas não conferem');
+        setSignupError('As senhas não coincidem. Verifique e tente novamente.');
         setIsSubmitting(false);
         return;
       }
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
       
-      // By default, register new users as 'cliente' role
       const result = await signUp(email, password, 'cliente');
       
-      // Check for technical error information from the result
       if (result && result.technicalError) {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
       }
       
-      // Note: toast and navigation are now handled in the signUp function in useAuthActions.ts
-      // to avoid duplicate messages and ensure they only happen after successful registration
-      
     } catch (error: any) {
       console.error("Erro capturado no componente Signup:", error);
       
-      // Store technical error for debugging
       if (error.message || error.stack) {
         setTechnicalErrorInfo(`Erro técnico: ${error.message || 'Erro desconhecido'}
 Stack: ${error.stack || 'N/A'}
@@ -68,12 +62,8 @@ Categoria: ${error.category || 'Desconhecida'}
 Timestamp: ${new Date().toISOString()}`);
       }
       
-      // Show user-friendly message
-      if (error.message?.includes('captcha') || error.message?.includes('configuração')) {
-        setSignupError('Erro temporário no sistema. Nossa equipe técnica foi notificada. Por favor, tente novamente mais tarde.');
-      } else {
-        setSignupError(error.message || 'Ocorreu um erro durante o cadastro');
-      }
+      const friendlyMessage = showFriendlyError(error, 'create');
+      setSignupError(friendlyMessage);
     } finally {
       setIsSubmitting(false);
     }

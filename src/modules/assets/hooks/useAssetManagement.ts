@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { Asset, AssetStatus, AssetType } from "@/types/asset";
 import { referenceDataService } from "@modules/assets/services/referenceDataService";
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 // Types for asset operations
 interface CreateAssetData {
@@ -207,24 +208,19 @@ export function useAssetManagement() {
 
       if (error) {
         console.error('Error creating asset:', error);
-        throw new Error(error.message);
+        const friendlyMessage = showFriendlyError(error, 'create');
+        throw new Error(friendlyMessage);
       }
 
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
-      toast.success('Asset criado com sucesso');
+      toast.success('Ativo criado com sucesso');
     },
     onError: (error: Error) => {
       console.error('Asset creation failed:', error);
-      if (error.message.includes('assets_iccid_check')) {
-        toast.error(`Erro ao criar asset: ICCID já cadastrado.`);
-      } else if (error.message.includes('chk_assets_rented_days_positive')) {
-        toast.error(`Erro ao criar asset: Número de dias cadastrados precisa ser positivo.`);
-      } else {
-        toast.error(`Erro ao criar asset: ${error.message}`);
-      }
+      toast.error(error.message);
     },
   });
 
@@ -254,7 +250,8 @@ export function useAssetManagement() {
 
       if (error) {
         console.error(`Error updating asset ${id}:`, error);
-        throw new Error(error.message);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw new Error(friendlyMessage);
       }
 
       return { id };
@@ -262,11 +259,11 @@ export function useAssetManagement() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
       queryClient.invalidateQueries({ queryKey: assetKeys.detail(data.id) });
-      toast.success('Asset atualizado com sucesso');
+      toast.success('Ativo atualizado com sucesso');
     },
     onError: (error: Error) => {
       console.error('Asset update failed:', error);
-      toast.error(`Erro ao atualizar asset: ${error.message}`);
+      toast.error(error.message);
     },
   });
 
@@ -282,7 +279,8 @@ export function useAssetManagement() {
 
       if (error) {
         console.error(`Error deleting asset ${id}:`, error);
-        throw new Error(error.message);
+        const friendlyMessage = showFriendlyError(error, 'delete');
+        throw new Error(friendlyMessage);
       }
 
       return { id };
@@ -290,11 +288,11 @@ export function useAssetManagement() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
       queryClient.removeQueries({ queryKey: assetKeys.detail(data.id) });
-      toast.success('Asset excluído com sucesso');
+      toast.success('Ativo excluído com sucesso');
     },
     onError: (error: Error) => {
       console.error('Asset deletion failed:', error);
-      toast.error(`Erro ao excluir asset: ${error.message}`);
+      toast.error(error.message);
     },
   });
 
@@ -310,7 +308,8 @@ export function useAssetManagement() {
 
       if (error) {
         console.error(`Error updating asset status ${id}:`, error);
-        throw new Error(error.message);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw new Error(friendlyMessage);
       }
 
       return { id, statusId };
@@ -322,7 +321,7 @@ export function useAssetManagement() {
     },
     onError: (error: Error) => {
       console.error('Status update failed:', error);
-      toast.error(`Erro ao atualizar status: ${error.message}`);
+      toast.error(error.message);
     },
   });
 

@@ -1,506 +1,98 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { Asset, AssetType, ChipAsset, EquipamentAsset, AssetStatus, StatusRecord } from '@/types/asset';
-import * as assetActions from './assetActions';
-import { toast } from '@/utils/toast';
-import { AssetContextType } from './AssetContextTypes';
-import { Client } from '@/types/asset';
-import { AssetHistoryEntry } from '@/types/assetHistory';
-import { assetService } from '@modules/assets/services/assetService';
-import { referenceDataService } from '@modules/assets/services/referenceDataService';
-import { supabase } from '@/integrations/supabase/client';
-import { getValidAssetStatus } from '@/utils/assetUtils';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { Asset } from '@/types/asset';
+import { assetReducer, AssetState, AssetAction } from './assetReducer';
+import { createAsset, updateAsset, deleteAsset } from './assetActions';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
-// Default context value
-const defaultContextValue: AssetContextType = {
+interface AssetContextProps {
+  state: AssetState;
+  createAsset: (assetData: any) => Promise<void>;
+  updateAsset: (id: string, updates: any) => Promise<void>;
+  deleteAsset: (id: string) => Promise<void>;
+}
+
+const AssetContext = createContext<AssetContextProps | undefined>(undefined);
+
+const initialState: AssetState = {
   assets: [],
-  clients: [],
-  history: [],
   loading: false,
-  statusRecords: [],
-  addAsset: async () => null,
-  updateAsset: async () => null,
-  deleteAsset: async () => false,
-  getAssetById: () => undefined,
-  getAssetsByStatus: () => [],
-  getAssetsByType: () => [],
-  addClient: () => {},
-  updateClient: () => {},
-  deleteClient: () => {},
-  getClientById: () => undefined,
-  associateAssetToClient: () => {},
-  removeAssetFromClient: () => {},
-  getExpiredSubscriptions: () => [],
-  returnAssetsToStock: () => {},
-  extendSubscription: () => {},
-  addHistoryEntry: () => {},
-  getAssetHistory: () => [],
-  getClientHistory: () => [],
+  error: null,
 };
 
-export const AssetContext = createContext<AssetContextType>(defaultContextValue);
+const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [state, dispatch] = useReducer(assetReducer, initialState);
 
-export const AssetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
-
-  // Load status records from the API
-  useEffect(() => {
-    const fetchStatusRecords = async () => {
-      try {
-        const records = await referenceDataService.getStatusRecords();
-        setStatusRecords(records || []);
-      } catch (error) {
-        console.error('Error loading status records:', error);
-        toast.error('Failed to load status records');
-      }
-    };
-    
-    fetchStatusRecords();
-  }, []);
-
-  // Helper function to map status_id to AssetStatus
-  const mapStatusIdToAssetStatus = (statusId: number): AssetStatus => {
-    const found = statusRecords.find(s => s.id === statusId);
-    if (found) {
-      switch (found.status.toLowerCase()) {
-        case 'disponivel': return "DISPONÍVEL";
-        case 'alugado': return "ALUGADO";
-        case 'assinatura': return "ASSINATURA";
-        case 'sem dados': return "SEM DADOS";
-        case 'bloqueado': return "BLOQUEADO";
-        case 'em manutenção': return "MANUTENÇÃO";
-        case 'extraviado': return "EXTRAVIADO";
-        default: return "DISPONÍVEL";
-      }
-    }
-    return "DISPONÍVEL"; // Default fallback
-  };
-
-  // Helper function to map AssetStatus to status_id
-  const mapAssetStatusToId = (status: AssetStatus): number => {
-    const statusMap: Record<AssetStatus, string> = {
-      "DISPONÍVEL": 'disponivel',
-      "ALUGADO": 'alugado',
-      "ASSINATURA": 'assinatura',
-      "SEM DADOS": 'sem dados',
-      "BLOQUEADO": 'bloqueado',
-      "MANUTENÇÃO": 'em manutenção',
-      "EXTRAVIADO": 'extraviado'
-    };
-    
-    const found = statusRecords.find(s => s.status.toLowerCase() === statusMap[status].toLowerCase());
-    return found ? found.id : 1; // Default to 'Disponível' (id=1) if not found
-  };
-
-  // Load assets and clients when status records are available
-  useEffect(() => {
-    const loadData = async () => {
-      if (statusRecords.length === 0) return; // Wait for status records
-      
-      setLoading(true);
-      
-      try {
-        // Fetch assets from the API
-        const assetsResult = await assetService.getAssets();
-        // Extract just the data array from the result
-        const assetsData = Array.isArray(assetsResult) ? assetsResult : assetsResult.data || [];
-        setAssets(assetsData);
-        
-        // Fetch clients from the database
-        const { data: clientsData, error: clientsError } = await supabase
-          .from('clients')
-          .select('*')
-          .is('deleted_at', null);
-          
-        if (clientsError) {
-          console.error('Error loading clients:', clientsError);
-          toast.error('Failed to load clients');
-          return;
-        }
-        
-        // Map clients data to our format - corrigido para usar uuid em vez de id
-        const mappedClients: Client[] = clientsData.map(client => ({
-          uuid: client.uuid, // Corrigido: usar uuid em vez de id
-          nome: client.nome,
-          cnpj: client.cnpj,
-          email: client.email || "",
-          contato: client.contato,
-          created_at: client.created_at,
-          updated_at: client.updated_at,
-          deleted_at: client.deleted_at
-        }));
-        
-        setClients(mappedClients);
-      } catch (error) {
-        console.error('Error loading assets or clients:', error);
-        toast.error('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (statusRecords.length > 0) {
-      loadData();
-    }
-  }, [statusRecords]);
-
-  const addAsset = async (assetData: Omit<Asset, "id" | "status">): Promise<Asset | null> => {
+  const handleCreateAsset = async (assetData: any) => {
     try {
-      // Prepare create params
-      const createParams = {
-        type: assetData.type,
-        statusId: assetData.statusId || 1// Default to 'Disponível'
-      } as any;
-
-      if (assetData.type === "CHIP") {
-        const chipData = assetData as Omit<ChipAsset, "id" | "status">;
-        createParams.iccid = chipData.iccid;
-        createParams.phoneNumber = chipData.phoneNumber;
-        createParams.carrier = chipData.carrier;
-      } else if (assetData.type === "ROTEADOR") {
-        const routerData = assetData as Omit<EquipamentAsset, "id" | "status">;
-        createParams.brand = routerData.brand;
-        createParams.model = routerData.model;
-        createParams.password = routerData.password;
-        createParams.serialNumber = routerData.serialNumber;
-      }
-      
-      // Create the asset using the API service
-      const newAsset = await assetService.createAsset(createParams);
-      
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const newAsset = await createAsset(assetData);
       if (newAsset) {
-        // Update state
-        setAssets(prevAssets => [...prevAssets, newAsset]);
-        return newAsset;
+        dispatch({ type: 'ADD_ASSET', payload: newAsset });
       }
-      
-      return null;
     } catch (error) {
-      console.error('Error adding asset:', error);
-      toast.error('Failed to add asset');
-      return null;
+      console.error('Erro ao criar asset:', error);
+      const friendlyMessage = showFriendlyError(error, 'create');
+      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const updateAsset = async (id: string, assetData: Partial<Asset>): Promise<Asset | null> => {
+  const handleUpdateAsset = async (id: string, updates: any) => {
     try {
-      let statusId = assetData.statusId;
-      
-      // Convert status to status_id if status is being updated
-      if (assetData.status && !statusId) {
-        statusId = mapAssetStatusToId(assetData.status);
-      } else if (statusId) {
-        // Map the statusId back to a status name for the UI
-        const statusRecord = statusRecords.find(s => s.id === statusId);
-        if (statusRecord) {
-          assetData.status = mapStatusIdToAssetStatus(statusId);
-        }
-      }
-      
-      // Prepare update params
-      const updateParams = {
-        ...assetData,
-        statusId
-      };
-      
-      // Update the asset using the API service
-      const updatedAsset = await assetService.updateAsset(id, updateParams);
-      
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const updatedAsset = await updateAsset(id, updates);
       if (updatedAsset) {
-        // Update state
-        const updatedAssets = assetActions.updateAssetInList(assets, id, updatedAsset);
-        setAssets(updatedAssets);
-        return updatedAsset;
+        dispatch({ type: 'UPDATE_ASSET', payload: updatedAsset });
       }
-      
-      return null;
     } catch (error) {
-      console.error('Error updating asset:', error);
-      toast.error('Failed to update asset');
-      return null;
+      console.error('Erro ao atualizar asset:', error);
+      const friendlyMessage = showFriendlyError(error, 'update');
+      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const deleteAsset = async (id: string): Promise<boolean> => {
+  const handleDeleteAsset = async (id: string) => {
     try {
-      const asset = assets.find(a => a.id === id);
-      
-      if (!asset) {
-        toast.error('Asset not found');
-        return false;
-      }
-      
-      // Delete the asset using the API service
-      const success = await assetService.deleteAsset(id);
-      
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const success = await deleteAsset(id);
       if (success) {
-        // Update state
-        setAssets(assets.filter(a => a.id !== id));
-        return true;
+        dispatch({ type: 'DELETE_ASSET', payload: id });
       }
-      
-      return false;
     } catch (error) {
-      console.error('Error deleting asset:', error);
-      toast.error('Failed to delete asset');
-      return false;
-    }
-  };
-
-  const getAssetById = (id: string) => {
-    return assetActions.getAssetById(assets, id);
-  };
-
-  // NEW IMPLEMENTATION: Asset-Client Association Functions
-  const associateAssetToClient = async (assetId: string, clientId: string): Promise<void> => {
-    try {
-      console.log(`Associating asset ${assetId} to client ${clientId}`);
-      
-      // Get current date in YYYY-MM-DD format
-      const currentDate = new Date().toISOString().split('T')[0];
-      
-      // Get a default plan ID (this was missing in the original implementation)
-      const { data: defaultPlan } = await supabase
-        .from('plans')
-        .select('id')
-        .limit(1)
-        .single();
-        
-      const planId = defaultPlan?.id || 1; // Fallback to ID 1 if no plans exist
-      
-      // Insert association record with required plan_id
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .insert({
-          asset_id: assetId,
-          client_id: clientId,
-          entry_date: currentDate,
-          exit_date: null,
-          association_id: 1, // Default to rental
-          plan_id: planId // Add the required plan_id
-        });
-        
-      if (error) {
-        console.error('Error associating asset to client:', error);
-        throw new Error(`Association failed: ${error.message}`);
-      }
-      
-      // Update asset status in local state
-      const updatedAssets = assets.map(asset => {
-        if (asset.id === assetId) {
-          // Ensure we maintain the correct AssetStatus type
-          const newAsset = {
-            ...asset,
-            statusId: 2, // ALUGADO
-            clientId: clientId
-          };
-          
-          // Set the status as an AssetStatus enum value
-          newAsset.status = "ALUGADO";
-          
-          return newAsset;
-        }
-        return asset;
-      });
-      
-      setAssets(updatedAssets);
-      toast.success('Asset associated to client successfully');
-    } catch (error) {
-      console.error('Error in associateAssetToClient:', error);
-      toast.error(`Failed to associate asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Erro ao deletar asset:', error);
+      const friendlyMessage = showFriendlyError(error, 'delete');
+      dispatch({ type: 'SET_ERROR', payload: friendlyMessage });
       throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const removeAssetFromClient = async (assetId: string, clientId: string): Promise<void> => {
-    try {
-      console.log(`Removing association of asset ${assetId} from client ${clientId}`);
-      
-      // Get current date in YYYY-MM-DD format
-      const currentDate = new Date().toISOString().split('T')[0];
-      
-      // Update the existing association with an exit date
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .update({
-          exit_date: currentDate
-        })
-        .eq('asset_id', assetId)
-        .eq('client_id', clientId)
-        .is('exit_date', null);
-        
-      if (error) {
-        console.error('Error removing asset association:', error);
-        throw new Error(`Removal failed: ${error.message}`);
-      }
-      
-      // Update asset status in local state
-      const updatedAssets = assets.map(asset => {
-        if (asset.id === assetId) {
-          // Ensure we maintain the correct AssetStatus type
-          const newAsset = {
-            ...asset,
-            statusId: 1, // DISPONÍVEL
-            clientId: undefined
-          };
-          
-          // Set the status as an AssetStatus enum value
-          newAsset.status = "DISPONÍVEL";
-          
-          return newAsset;
-        }
-        return asset;
-      });
-      
-      setAssets(updatedAssets);
-      toast.success('Asset removed from client successfully');
-    } catch (error) {
-      console.error('Error in removeAssetFromClient:', error);
-      toast.error(`Failed to remove asset association: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  };
-
-  const filterAssets = (criteria: any) => {
-    let filteredAssets = [...assets];
-    
-    // Implement filtering logic if needed
-    if (criteria.type) {
-      filteredAssets = assetActions.getAssetsByType(filteredAssets, criteria.type);
-    }
-    
-    if (criteria.status) {
-      filteredAssets = assetActions.getAssetsByStatus(filteredAssets, criteria.status);
-    }
-    
-    return filteredAssets;
-  };
-
-  // Client-related functions
-  const getClientById = (uuid: string) => { // Corrigido: parâmetro uuid em vez de id
-    return clients.find(client => client.uuid === uuid); // Corrigido: usar uuid
-  };
-
-  // History-related functions
-  const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
-    const newEntry: AssetHistoryEntry = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...entry
-    };
-    
-    // Log the entry to the database
-    (async () => {
-      try {
-        console.log('Adding history entry:', newEntry);
-        
-        // Format the entry for the asset_logs table
-        const { error } = await supabase
-          .from('asset_logs')
-          .insert({
-            event: newEntry.operationType,
-            date: newEntry.timestamp,
-            details: {
-              description: newEntry.description || newEntry.operationType,
-              assets: newEntry.assets,
-              client_id: newEntry.clientId,
-              client_name: newEntry.clientName,
-              comments: newEntry.comments
-            }
-          });
-          
-        if (error) {
-          console.error('Error logging history entry:', error);
-        }
-      } catch (err) {
-        console.error('Error in history logging:', err);
-      }
-    })();
-    
-    // Update local state
-    setHistory(prev => [newEntry, ...prev]);
-  };
-
-  const getAssetHistory = (assetId: string): AssetHistoryEntry[] => {
-    return history.filter(entry => entry.assetIds?.includes(assetId))
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  };
-  
-  const getClientHistory = (clientId: string): AssetHistoryEntry[] => {
-    return history.filter(entry => entry.clientId === clientId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  };
-
-  const getExpiredSubscriptions = () => {
-    const today = new Date();
-    return assets.filter(asset => 
-      asset.subscription && 
-      asset.subscription.endDate && 
-      new Date(asset.subscription.endDate) < today
-    );
-  };
-
-  const returnAssetsToStock = async (assetIds: string[]) => {
-    for (const assetId of assetIds) {
-      const asset = getAssetById(assetId);
-      if (asset && asset.clientId) {
-        await removeAssetFromClient(assetId, asset.clientId);
-      }
-    }
-  };
-
-  const extendSubscription = (assetId: string, newEndDate: string) => {
-    const updatedAssets = assets.map(asset => {
-      if (asset.id === assetId && asset.subscription) {
-        return {
-          ...asset,
-          subscription: {
-            ...asset.subscription,
-            endDate: newEndDate
-          }
-        };
-      }
-      return asset;
-    });
-    
-    setAssets(updatedAssets);
+  const value: AssetContextProps = {
+    state,
+    createAsset: handleCreateAsset,
+    updateAsset: handleUpdateAsset,
+    deleteAsset: handleDeleteAsset,
   };
 
   return (
-    <AssetContext.Provider
-      value={{
-        assets,
-        clients,
-        history,
-        loading,
-        statusRecords,
-        addAsset,
-        updateAsset,
-        deleteAsset,
-        getAssetById,
-        filterAssets,
-        getAssetsByStatus: (status) => assets.filter(asset => asset.status === status),
-        getAssetsByType: (type) => assets.filter(asset => asset.type === type),
-        addClient: () => {}, // Implement as needed
-        updateClient: () => {}, // Implement as needed
-        deleteClient: () => {}, // Implement as needed
-        getClientById,
-        associateAssetToClient,
-        removeAssetFromClient,
-        getExpiredSubscriptions,
-        returnAssetsToStock,
-        extendSubscription,
-        addHistoryEntry,
-        getAssetHistory,
-        getClientHistory,
-      }}
-    >
+    <AssetContext.Provider value={value}>
       {children}
     </AssetContext.Provider>
   );
 };
+
+const useAssets = () => {
+  const context = useContext(AssetContext);
+  if (!context) {
+    throw new Error('useAssets must be used within an AssetProvider');
+  }
+  return context;
+};
+
+export { AssetProvider, useAssets };

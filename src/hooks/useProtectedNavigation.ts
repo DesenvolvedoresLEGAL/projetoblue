@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types/auth';
@@ -19,22 +18,19 @@ export const useProtectedNavigation = () => {
   ) => {
     const { replace = false, showToast = true, customMessage } = options || {};
 
-    // Se não há role requerido, navega normalmente
     if (!requiredRole) {
       navigate(path, { replace });
       return true;
     }
 
-    // Verifica se tem permissão
     if (hasMinimumRole(requiredRole)) {
       navigate(path, { replace });
       return true;
     }
 
-    // Sem permissão - mostra toast se solicitado
     if (showToast) {
       const message = customMessage || 
-        `Você precisa ter permissões de ${requiredRole} ou superior para acessar esta página.`;
+        `Você não tem permissão para acessar esta página. É necessário ter perfil de ${requiredRole} ou superior.`;
       
       toast.error(message);
     }

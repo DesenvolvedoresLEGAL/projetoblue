@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { assetService } from '@modules/assets/services/asset';
 import { toast } from '@/utils/toast';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface UseAssetEditFormProps {
   asset: AssetWithRelations | null;
@@ -115,11 +116,12 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         onAssetUpdated();
         onClose();
       } else {
-        toast.error("Falha ao atualizar ativo");
+        toast.error("Não foi possível atualizar o ativo. Tente novamente ou entre em contato com o suporte.");
       }
     } catch (error) {
       console.error('Erro ao atualizar ativo:', error);
-      toast.error("Ocorreu um erro ao processar a solicitação");
+      const friendlyMessage = showFriendlyError(error, 'update');
+      toast.error(friendlyMessage);
     } finally {
       setIsLoading(false);
     }

@@ -1,204 +1,176 @@
-
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import { AlertTriangle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Association {
-  id: number;
-  asset_id: string;
-  client_id: string;
-  entry_date: string;
-  exit_date: string | null;
-  association_id: number;
-  created_at: string;
-  client_name: string;
-  asset_iccid: string | null;
-  asset_radio: string | null;
-  asset_solution_id: number;
-  asset_solution_name: string;
-  notes?: string;
-}
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface EditAssociationDialogProps {
-  association: Association | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  association: any;
+  onAssociationUpdated: () => void;
 }
 
-export function EditAssociationDialog({ association, open, onOpenChange }: EditAssociationDialogProps) {
-  const [entryDate, setEntryDate] = useState<Date | undefined>();
-  const [exitDate, setExitDate] = useState<Date | undefined>();
-  const [notes, setNotes] = useState('');
-  const [validationError, setValidationError] = useState<string | null>(null);
+export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
+  isOpen,
+  onClose,
+  association,
+  onAssociationUpdated
+}) => {
+  const [formData, setFormData] = useState({
+    ssid: '',
+    pass: '',
+    notes: '',
+    gb: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const queryClient = useQueryClient();
-
-  // Preencher formulário quando associação muda
   useEffect(() => {
     if (association) {
-      // Converter datas corretamente
-      if (association.entry_date) {
-        const [year, month, day] = association.entry_date.split('-').map(Number);
-        setEntryDate(new Date(year, month - 1, day));
-      }
-      
-      if (association.exit_date) {
-        const [year, month, day] = association.exit_date.split('-').map(Number);
-        setExitDate(new Date(year, month - 1, day));
-      } else {
-        setExitDate(undefined);
-      }
-      
-      setNotes(association.notes || '');
-      setValidationError(null);
+      setFormData({
+        ssid: association.ssid || '',
+        pass: association.pass || '',
+        notes: association.notes || '',
+        gb: association.gb ? association.gb.toString() : ''
+      });
     }
   }, [association]);
 
-  // Validação de datas
-  useEffect(() => {
-    let error = null;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    if (entryDate && exitDate && exitDate < entryDate) {
-      error = 'A data de fim não pode ser anterior à data de início';
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!association) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const updateData = {
+        ssid: formData.ssid || null,
+        pass: formData.pass || null,
+        notes: formData.notes || null,
+        gb: formData.gb ? parseInt(formData.gb) : null,
+        updated_at: new Date().toISOString()
+      };
 
-    setValidationError(error);
-  }, [entryDate, exitDate]);
-
-  const updateMutation = useMutation({
-    mutationFn: async (updateData: { entry_date: string; exit_date?: string | null; notes?: string }) => {
       const { error } = await supabase
         .from('asset_client_assoc')
         .update(updateData)
-        .eq('id', association!.id);
+        .eq('id', association.id);
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      // Invalidar queries para atualizar a tabela
-      queryClient.invalidateQueries({ queryKey: ['associations-list'] });
+      if (error) {
+        console.error('Erro ao atualizar associação:', error);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw error;
+      }
+
       toast.success('Associação atualizada com sucesso!');
-      onOpenChange(false);
-    },
-    onError: (error) => {
+      onAssociationUpdated();
+      onClose();
+    } catch (error) {
       console.error('Erro ao atualizar associação:', error);
-      toast.error('Erro ao atualizar associação. Tente novamente.');
+      const friendlyMessage = showFriendlyError(error, 'update');
+      toast.error(friendlyMessage);
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  const handleSave = () => {
-    if (!entryDate) {
-      setValidationError('Data de início é obrigatória');
-      return;
-    }
-
-    if (validationError) {
-      return;
-    }
-
-    const updateData = {
-      entry_date: entryDate.toISOString().split('T')[0],
-      exit_date: exitDate ? exitDate.toISOString().split('T')[0] : null,
-      notes: notes.trim() || null
-    };
-
-    updateMutation.mutate(updateData);
   };
-
-  const handleCancel = () => {
-    onOpenChange(false);
-    setValidationError(null);
-  };
-
-  if (!association) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Associação</DialogTitle>
-          <DialogDescription>
-            Edite os dados da associação #{association.id}
-          </DialogDescription>
+          <DialogTitle className="font-neue-haas font-bold text-[#020CBC]">
+            Editar Associação
+          </DialogTitle>
         </DialogHeader>
-
-        <div className="grid gap-6 py-4">
-          {/* Informações da Associação */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <Label className="text-xs text-muted-foreground">Cliente</Label>
-              <div className="font-medium">{association.client_name}</div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* SSID */}
+            <div className="space-y-2">
+              <Label htmlFor="ssid">SSID</Label>
+              <Input
+                id="ssid"
+                name="ssid"
+                value={formData.ssid}
+                onChange={handleChange}
+                placeholder="Digite o SSID"
+              />
             </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Ativo</Label>
-              <div className="font-medium">
-                {association.asset_solution_id === 11 && association.asset_iccid 
-                  ? association.asset_iccid 
-                  : association.asset_radio || 'N/A'}
-              </div>
+
+            {/* Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="pass">Senha</Label>
+              <Input
+                id="pass"
+                name="pass"
+                value={formData.pass}
+                onChange={handleChange}
+                placeholder="Digite a senha"
+              />
+            </div>
+
+            {/* GB */}
+            <div className="space-y-2">
+              <Label htmlFor="gb">GB</Label>
+              <Input
+                id="gb"
+                name="gb"
+                value={formData.gb}
+                onChange={handleChange}
+                placeholder="Digite a quantidade de GB"
+              />
             </div>
           </div>
 
-          {/* Mensagem de erro de validação */}
-          {validationError && (
-            <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm">{validationError}</span>
-            </div>
-          )}
-
-          {/* Data de Início */}
+          {/* Observações */}
           <div className="space-y-2">
-            <Label htmlFor="entry-date">Data de Início *</Label>
-            <DatePicker
-              date={entryDate}
-              setDate={setEntryDate}
-              placeholder="Selecionar data de início"
-            />
-          </div>
-
-          {/* Data de Fim */}
-          <div className="space-y-2">
-            <Label htmlFor="exit-date">Data de Fim</Label>
-            <DatePicker
-              date={exitDate}
-              setDate={setExitDate}
-              placeholder="Selecionar data de fim (opcional)"
-            />
-          </div>
-
-          {/* Notas */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notas/Observações</Label>
+            <Label htmlFor="notes">Observações</Label>
             <Textarea
               id="notes"
-              placeholder="Adicione observações sobre esta associação..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              placeholder="Observações adicionais..."
               rows={3}
             />
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} disabled={updateMutation.isPending}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={updateMutation.isPending || !!validationError || !entryDate}
-          >
-            {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </DialogFooter>
+          {/* Botões */}
+          <div className="flex gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="flex-1 bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : 'Salvar Alterações'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
