@@ -2,8 +2,12 @@
 import { Association } from '@/types/associations';
 
 export interface CompanyGroup {
-  companyName: string;
+  client_id: string;
+  client_name: string;
+  entry_date: string;
+  exit_date: string | null;
   associations: Association[];
+  asset_types?: { [key: string]: number };
 }
 
 export interface TimestampGroup {
@@ -60,13 +64,29 @@ export const groupAssociationsByTimestampAndCompany = (associations: Association
         companyGroups[companyKey].push(association);
       });
       
-      // Converter para array e ordenar por nome da empresa
+      // Converter para array e criar CompanyGroup com todas as propriedades necessárias
       const companyGroupsArray: CompanyGroup[] = Object.entries(companyGroups)
-        .map(([companyName, associations]) => ({
-          companyName,
-          associations
-        }))
-        .sort((a, b) => a.companyName.localeCompare(b.companyName));
+        .map(([companyName, associations]) => {
+          // Calcular tipos de assets
+          const assetTypes: { [key: string]: number } = {};
+          associations.forEach(association => {
+            const solutionName = association.asset_solution_name || 'Desconhecido';
+            assetTypes[solutionName] = (assetTypes[solutionName] || 0) + 1;
+          });
+
+          // Pegar dados do primeiro item para entry_date e exit_date
+          const firstAssociation = associations[0];
+          
+          return {
+            client_id: firstAssociation.client_id,
+            client_name: companyName,
+            entry_date: firstAssociation.entry_date,
+            exit_date: firstAssociation.exit_date,
+            associations,
+            asset_types: assetTypes
+          };
+        })
+        .sort((a, b) => a.client_name.localeCompare(b.client_name));
       
       return {
         timestamp,
