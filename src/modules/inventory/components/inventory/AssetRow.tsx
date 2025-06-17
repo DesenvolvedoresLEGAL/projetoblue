@@ -23,7 +23,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/utils/toast";
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface AssetRowProps {
   asset: Asset;
@@ -71,13 +70,13 @@ const AssetRow = ({
     try {
       const success = await deleteAsset(asset.id);
       if (success) {
-        toast.success("Ativo excluído com sucesso.");
+        toast.success("O ativo foi excluído com sucesso.");
       } else {
-        toast.error("Não foi possível excluir o ativo. Verifique se ele não está associado a um cliente.");
+        toast.error("Não foi possível excluir o ativo.");
       }
     } catch (error) {
       console.error("Erro ao excluir ativo:", error);
-      showFriendlyError(error, "Ocorreu um erro ao tentar excluir o ativo.");
+      toast.error("Ocorreu um erro ao excluir o ativo.");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -107,13 +106,13 @@ const AssetRow = ({
       });
       
       if (updatedAsset) {
-        toast.success(`Status do ativo alterado para ${selectedStatus.name} com sucesso.`);
+        toast.success(`O ativo agora está marcado como ${selectedStatus.name}.`);
       } else {
-        toast.error("Não foi possível atualizar o status do ativo. Tente novamente.");
+        toast.error("Não foi possível atualizar o status do ativo.");
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
-      showFriendlyError(error, "Ocorreu um erro ao alterar o status do ativo.");
+      toast.error("Ocorreu um erro ao atualizar o status do ativo.");
     } finally {
       setIsUpdatingStatus(false);
       setIsStatusDialogOpen(false);

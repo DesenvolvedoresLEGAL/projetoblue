@@ -4,8 +4,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
 import { AssociationGroup } from '@/types/associations';
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const useAssociationActions = () => {
   const queryClient = useQueryClient();
@@ -49,7 +47,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-        showFriendlyError(error, 'Não foi possível encerrar a associação. Tente novamente.');
+        toast.error('Erro ao encerrar associação');
         return;
       }
 
@@ -60,7 +58,7 @@ export const useAssociationActions = () => {
       await forceRefreshAssociationsData();
     } catch (error) {
       console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-      showFriendlyError(error, 'Ocorreu um erro inesperado ao encerrar a associação.');
+      toast.error('Erro ao encerrar associação');
     } finally {
       setIsEndingAssociation(false);
     }
@@ -120,7 +118,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-        showFriendlyError(error, 'Não foi possível encerrar o grupo de associações. Tente novamente.');
+        toast.error('Erro ao encerrar grupo de associações');
         return;
       }
 
@@ -151,44 +149,18 @@ export const useAssociationActions = () => {
 
     } catch (error) {
       console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-      showFriendlyError(error, 'Ocorreu um erro inesperado ao encerrar o grupo de associações.');
+      toast.error('Erro ao encerrar grupo de associações');
     } finally {
       setIsEndingGroup(false);
       setOperationProgress({ current: 0, total: 0 });
     }
   };
 
-  const endAssociationMutation = useMutation({
-    mutationFn: async (associationId: number) => {
-      const today = new Date().toISOString().split('T')[0];
-      
-      const { data, error } = await supabase
-        .from('asset_client_assoc')
-        .update({ exit_date: today })
-        .eq('id', associationId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['associations'] });
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Associação encerrada com sucesso!');
-    },
-    onError: (error) => {
-      console.error('Erro ao encerrar associação:', error);
-      showFriendlyError(error, 'Não foi possível encerrar a associação. Tente novamente.');
-    },
-  });
-
   return {
     handleEndAssociation,
     handleEndGroup,
     isEndingAssociation,
     isEndingGroup,
-    operationProgress,
-    endAssociationMutation
+    operationProgress
   };
 };
