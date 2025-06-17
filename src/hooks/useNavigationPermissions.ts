@@ -28,8 +28,7 @@ export const useNavigationPermissions = () => {
       automation: permissions.canViewReports,
       analytics: permissions.canViewReports,
       quality: permissions.canProvideSupport,
-      copilot: permissions.canProvideSupport,
-      integrations: permissions.canManageUsers
+      copilot: permissions.canProvideSupport
     },
     
     // BITS - disponível para cliente ou superior
@@ -54,7 +53,8 @@ export const useNavigationPermissions = () => {
     admin: {
       suppliers: permissions.canManageUsers,
       settings: permissions.canAccessAdminPanel,
-      users: permissions.canManageUsers
+      users: permissions.canManageUsers,
+      integrations: permissions.canManageUsers
     }
   }), [permissions]);
 

@@ -5,6 +5,7 @@ import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 export function StaticNavigation({
   isMobile = false,
   onClose
@@ -204,12 +205,6 @@ export function StaticNavigation({
           label="Copiloto do Agente (IA)"
           onClose={isMobile ? onClose : undefined}
         />
-        <NavigationItem
-          to="/tickets/integrations"
-          icon={Puzzle}
-          label="Integrações"
-          onClose={isMobile ? onClose : undefined}
-        />
       </NavigationModule>
 
       {/* BITS Section - Available to cliente or above */}
@@ -292,6 +287,12 @@ export function StaticNavigation({
           to="/admin/config"
           icon={Cog}
           label="Configurações"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/admin/integrations"
+          icon={Puzzle}
+          label="Integrações"
           onClose={isMobile ? onClose : undefined}
         />
       </NavigationModule>

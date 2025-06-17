@@ -189,11 +189,6 @@ const App = () => (
                           <AgentCopilot />
                         </AuthRoute>
                       } />
-                      <Route path="integrations" element={
-                        <AuthRoute requiredRole="admin">
-                          <TicketIntegrations />
-                        </AuthRoute>
-                      } />
                     </Route>
                     
                     {/* Topology module routes */}
@@ -266,6 +261,12 @@ const App = () => (
                       <PrivateRoute requiredRole="admin">
                         <AdminConfig />
                       </PrivateRoute>
+                    } />
+
+                    <Route path="/admin/integrations" element={
+                      <AuthRoute requiredRole="admin">
+                        <TicketIntegrations />
+                      </AuthRoute>
                     } />
                     
                     {/* Direct shortcuts */}
