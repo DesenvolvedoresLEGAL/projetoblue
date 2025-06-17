@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   MoreHorizontal, 
-  edit, 
-  trash-2, 
-  x 
+  Edit, 
+  Trash2, 
+  X 
 } from "lucide-react";
 import { AssociationGroup } from '@/types/associations';
 import { useGroupActions } from '../../hooks/useGroupActions';
@@ -59,7 +59,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
             className="h-8 px-3 hover:bg-destructive/10 text-destructive hover:text-destructive"
             title={`Encerrar ${activeAssociationsCount} associação${activeAssociationsCount > 1 ? 'ões' : ''} ativa${activeAssociationsCount > 1 ? 's' : ''}`}
           >
-            <x className="h-4 w-4 mr-1" />
+            <X className="h-4 w-4 mr-1" />
             Encerrar Grupo
           </Button>
         )}
@@ -73,7 +73,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setShowBulkEdit(true)}>
-              <edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4 mr-2" />
               Editar em Lote
             </DropdownMenuItem>
             <DropdownMenuItem 
@@ -92,7 +92,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
               onClick={() => setShowSoftDeleteConfirm(true)}
               className="text-destructive"
             >
-              <trash-2 className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Remover Grupo
             </DropdownMenuItem>
           </DropdownMenuContent>
