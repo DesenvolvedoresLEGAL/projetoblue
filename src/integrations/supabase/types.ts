@@ -1269,6 +1269,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_user_self: {
+        Args: { profile_id: string }
+        Returns: boolean
+      }
       status_by_asset_type: {
         Args: Record<PropertyKey, never>
         Returns: {

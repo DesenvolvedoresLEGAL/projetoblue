@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,8 @@ import { AssociationSummary } from '@modules/associations/components/association
 import { Client } from '@/types/client';
 import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
 import { SelectedAsset } from '@modules/associations/types';
+import { useCreateAssociation } from '@modules/associations/hooks/useCreateAssociation';
+import { toast } from '@/utils/toast';
 
 type Step = 'client' | 'assets' | 'summary';
 
@@ -29,6 +30,8 @@ const AssetAssociation = () => {
   } = useAssetAssociationState();
   
   const navigate = useNavigate();
+  const createAssociationMutation = useCreateAssociation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
@@ -48,10 +51,44 @@ const AssetAssociation = () => {
     }
   };
 
-  const handleComplete = () => {
-    // Clear persisted state and navigate
-    clearState();
-    navigate('/associations');
+  const handleComplete = async () => {
+    if (!selectedClient || selectedAssets.length === 0) {
+      toast.error('Dados incompletos para criar as associações');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Criar associações para cada ativo selecionado
+      const associationPromises = selectedAssets.map(async (asset) => {
+        const associationData = {
+          clientId: selectedClient.uuid,
+          assetId: asset.uuid,
+          associationType: asset.associationType || 'ALUGUEL',
+          startDate: asset.startDate || new Date().toISOString().split('T')[0],
+          rentedDays: asset.rented_days,
+          notes: asset.notes
+        };
+
+        return createAssociationMutation.mutateAsync(associationData);
+      });
+
+      // Aguardar todas as associações serem criadas
+      await Promise.all(associationPromises);
+
+      toast.success(`${selectedAssets.length} associação(ões) criada(s) com sucesso!`);
+      
+      // Clear persisted state and navigate
+      clearState();
+      navigate('/associations');
+      
+    } catch (error) {
+      console.error('Erro ao criar associações:', error);
+      toast.error('Erro ao criar uma ou mais associações. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -90,6 +127,7 @@ const AssetAssociation = () => {
           size="sm"
           onClick={handleCancel}
           className="flex items-center gap-2 text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+          disabled={isSubmitting}
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
@@ -131,6 +169,7 @@ const AssetAssociation = () => {
               size="sm"
               onClick={handleBack}
               className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10 font-neue-haas"
+              disabled={isSubmitting}
             >
               Voltar
             </Button>
@@ -163,6 +202,7 @@ const AssetAssociation = () => {
               generalConfig={generalConfig}
               onComplete={handleComplete}
               onBack={handleBack}
+              isLoading={isSubmitting}
             />
           )}
         </CardContent>
