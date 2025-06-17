@@ -1,10 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { translateAssociationError } from "@/utils/errorTranslator";
 import { toast } from "sonner";
 import { AssociationGroup } from '@/types/associations';
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const useAssociationActions = () => {
   const queryClient = useQueryClient();
@@ -48,7 +48,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-        toast.error(translateAssociationError(error, 'update'));
+        toast.error('Erro ao encerrar associação');
         return;
       }
 
@@ -59,7 +59,7 @@ export const useAssociationActions = () => {
       await forceRefreshAssociationsData();
     } catch (error) {
       console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-      toast.error(translateAssociationError(error, 'update'));
+      toast.error('Erro ao encerrar associação');
     } finally {
       setIsEndingAssociation(false);
     }
@@ -77,7 +77,7 @@ export const useAssociationActions = () => {
       
       if (!group) {
         console.error('[handleEndGroup] Grupo não encontrado:', groupKey);
-        toast.error('Grupo não encontrado. Por favor, recarregue a página e tente novamente.');
+        toast.error('Grupo não encontrado');
         return;
       }
 
@@ -119,7 +119,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-        toast.error(translateAssociationError(error, 'update'));
+        toast.error('Erro ao encerrar grupo de associações');
         return;
       }
 
@@ -150,18 +150,44 @@ export const useAssociationActions = () => {
 
     } catch (error) {
       console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-      toast.error(translateAssociationError(error, 'update'));
+      toast.error('Erro ao encerrar grupo de associações');
     } finally {
       setIsEndingGroup(false);
       setOperationProgress({ current: 0, total: 0 });
     }
   };
 
+  const endAssociationMutation = useMutation({
+    mutationFn: async (associationId: number) => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('asset_client_assoc')
+        .update({ exit_date: today })
+        .eq('id', associationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['associations'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      toast.success('Associação encerrada com sucesso!');
+    },
+    onError: (error) => {
+      console.error('Erro ao encerrar associação:', error);
+      showFriendlyError(error, 'Não foi possível encerrar a associação. Tente novamente.');
+    },
+  });
+
   return {
     handleEndAssociation,
     handleEndGroup,
     isEndingAssociation,
     isEndingGroup,
-    operationProgress
+    operationProgress,
+    endAssociationMutation
   };
 };

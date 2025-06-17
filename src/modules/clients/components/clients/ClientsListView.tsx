@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ClientsFilters } from '@modules/clients/components/clients/ClientsFilters';
 import { ClientsTable } from '@modules/clients/components/clients/ClientsTable';
 import { ClientsEmptyState } from '@modules/clients/components/clients/ClientsEmptyState';
-import { ClientEditDialog } from '@modules/clients/components/clients/ClientEditDialog';
+import ClientEditDialog from '@modules/clients/components/clients/ClientEditDialog';
 
 interface Client {
   uuid: string;
@@ -68,6 +68,14 @@ export const ClientsListView: React.FC<ClientsListViewProps> = ({
     setIsEditModalOpen(false);
   };
 
+  // Função para lidar com a atualização do cliente
+  const handleClientUpdated = (updatedClient: Client) => {
+    // Aqui você pode implementar a lógica para atualizar a lista de clientes
+    // Por exemplo, forçar um refresh dos dados ou atualizar o estado local
+    console.log('Cliente atualizado:', updatedClient);
+    // Esta função será chamada quando o cliente for atualizado com sucesso
+  };
+
   return (
     <>
       {/* Filtros e Busca */}
@@ -99,6 +107,7 @@ export const ClientsListView: React.FC<ClientsListViewProps> = ({
         isOpen={isEditModalOpen}
         onClose={closeEditModal}
         client={selectedClient}
+        onClientUpdated={handleClientUpdated}
       />
     </>
   );

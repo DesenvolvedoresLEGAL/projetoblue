@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,9 +8,9 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { translateAuthError } from '@/utils/errorTranslator';
 import { toast } from '@/utils/toast';
 import { useAuth } from '@/context/AuthContext';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -31,7 +30,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Email e senha são obrigatórios. Por favor, preencha todos os campos.");
+      toast.error("Email e senha são obrigatórios");
       return;
     }
 
@@ -40,7 +39,7 @@ const Login = () => {
       // No need to redirect here as the AuthContext will handle it
     } catch (err) {
       console.error("Erro ao fazer login:", err);
-      toast.error(translateAuthError(err));
+      // Error will be handled by the AuthContext
     }
   };
 

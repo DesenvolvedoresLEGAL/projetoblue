@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { translateAssetError } from '@/utils/errorTranslator';
 import { toast } from 'sonner';
 
 interface EquipmentFormProps {
@@ -60,7 +59,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
     e.preventDefault();
     
     if (!formData.radio || !formData.solution_id) {
-      toast.error('Número do rádio e tipo de equipamento são obrigatórios. Por favor, preencha todos os campos necessários.');
+      toast.error('Rádio e tipo de equipamento são obrigatórios');
       return;
     }
 
@@ -81,7 +80,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
 
       if (error) {
         console.error('Erro ao criar equipamento:', error);
-        toast.error(translateAssetError(error, 'create'));
+        toast.error('Erro ao cadastrar equipamento');
         return;
       }
 
@@ -89,7 +88,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error(translateAssetError(error, 'create'));
+      toast.error('Erro inesperado ao cadastrar equipamento');
     } finally {
       setIsSubmitting(false);
     }

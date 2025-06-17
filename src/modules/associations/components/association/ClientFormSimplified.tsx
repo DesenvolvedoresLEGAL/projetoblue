@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Save, X, Plus, Trash2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
-import { translateClientError } from '@/utils/errorTranslator';
 import { toast } from 'sonner';
 import { mapDatabaseClientToFrontend, normalizePhoneForStorage } from '@/utils/clientMappers';
 import { formatPhoneNumber } from '@/utils/phoneFormatter';
@@ -59,7 +58,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
     e.preventDefault();
     
     if (!isFormValid) {
-      toast.error('Empresa, responsável e pelo menos um telefone válido são obrigatórios. Por favor, preencha todos os campos necessários.');
+      toast.error('Preencha empresa, responsável e pelo menos um telefone válido');
       return;
     }
 
@@ -91,8 +90,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
 
       if (error) {
         console.error('Erro ao criar cliente:', error);
-        toast.error(translateClientError(error, 'create'));
-        return;
+        throw error;
       }
 
       const newClient = mapDatabaseClientToFrontend(data);
@@ -100,7 +98,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
-      toast.error(translateClientError(error, 'create'));
+      toast.error('Erro ao cadastrar cliente. Tente novamente.');
     } finally {
       setIsLoading(false);
     }

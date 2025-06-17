@@ -1,114 +1,169 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { translateAuthError } from '@/utils/errorTranslator';
-import { toast } from '@/utils/toast';
 import { useState } from 'react';
-import { TechnicalErrorInfo } from '@/types/authContext';
-import { UserRole } from '@/types/auth';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/utils/toast';
+import { profileService } from '@/services/profileService';
+import { UserProfile, UserRole } from '@/types/auth';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const useAuthActions = (updateState?: (updates: any) => void) => {
-  const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [technicalError, setTechnicalError] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const clearError = () => {
+    setError(null);
+    setTechnicalError(null);
+  };
 
   const signIn = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    setTechnicalError(null);
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
-      
-      if (error) {
-        console.error('Erro ao fazer login:', error);
-        toast.error(translateAuthError(error));
-        setTechnicalError({
-          message: error.message,
-          timestamp: new Date().toISOString(),
-          context: { action: 'signIn' }
-        });
-        throw error;
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Update last login timestamp
+        await profileService.updateLastLogin(data.user.id);
+        toast.success('Login realizado com sucesso!');
+        navigate('/');
       }
-      
-      setTechnicalError(null);
-    } catch (error) {
-      console.error('Erro inesperado no login:', error);
-      toast.error(translateAuthError(error));
-      setTechnicalError({
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-        context: { action: 'signIn' }
-      });
-      throw error;
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      setTechnicalError(error);
+      showFriendlyError(error);
+      setError(error.message || 'Ocorreu um erro ao fazer login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, role?: UserRole) => {
+  const signUp = async (email: string, password: string, role: UserRole = 'cliente') => {
+    setIsLoading(true);
+    setError(null);
+    let currentTechnicalError: any = null;
+
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
-            role: role || 'cliente'
+            role: role,
+            is_active: true,
+            is_approved: role === 'cliente' // Auto-approve cliente role
           }
         }
       });
 
       if (error) {
-        console.error('Erro ao fazer cadastro:', error);
-        toast.error(translateAuthError(error));
-        setTechnicalError({
-          message: error.message,
-          timestamp: new Date().toISOString(),
-          context: { action: 'signUp' }
-        });
+        currentTechnicalError = error;
         throw error;
       }
 
-      setTechnicalError(null);
-      return data;
-    } catch (error) {
-      console.error('Erro inesperado no cadastro:', error);
-      toast.error(translateAuthError(error));
-      setTechnicalError({
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-        context: { action: 'signUp' }
-      });
-      throw error;
+      if (data.user) {
+        // Update last login timestamp
+        await profileService.updateLastLogin(data.user.id);
+
+        toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar.');
+        navigate('/login');
+      }
+    } catch (error: any) {
+      console.error('Erro ao cadastrar:', error);
+      setTechnicalError(currentTechnicalError);
+      showFriendlyError(error);
+      setError(error.message || 'Ocorreu um erro durante o cadastro');
+    } finally {
+      setIsLoading(false);
+      return { technicalError: currentTechnicalError };
     }
   };
 
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Erro ao fazer logout:', error);
-        toast.error(translateAuthError(error));
-        return;
-      }
-      toast.success('Logout realizado com sucesso');
+      if (error) throw error;
+      
+      navigate('/login');
+      toast.success('Logout realizado com sucesso!');
     } catch (error) {
-      console.error('Erro inesperado no logout:', error);
-      toast.error(translateAuthError(error));
+      console.error('Erro ao fazer logout:', error);
+      showFriendlyError(error, 'Erro ao sair do sistema. Tente novamente.');
     }
   };
 
   const resetPassword = async (email: string) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) {
-        console.error('Erro ao solicitar reset de senha:', error);
-        toast.error(translateAuthError(error));
-        return false;
-      }
-      toast.success('Email de recuperação enviado com sucesso');
-      return true;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/atualizar-senha`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Email de recuperação de senha enviado com sucesso!');
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Erro ao solicitar recuperação de senha:', error);
+      showFriendlyError(error);
+      setError(error.message || 'Ocorreu um erro ao solicitar recuperação de senha');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success('Senha atualizada com sucesso!');
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Erro ao atualizar senha:', error);
+      showFriendlyError(error);
+      setError(error.message || 'Ocorreu um erro ao atualizar senha');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+      return await profileService.fetchUserProfile(userId);
     } catch (error) {
-      console.error('Erro inesperado no reset de senha:', error);
-      toast.error(translateAuthError(error));
-      return false;
+      console.error('Erro ao buscar perfil do usuário:', error);
+      return null;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      navigate('/login');
+      toast.success('Logout realizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      showFriendlyError(error, 'Erro ao sair do sistema. Tente novamente.');
     }
   };
 
@@ -116,7 +171,13 @@ export const useAuthActions = (updateState?: (updates: any) => void) => {
     signIn,
     signUp,
     signOut,
+    logout,
     resetPassword,
-    technicalError
+    updatePassword,
+    getUserProfile,
+    isLoading,
+    error,
+    technicalError,
+    clearError
   };
 };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Asset, AssetStatus, ChipAsset, EquipamentAsset, StatusRecord } from "@/types/asset";
 import { Smartphone, Wifi, AlertTriangle, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -23,7 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { translateAssetError } from "@/utils/errorTranslator";
 import { toast } from "@/utils/toast";
 
 interface AssetRowProps {
@@ -72,13 +70,13 @@ const AssetRow = ({
     try {
       const success = await deleteAsset(asset.id);
       if (success) {
-        toast.success("Ativo excluído com sucesso");
+        toast.success("O ativo foi excluído com sucesso.");
       } else {
-        toast.error("Não foi possível excluir o ativo. Tente novamente mais tarde.");
+        toast.error("Não foi possível excluir o ativo.");
       }
     } catch (error) {
       console.error("Erro ao excluir ativo:", error);
-      toast.error(translateAssetError(error, 'delete'));
+      toast.error("Ocorreu um erro ao excluir o ativo.");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -108,13 +106,13 @@ const AssetRow = ({
       });
       
       if (updatedAsset) {
-        toast.success(`Status do ativo alterado para ${selectedStatus.name} com sucesso`);
+        toast.success(`O ativo agora está marcado como ${selectedStatus.name}.`);
       } else {
-        toast.error("Não foi possível atualizar o status do ativo. Tente novamente mais tarde.");
+        toast.error("Não foi possível atualizar o status do ativo.");
       }
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
-      toast.error(translateAssetError(error, 'update'));
+      toast.error("Ocorreu um erro ao atualizar o status do ativo.");
     } finally {
       setIsUpdatingStatus(false);
       setIsStatusDialogOpen(false);

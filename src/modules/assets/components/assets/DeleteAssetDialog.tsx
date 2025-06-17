@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   AlertDialog,
@@ -11,11 +10,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { assetService } from '@modules/assets/services/asset';
-import { translateAssetError } from '@/utils/errorTranslator';
 import { toast } from '@/utils/toast';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { AssetAssociation } from '@modules/assets/services/asset/associationQueries';
 import AssetAssociationWarningDialog from './AssetAssociationWarningDialog';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface DeleteAssetDialogProps {
   isOpen: boolean;
@@ -60,11 +59,11 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
         onAssetDeleted();
         onClose();
       } else {
-        toast.error("Não foi possível excluir o ativo. Tente novamente mais tarde.");
+        toast.error("Falha ao excluir ativo");
       }
     } catch (error) {
       console.error('Erro ao verificar associações ou excluir ativo:', error);
-      toast.error(translateAssetError(error, 'delete'));
+      showFriendlyError(error);
     } finally {
       setIsDeleting(false);
       setIsCheckingAssociation(false);

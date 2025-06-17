@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
-import { translateClientError } from '@/utils/errorTranslator';
 import { toast } from 'sonner';
 import { mapDatabaseClientToFrontend, normalizePhoneForStorage } from '@/utils/clientMappers';
 import { useClientRegistrationState } from '@/modules/clients/hooks/useClientRegistrationState';
@@ -11,6 +9,7 @@ import { useClientFormValidation } from './hooks/useClientFormValidation';
 import { PhoneFields } from './components/PhoneFields';
 import { ClientFormFields } from './components/ClientFormFields';
 import { ClientFormActions } from './components/ClientFormActions';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface ClientFormProps {
   onSubmit: (client: Client) => void;
@@ -36,7 +35,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
     e.preventDefault();
     
     if (!isFormValid) {
-      toast.error('Empresa, responsável e pelo menos um telefone válido são obrigatórios. Por favor, preencha todos os campos necessários.');
+      toast.error('Preencha todos os campos obrigatórios: empresa, responsável e pelo menos um telefone válido.');
       return;
     }
 
@@ -69,8 +68,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
 
       if (error) {
         console.error('Erro ao criar cliente:', error);
-        toast.error(translateClientError(error, 'create'));
-        return;
+        throw error;
       }
 
       const newClient = mapDatabaseClientToFrontend(data);
@@ -84,7 +82,15 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
-      toast.error(translateClientError(error, 'create'));
+      if (error?.message?.includes('duplicate key value violates unique constraint')) {
+        if (error.message.includes('cnpj')) {
+          showFriendlyError(null, 'Já existe um cliente cadastrado com este CNPJ.');
+        } else {
+          showFriendlyError(null, 'Já existe um cliente cadastrado com essas informações.');
+        }
+      } else {
+        showFriendlyError(error);
+      }
     } finally {
       setIsLoading(false);
     }

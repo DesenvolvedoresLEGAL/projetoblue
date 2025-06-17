@@ -1,149 +1,118 @@
 
-/**
- * Utilitário para traduzir erros técnicos em mensagens amigáveis ao usuário
- */
-
-export interface ErrorContext {
+interface ErrorTranslation {
+  message: string;
   action?: string;
-  entity?: string;
-  field?: string;
 }
 
-export const translateError = (error: any, context?: ErrorContext): string => {
-  const errorMessage = error?.message || error?.toString() || '';
+export const translateSupabaseError = (error: any): ErrorTranslation => {
+  const errorMessage = error?.message?.toLowerCase() || '';
   const errorCode = error?.code || '';
   
-  // Logs técnicos para debugging (não expostos ao usuário)
-  console.error('[Error Translator]', {
-    original: error,
-    message: errorMessage,
-    code: errorCode,
-    context
-  });
+  // Erros de constraint específicos
+  if (errorMessage.includes('assets_iccid_key') || errorMessage.includes('duplicate key value violates unique constraint')) {
+    if (errorMessage.includes('iccid')) {
+      return {
+        message: "Já existe um ativo cadastrado com esse ICCID.",
+        action: "Verifique o número do ICCID e tente novamente."
+      };
+    }
+    if (errorMessage.includes('serial_number')) {
+      return {
+        message: "Já existe um ativo cadastrado com esse número de série.",
+        action: "Verifique o número de série e tente novamente."
+      };
+    }
+    return {
+      message: "Já existe um registro com essas informações.",
+      action: "Verifique os dados inseridos e tente novamente."
+    };
+  }
+
+  // Erros de chave estrangeira
+  if (errorMessage.includes('foreign key constraint') || errorMessage.includes('violates foreign key')) {
+    return {
+      message: "Não foi possível realizar a operação devido a vínculos com outros registros.",
+      action: "Verifique se todos os dados relacionados estão corretos."
+    };
+  }
+
+  // Erros de NOT NULL
+  if (errorMessage.includes('null value') || errorMessage.includes('not-null constraint')) {
+    return {
+      message: "Há campos obrigatórios que não foram preenchidos.",
+      action: "Preencha todos os campos obrigatórios e tente novamente."
+    };
+  }
+
+  // Erros de RLS/Permissão
+  if (errorMessage.includes('row-level security') || 
+      errorMessage.includes('permission denied') || 
+      errorMessage.includes('insufficient privilege') ||
+      errorCode === 'PGRST301') {
+    return {
+      message: "Você não tem permissão para realizar esta ação.",
+      action: "Entre em contato com o administrador do sistema se precisar de acesso."
+    };
+  }
 
   // Erros de autenticação
-  if (errorMessage.includes('Invalid login credentials') || 
-      errorMessage.includes('Email not confirmed') ||
-      errorCode === 'invalid_credentials') {
-    return 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.';
+  if (errorMessage.includes('invalid_credentials') || 
+      errorMessage.includes('authentication failed') ||
+      errorMessage.includes('invalid login credentials')) {
+    return {
+      message: "Credenciais inválidas.",
+      action: "Verifique seu email e senha e tente novamente."
+    };
   }
 
-  if (errorMessage.includes('Email rate limit exceeded')) {
-    return 'Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.';
+  // Erros de email já cadastrado
+  if (errorMessage.includes('user_already_registered') || 
+      errorMessage.includes('email already registered')) {
+    return {
+      message: "Este email já está cadastrado no sistema.",
+      action: "Tente fazer login ou use outro email para cadastro."
+    };
   }
 
-  if (errorMessage.includes('User not found') || 
-      errorMessage.includes('No user found')) {
-    return 'Usuário não encontrado. Verifique o email informado ou cadastre-se.';
+  // Erros de conexão/rede
+  if (errorMessage.includes('network') || 
+      errorMessage.includes('fetch') || 
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('connection')) {
+    return {
+      message: "Problema de conexão com o servidor.",
+      action: "Verifique sua conexão com a internet e tente novamente."
+    };
   }
 
-  // Erros de permissão/RLS
-  if (errorMessage.includes('permission denied') ||
-      errorMessage.includes('insufficient_privilege') ||
-      errorMessage.includes('row-level security') ||
-      errorCode === 'PGRST301') {
-    return 'Você não tem permissão para realizar esta ação. Entre em contato com o administrador do sistema.';
+  // Erros de associação já existente
+  if (errorMessage.includes('já está associado') || 
+      errorMessage.includes('asset already associated')) {
+    return {
+      message: "Este ativo já está associado a outro cliente.",
+      action: "Verifique se o ativo está disponível ou escolha outro."
+    };
   }
 
-  // Erros de constraint específicos
-  if (errorMessage.includes('assets_iccid_key') || 
-      errorMessage.includes('duplicate key value violates unique constraint "assets_iccid_key"')) {
-    return 'Não foi possível salvar os dados. Já existe um ativo cadastrado com este ICCID.';
-  }
-
-  if (errorMessage.includes('assets_radio_key') || 
-      errorMessage.includes('duplicate key value violates unique constraint "assets_radio_key"')) {
-    return 'Não foi possível salvar os dados. Já existe um equipamento cadastrado com este número de rádio.';
-  }
-
-  if (errorMessage.includes('clients_cnpj_key') || 
-      errorMessage.includes('duplicate key value violates unique constraint "clients_cnpj_key"')) {
-    return 'Não foi possível cadastrar o cliente. Já existe um cliente com este CNPJ.';
-  }
-
-  if (errorMessage.includes('clients_email_key') || 
-      errorMessage.includes('duplicate key value violates unique constraint "clients_email_key"')) {
-    return 'Não foi possível cadastrar o cliente. Já existe um cliente com este email.';
-  }
-
-  // Erros de foreign key
-  if (errorMessage.includes('foreign key constraint') ||
-      errorMessage.includes('violates foreign key constraint')) {
-    if (context?.entity === 'asset') {
-      return 'Não foi possível excluir este ativo pois ele está vinculado a associações ou histórico.';
-    }
-    if (context?.entity === 'client') {
-      return 'Não foi possível excluir este cliente pois ele possui ativos associados.';
-    }
-    return 'Não foi possível realizar a operação. Este item está vinculado a outros registros.';
-  }
-
-  // Erros de not null
-  if (errorMessage.includes('null value in column') ||
-      errorMessage.includes('violates not-null constraint')) {
-    return 'Há campos obrigatórios não preenchidos. Por favor, revise os dados e tente novamente.';
-  }
-
-  // Erros de conexão
-  if (errorMessage.includes('fetch') ||
-      errorMessage.includes('network') ||
-      errorMessage.includes('connection') ||
-      errorMessage.includes('timeout')) {
-    return 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.';
-  }
-
-  // Erros de validação
-  if (errorMessage.includes('invalid input') ||
-      errorMessage.includes('invalid format') ||
-      errorMessage.includes('validation')) {
-    if (context?.field) {
-      return `O campo "${context.field}" possui um formato inválido. Por favor, verifique e tente novamente.`;
-    }
-    return 'Há dados inválidos no formulário. Por favor, revise as informações e tente novamente.';
-  }
-
-  // Erros específicos de associação
-  if (errorMessage.includes('Asset should be available') ||
-      errorMessage.includes('already associated')) {
-    return 'Este ativo já está associado a outro cliente. Libere-o primeiro ou selecione outro ativo.';
-  }
-
-  // Erros de dados não encontrados
-  if (errorMessage.includes('not found') ||
-      errorMessage.includes('No data') ||
-      errorMessage.includes('404')) {
-    return 'Nenhum registro encontrado para os critérios informados.';
-  }
-
-  // Erro genérico baseado no contexto
-  if (context?.action) {
-    switch (context.action) {
-      case 'create':
-        return `Não foi possível criar ${context.entity || 'o registro'}. Tente novamente mais tarde.`;
-      case 'update':
-        return `Não foi possível atualizar ${context.entity || 'o registro'}. Tente novamente mais tarde.`;
-      case 'delete':
-        return `Não foi possível excluir ${context.entity || 'o registro'}. Tente novamente mais tarde.`;
-      case 'fetch':
-        return `Não foi possível carregar ${context.entity || 'os dados'}. Tente novamente mais tarde.`;
-      default:
-        return 'Ocorreu um erro inesperado. Tente novamente mais tarde.';
-    }
-  }
-
-  // Fallback final
-  return 'Ocorreu um erro inesperado ao processar sua solicitação. Tente novamente ou contate o suporte.';
+  // Erro genérico
+  return {
+    message: "Ocorreu um erro inesperado ao processar sua solicitação.",
+    action: "Tente novamente mais tarde ou entre em contato com o suporte."
+  };
 };
 
-// Funções de conveniência para contextos específicos
-export const translateAssetError = (error: any, action: string) => 
-  translateError(error, { action, entity: 'o ativo' });
-
-export const translateClientError = (error: any, action: string) => 
-  translateError(error, { action, entity: 'o cliente' });
-
-export const translateAssociationError = (error: any, action: string) => 
-  translateError(error, { action, entity: 'a associação' });
-
-export const translateAuthError = (error: any) => 
-  translateError(error, { action: 'authenticate', entity: 'usuário' });
+export const showFriendlyError = (error: any, customMessage?: string) => {
+  const { toast } = require('@/utils/toast');
+  
+  if (customMessage) {
+    toast.error(customMessage);
+    return;
+  }
+  
+  const translation = translateSupabaseError(error);
+  const fullMessage = translation.action 
+    ? `${translation.message} ${translation.action}`
+    : translation.message;
+    
+  toast.error(fullMessage);
+};
