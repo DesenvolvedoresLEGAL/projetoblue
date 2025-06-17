@@ -9,6 +9,7 @@ import { NamedLogo } from '@/components/ui/namedlogo';
 import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { translateAuthError } from '@/utils/errorTranslator';
 import { toast } from '@/utils/toast';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,7 +31,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Email e senha são obrigatórios");
+      toast.error("Email e senha são obrigatórios. Por favor, preencha todos os campos.");
       return;
     }
 
@@ -39,7 +40,7 @@ const Login = () => {
       // No need to redirect here as the AuthContext will handle it
     } catch (err) {
       console.error("Erro ao fazer login:", err);
-      // Error will be handled by the AuthContext
+      toast.error(translateAuthError(err));
     }
   };
 

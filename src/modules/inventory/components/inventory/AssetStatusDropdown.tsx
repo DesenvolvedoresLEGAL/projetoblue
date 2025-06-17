@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAssets } from "@/context/useAssets";
 import { StatusRecord, Asset } from "@/types/asset";
+import { translateAssetError } from "@/utils/errorTranslator";
 import { toast } from "@/utils/toast";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 
@@ -49,9 +50,9 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
         status: selectedStatus.status as any, 
         statusId: selectedStatus.id 
       });
-      toast.success(`Status alterado para ${selectedStatus.status}`);
+      toast.success(`Status alterado para ${selectedStatus.status} com sucesso`);
     } catch (error) {
-      toast.error("Erro ao atualizar o status do ativo");
+      toast.error(translateAssetError(error, 'update'));
       console.error("Error updating asset status:", error);
     } finally {
       setIsLoading(false);

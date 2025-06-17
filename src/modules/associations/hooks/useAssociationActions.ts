@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { translateAssociationError } from "@/utils/errorTranslator";
 import { toast } from "sonner";
 import { AssociationGroup } from '@/types/associations';
 import { useState } from 'react';
@@ -47,7 +48,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-        toast.error('Erro ao encerrar associação');
+        toast.error(translateAssociationError(error, 'update'));
         return;
       }
 
@@ -58,7 +59,7 @@ export const useAssociationActions = () => {
       await forceRefreshAssociationsData();
     } catch (error) {
       console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-      toast.error('Erro ao encerrar associação');
+      toast.error(translateAssociationError(error, 'update'));
     } finally {
       setIsEndingAssociation(false);
     }
@@ -76,7 +77,7 @@ export const useAssociationActions = () => {
       
       if (!group) {
         console.error('[handleEndGroup] Grupo não encontrado:', groupKey);
-        toast.error('Grupo não encontrado');
+        toast.error('Grupo não encontrado. Por favor, recarregue a página e tente novamente.');
         return;
       }
 
@@ -118,7 +119,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-        toast.error('Erro ao encerrar grupo de associações');
+        toast.error(translateAssociationError(error, 'update'));
         return;
       }
 
@@ -149,7 +150,7 @@ export const useAssociationActions = () => {
 
     } catch (error) {
       console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-      toast.error('Erro ao encerrar grupo de associações');
+      toast.error(translateAssociationError(error, 'update'));
     } finally {
       setIsEndingGroup(false);
       setOperationProgress({ current: 0, total: 0 });

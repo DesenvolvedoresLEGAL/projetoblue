@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { assetService } from '@modules/assets/services/asset';
+import { translateAssetError } from '@/utils/errorTranslator';
 import { toast } from '@/utils/toast';
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 import { AssetAssociation } from '@modules/assets/services/asset/associationQueries';
@@ -59,11 +60,11 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
         onAssetDeleted();
         onClose();
       } else {
-        toast.error("Falha ao excluir ativo");
+        toast.error("Não foi possível excluir o ativo. Tente novamente mais tarde.");
       }
     } catch (error) {
       console.error('Erro ao verificar associações ou excluir ativo:', error);
-      toast.error("Ocorreu um erro ao processar a solicitação");
+      toast.error(translateAssetError(error, 'delete'));
     } finally {
       setIsDeleting(false);
       setIsCheckingAssociation(false);

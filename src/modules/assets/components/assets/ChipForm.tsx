@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { translateAssetError } from '@/utils/errorTranslator';
 import { toast } from 'sonner';
 
 interface ChipFormProps {
@@ -58,7 +59,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
     e.preventDefault();
     
     if (!formData.iccid || !formData.line_number) {
-      toast.error('ICCID e número da linha são obrigatórios');
+      toast.error('ICCID e número da linha são obrigatórios. Por favor, preencha todos os campos necessários.');
       return;
     }
 
@@ -79,7 +80,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
 
       if (error) {
         console.error('Erro ao criar CHIP:', error);
-        toast.error('Erro ao cadastrar CHIP');
+        toast.error(translateAssetError(error, 'create'));
         return;
       }
 
@@ -87,7 +88,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro inesperado ao cadastrar CHIP');
+      toast.error(translateAssetError(error, 'create'));
     } finally {
       setIsSubmitting(false);
     }

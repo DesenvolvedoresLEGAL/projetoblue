@@ -1,66 +1,35 @@
 
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UserRole } from '@/types/auth';
+import { useNavigate } from 'react-router-dom';
+import { translateAuthError } from '@/utils/errorTranslator';
 import { toast } from '@/utils/toast';
 
 export const useProtectedNavigation = () => {
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { hasMinimumRole, userRole } = useAuth();
 
-  const navigateWithPermission = (
-    path: string, 
-    requiredRole?: UserRole,
-    options?: { 
-      replace?: boolean;
-      showToast?: boolean;
-      customMessage?: string;
+  const navigateToProtectedRoute = (route: string) => {
+    try {
+      if (isLoading) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        toast.error('Você precisa estar logado para acessar esta página. Faça login e tente novamente.');
+        navigate('/login');
+        return;
+      }
+
+      navigate(route);
+    } catch (error) {
+      console.error('Erro na navegação protegida:', error);
+      toast.error(translateAuthError(error));
     }
-  ) => {
-    const { replace = false, showToast = true, customMessage } = options || {};
-
-    // Se não há role requerido, navega normalmente
-    if (!requiredRole) {
-      navigate(path, { replace });
-      return true;
-    }
-
-    // Verifica se tem permissão
-    if (hasMinimumRole(requiredRole)) {
-      navigate(path, { replace });
-      return true;
-    }
-
-    // Sem permissão - mostra toast se solicitado
-    if (showToast) {
-      const message = customMessage || 
-        `Você precisa ter permissões de ${requiredRole} ou superior para acessar esta página.`;
-      
-      toast.error(message);
-    }
-
-    return false;
-  };
-
-  const canNavigate = (requiredRole?: UserRole): boolean => {
-    if (!requiredRole) return true;
-    return hasMinimumRole(requiredRole);
-  };
-
-  const getNavigationInfo = (requiredRole?: UserRole) => {
-    return {
-      canNavigate: canNavigate(requiredRole),
-      userRole,
-      requiredRole,
-      hasPermission: requiredRole ? hasMinimumRole(requiredRole) : true
-    };
   };
 
   return {
-    navigateWithPermission,
-    canNavigate,
-    getNavigationInfo,
-    userRole,
-    hasMinimumRole
+    navigateToProtectedRoute,
+    isAuthenticated,
+    isLoading
   };
 };
