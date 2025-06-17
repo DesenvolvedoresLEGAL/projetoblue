@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +9,7 @@ import { useClientFormValidation } from './hooks/useClientFormValidation';
 import { PhoneFields } from './components/PhoneFields';
 import { ClientFormFields } from './components/ClientFormFields';
 import { ClientFormActions } from './components/ClientFormActions';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface ClientFormProps {
   onSubmit: (client: Client) => void;
@@ -35,7 +35,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
     e.preventDefault();
     
     if (!isFormValid) {
-      toast.error('Preencha empresa, responsável e pelo menos um telefone válido');
+      toast.error('Preencha todos os campos obrigatórios: empresa, responsável e pelo menos um telefone válido.');
       return;
     }
 
@@ -82,7 +82,15 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
-      toast.error('Erro ao cadastrar cliente. Tente novamente.');
+      if (error?.message?.includes('duplicate key value violates unique constraint')) {
+        if (error.message.includes('cnpj')) {
+          showFriendlyError(null, 'Já existe um cliente cadastrado com este CNPJ.');
+        } else {
+          showFriendlyError(null, 'Já existe um cliente cadastrado com essas informações.');
+        }
+      } else {
+        showFriendlyError(error);
+      }
     } finally {
       setIsLoading(false);
     }
