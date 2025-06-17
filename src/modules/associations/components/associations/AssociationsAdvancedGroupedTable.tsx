@@ -15,8 +15,10 @@ interface AssociationsAdvancedGroupedTableProps {
   onPageChange: (page: number) => void;
   onEditAssociation: (association: Association) => void;
   onEndAssociation: (associationId: number) => void;
+  onEndGroup: (groupKey: string) => void;
   debouncedSearchTerm: string;
   isEndingAssociation: boolean;
+  isEndingGroup: boolean;
   operationProgress?: { current: number; total: number; };
 }
 
@@ -28,8 +30,10 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
   onPageChange,
   onEditAssociation,
   onEndAssociation,
+  onEndGroup,
   debouncedSearchTerm,
   isEndingAssociation,
+  isEndingGroup,
   operationProgress
 }) => {
   const { totalAssociations, totalTimestampGroups, totalCompanyGroups } = getTimestampGroupStats(timestampGroups);
@@ -76,8 +80,10 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
                   companyGroups={timestampGroup.companyGroups}
                   onEditAssociation={onEditAssociation}
                   onEndAssociation={onEndAssociation}
+                  onEndGroup={onEndGroup}
                   debouncedSearchTerm={debouncedSearchTerm}
                   isEndingAssociation={isEndingAssociation}
+                  isEndingGroup={isEndingGroup}
                 />
               </CardContent>
             </Card>

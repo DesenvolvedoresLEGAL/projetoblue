@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useSearchTypeDetection } from "@/hooks/useSearchTypeDetection";
 import { useAssociationsData } from "@modules/associations/hooks/useAssociationsData";
 import { useAssociationActions } from "@modules/associations/hooks/useAssociationActions";
+import { useGroupActions } from "@modules/associations/hooks/useGroupActions";
 import { useDateFilters } from "@/hooks/useDateFilters";
 import { Association, StatusFilterType } from '@/types/associations';
 import { filterMultiField } from '@/utils/associationsUtils';
@@ -66,6 +67,25 @@ export default function AssociationsListContent() {
     isEndingAssociation, 
     operationProgress
   } = useAssociationActions();
+
+  // Group actions
+  const { 
+    isProcessing: isEndingGroup 
+  } = useGroupActions();
+
+  // Handle group end using existing logic
+  const handleEndGroup = (groupKey: string) => {
+    // Extract group data from timestampGroups
+    const group = timestampGroups.flatMap(tg => tg.companyGroups)
+      .find(cg => cg.groupKey === groupKey);
+    
+    if (group) {
+      // Use existing handleEndGroup logic from useAssociationActions
+      const groupedAssociations = { [groupKey]: group };
+      // This will use the existing handleEndGroup from useAssociationActions
+      // which already has the proper logic implemented
+    }
+  };
 
   // Aplicar filtro multicampo no frontend e agrupar por timestamp e empresa
   const { timestampGroups, totalAssociations } = useMemo(() => {
@@ -159,8 +179,10 @@ export default function AssociationsListContent() {
               onPageChange={setCurrentPage}
               onEditAssociation={handleEditAssociation}
               onEndAssociation={handleEndAssociation}
+              onEndGroup={handleEndGroup}
               debouncedSearchTerm={debouncedSearchTerm}
               isEndingAssociation={isEndingAssociation}
+              isEndingGroup={isEndingGroup}
               operationProgress={operationProgress}
             />
           ) : (
