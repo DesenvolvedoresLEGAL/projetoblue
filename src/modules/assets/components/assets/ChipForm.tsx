@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface ChipFormProps {
   onSuccess: () => void;
@@ -58,7 +58,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
     e.preventDefault();
     
     if (!formData.iccid || !formData.line_number) {
-      toast.error('ICCID e número da linha são obrigatórios');
+      toast.error('Preencha o ICCID e número da linha para cadastrar o CHIP.');
       return;
     }
 
@@ -79,7 +79,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
 
       if (error) {
         console.error('Erro ao criar CHIP:', error);
-        toast.error('Erro ao cadastrar CHIP');
+        showFriendlyError(error);
         return;
       }
 
@@ -87,7 +87,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
       onSuccess();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro inesperado ao cadastrar CHIP');
+      showFriendlyError(error, 'Ocorreu um erro inesperado ao cadastrar o CHIP. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }

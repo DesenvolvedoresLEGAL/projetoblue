@@ -49,10 +49,10 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
         status: selectedStatus.status as any, 
         statusId: selectedStatus.id 
       });
-      toast.success(`Status alterado para ${selectedStatus.status}`);
+      toast.success(`Status alterado para ${selectedStatus.status} com sucesso.`);
     } catch (error) {
-      toast.error("Erro ao atualizar o status do ativo");
       console.error("Error updating asset status:", error);
+      showFriendlyError(error, "Não foi possível alterar o status do ativo. Tente novamente.");
     } finally {
       setIsLoading(false);
       setConfirmDialogOpen(false);

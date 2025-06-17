@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from "sonner";
@@ -48,7 +49,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-        toast.error('Erro ao encerrar associação');
+        showFriendlyError(error, 'Não foi possível encerrar a associação. Tente novamente.');
         return;
       }
 
@@ -59,7 +60,7 @@ export const useAssociationActions = () => {
       await forceRefreshAssociationsData();
     } catch (error) {
       console.error('[handleEndAssociation] Erro ao encerrar associação:', error);
-      toast.error('Erro ao encerrar associação');
+      showFriendlyError(error, 'Ocorreu um erro inesperado ao encerrar a associação.');
     } finally {
       setIsEndingAssociation(false);
     }
@@ -119,7 +120,7 @@ export const useAssociationActions = () => {
 
       if (error) {
         console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-        toast.error('Erro ao encerrar grupo de associações');
+        showFriendlyError(error, 'Não foi possível encerrar o grupo de associações. Tente novamente.');
         return;
       }
 
@@ -150,7 +151,7 @@ export const useAssociationActions = () => {
 
     } catch (error) {
       console.error('[handleEndGroup] Erro ao encerrar grupo de associações:', error);
-      toast.error('Erro ao encerrar grupo de associações');
+      showFriendlyError(error, 'Ocorreu um erro inesperado ao encerrar o grupo de associações.');
     } finally {
       setIsEndingGroup(false);
       setOperationProgress({ current: 0, total: 0 });

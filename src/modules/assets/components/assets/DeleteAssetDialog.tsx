@@ -59,11 +59,15 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
         onAssetDeleted();
         onClose();
       } else {
-        toast.error("Falha ao excluir ativo");
+        toast.error("Não foi possível excluir o ativo. Tente novamente mais tarde.");
       }
     } catch (error) {
       console.error('Erro ao verificar associações ou excluir ativo:', error);
-      showFriendlyError(error);
+      if (error?.message?.includes('foreign key constraint')) {
+        showFriendlyError(null, 'Não foi possível excluir este ativo pois ele está vinculado a outros registros.');
+      } else {
+        showFriendlyError(error);
+      }
     } finally {
       setIsDeleting(false);
       setIsCheckingAssociation(false);

@@ -82,15 +82,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar cliente:', error);
-      if (error?.message?.includes('duplicate key value violates unique constraint')) {
-        if (error.message.includes('cnpj')) {
-          showFriendlyError(null, 'Já existe um cliente cadastrado com este CNPJ.');
-        } else {
-          showFriendlyError(null, 'Já existe um cliente cadastrado com essas informações.');
-        }
-      } else {
-        showFriendlyError(error);
-      }
+      showFriendlyError(error);
     } finally {
       setIsLoading(false);
     }

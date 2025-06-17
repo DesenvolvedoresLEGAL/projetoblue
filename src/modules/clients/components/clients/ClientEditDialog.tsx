@@ -117,15 +117,7 @@ const ClientEditDialog = ({ isOpen, onClose, client, onClientUpdated }: ClientEd
       toast.success('Cliente atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
-      if (error?.message?.includes('duplicate key value violates unique constraint')) {
-        if (error.message.includes('cnpj')) {
-          showFriendlyError(null, 'Já existe um cliente cadastrado com este CNPJ.');
-        } else {
-          showFriendlyError(null, 'Já existe um cliente cadastrado com essas informações.');
-        }
-      } else {
-        showFriendlyError(error);
-      }
+      showFriendlyError(error);
     } finally {
       setIsLoading(false);
     }

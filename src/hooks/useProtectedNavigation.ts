@@ -34,7 +34,7 @@ export const useProtectedNavigation = () => {
     // Sem permissão - mostra toast se solicitado
     if (showToast) {
       const message = customMessage || 
-        `Você precisa ter permissões de ${requiredRole} ou superior para acessar esta página.`;
+        `Você não tem permissão para acessar esta página. Entre em contato com o administrador se precisar de acesso.`;
       
       toast.error(message);
     }

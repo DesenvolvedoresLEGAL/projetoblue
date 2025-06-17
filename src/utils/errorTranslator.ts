@@ -12,14 +12,20 @@ export const translateSupabaseError = (error: any): ErrorTranslation => {
   if (errorMessage.includes('assets_iccid_key') || errorMessage.includes('duplicate key value violates unique constraint')) {
     if (errorMessage.includes('iccid')) {
       return {
-        message: "Já existe um ativo cadastrado com esse ICCID.",
-        action: "Verifique o número do ICCID e tente novamente."
+        message: "Já existe um CHIP cadastrado com esse ICCID.",
+        action: "Verifique o número do ICCID ou use outro CHIP."
       };
     }
     if (errorMessage.includes('serial_number')) {
       return {
-        message: "Já existe um ativo cadastrado com esse número de série.",
-        action: "Verifique o número de série e tente novamente."
+        message: "Já existe um equipamento cadastrado com esse número de série.",
+        action: "Verifique o número de série ou use outro equipamento."
+      };
+    }
+    if (errorMessage.includes('cnpj')) {
+      return {
+        message: "Já existe um cliente cadastrado com este CNPJ.",
+        action: "Verifique os dados ou faça login na conta existente."
       };
     }
     return {

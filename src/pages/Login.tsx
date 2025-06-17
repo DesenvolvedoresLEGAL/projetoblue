@@ -30,7 +30,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Email e senha são obrigatórios");
+      toast.error("Preencha seu email e senha para continuar.");
       return;
     }
 
