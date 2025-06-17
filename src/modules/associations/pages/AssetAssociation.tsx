@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { Button } from "@/components/ui/button";
@@ -33,17 +34,30 @@ const AssetAssociation = () => {
   const createAssociationMutation = useCreateAssociation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Debug log on component mount and state changes
+  useEffect(() => {
+    console.log('🏗️ AssetAssociation component mounted/updated:', {
+      currentStep,
+      hasSelectedClient: !!selectedClient,
+      selectedAssetsCount: selectedAssets.length,
+      hasGeneralConfig: !!generalConfig
+    });
+  }, [currentStep, selectedClient, selectedAssets, generalConfig]);
+
   const handleClientSelect = (client: Client) => {
+    console.log('👤 Client selected in AssetAssociation:', client);
     setSelectedClient(client);
     setCurrentStep('assets');
   };
 
   const handleAssetsConfirm = (assets: SelectedAsset[]) => {
+    console.log('📦 Assets confirmed in AssetAssociation:', assets.length, 'assets');
     setSelectedAssets(assets);
     setCurrentStep('summary');
   };
 
   const handleBack = () => {
+    console.log('⬅️ Back button pressed from step:', currentStep);
     if (currentStep === 'assets') {
       setCurrentStep('client');
     } else if (currentStep === 'summary') {
@@ -52,16 +66,27 @@ const AssetAssociation = () => {
   };
 
   const handleComplete = async () => {
+    console.log('✅ Starting association creation process');
+    console.log('📊 Association data:', {
+      client: selectedClient,
+      assetsCount: selectedAssets.length,
+      generalConfig
+    });
+
     if (!selectedClient || selectedAssets.length === 0) {
-      toast.error('Dados incompletos para criar as associações');
+      const errorMsg = 'Dados incompletos para criar as associações';
+      console.error('❌ Validation failed:', errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      console.log('🚀 Creating associations for', selectedAssets.length, 'assets');
+      
       // Criar associações para cada ativo selecionado
-      const associationPromises = selectedAssets.map(async (asset) => {
+      const associationPromises = selectedAssets.map(async (asset, index) => {
         const associationData = {
           clientId: selectedClient.uuid,
           assetId: asset.uuid,
@@ -71,11 +96,13 @@ const AssetAssociation = () => {
           notes: asset.notes
         };
 
+        console.log(`📝 Creating association ${index + 1}/${selectedAssets.length}:`, associationData);
         return createAssociationMutation.mutateAsync(associationData);
       });
 
       // Aguardar todas as associações serem criadas
-      await Promise.all(associationPromises);
+      const results = await Promise.all(associationPromises);
+      console.log('✅ All associations created successfully:', results);
 
       toast.success(`${selectedAssets.length} associação(ões) criada(s) com sucesso!`);
       
@@ -84,7 +111,7 @@ const AssetAssociation = () => {
       navigate('/associations');
       
     } catch (error) {
-      console.error('Erro ao criar associações:', error);
+      console.error('❌ Error creating associations:', error);
       toast.error('Erro ao criar uma ou mais associações. Tente novamente.');
     } finally {
       setIsSubmitting(false);
@@ -92,6 +119,7 @@ const AssetAssociation = () => {
   };
 
   const handleCancel = () => {
+    console.log('❌ Canceling association creation');
     // Clear persisted state when canceling
     clearState();
     navigate(-1);
