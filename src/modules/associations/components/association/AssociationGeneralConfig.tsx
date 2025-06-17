@@ -8,7 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Settings, Calendar } from "lucide-react";
 
 export interface AssociationGeneralConfig {
-  associationType: 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO';
+  associationType: 'ALUGUEL' | 'ASSINATURA';
   startDate: Date;
   endDate?: Date;
   notes: string;
@@ -25,6 +25,11 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
 }) => {
   // Validação de datas
   const isEndDateValid = !config.endDate || config.endDate >= config.startDate;
+
+  const handleAssociationTypeChange = (value: 'ALUGUEL' | 'ASSINATURA') => {
+    console.log('🔄 AssociationGeneralConfig - Type changed to:', value);
+    onUpdate({ associationType: value });
+  };
 
   return (
     <Card className="border-[#4D2BFB]/20">
@@ -44,9 +49,7 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
             <Label htmlFor="association-type" className="text-sm">Tipo de Associação *</Label>
             <Select 
               value={config.associationType} 
-              onValueChange={(value: 'ALUGUEL' | 'ASSINATURA' | 'EMPRESTIMO') => 
-                onUpdate({ associationType: value })
-              }
+              onValueChange={handleAssociationTypeChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
@@ -54,7 +57,6 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
               <SelectContent>
                 <SelectItem value="ALUGUEL">Aluguel</SelectItem>
                 <SelectItem value="ASSINATURA">Assinatura</SelectItem>
-                <SelectItem value="EMPRESTIMO">Empréstimo</SelectItem>
               </SelectContent>
             </Select>
           </div>

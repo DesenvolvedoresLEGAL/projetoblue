@@ -16,21 +16,36 @@ export const useCreateAssociation = () => {
 
   return useMutation({
     mutationFn: async (params: CreateAssociationParams) => {
-      // Atualizar status do ativo para "EM USO"
+      console.log('🔧 useCreateAssociation - Creating association with params:', params);
+      
+      // Atualizar status do ativo para "EM USO" (status_id = 2)
       const { error: assetError } = await supabase
         .from('assets')
-        .update({ status_id: 2 }) // 2 = EM USO
+        .update({ status_id: 2 })
         .eq('uuid', params.assetId);
 
-      if (assetError) throw assetError;
-
-      // Map association type to association_id
-      let associationId = 1; // Default to ALUGUEL
-      if (params.associationType === 'ASSINATURA') {
-        associationId = 2;
-      } else if (params.associationType === 'EMPRESTIMO') {
-        associationId = 3;
+      if (assetError) {
+        console.error('❌ Error updating asset status:', assetError);
+        throw assetError;
       }
+
+      // Mapear tipo de associação para association_id correto
+      let associationId: number;
+      
+      switch (params.associationType) {
+        case 'ASSINATURA':
+          associationId = 2;
+          break;
+        case 'ALUGUEL':
+        default:
+          associationId = 1;
+          break;
+      }
+
+      console.log('📝 useCreateAssociation - Mapped association type:', {
+        input: params.associationType,
+        mapped_id: associationId
+      });
 
       // Criar associação
       const { data, error } = await supabase
@@ -38,14 +53,19 @@ export const useCreateAssociation = () => {
         .insert({
           asset_id: params.assetId,
           client_id: params.clientId,
-          association_id: associationId, // Use association_id instead of association_type
+          association_id: associationId,
           entry_date: params.startDate,
           notes: params.notes
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creating association:', error);
+        throw error;
+      }
+
+      console.log('✅ Association created successfully:', data);
       return data;
     },
     onSuccess: () => {

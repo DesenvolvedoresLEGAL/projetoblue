@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,30 +16,26 @@ import { toast } from 'sonner';
 interface AssetSelectionProps {
   client: any;
   selectedAssets: SelectedAsset[];
+  generalConfig: AssociationGeneralConfig;
   onAssetAdded: (asset: SelectedAsset) => void;
   onAssetRemoved: (assetId: string) => void;
   onAssetUpdated: (assetId: string, updates: any) => void;
+  onGeneralConfigUpdate: (updates: Partial<AssociationGeneralConfig>) => void;
   onProceed: () => void;
 }
 
 export const AssetSelection: React.FC<AssetSelectionProps> = ({
   client,
   selectedAssets,
+  generalConfig,
   onAssetAdded,
   onAssetRemoved,
   onAssetUpdated,
+  onGeneralConfigUpdate,
   onProceed
 }) => {
   const [editingAsset, setEditingAsset] = useState<SelectedAsset | null>(null);
   
-  // Estado para configuração geral da associação
-  const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
-    associationType: 'ALUGUEL',
-    startDate: new Date(),
-    endDate: undefined,
-    notes: ''
-  });
-
   // Convert SelectedAsset back to AssetWithRelations format for compatibility
   const convertToAssetWithRelations = (selectedAsset: SelectedAsset): AssetWithRelations => {
     return {
@@ -86,10 +81,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     setEditingAsset(null);
   };
 
-  const handleGeneralConfigUpdate = (updates: Partial<AssociationGeneralConfig>) => {
-    setGeneralConfig(prev => ({ ...prev, ...updates }));
-  };
-
   const handleAssetSpecificUpdate = (assetId: string, updates: any) => {
     onAssetUpdated(assetId, updates);
   };
@@ -111,6 +102,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
       return;
     }
     
+    console.log('🚀 AssetSelection - Proceeding with generalConfig:', generalConfig);
     onProceed();
   };
 
@@ -197,7 +189,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           </p>
           <AssociationGeneralConfigComponent
             config={generalConfig}
-            onUpdate={handleGeneralConfigUpdate}
+            onUpdate={onGeneralConfigUpdate}
           />
         </div>
       )}

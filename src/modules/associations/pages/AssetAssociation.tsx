@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { ClientSelectionSimplified } from '@modules/associations/components/association/ClientSelectionSimplified';
 import { AssetSelection } from '@modules/associations/components/association/AssetSelection';
 import { AssociationSummary } from '@modules/associations/components/association/AssociationSummary';
+import { AssociationGeneralConfig } from '@modules/associations/components/association/AssociationGeneralConfig';
 import { Client } from '@/types/client';
 import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
 import { SelectedAsset } from '@modules/associations/types';
@@ -22,17 +23,33 @@ const AssetAssociation = () => {
     currentStep,
     selectedClient,
     selectedAssets,
-    generalConfig,
+    generalConfig: persistedGeneralConfig,
     setCurrentStep,
     setSelectedClient,
     setSelectedAssets,
-    setGeneralConfig,
+    setGeneralConfig: setPersistedGeneralConfig,
     clearState
   } = useAssetAssociationState();
+  
+  // Estado local para configuração geral
+  const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
+    associationType: 'ALUGUEL',
+    startDate: new Date(),
+    endDate: undefined,
+    notes: ''
+  });
   
   const navigate = useNavigate();
   const createAssociationMutation = useCreateAssociation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sincronizar com o estado persistido
+  useEffect(() => {
+    if (persistedGeneralConfig) {
+      console.log('📥 AssetAssociation - Loading persisted config:', persistedGeneralConfig);
+      setGeneralConfig(persistedGeneralConfig);
+    }
+  }, [persistedGeneralConfig]);
 
   // Debug log on component mount and state changes
   useEffect(() => {
@@ -40,9 +57,10 @@ const AssetAssociation = () => {
       currentStep,
       hasSelectedClient: !!selectedClient,
       selectedAssetsCount: selectedAssets.length,
-      hasGeneralConfig: !!generalConfig
+      generalConfig,
+      persistedGeneralConfig
     });
-  }, [currentStep, selectedClient, selectedAssets, generalConfig]);
+  }, [currentStep, selectedClient, selectedAssets, generalConfig, persistedGeneralConfig]);
 
   const handleClientSelect = (client: Client) => {
     console.log('👤 Client selected in AssetAssociation:', client);
@@ -50,10 +68,11 @@ const AssetAssociation = () => {
     setCurrentStep('assets');
   };
 
-  const handleAssetsConfirm = (assets: SelectedAsset[]) => {
-    console.log('📦 Assets confirmed in AssetAssociation:', assets.length, 'assets');
-    setSelectedAssets(assets);
-    setCurrentStep('summary');
+  const handleGeneralConfigUpdate = (updates: Partial<AssociationGeneralConfig>) => {
+    const newConfig = { ...generalConfig, ...updates };
+    console.log('🔧 AssetAssociation - General config updated:', newConfig);
+    setGeneralConfig(newConfig);
+    setPersistedGeneralConfig(newConfig);
   };
 
   const handleBack = () => {
@@ -90,10 +109,10 @@ const AssetAssociation = () => {
         const associationData = {
           clientId: selectedClient.uuid,
           assetId: asset.uuid,
-          associationType: asset.associationType || 'ALUGUEL',
-          startDate: asset.startDate || new Date().toISOString().split('T')[0],
+          associationType: generalConfig.associationType, // Usar a configuração geral
+          startDate: generalConfig.startDate.toISOString().split('T')[0],
           rentedDays: asset.rented_days,
-          notes: asset.notes
+          notes: generalConfig.notes || asset.notes
         };
 
         console.log(`📝 Creating association ${index + 1}/${selectedAssets.length}:`, associationData);
@@ -216,9 +235,11 @@ const AssetAssociation = () => {
             <AssetSelection
               client={selectedClient}
               selectedAssets={selectedAssets}
+              generalConfig={generalConfig}
               onAssetAdded={(asset) => setSelectedAssets([...selectedAssets, asset])}
               onAssetRemoved={(assetId) => setSelectedAssets(selectedAssets.filter(a => a.uuid !== assetId))}
               onAssetUpdated={(assetId, updates) => setSelectedAssets(selectedAssets.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
+              onGeneralConfigUpdate={handleGeneralConfigUpdate}
               onProceed={() => setCurrentStep('summary')}
             />
           )}
