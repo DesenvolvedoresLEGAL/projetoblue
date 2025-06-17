@@ -1,3 +1,4 @@
+
 import { translateError } from "@/utils/errorTranslator";
 import { toast } from "@/utils/toast";
 import { Asset, AssetLog, StatusRecord } from "@/types/asset";
@@ -39,10 +40,11 @@ export const validateAssetData = (assetData: any): string | null => {
 
 // Map database asset to frontend asset
 export const mapAssetFromDb = (dbAsset: any): Asset => {
-  return {
+  const isChip = dbAsset.asset_solutions?.solution === 'CHIP';
+  
+  const baseAsset = {
     id: dbAsset.uuid,
     uuid: dbAsset.uuid,
-    type: dbAsset.asset_solutions?.solution === 'CHIP' ? 'CHIP' : 'ROTEADOR',
     registrationDate: dbAsset.created_at,
     status: dbAsset.asset_status?.status || 'DISPONÍVEL',
     statusId: dbAsset.status_id,
@@ -58,19 +60,27 @@ export const mapAssetFromDb = (dbAsset: any): Asset => {
     ssid_fabrica: dbAsset.ssid_fabrica,
     pass_fabrica: dbAsset.pass_fabrica,
     admin_user_fabrica: dbAsset.admin_user_fabrica,
-    admin_pass_fabrica: dbAsset.admin_user_fabrica,
+    admin_pass_fabrica: dbAsset.admin_pass_fabrica,
     ssid_atual: dbAsset.ssid_atual,
     pass_atual: dbAsset.pass_atual,
     created_at: dbAsset.created_at,
     updated_at: dbAsset.updated_at,
-    deleted_at: dbAsset.deleted_at,
-    // Type-specific properties
-    ...(dbAsset.asset_solutions?.solution === 'CHIP' ? {
+    deleted_at: dbAsset.deleted_at
+  };
+  
+  if (isChip) {
+    return {
+      ...baseAsset,
+      type: "CHIP" as const,
       iccid: dbAsset.iccid || '',
       phoneNumber: dbAsset.line_number?.toString() || '',
       carrier: dbAsset.manufacturers?.name || 'Unknown',
       line_number: dbAsset.line_number
-    } : {
+    };
+  } else {
+    return {
+      ...baseAsset,
+      type: "ROTEADOR" as const,
       uniqueId: dbAsset.uuid,
       brand: dbAsset.manufacturers?.name || '',
       ssid: dbAsset.ssid_atual || '',
@@ -80,8 +90,8 @@ export const mapAssetFromDb = (dbAsset: any): Asset => {
       adminUser: dbAsset.admin_user,
       adminPassword: dbAsset.admin_pass,
       imei: dbAsset.imei
-    })
-  };
+    };
+  }
 };
 
 // Map database asset log to frontend asset log
