@@ -128,7 +128,7 @@ export async function fetchDetailedStatusBreakdown() {
   return result;
 }
 
-// NEW: Fetch active associations
+// NEW: Fetch active associations - CORRIGIDO para usar asset_client_assoc
 export async function fetchActiveAssociations() {
   console.log('Executing fetchActiveAssociations query');
   const result = await supabase
@@ -140,9 +140,12 @@ export async function fetchActiveAssociations() {
       association_id,
       entry_date,
       exit_date,
-      clients!inner(nome),
+      clients!inner(empresa),
       association_types!inner(type),
-      assets!inner(solution_id, asset_solutions!inner(solution))
+      assets!inner(
+        solution_id,
+        asset_solutions!inner(solution)
+      )
     `)
     .is('exit_date', null)
     .is('deleted_at', null);
@@ -164,7 +167,7 @@ export async function fetchAssociationsEndingToday() {
       association_id,
       entry_date,
       exit_date,
-      clients!inner(nome),
+      clients!inner(empresa),
       association_types!inner(type)
     `)
     .eq('exit_date', today)
@@ -181,7 +184,7 @@ export async function fetchTopClientsWithAssociations() {
     .from('asset_client_assoc')
     .select(`
       client_id,
-      clients!inner(nome)
+      clients!inner(empresa)
     `)
     .is('exit_date', null)
     .is('deleted_at', null);

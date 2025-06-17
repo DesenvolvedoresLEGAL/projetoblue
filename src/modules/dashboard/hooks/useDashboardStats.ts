@@ -97,87 +97,63 @@ export function useDashboardStats() {
         const solutions = solutionsResult.data || [];
         const statuses = statusResult.data || [];
         
-        // Process recent assets data
+        // Process recent assets data - CORRIGIDO tratamento de dados
         const processedRecentAssets = recentAssetsResult.data?.map(asset => {
           const solution = solutions.find(s => s.id === asset.solution_id);
           const status = statuses.find(s => s.id === asset.status_id);
           
+          // Melhor identificação do asset
+          const assetName = asset.radio || 
+                           (asset.line_number ? asset.line_number.toString() : '') || 
+                           asset.serial_number || 
+                           asset.iccid || 
+                           'N/A';
+          
           return {
             id: asset.uuid,
-            name: asset.radio || asset.line_number?.toString() || asset.serial_number || 'N/A',
+            name: assetName,
             type: solution?.solution || 'Unknown',
             status: status?.status || 'Unknown',
             solution: solution?.solution || 'Unknown'
           };
         }) || [];
-        
-        // Process recent events data
-        const processedRecentEvents = recentEventsResult.data?.map(event => {
-          let description = event.event || 'Event logged';
-          let asset_name = 'N/A';
-          
-          // Extract more meaningful description from details if available
-          if (event.details && typeof event.details === 'object') {
-            // Ensure we're dealing with an object
-            const details = event.details as Record<string, any>;
-            
-            if (details.description) {
-              description = details.description;
-            }
-            
-            if (details.asset_id) {
-              asset_name = details.radio || details.asset_id.toString().substring(0, 8) || 'unknown';
-            }
-          }
-          
-          return {
-            id: event.id,
-            type: event.event?.toLowerCase().includes('register') ? 'register' : 
-                  event.event?.toLowerCase().includes('link') || event.event?.toLowerCase().includes('assoc') ? 'link' : 
-                  'status',
-            description,
-            asset_name,
-            time: event.date,
-            asset_id: (typeof event.details === 'object' && event.details) ? 
-                      (event.details as any).asset_id : undefined
-          };
-        }) || [];
 
-        // NEW: Process data for PieChart (aggregated by status only)
-        const statusCounts = new Map<string, number>();
-        statusSummaryResult.data?.forEach(asset => {
-          const status = asset.asset_status?.status || 'Desconhecido';
-          statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
+        // Process recent events data - MELHORADO tratamento
+        const processedRecentEvents = recentEventsResult.data?.map((event, index) => ({
+          id: event.id || index,
+          type: event.event || 'UNKNOWN',
+          description: event.details?.event_description || event.event || 'Evento sem descrição',
+          time: formatRelativeTime(event.date || new Date().toISOString()),
+          asset_id: event.details?.asset_id,
+          asset_name: event.details?.line_number || event.details?.radio || 'N/A'
+        })) || [];
+
+        // Process status summary for pie chart - CORRIGIDO agregação
+        const statusCounts: { [key: string]: number } = {};
+        statusSummaryResult.data?.forEach(item => {
+          const statusName = item.asset_status?.status || 'Unknown';
+          statusCounts[statusName] = (statusCounts[statusName] || 0) + 1;
         });
 
-        const pieChartData = Array.from(statusCounts.entries()).map(([status, total]) => ({
-          status: status.charAt(0).toUpperCase() + status.slice(1).toLowerCase(),
+        const pieChartData = Object.entries(statusCounts).map(([status, total]) => ({
+          status,
           total
         }));
 
-        // NEW: Process detailed data for tooltip (type + status)
-        const detailedCounts = new Map<string, number>();
-        detailedBreakdownResult.data?.forEach(asset => {
-          const type = asset.asset_solutions?.solution || 'Desconhecido';
-          const status = asset.asset_status?.status || 'Desconhecido';
-          const key = `${type}|${status}`;
-          detailedCounts.set(key, (detailedCounts.get(key) || 0) + 1);
+        // Process detailed breakdown - CORRIGIDO agregação
+        const detailedCounts: { [key: string]: number } = {};
+        detailedBreakdownResult.data?.forEach(item => {
+          const type = item.asset_solutions?.solution || 'Unknown';
+          const status = item.asset_status?.status || 'Unknown';
+          const key = `${type}-${status}`;
+          detailedCounts[key] = (detailedCounts[key] || 0) + 1;
         });
 
-        const detailedStatusData = Array.from(detailedCounts.entries()).map(([key, total]) => {
-          const [type, status] = key.split('|');
-          return {
-            type: type.charAt(0).toUpperCase() + type.slice(1).toLowerCase(),
-            status: status.charAt(0).toUpperCase() + status.slice(1).toLowerCase(),
-            total
-          };
+        const detailedStatusData = Object.entries(detailedCounts).map(([key, total]) => {
+          const [type, status] = key.split('-');
+          return { type, status, total };
         });
-        
-        console.log('Dashboard data fetched successfully');
-        console.log('PieChart data:', pieChartData);
-        console.log('Detailed status data:', detailedStatusData);
-        
-        // Return data in the expected format
+
         return {
           totalAssets: totalAssetsResult.count || 0,
           activeClients: activeClientsResult.count || 0,
@@ -188,13 +164,13 @@ export function useDashboardStats() {
           detailedStatusData
         };
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
+        console.error('💥 Error fetching dashboard stats:', error);
         throw error;
       }
     },
-    staleTime: 60000, // 1 minute
-    gcTime: 300000,   // 5 minutes
-    retry: 1,
-    refetchOnWindowFocus: false
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
