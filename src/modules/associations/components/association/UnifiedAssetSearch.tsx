@@ -23,7 +23,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
   const [directSearchTerm, setDirectSearchTerm] = useState('');
   const [directSearchType, setDirectSearchType] = useState<'chip' | 'equipment'>('equipment');
   const [isDirectSearching, setIsDirectSearching] = useState(false);
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(true);
   const [selectingAssetId, setSelectingAssetId] = useState<string | null>(null);
 
   const {
@@ -164,7 +164,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
 
       {/* Busca Avançada */}
       <Card className="border-[#4D2BFB]/20">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-none shadow-none">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Filter className="h-4 w-4" />
