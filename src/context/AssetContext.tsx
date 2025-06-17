@@ -1,22 +1,41 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Asset } from '@/types/asset';
+import { Asset, Client, StatusRecord } from '@/types/asset';
+import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
 import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface AssetContextProps {
   assets: Asset[];
+  clients: Client[];
+  history: AssetHistoryEntry[];
+  statusRecords: StatusRecord[];
   loading: boolean;
   error: string | null;
   createAsset: (assetData: any) => Promise<void>;
-  updateAsset: (id: string, updates: any) => Promise<void>;
-  deleteAsset: (id: string) => Promise<void>;
+  updateAsset: (id: string, updates: any) => Promise<Asset>;
+  deleteAsset: (id: string) => Promise<boolean>;
+  getAssetById: (id: string) => Asset | undefined;
+  getAssetsByStatus: (status: string) => Asset[];
+  getAssetsByType: (type: string) => Asset[];
+  getClientById: (id: string) => Client | undefined;
+  associateAssetToClient: (assetId: string, clientId: string) => Promise<void>;
+  removeAssetFromClient: (assetId: string, clientId: string) => Promise<void>;
+  addHistoryEntry: (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => void;
+  getAssetHistory: (assetId: string) => AssetHistoryEntry[];
+  getClientHistory: (clientId: string) => AssetHistoryEntry[];
+  getExpiredSubscriptions: () => Asset[];
+  returnAssetsToStock: (assetIds: string[]) => void;
+  extendSubscription: (assetId: string, newEndDate: string) => void;
 }
 
 const AssetContext = createContext<AssetContextProps | undefined>(undefined);
 
 const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
+  const [statusRecords, setStatusRecords] = useState<StatusRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +57,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const handleUpdateAsset = async (id: string, updates: any) => {
+  const handleUpdateAsset = async (id: string, updates: any): Promise<Asset> => {
     try {
       setLoading(true);
       setError(null);
@@ -47,7 +66,9 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         setAssets(prevAssets => 
           prevAssets.map(asset => asset.uuid === id ? updatedAsset : asset)
         );
+        return updatedAsset;
       }
+      throw new Error('Falha ao atualizar o ativo');
     } catch (error) {
       console.error('Erro ao atualizar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
@@ -58,14 +79,16 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
-  const handleDeleteAsset = async (id: string) => {
+  const handleDeleteAsset = async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
       const success = await deleteAsset(id);
       if (success) {
         setAssets(prevAssets => prevAssets.filter(asset => asset.uuid !== id));
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Erro ao deletar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'delete');
@@ -76,13 +99,86 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     }
   };
 
+  const getAssetById = (id: string) => {
+    return assets.find(asset => asset.uuid === id);
+  };
+
+  const getAssetsByStatus = (status: string) => {
+    return assets.filter(asset => asset.status === status);
+  };
+
+  const getAssetsByType = (type: string) => {
+    return assets.filter(asset => asset.type === type);
+  };
+
+  const getClientById = (id: string) => {
+    return clients.find(client => client.uuid === id);
+  };
+
+  const associateAssetToClient = async (assetId: string, clientId: string) => {
+    // TODO: Implement asset-client association logic
+    console.log('Associating asset', assetId, 'to client', clientId);
+  };
+
+  const removeAssetFromClient = async (assetId: string, clientId: string) => {
+    // TODO: Implement asset-client disassociation logic
+    console.log('Removing asset', assetId, 'from client', clientId);
+  };
+
+  const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
+    const newEntry = {
+      ...entry,
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString()
+    };
+    setHistory(prev => [newEntry, ...prev]);
+  };
+
+  const getAssetHistory = (assetId: string) => {
+    return history.filter(entry => entry.assetIds.includes(assetId));
+  };
+
+  const getClientHistory = (clientId: string) => {
+    return history.filter(entry => entry.clientId === clientId);
+  };
+
+  const getExpiredSubscriptions = () => {
+    // TODO: Implement logic to get expired subscriptions
+    return [];
+  };
+
+  const returnAssetsToStock = (assetIds: string[]) => {
+    // TODO: Implement logic to return assets to stock
+    console.log('Returning assets to stock:', assetIds);
+  };
+
+  const extendSubscription = (assetId: string, newEndDate: string) => {
+    // TODO: Implement logic to extend subscription
+    console.log('Extending subscription for asset', assetId, 'to', newEndDate);
+  };
+
   const value: AssetContextProps = {
     assets,
+    clients,
+    history,
+    statusRecords,
     loading,
     error,
     createAsset: handleCreateAsset,
     updateAsset: handleUpdateAsset,
     deleteAsset: handleDeleteAsset,
+    getAssetById,
+    getAssetsByStatus,
+    getAssetsByType,
+    getClientById,
+    associateAssetToClient,
+    removeAssetFromClient,
+    addHistoryEntry,
+    getAssetHistory,
+    getClientHistory,
+    getExpiredSubscriptions,
+    returnAssetsToStock,
+    extendSubscription,
   };
 
   return (

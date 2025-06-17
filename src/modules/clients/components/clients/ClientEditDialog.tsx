@@ -1,12 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Plus, X } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, X, Plus } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { Client } from '@/types/client';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 import { mapDatabaseClientToFrontend, normalizePhoneForStorage, formatPhoneForDisplay } from '@/utils/clientMappers';
 import { showFriendlyError } from '@/utils/errorTranslator';
 

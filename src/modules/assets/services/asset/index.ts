@@ -11,7 +11,7 @@ import {
   listProblemAssets,
   statusByType
 } from './queries';
-import { assetMutations } from './mutations';
+import { createAsset, updateAsset, deleteAsset } from './mutations';
 import { associationQueries } from './associationQueries';
 import { AssetListParams, AssetCreateParams, AssetUpdateParams, AssetStatusByType, ProblemAsset } from './types';
 import { PROBLEM_STATUS_IDS } from './constants';
@@ -46,10 +46,9 @@ export const assetService = {
   checkActiveAssociations: associationQueries.checkActiveAssociations,
 
   // Mutations
-  createAsset: assetMutations.createAsset,
-  updateAsset: assetMutations.updateAsset,
-  deleteAsset: assetMutations.deleteAsset,
-  updateAssetStatus: assetMutations.updateAssetStatus
+  createAsset,
+  updateAsset,
+  deleteAsset
 };
 
 // Export as default and named export for backward compatibility
