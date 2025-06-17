@@ -1,7 +1,10 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Asset } from '@/types/asset';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
+import { showFriendlyError } from '@/utils/errorTranslator';
+import { mapDatabaseAssetToFrontend } from '@/utils/databaseMappers';
 
 interface AssetContextProps {
   assets: Asset[];
@@ -12,13 +15,11 @@ interface AssetContextProps {
   deleteAsset: (id: string) => Promise<boolean>;
 }
 
-const AssetContext = createContext<AssetContextProps | undefined>(undefined);
+export const AssetContext = createContext<AssetContextProps | undefined>(undefined);
 
 interface AssetProviderProps {
   children: React.ReactNode;
 }
-
-import { showFriendlyError } from '@/utils/errorTranslator';
 
 export const AssetProvider: React.FC<AssetProviderProps> = ({ children }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -27,16 +28,32 @@ export const AssetProvider: React.FC<AssetProviderProps> = ({ children }) => {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('*')
+        .select(`
+          *,
+          asset_status:status_id (
+            id,
+            status
+          ),
+          asset_solutions:solution_id (
+            id,
+            solution
+          ),
+          manufacturers:manufacturer_id (
+            id,
+            name
+          )
+        `)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setAssets(data || []);
+      // Transform database data to frontend Asset format
+      const transformedAssets = (data || []).map(mapDatabaseAssetToFrontend).filter(Boolean);
+      setAssets(transformedAssets);
     } catch (error) {
       console.error('Erro ao buscar ativos:', error);
-      toast.error('Erro ao buscar ativos.');
+      showFriendlyError(error);
     }
   };
 
@@ -49,14 +66,32 @@ export const AssetProvider: React.FC<AssetProviderProps> = ({ children }) => {
       const { data, error } = await supabase
         .from('assets')
         .insert([assetData])
-        .select()
+        .select(`
+          *,
+          asset_status:status_id (
+            id,
+            status
+          ),
+          asset_solutions:solution_id (
+            id,
+            solution
+          ),
+          manufacturers:manufacturer_id (
+            id,
+            name
+          )
+        `)
         .single();
 
       if (error) throw error;
 
-      setAssets(prev => [...prev, data]);
-      toast.success('Ativo criado com sucesso!');
-      return data;
+      const transformedAsset = mapDatabaseAssetToFrontend(data);
+      if (transformedAsset) {
+        setAssets(prev => [...prev, transformedAsset]);
+        toast.success('Ativo criado com sucesso!');
+        return transformedAsset;
+      }
+      return null;
     } catch (error) {
       console.error('Erro ao criar ativo:', error);
       showFriendlyError(error);
@@ -70,17 +105,34 @@ export const AssetProvider: React.FC<AssetProviderProps> = ({ children }) => {
         .from('assets')
         .update(assetData)
         .eq('uuid', id)
-        .select()
+        .select(`
+          *,
+          asset_status:status_id (
+            id,
+            status
+          ),
+          asset_solutions:solution_id (
+            id,
+            solution
+          ),
+          manufacturers:manufacturer_id (
+            id,
+            name
+          )
+        `)
         .single();
 
       if (error) throw error;
 
-      setAssets(prev => prev.map(asset => 
-        asset.id === id ? { ...asset, ...data } : asset
-      ));
-
-      toast.success('Ativo atualizado com sucesso!');
-      return data;
+      const transformedAsset = mapDatabaseAssetToFrontend(data);
+      if (transformedAsset) {
+        setAssets(prev => prev.map(asset => 
+          asset.id === id ? transformedAsset : asset
+        ));
+        toast.success('Ativo atualizado com sucesso!');
+        return transformedAsset;
+      }
+      return null;
     } catch (error) {
       console.error('Erro ao atualizar ativo:', error);
       showFriendlyError(error);

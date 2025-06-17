@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,18 +7,21 @@ import { profileService } from '@/services/profileService';
 import { UserProfile, UserRole } from '@/types/auth';
 import { showFriendlyError } from '@/utils/errorTranslator';
 
-export const useAuthActions = () => {
+export const useAuthActions = (updateState?: (updates: any) => void) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [technicalError, setTechnicalError] = useState<any>(null);
   const navigate = useNavigate();
 
   const clearError = () => {
     setError(null);
+    setTechnicalError(null);
   };
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    setTechnicalError(null);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -35,6 +39,8 @@ export const useAuthActions = () => {
       }
     } catch (error: any) {
       console.error('Erro no login:', error);
+      setTechnicalError(error);
+      showFriendlyError(error);
       setError(error.message || 'Ocorreu um erro ao fazer login');
     } finally {
       setIsLoading(false);
@@ -44,7 +50,7 @@ export const useAuthActions = () => {
   const signUp = async (email: string, password: string, role: UserRole = 'cliente') => {
     setIsLoading(true);
     setError(null);
-    let technicalError: any = null;
+    let currentTechnicalError: any = null;
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -60,7 +66,7 @@ export const useAuthActions = () => {
       });
 
       if (error) {
-        technicalError = error;
+        currentTechnicalError = error;
         throw error;
       }
 
@@ -73,10 +79,25 @@ export const useAuthActions = () => {
       }
     } catch (error: any) {
       console.error('Erro ao cadastrar:', error);
+      setTechnicalError(currentTechnicalError);
+      showFriendlyError(error);
       setError(error.message || 'Ocorreu um erro durante o cadastro');
     } finally {
       setIsLoading(false);
-      return { technicalError };
+      return { technicalError: currentTechnicalError };
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      navigate('/login');
+      toast.success('Logout realizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      showFriendlyError(error, 'Erro ao sair do sistema. Tente novamente.');
     }
   };
 
@@ -95,6 +116,7 @@ export const useAuthActions = () => {
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao solicitar recuperação de senha:', error);
+      showFriendlyError(error);
       setError(error.message || 'Ocorreu um erro ao solicitar recuperação de senha');
     } finally {
       setIsLoading(false);
@@ -116,6 +138,7 @@ export const useAuthActions = () => {
       navigate('/login');
     } catch (error: any) {
       console.error('Erro ao atualizar senha:', error);
+      showFriendlyError(error);
       setError(error.message || 'Ocorreu um erro ao atualizar senha');
     } finally {
       setIsLoading(false);
@@ -147,12 +170,14 @@ export const useAuthActions = () => {
   return {
     signIn,
     signUp,
+    signOut,
     logout,
     resetPassword,
     updatePassword,
     getUserProfile,
     isLoading,
     error,
+    technicalError,
     clearError
   };
 };
