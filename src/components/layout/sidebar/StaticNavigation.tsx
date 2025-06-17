@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
+import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, FileChartColumnIncreasing, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";
 import { useLocation } from "react-router-dom";
@@ -113,7 +113,8 @@ export function StaticNavigation({
         isOpen={openModules.assets}
         onToggle={() => toggleModule('assets')}
         requiredRole="suporte"
-      >          <NavigationItem
+      >
+        <NavigationItem
           to="/assets/dashboard"
           icon={Package}
           label="Dashboard"
@@ -127,8 +128,14 @@ export function StaticNavigation({
         />
         <NavigationItem
           to="/assets/management"
-          icon={PlusCircle}
+          icon={FileChartColumnIncreasing}
           label="Gestão"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/assets/register"
+          icon={PlusCircle}
+          label="Cadastrar"
           onClose={isMobile ? onClose : undefined}
         />
       </NavigationModule>
@@ -252,9 +259,15 @@ export function StaticNavigation({
         requiredRole="suporte"
       >
         <NavigationItem
-          to="/clients"
+          to="/clients/list"
           icon={User}
-          label="Gerenciar Clientes"
+          label="Listar"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/clients/register"
+          icon={PlusCircle}
+          label="Cadastrar"
           onClose={isMobile ? onClose : undefined}
         />
       </NavigationModule>

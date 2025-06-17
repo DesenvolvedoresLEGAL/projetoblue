@@ -331,7 +331,7 @@ const AssetsManagement = () => {
             {/* Card Gerenciar Clientes - Requer suporte ou superior */}
             <RoleGuard requiredRole="suporte">
               <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
-                onClick={() => navigate('/clients')}>
+                onClick={() => navigate('/clients/list')}>
                 <CardHeader className="pb-3 sm:pb-4">
                   <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
                     <div className="p-1.5 sm:p-2 bg-legal-primary/10 rounded-lg group-hover:bg-legal-primary/20 transition-colors">
@@ -356,7 +356,7 @@ const AssetsManagement = () => {
                       className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate('/clients');
+                        navigate('/clients/list');
                       }}
                       tooltip="Você precisa ser suporte ou superior para gerenciar clientes"
                     >

@@ -243,7 +243,7 @@ const App = () => (
                     </Route>
                     
                     {/* Client management routes - Requires suporte or above */}
-                    <Route path="/clients" element={
+                    <Route path="/clients/list" element={
                       <AuthRoute requiredRole="suporte">
                         <Clients />
                       </AuthRoute>
