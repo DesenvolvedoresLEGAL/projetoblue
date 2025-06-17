@@ -47,7 +47,8 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
     }
   };
 
-  const getAssetTypesSummary = (assetTypes: { [key: string]: number }) => {
+  const getAssetTypesSummary = (assetTypes: { [key: string]: number } | undefined) => {
+    if (!assetTypes) return '';
     return Object.entries(assetTypes)
       .map(([type, count]) => `${count} ${type}${count > 1 ? 's' : ''}`)
       .join(', ');
@@ -63,14 +64,14 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
     const activeCount = getActiveAssociationsCount(group.associations);
     
     return {
-      groupKey: group.clientId, // Use clientId as groupKey
-      client_name: group.clientName,
-      client_id: group.clientId,
-      entry_date: group.entryDate,
-      exit_date: group.exitDate || null,
+      groupKey: group.client_id, // Use client_id as groupKey
+      client_name: group.client_name,
+      client_id: group.client_id,
+      entry_date: group.entry_date,
+      exit_date: group.exit_date || null,
       associations: group.associations,
       totalAssets: group.associations.length,
-      assetTypes: group.assetTypeDistribution,
+      assetTypes: group.asset_types || {},
       canEndGroup: activeCount > 0
     };
   };
@@ -88,8 +89,8 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
         
         return (
           <AccordionItem 
-            key={group.clientId} 
-            value={group.clientId}
+            key={group.client_id} 
+            value={group.client_id}
             className="border border-gray-200 rounded-lg px-4"
           >
             <AccordionTrigger className="hover:no-underline py-4">
@@ -98,7 +99,7 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                   <Building2 className="h-5 w-5 text-blue-600" />
                   <div className="text-left">
                     <div className="font-semibold text-gray-900">
-                      {group.clientName}
+                      {group.client_name}
                     </div>
                     <div className="text-sm text-gray-500 flex items-center gap-4">
                       <span className="flex items-center gap-1">
@@ -107,12 +108,12 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDateCorrect(group.entryDate)}
+                        {formatDateCorrect(group.entry_date)}
                       </span>
-                      {group.exitDate && (
+                      {group.exit_date && (
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          até {formatDateCorrect(group.exitDate)}
+                          até {formatDateCorrect(group.exit_date)}
                         </span>
                       )}
                     </div>
@@ -121,7 +122,7 @@ export const CompanyGroupAccordion: React.FC<CompanyGroupAccordionProps> = ({
                 
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">
-                    {getAssetTypesSummary(group.assetTypeDistribution)}
+                    {getAssetTypesSummary(group.asset_types)}
                   </Badge>
                   {activeCount > 0 && activeCount < group.associations.length && (
                     <Badge variant="outline" className="text-xs">
