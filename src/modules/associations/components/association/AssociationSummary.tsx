@@ -13,6 +13,7 @@ interface AssociationSummaryProps {
   generalConfig: any; // Replace 'any' with the actual generalConfig type
   onComplete: () => void;
   onBack: () => void;
+  isLoading?: boolean;
 }
 
 export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
@@ -20,7 +21,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
   assets,
   generalConfig,
   onComplete,
-  onBack
+  onBack,
+  isLoading = false
 }) => {
   const getAssetIdentifier = (asset: SelectedAsset) => {
     if (asset.type === 'CHIP') {
@@ -251,14 +253,20 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
 
       {/* Ações */}
       <div className="flex items-center justify-between pt-4">
-        <Button variant="outline" onClick={onBack} className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10">
+        <Button 
+          variant="outline" 
+          onClick={onBack} 
+          className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
+          disabled={isLoading}
+        >
           Voltar
         </Button>
         <Button 
           onClick={onComplete}
           className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
+          disabled={isLoading}
         >
-          Confirmar Associação
+          {isLoading ? 'Criando Associações...' : 'Confirmar Associação'}
         </Button>
       </div>
     </div>
