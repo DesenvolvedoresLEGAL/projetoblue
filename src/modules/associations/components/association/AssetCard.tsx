@@ -32,10 +32,10 @@ export const AssetCard: React.FC<AssetCardProps> = ({
 
   const getAssetSecondaryInfo = () => {
     if (asset.type === 'CHIP' && asset.line_number) {
-      return `Linha: ${asset.line_number}`;
+      return `(${asset.line_number.slice(0, 2)}) ${asset.line_number[2]} ${asset.line_number.slice(3, asset.line_number.length)}`;
     }
     if (asset.model) {
-      return asset.model;
+      return asset.radio;
     }
     return asset.solucao || 'N/A';
   };
