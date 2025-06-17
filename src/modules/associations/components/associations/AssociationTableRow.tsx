@@ -110,6 +110,9 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
           <AssociationStatusBadge exitDate={association.exit_date} />
         </TableCell>
         <TableCell>
+          { association.association_id === 1 ? "Locação" : "Assinatura" }
+        </TableCell>
+        <TableCell>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
