@@ -28,7 +28,7 @@ export function Footer({ className, ...props }: FooterProps) {
     >
       <div className="flex items-center gap-4">
         <span className="text-legal-primary dark:text-legal-secondary font-medium">
-          LEGAL Platform v1.0.2
+          LEGAL Platform v1.4.100
         </span>
         <div className="flex items-center gap-1 text-muted-foreground">
           <Clock className="w-3 h-3 text-legal-primary dark:text-legal-secondary" />
