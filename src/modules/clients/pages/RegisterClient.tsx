@@ -21,7 +21,7 @@ const RegisterClient: React.FC = () => {
 
   const handleSubmit = (client: Client) => {
     // State is already cleared in ClientForm after successful submission
-    navigate('/clients');
+    navigate('/clients/list');
   };
 
   return (
