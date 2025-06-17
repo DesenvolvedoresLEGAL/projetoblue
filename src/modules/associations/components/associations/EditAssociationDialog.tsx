@@ -1,81 +1,77 @@
+
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from '@/integrations/supabase/client';
+import { Association } from '@/types/associations';
 import { toast } from 'sonner';
 import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface EditAssociationDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  association: any;
-  onAssociationUpdated: () => void;
+  association: Association | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
-  isOpen,
-  onClose,
   association,
-  onAssociationUpdated
+  open,
+  onOpenChange
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    entry_date: '',
+    exit_date: '',
+    notes: '',
     ssid: '',
     pass: '',
-    notes: '',
-    gb: ''
+    gb: 0
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (association) {
       setFormData({
+        entry_date: association.entry_date || '',
+        exit_date: association.exit_date || '',
+        notes: association.notes || '',
         ssid: association.ssid || '',
         pass: association.pass || '',
-        notes: association.notes || '',
-        gb: association.gb ? association.gb.toString() : ''
+        gb: association.gb || 0
       });
     }
   }, [association]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!association) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const updateData = {
-        ssid: formData.ssid || null,
-        pass: formData.pass || null,
-        notes: formData.notes || null,
-        gb: formData.gb ? parseInt(formData.gb) : null,
-        updated_at: new Date().toISOString()
-      };
 
+    setIsLoading(true);
+
+    try {
       const { error } = await supabase
         .from('asset_client_assoc')
-        .update(updateData)
+        .update({
+          entry_date: formData.entry_date,
+          exit_date: formData.exit_date || null,
+          notes: formData.notes,
+          ssid: formData.ssid,
+          pass: formData.pass,
+          gb: formData.gb,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', association.id);
 
       if (error) {
         console.error('Erro ao atualizar associação:', error);
         const friendlyMessage = showFriendlyError(error, 'update');
-        throw error;
+        throw new Error(friendlyMessage);
       }
 
       toast.success('Associação atualizada com sucesso!');
-      onAssociationUpdated();
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       console.error('Erro ao atualizar associação:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
@@ -86,89 +82,92 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-neue-haas font-bold text-[#020CBC]">
-            Editar Associação
-          </DialogTitle>
+          <DialogTitle>Editar Associação</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* SSID */}
-            <div className="space-y-2">
-              <Label htmlFor="ssid">SSID</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="entry_date">Data de Entrada</Label>
               <Input
-                id="ssid"
-                name="ssid"
-                value={formData.ssid}
-                onChange={handleChange}
-                placeholder="Digite o SSID"
+                id="entry_date"
+                type="date"
+                value={formData.entry_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, entry_date: e.target.value }))}
+                required
               />
             </div>
 
-            {/* Senha */}
-            <div className="space-y-2">
-              <Label htmlFor="pass">Senha</Label>
+            <div>
+              <Label htmlFor="exit_date">Data de Saída</Label>
               <Input
-                id="pass"
-                name="pass"
-                value={formData.pass}
-                onChange={handleChange}
-                placeholder="Digite a senha"
-              />
-            </div>
-
-            {/* GB */}
-            <div className="space-y-2">
-              <Label htmlFor="gb">GB</Label>
-              <Input
-                id="gb"
-                name="gb"
-                value={formData.gb}
-                onChange={handleChange}
-                placeholder="Digite a quantidade de GB"
+                id="exit_date"
+                type="date"
+                value={formData.exit_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, exit_date: e.target.value }))}
               />
             </div>
           </div>
 
-          {/* Observações */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Observações</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              placeholder="Observações adicionais..."
-              rows={3}
+          <div>
+            <Label htmlFor="ssid">SSID</Label>
+            <Input
+              id="ssid"
+              value={formData.ssid}
+              onChange={(e) => setFormData(prev => ({ ...prev, ssid: e.target.value }))}
+              placeholder="Nome da rede WiFi"
             />
           </div>
 
-          {/* Botões */}
-          <div className="flex gap-4 pt-4">
+          <div>
+            <Label htmlFor="pass">Senha</Label>
+            <Input
+              id="pass"
+              type="password"
+              value={formData.pass}
+              onChange={(e) => setFormData(prev => ({ ...prev, pass: e.target.value }))}
+              placeholder="Senha da rede WiFi"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="gb">GB do Plano</Label>
+            <Input
+              id="gb"
+              type="number"
+              value={formData.gb}
+              onChange={(e) => setFormData(prev => ({ ...prev, gb: Number(e.target.value) }))}
+              placeholder="Quantidade em GB"
+              min="0"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Observações</Label>
+            <Input
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Observações adicionais"
+            />
+          </div>
+
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="flex-1"
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white font-neue-haas"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : 'Salvar Alterações'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : 'Salvar'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

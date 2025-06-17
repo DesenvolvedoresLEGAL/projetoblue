@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Dialog, 
   DialogContent, 
@@ -17,18 +17,6 @@ import { Client } from '@/types/client';
 import { toast } from 'sonner';
 import { mapDatabaseClientToFrontend, normalizePhoneForStorage, formatPhoneForDisplay } from '@/utils/clientMappers';
 import { showFriendlyError } from '@/utils/errorTranslator';
-
-interface Client {
-  uuid: string;
-  empresa: string;
-  responsavel: string;
-  telefones: string[];
-  cnpj?: string;
-  email?: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string;
-}
 
 interface EditClientFormData {
   empresa: string;

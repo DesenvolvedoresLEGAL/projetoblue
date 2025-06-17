@@ -126,16 +126,18 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
-    const newEntry = {
+    const newEntry: AssetHistoryEntry = {
       ...entry,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString()
+      id: Date.now(), // Use number instead of string
+      timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     setHistory(prev => [newEntry, ...prev]);
   };
 
   const getAssetHistory = (assetId: string) => {
-    return history.filter(entry => entry.assetIds.includes(assetId));
+    return history.filter(entry => entry.assetIds?.includes(assetId));
   };
 
   const getClientHistory = (clientId: string) => {
