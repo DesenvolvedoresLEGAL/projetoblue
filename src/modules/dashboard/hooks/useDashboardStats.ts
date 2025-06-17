@@ -118,15 +118,26 @@ export function useDashboardStats() {
           };
         }) || [];
 
-        // Process recent events data - MELHORADO tratamento
-        const processedRecentEvents = recentEventsResult.data?.map((event, index) => ({
-          id: event.id || index,
-          type: event.event || 'UNKNOWN',
-          description: event.details?.event_description || event.event || 'Evento sem descrição',
-          time: formatRelativeTime(event.date || new Date().toISOString()),
-          asset_id: event.details?.asset_id,
-          asset_name: event.details?.line_number || event.details?.radio || 'N/A'
-        })) || [];
+        // Process recent events data - CORRIGIDO tratamento com type safety
+        const processedRecentEvents = recentEventsResult.data?.map((event, index) => {
+          // Safe type casting for details object
+          const details = event.details && typeof event.details === 'object' && event.details !== null 
+            ? event.details as Record<string, any> 
+            : {};
+          
+          const description = details.event_description || event.event || 'Evento sem descrição';
+          const asset_id = details.asset_id;
+          const asset_name = details.line_number || details.radio || 'N/A';
+
+          return {
+            id: event.id || index,
+            type: event.event || 'UNKNOWN',
+            description,
+            time: formatRelativeTime(event.date || new Date().toISOString()),
+            asset_id,
+            asset_name
+          };
+        }) || [];
 
         // Process status summary for pie chart - CORRIGIDO agregação
         const statusCounts: { [key: string]: number } = {};

@@ -244,17 +244,11 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Lease & Subscription Cards - Mobile Responsive */}
+        {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-          <LeaseAssetsCard 
-            leaseAssetsByType={leaseAssetsByType}
-            isLoading={dashboard.onLeaseAssets.isLoading}
-          />
+          <LeaseAssetsCard />
           
-          <SubscriptionAssetsCard 
-            subscriptionAssetsByType={subscriptionAssetsByType}
-            isLoading={dashboard.onSubscriptionAssets.isLoading}
-          />
+          <SubscriptionAssetsCard />
         </div>
 
         {/* Monitoring Cards - Mobile Responsive */}
