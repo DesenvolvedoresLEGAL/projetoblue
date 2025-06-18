@@ -10,6 +10,7 @@ export interface RecentActivity {
   clientName?: string;
   timestamp: string;
   details?: any;
+  performedBy?: string; // NEW: User who performed the action
 }
 
 export function useDashboardRecentActivities() {
@@ -34,6 +35,14 @@ export function useDashboardRecentActivities() {
           let clientName: string | undefined;
 
           const details = event.details as any;
+          
+          // Determine performed by user
+          let performedBy = 'Sistema'; // Default fallback
+          if ((event as any).user_email) {
+            performedBy = (event as any).user_email;
+          } else if (details?.username && details.username !== 'system') {
+            performedBy = details.username;
+          }
           
           // Extrair nome do ativo de forma mais robusta
           if (details?.radio) {
@@ -113,8 +122,9 @@ export function useDashboardRecentActivities() {
             description,
             assetName,
             clientName,
-            timestamp: event.date, // Usar a data real do evento
-            details
+            timestamp: event.date,
+            details,
+            performedBy // NEW: Include performed by information
           };
         });
 

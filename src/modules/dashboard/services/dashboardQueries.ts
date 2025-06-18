@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 // Fetch total assets count
@@ -216,16 +215,60 @@ export async function fetchAssociationsLast30Days() {
   return result;
 }
 
-// NEW: Enhanced recent events
+// NEW: Enhanced recent events with user information
 export async function fetchEnhancedRecentEvents() {
   console.log('Executing fetchEnhancedRecentEvents query');
-  const result = await supabase
+  
+  // First get the events
+  const eventsResult = await supabase
     .from('asset_logs')
     .select('id, event, date, details, status_before_id, status_after_id')
     .in('event', ['ASSET_CRIADO', 'ASSOCIATION_CREATED', 'ASSOCIATION_REMOVED', 'STATUS_UPDATED'])
     .order('date', { ascending: false })
     .limit(10);
   
-  console.log('fetchEnhancedRecentEvents result:', result);
-  return result;
+  if (eventsResult.error) {
+    console.log('fetchEnhancedRecentEvents error:', eventsResult.error);
+    return eventsResult;
+  }
+
+  // Extract unique user IDs from event details
+  const userIds = new Set<string>();
+  eventsResult.data?.forEach(event => {
+    const details = event.details as any;
+    if (details?.user_id && details.user_id !== '00000000-0000-0000-0000-000000000000') {
+      userIds.add(details.user_id);
+    }
+  });
+
+  // Fetch user profiles if we have user IDs
+  let usersMap = new Map<string, string>();
+  if (userIds.size > 0) {
+    const usersResult = await supabase
+      .from('profiles')
+      .select('id, email')
+      .in('id', Array.from(userIds));
+    
+    if (usersResult.data) {
+      usersResult.data.forEach(user => {
+        usersMap.set(user.id, user.email);
+      });
+    }
+  }
+
+  // Add user information to events
+  const enrichedData = eventsResult.data?.map(event => ({
+    ...event,
+    user_email: (() => {
+      const details = event.details as any;
+      const userId = details?.user_id;
+      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+        return null;
+      }
+      return usersMap.get(userId) || null;
+    })()
+  }));
+
+  console.log('fetchEnhancedRecentEvents enriched result:', { ...eventsResult, data: enrichedData });
+  return { ...eventsResult, data: enrichedData };
 }

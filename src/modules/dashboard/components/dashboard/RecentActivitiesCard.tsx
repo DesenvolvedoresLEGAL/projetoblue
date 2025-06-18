@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, ExternalLink } from "lucide-react";
+import { Bell, ExternalLink, User } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { capitalize } from '@/utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +15,7 @@ interface RecentActivity {
   clientName?: string;
   timestamp: string;
   details?: any;
+  performedBy?: string; // NEW: User who performed the action
 }
 
 interface RecentActivitiesCardProps {
@@ -164,6 +164,13 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                     <p className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
                       {activity.description}
                     </p>
+                    {/* NEW: Display performed by user */}
+                    {activity.performedBy && (
+                      <div className="flex items-center gap-1 mb-2 text-xs text-gray-600">
+                        <User className="h-3 w-3" />
+                        <span>por {activity.performedBy}</span>
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-1">
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                         {getAssetTypeBadge(activity.description, activity.details) === "ATIVO" ? "ASSOCIAÇÃO" : getAssetTypeBadge(activity.description, activity.details)}
