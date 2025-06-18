@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { useSubscriptionAssets } from '@modules/dashboard/hooks/useSubscriptionAssets';
+import { toast } from '@/utils/toast';
 
 export const SubscriptionAssetsCard: React.FC = () => {
   const { data: subscriptionAssetsByType, isLoading, error } = useSubscriptionAssets();
@@ -80,8 +81,8 @@ export const SubscriptionAssetsCard: React.FC = () => {
         )}
       </CardContent>
       <CardFooter className="mt-auto">
-        <Link to="/associations-list?association_type=subscription" className="w-full">
-          <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8 md:h-9">
+        <Link to="/assets/inventory" className="w-full">
+          <Button variant="outline" size="sm" onClick={() => toast.info('Altere "Status do Ativo" para "📋 Em Assinatura"')} className="w-full text-xs md:text-sm h-8 md:h-9">
             Ver todas as assinaturas
           </Button>
         </Link>

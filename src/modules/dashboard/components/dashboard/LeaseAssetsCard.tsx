@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { useLeaseAssets } from '@modules/dashboard/hooks/useLeaseAssets';
+import { toast } from '@/utils/toast';
 
 export const LeaseAssetsCard: React.FC = () => {
   const { data: leaseAssetsByType, isLoading, error } = useLeaseAssets();
@@ -80,8 +81,8 @@ export const LeaseAssetsCard: React.FC = () => {
         )}
       </CardContent>
       <CardFooter className="mt-auto">
-        <Link to="/associations-list?association_type=lease" className="w-full">
-          <Button variant="outline" size="sm" className="w-full text-xs md:text-sm h-8 md:h-9">
+        <Link to="/assets/inventory" className="w-full">
+          <Button variant="outline" size="sm" onClick={() => toast.info('Altere "Status do Ativo" para "📍 Em Locação"')} className="w-full text-xs md:text-sm h-8 md:h-9">
             Ver todas as locações
           </Button>
         </Link>
