@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
 import { showFriendlyError } from '@/utils/errorTranslator';
+import { useAuth } from '@/context/AuthContext';
 
 interface AssetContextProps {
   assets: Asset[];
@@ -32,6 +32,7 @@ interface AssetContextProps {
 const AssetContext = createContext<AssetContextProps | undefined>(undefined);
 
 const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { hasMinimumRole, isAuthenticated } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [history, setHistory] = useState<AssetHistoryEntry[]>([]);
@@ -39,8 +40,25 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Valida se o usuário tem permissão para executar operações de assets
+   * Requer role 'suporte' ou superior para operações críticas
+   */
+  const validateAssetPermission = () => {
+    if (!isAuthenticated) {
+      throw new Error('Usuário não autenticado. Faça login para continuar.');
+    }
+    
+    if (!hasMinimumRole('suporte')) {
+      throw new Error('Permissão insuficiente. Esta operação requer nível de acesso de suporte ou superior.');
+    }
+  };
+
   const handleCreateAsset = async (assetData: any) => {
     try {
+      // Validação de permissão antes de executar a operação crítica
+      validateAssetPermission();
+      
       setLoading(true);
       setError(null);
       const newAsset = await createAsset(assetData);
@@ -59,6 +77,9 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const handleUpdateAsset = async (id: string, updates: any): Promise<Asset> => {
     try {
+      // Validação de permissão antes de executar a operação crítica
+      validateAssetPermission();
+      
       setLoading(true);
       setError(null);
       const updatedAsset = await updateAsset(id, updates);
@@ -81,6 +102,9 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const handleDeleteAsset = async (id: string): Promise<boolean> => {
     try {
+      // Validação de permissão antes de executar a operação crítica
+      validateAssetPermission();
+      
       setLoading(true);
       setError(null);
       const success = await deleteAsset(id);
