@@ -3,17 +3,22 @@ import { UserProfile, UserRole } from '@/types/auth';
 import { toUserRole } from '@/utils/roleUtils';
 
 export const profileService = {
-  async fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  async fetchUserProfile(userId: string, includeDeleted = false): Promise<UserProfile | null> {
     try {
       console.log(`Fetching profile for user: ${userId}`);
       
-      // First attempt with 'profiles' table query - FILTRAR usuários excluídos
-      const { data, error } = await supabase
+      // First attempt with 'profiles' table query
+      let query = supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
-        .is('deleted_at', null) // CORREÇÃO: Filtrar usuários com deleted_at = null
-        .maybeSingle();
+        .eq('id', userId);
+
+      // Apply soft-delete filter unless explicitly included
+      if (!includeDeleted) {
+        query = query.is('deleted_at', null);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -70,13 +75,17 @@ export const profileService = {
         } else {
           console.log('RPC ensure_user_profile executado:', rpcData);
           
-          // Tentar buscar o perfil novamente após criação - COM FILTRO
-          const { data: newProfileData } = await supabase
+          // Tentar buscar o perfil novamente após criação
+          let retryQuery = supabase
             .from('profiles')
             .select('*')
-            .eq('id', userId)
-            .is('deleted_at', null) // IMPORTANTE: Aplicar o mesmo filtro aqui
-            .maybeSingle();
+            .eq('id', userId);
+
+          if (!includeDeleted) {
+            retryQuery = retryQuery.is('deleted_at', null);
+          }
+
+          const { data: newProfileData } = await retryQuery.maybeSingle();
             
           if (newProfileData) {
             console.log('Perfil encontrado após criação via RPC');
