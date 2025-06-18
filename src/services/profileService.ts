@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types/auth';
 import { toUserRole } from '@/utils/roleUtils';
@@ -8,11 +7,12 @@ export const profileService = {
     try {
       console.log(`Fetching profile for user: ${userId}`);
       
-      // First attempt with 'profiles' table query
+      // First attempt with 'profiles' table query - FILTRAR usuários excluídos
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
+        .is('deleted_at', null) // CORREÇÃO: Filtrar usuários com deleted_at = null
         .maybeSingle();
 
       if (error) {
@@ -36,7 +36,8 @@ export const profileService = {
           is_active: data.is_active !== false, // Default to true if undefined
           is_approved: data.is_approved !== false, // Default to true if undefined
           bits_referral_code: data.bits_referral_code,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
+          deleted_at: data.deleted_at // Incluir deleted_at no retorno
         };
       }
       
@@ -69,11 +70,12 @@ export const profileService = {
         } else {
           console.log('RPC ensure_user_profile executado:', rpcData);
           
-          // Tentar buscar o perfil novamente após criação
+          // Tentar buscar o perfil novamente após criação - COM FILTRO
           const { data: newProfileData } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', userId)
+            .is('deleted_at', null) // IMPORTANTE: Aplicar o mesmo filtro aqui
             .maybeSingle();
             
           if (newProfileData) {
@@ -87,7 +89,8 @@ export const profileService = {
               is_active: newProfileData.is_active !== false,
               is_approved: newProfileData.is_approved !== false,
               bits_referral_code: newProfileData.bits_referral_code,
-              updated_at: newProfileData.updated_at
+              updated_at: newProfileData.updated_at,
+              deleted_at: newProfileData.deleted_at
             };
           }
         }
