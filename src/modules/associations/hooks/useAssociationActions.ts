@@ -28,6 +28,15 @@ export const useAssociationActions = () => {
     }
   };
 
+  // Função para verificar e garantir contexto de autenticação
+  const ensureAuthenticatedContext = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Usuário não autenticado. Faça login novamente.');
+    }
+    return session;
+  };
+
   // Função para encerrar associação individual
   const handleEndAssociation = async (associationId: number) => {
     if (isEndingAssociation) return;
@@ -35,6 +44,9 @@ export const useAssociationActions = () => {
     setIsEndingAssociation(true);
     try {
       console.log('[handleEndAssociation] Encerrando associação ID:', associationId);
+      
+      // Garantir contexto de autenticação
+      await ensureAuthenticatedContext();
       
       const { error } = await supabase
         .from('asset_client_assoc')

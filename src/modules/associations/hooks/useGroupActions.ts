@@ -17,21 +17,43 @@ export const useGroupActions = () => {
     await new Promise(resolve => setTimeout(resolve, 300));
   };
 
+  // Função para verificar e garantir contexto de autenticação
+  const ensureAuthenticatedContext = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Usuário não autenticado. Faça login novamente.');
+    }
+    return session;
+  };
+
   const softDeleteGroup = useMutation({
     mutationFn: async (group: AssociationGroup) => {
       console.log('🗑️ Soft deleting group:', group.groupKey);
+      
+      // Garantir contexto de autenticação
+      await ensureAuthenticatedContext();
+      
       const associationIds = group.associations.map(a => a.id);
       
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .in('id', associationIds);
-
-      if (error) throw error;
-      return { deletedCount: associationIds.length };
+      // Fazer updates individuais para manter contexto de auth
+      const results = [];
+      for (const id of associationIds) {
+        const { error } = await supabase
+          .from('asset_client_assoc')
+          .update({ 
+            deleted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+        
+        if (error) {
+          console.error('Erro ao deletar associação:', id, error);
+          throw error;
+        }
+        results.push(id);
+      }
+      
+      return { deletedCount: results.length };
     },
     onSuccess: async (data) => {
       toast.success(`${data.deletedCount} associações foram removidas com sucesso.`);
@@ -46,18 +68,31 @@ export const useGroupActions = () => {
   const bulkUpdateGroup = useMutation({
     mutationFn: async ({ group, updates }: { group: AssociationGroup; updates: Record<string, any> }) => {
       console.log('📝 Bulk updating group:', group.groupKey, 'with updates:', updates);
+      
+      // Garantir contexto de autenticação
+      await ensureAuthenticatedContext();
+      
       const associationIds = group.associations.map(a => a.id);
       
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .update({ 
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .in('id', associationIds);
-
-      if (error) throw error;
-      return { updatedCount: associationIds.length };
+      // Fazer updates individuais para manter contexto de auth
+      const results = [];
+      for (const id of associationIds) {
+        const { error } = await supabase
+          .from('asset_client_assoc')
+          .update({ 
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+        
+        if (error) {
+          console.error('Erro ao atualizar associação:', id, error);
+          throw error;
+        }
+        results.push(id);
+      }
+      
+      return { updatedCount: results.length };
     },
     onSuccess: async (data) => {
       toast.success(`${data.updatedCount} associações foram atualizadas com sucesso.`);
@@ -72,18 +107,31 @@ export const useGroupActions = () => {
   const changeGroupAssociationType = useMutation({
     mutationFn: async ({ group, newType }: { group: AssociationGroup; newType: number }) => {
       console.log('🔄 Changing association type for group:', group.groupKey, 'to:', newType);
+      
+      // Garantir contexto de autenticação
+      await ensureAuthenticatedContext();
+      
       const associationIds = group.associations.map(a => a.id);
       
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .update({ 
-          association_id: newType,
-          updated_at: new Date().toISOString()
-        })
-        .in('id', associationIds);
-
-      if (error) throw error;
-      return { updatedCount: associationIds.length };
+      // Fazer updates individuais para manter contexto de auth
+      const results = [];
+      for (const id of associationIds) {
+        const { error } = await supabase
+          .from('asset_client_assoc')
+          .update({ 
+            association_id: newType,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+        
+        if (error) {
+          console.error('Erro ao alterar tipo de associação:', id, error);
+          throw error;
+        }
+        results.push(id);
+      }
+      
+      return { updatedCount: results.length };
     },
     onSuccess: async (data) => {
       toast.success(`${data.updatedCount} associações tiveram o tipo alterado com sucesso.`);
@@ -98,6 +146,10 @@ export const useGroupActions = () => {
   const endGroup = useMutation({
     mutationFn: async (group: AssociationGroup) => {
       console.log('⏹️ Ending group:', group.groupKey);
+      
+      // Garantir contexto de autenticação
+      await ensureAuthenticatedContext();
+      
       const today = new Date().toISOString().split('T')[0];
       const associationsToEnd = group.associations.filter(a => 
         !a.exit_date || a.exit_date > today
@@ -109,16 +161,25 @@ export const useGroupActions = () => {
 
       const associationIds = associationsToEnd.map(a => a.id);
       
-      const { error } = await supabase
-        .from('asset_client_assoc')
-        .update({ 
-          exit_date: today,
-          updated_at: new Date().toISOString()
-        })
-        .in('id', associationIds);
-
-      if (error) throw error;
-      return { endedCount: associationIds.length };
+      // Fazer updates individuais para manter contexto de auth
+      const results = [];
+      for (const id of associationIds) {
+        const { error } = await supabase
+          .from('asset_client_assoc')
+          .update({ 
+            exit_date: today,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+        
+        if (error) {
+          console.error('Erro ao encerrar associação:', id, error);
+          throw error;
+        }
+        results.push(id);
+      }
+      
+      return { endedCount: results.length };
     },
     onMutate: () => {
       setIsProcessing(true);
