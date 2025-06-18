@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { RoleGuard } from '@/components/auth/RoleGuard';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -174,28 +175,30 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
                     <h3 className="font-medium text-[#020CBC] text-base mb-1">{client.empresa}</h3>
                     <p className="text-sm text-gray-600">{client.responsavel}</p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="p-2 h-8 w-8 hover:bg-gray-100"
-                        disabled={isUpdating || isDeleting === client.uuid}
-                      >
-                        <MoreVertical className="h-4 w-4 text-[#020CBC]" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" sideOffset={4} className="w-36 bg-white border border-gray-200 shadow-lg z-50">
-                      <DropdownMenuItem onClick={() => onEditClient(client)}>
-                        <Edit className="mr-2 h-4 w-4" /> Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleSoftDelete(client.uuid)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <RoleGuard requiredRole="suporte">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="p-2 h-8 w-8 hover:bg-gray-100"
+                          disabled={isUpdating || isDeleting === client.uuid}
+                        >
+                          <MoreVertical className="h-4 w-4 text-[#020CBC]" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" sideOffset={4} className="w-36 bg-white border border-gray-200 shadow-lg z-50">
+                        <DropdownMenuItem onClick={() => onEditClient(client)}>
+                          <Edit className="mr-2 h-4 w-4" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleSoftDelete(client.uuid)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </RoleGuard>
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -346,28 +349,30 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
                       <TableCell className="hidden lg:table-cell px-2 sm:px-4 py-3 text-gray-700 text-sm">{client.cnpj || '-'}</TableCell>
                       <TableCell className="hidden xl:table-cell px-2 sm:px-4 py-3 text-gray-700 text-sm">{formatDateForDisplay(client.created_at)}</TableCell>
                       <TableCell className="px-2 sm:px-4 py-3">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="p-1 sm:p-2 h-6 w-6 sm:h-8 sm:w-8 hover:bg-gray-100"
-                              disabled={isUpdating || isDeleting === client.uuid}
-                            >
-                              <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4 text-[#020CBC]" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" sideOffset={4} className="w-36 bg-white border border-gray-200 shadow-lg z-50">
-                            <DropdownMenuItem onClick={() => onEditClient(client)}>
-                              <Edit className="mr-2 h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleSoftDelete(client.uuid)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <RoleGuard requiredRole="suporte">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="p-1 sm:p-2 h-6 w-6 sm:h-8 sm:w-8 hover:bg-gray-100"
+                                disabled={isUpdating || isDeleting === client.uuid}
+                              >
+                                <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4 text-[#020CBC]" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" sideOffset={4} className="w-36 bg-white border border-gray-200 shadow-lg z-50">
+                              <DropdownMenuItem onClick={() => onEditClient(client)}>
+                                <Edit className="mr-2 h-4 w-4" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleSoftDelete(client.uuid)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </RoleGuard>
                       </TableCell>
                     </TableRow>
                     
