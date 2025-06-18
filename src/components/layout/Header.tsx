@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { NamedLogo } from "@/components/ui/namedlogo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RoleBadge } from "@/components/ui/role-badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,7 @@ interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function Header({ children, className, ...props }: HeaderProps) {
-  const { signOut } = useAuth();
+  const { signOut, isAuthenticated, userRole } = useAuth();
 
   return (
     <header 
@@ -51,6 +52,17 @@ export function Header({ children, className, ...props }: HeaderProps) {
             3
           </span>
         </Button>
+        
+        {/* Role Badge - only show when authenticated */}
+        {isAuthenticated && (
+          <div className="hidden sm:block">
+            <RoleBadge 
+              role={userRole} 
+              className="shadow-sm" 
+              showDescription={false}
+            />
+          </div>
+        )}
         
         {/* User dropdown */}
         <DropdownMenu>
