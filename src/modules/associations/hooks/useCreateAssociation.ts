@@ -18,34 +18,38 @@ export const useCreateAssociation = () => {
     mutationFn: async (params: CreateAssociationParams) => {
       console.log('🔧 useCreateAssociation - Creating association with params:', params);
       
-      // Atualizar status do ativo para "EM USO" (status_id = 2)
+      // Mapear tipo de associação para association_id e status_id corretos
+      let associationId: number;
+      let statusId: number;
+      
+      switch (params.associationType) {
+        case 'ASSINATURA':
+          associationId = 2;
+          statusId = 3; // Status "ASSINATURA"
+          break;
+        case 'ALUGUEL':
+        default:
+          associationId = 1;
+          statusId = 2; // Status "ALUGADO"
+          break;
+      }
+
+      console.log('📝 useCreateAssociation - Mapped association and status:', {
+        input: params.associationType,
+        mapped_association_id: associationId,
+        mapped_status_id: statusId
+      });
+
+      // Atualizar status do ativo com o status correto baseado no tipo de associação
       const { error: assetError } = await supabase
         .from('assets')
-        .update({ status_id: 2 })
+        .update({ status_id: statusId })
         .eq('uuid', params.assetId);
 
       if (assetError) {
         console.error('❌ Error updating asset status:', assetError);
         throw assetError;
       }
-
-      // Mapear tipo de associação para association_id correto
-      let associationId: number;
-      
-      switch (params.associationType) {
-        case 'ASSINATURA':
-          associationId = 2;
-          break;
-        case 'ALUGUEL':
-        default:
-          associationId = 1;
-          break;
-      }
-
-      console.log('📝 useCreateAssociation - Mapped association type:', {
-        input: params.associationType,
-        mapped_id: associationId
-      });
 
       // Criar associação
       const { data, error } = await supabase
@@ -73,6 +77,7 @@ export const useCreateAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['associations'] });
       queryClient.invalidateQueries({ queryKey: ['available-assets'] });
+      queryClient.invalidateQueries({ queryKey: ['associations-list-optimized'] });
     }
   });
 };

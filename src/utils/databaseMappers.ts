@@ -1,4 +1,3 @@
-
 import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
@@ -8,7 +7,8 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
     switch (statusName.toLowerCase()) {
       case 'disponivel':
       case 'disponível': return "DISPONÍVEL";
-      case 'alugado': return "ALUGADO";
+      case 'alugado': 
+      case 'em uso': return "ALUGADO"; // Aceita ambos os nomes
       case 'assinatura': return "ASSINATURA";
       case 'sem dados': return "SEM DADOS";
       case 'bloqueado': return "BLOQUEADO";
@@ -18,10 +18,11 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
     }
   }
   
+  // Mapeamento correto por ID
   switch (statusId) {
     case 1: return "DISPONÍVEL";
-    case 2: return "ALUGADO";
-    case 3: return "ASSINATURA";
+    case 2: return "ALUGADO"; // Correto para locação/aluguel
+    case 3: return "ASSINATURA"; // Correto para assinatura
     case 4: return "SEM DADOS";
     case 5: return "BLOQUEADO";
     case 6: return "MANUTENÇÃO";
@@ -156,12 +157,12 @@ export const mapDatabaseAssocToFrontend = (dbAssoc: any): AssetClientAssociation
   };
 };
 
-// Map frontend AssetStatus to database status ID
+// Map frontend AssetStatus to database status ID - corrigido
 export const mapAssetStatusToId = (status: AssetStatus): number => {
   switch (status) {
     case "DISPONÍVEL": return 1;
-    case "ALUGADO": return 2;
-    case "ASSINATURA": return 3;
+    case "ALUGADO": return 2; // Correto para locação/aluguel
+    case "ASSINATURA": return 3; // Correto para assinatura
     case "SEM DADOS": return 4;
     case "BLOQUEADO": return 5;
     case "MANUTENÇÃO": return 6;
