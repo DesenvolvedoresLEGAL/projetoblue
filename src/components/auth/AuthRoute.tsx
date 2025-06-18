@@ -53,7 +53,7 @@ export const AuthRoute = ({ children, requiredRole }: AuthRouteProps) => {
   // Check role permissions if required
   if (requiredRole && !hasMinimumRole(requiredRole)) {
     console.log('AuthRoute: Insufficient permissions for role:', requiredRole);
-    return <Navigate to="/" replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
   // If authenticated and has required permissions, render the protected content
