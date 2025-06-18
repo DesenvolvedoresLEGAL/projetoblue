@@ -28,7 +28,8 @@ export function useAuthSession(updateState: (state: any) => void) {
       try {
         if (!isMounted) return;
         
-        const profile = await profileService.fetchUserProfile(userId);
+          // Incluir perfis soft-deletados para validação
+          const profile = await profileService.fetchUserProfile(userId, true);
         
         if (!isMounted) return;
         

@@ -214,7 +214,8 @@ export function useAuthActions(updateState: (state: any) => void) {
       if (data.user) {
         console.log('Login bem-sucedido para:', email);
         try {
-          let userProfile = await profileService.fetchUserProfile(data.user.id);
+          // Incluir perfis soft-deletados para validação
+          let userProfile = await profileService.fetchUserProfile(data.user.id, true);
           console.log('Perfil obtido após login:', userProfile);
           
           if (!userProfile) {
@@ -240,7 +241,7 @@ export function useAuthActions(updateState: (state: any) => void) {
               };
               console.log('Usando perfil mínimo para continuar o login');
             } else {
-              const profileRetry = await profileService.fetchUserProfile(data.user.id);
+              const profileRetry = await profileService.fetchUserProfile(data.user.id, true);
               if (profileRetry) {
                 userProfile = profileRetry;
               } else {
