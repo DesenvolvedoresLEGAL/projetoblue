@@ -30,6 +30,9 @@ interface Profile {
   role: UserRole;
   created_at: string;
   last_login: string;
+  is_active: boolean;
+  is_approved: boolean;
+  deleted_at?: string;
 }
 
 const roles: UserRole[] = ['user', 'cliente', 'suporte', 'admin'];
@@ -44,8 +47,8 @@ const AdminConfig = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, role, created_at, last_login')
-        .is('deleted_at', null);
+        .select('id, email, role, created_at, last_login, is_active, is_approved, deleted_at')
+        .is('deleted_at', null); // Só mostra usuários não excluídos
       if (error) throw error;
       return data as Profile[];
     }
@@ -55,7 +58,12 @@ const AdminConfig = () => {
     mutationFn: async (user: Profile) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ email: user.email, role: user.role })
+        .update({ 
+          email: user.email, 
+          role: user.role,
+          is_active: user.is_active,
+          is_approved: user.is_approved
+        })
         .eq('id', user.id);
       if (error) throw error;
     },
@@ -68,31 +76,59 @@ const AdminConfig = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
+      // Usar a função admin_delete_user que faz soft delete e desativa o usuário
+      const { data, error } = await supabase.rpc('admin_delete_user', {
+        user_id: id
+      });
+      
+      if (error) {
+        console.error('Erro ao excluir usuário:', error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
-      toast.success('Usuário excluído');
+      toast.success('Usuário excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
-    onError: () => toast.error('Erro ao excluir usuário')
+    onError: (error: any) => {
+      console.error('Erro na mutation de exclusão:', error);
+      const errorMessage = error?.message || 'Erro ao excluir usuário';
+      toast.error(errorMessage);
+    }
   });
 
   const openEdit = (user: Profile) => {
-    setFormState({ email: user.email, role: user.role });
+    setFormState({ 
+      email: user.email, 
+      role: user.role
+    });
     setEditingUser(user);
   };
 
   const handleSave = () => {
     if (!editingUser) return;
-    updateMutation.mutate({ ...editingUser, ...formState });
+    
+    const updatedUser = { 
+      ...editingUser, 
+      ...formState,
+      // Manter valores atuais de is_active e is_approved se não foram alterados
+      is_active: editingUser.is_active,
+      is_approved: editingUser.is_approved
+    };
+    
+    updateMutation.mutate(updatedUser);
     setEditingUser(null);
   };
 
-  console.log("USERS ---> " + users);
+  const handleDeleteUser = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    
+    console.log(`Excluindo usuário: ${user.email} (ID: ${userId})`);
+    deleteMutation.mutate(userId);
+  };
 
   return (
     <div className="space-y-6">
@@ -107,6 +143,7 @@ const AdminConfig = () => {
             <TableRow>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Criado em</TableHead>
               <TableHead>Último acesso</TableHead>
               <TableHead>Ações</TableHead>
@@ -117,8 +154,24 @@ const AdminConfig = () => {
               <TableRow key={u.id}>
                 <TableCell>{u.email}</TableCell>
                 <TableCell>{getRoleLabel(u.role)}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      u.is_active 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {u.is_active ? 'Ativo' : 'Inativo'}
+                    </span>
+                    {!u.is_approved && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        Pendente
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>{formatDateForDisplay(u.created_at)}</TableCell>
-                <TableCell>{formatDateTimeForDisplay(u.last_login)}</TableCell>
+                <TableCell>{u.last_login ? formatDateTimeForDisplay(u.last_login) : 'Nunca'}</TableCell>
                 <TableCell className="space-x-2">
                   <Button size="sm" variant="outline" onClick={() => openEdit(u)} disabled={updateMutation.isPending}>
                     Editar
@@ -136,13 +189,14 @@ const AdminConfig = () => {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja excluir este usuário?
+                          Tem certeza que deseja excluir o usuário "{u.email}"? 
+                          Esta ação irá desativar a conta e impedir o acesso do usuário ao sistema.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel disabled={deleteMutation.isPending}>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => deleteMutation.mutate(u.id)}
+                          onClick={() => handleDeleteUser(u.id)}
                           disabled={deleteMutation.isPending}
                         >
                           {deleteMutation.isPending ? (

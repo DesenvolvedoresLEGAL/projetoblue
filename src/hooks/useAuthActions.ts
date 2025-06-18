@@ -257,11 +257,31 @@ export function useAuthActions(updateState: (state: any) => void) {
             }
           }
           
+          // NOVA VALIDAÇÃO: Verificar se usuário foi excluído (soft delete)
+          if (userProfile.deleted_at) {
+            console.log('Tentativa de login com perfil excluído:', userProfile);
+            await authService.signOut(); // Forçar logout
+            throw { 
+              message: 'Esta conta foi desativada. Entre em contato com o administrador para mais informações.',
+              category: AuthErrorCategory.AUTHENTICATION
+            };
+          }
+          
           if (userProfile.is_active === false) {
             console.log('Perfil inativo, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
               message: 'Sua conta está desativada. Entre em contato com o administrador para reativá-la.',
+              category: AuthErrorCategory.AUTHENTICATION
+            };
+          }
+          
+          // NOVA VALIDAÇÃO: Verificar se usuário foi aprovado
+          if (userProfile.is_approved === false) {
+            console.log('Perfil não aprovado, fazendo logout:', userProfile);
+            await authService.signOut();
+            throw { 
+              message: 'Sua conta ainda não foi aprovada. Entre em contato com o administrador.',
               category: AuthErrorCategory.AUTHENTICATION
             };
           }
@@ -282,6 +302,15 @@ export function useAuthActions(updateState: (state: any) => void) {
           
         } catch (profileError: any) {
           console.error('Erro ao verificar perfil após login:', profileError);
+          
+          // Se o erro é relacionado a conta excluída/inativa, não permitir login
+          if (profileError?.message?.includes('desativada') || 
+              profileError?.message?.includes('excluída') || 
+              profileError?.message?.includes('aprovada')) {
+            updateState({ error: profileError.message, isLoading: false });
+            toast.error(profileError.message);
+            return;
+          }
           
           if (profileError?.message?.includes('403') || profileError?.message?.includes('profile')) {
             console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');

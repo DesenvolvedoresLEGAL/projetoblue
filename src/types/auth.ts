@@ -13,6 +13,7 @@ export interface UserProfile {
   is_approved: boolean;
   bits_referral_code?: string;
   updated_at?: string;
+  deleted_at?: string; // Adicionado para soft delete
 }
 
 export interface AuthState {
