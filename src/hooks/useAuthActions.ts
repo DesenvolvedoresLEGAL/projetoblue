@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -148,12 +149,19 @@ export function useAuthActions(updateState: (state: any) => void) {
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
         
-        const { data, error } = await supabase.rpc('ensure_user_profile', {
-          user_id: userId,
-          user_email: userEmail,
-          user_role: userRole,
-          user_username: username || `user_${userId.substring(0, 8)}`
-        });
+        // Inserir diretamente na tabela profiles
+        const { data, error } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: userEmail,
+            role: userRole,
+            username: username || `user_${userId.substring(0, 8)}`,
+            is_active: true,
+            is_approved: true
+          })
+          .select()
+          .single();
         
         if (error) {
           console.error(`Tentativa ${attempt+1} falhou:`, error);
@@ -162,7 +170,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         }
         
         if (data) {
-          console.log('Perfil verificado após criação manual:', data);
+          console.log('Perfil criado manualmente:', data);
           return { success: true };
         } else {
           console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
@@ -221,18 +229,24 @@ export function useAuthActions(updateState: (state: any) => void) {
           console.log('Perfil obtido após login:', userProfile);
           
           if (!userProfile) {
-            console.warn('Perfil não encontrado, tentando criar via RPC');
+            console.warn('Perfil não encontrado, tentando criar perfil básico');
             
-            const { data: rpcData, error: rpcError } = await supabase
-              .rpc('ensure_user_profile', {
-                user_id: data.user.id,
-                user_email: data.user.email || email,
-                user_role: DEFAULT_USER_ROLE,
-                user_username: `user_${data.user.id.substring(0, 8)}`
-              });
+            // Criar perfil básico diretamente
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                email: data.user.email || email,
+                role: DEFAULT_USER_ROLE,
+                username: `user_${data.user.id.substring(0, 8)}`,
+                is_active: true,
+                is_approved: true
+              })
+              .select()
+              .single();
             
-            if (rpcError) {
-              console.error('Falha ao criar perfil via RPC:', rpcError);
+            if (profileError) {
+              console.error('Falha ao criar perfil básico:', profileError);
               userProfile = {
                 id: data.user.id,
                 email: data.user.email || email,
@@ -245,21 +259,19 @@ export function useAuthActions(updateState: (state: any) => void) {
               };
               console.log('Usando perfil mínimo para continuar o login');
             } else {
-              const profileRetry = await profileService.fetchUserProfile(data.user.id, true);
-              if (profileRetry) {
-                userProfile = profileRetry;
-              } else {
-                userProfile = {
-                  id: data.user.id,
-                  email: data.user.email || email,
-                  username: `user_${data.user.id.substring(0, 8)}`,
-                  role: DEFAULT_USER_ROLE as UserRole,
-                  created_at: data.user.created_at || new Date().toISOString(),
-                  last_login: new Date().toISOString(),
-                  is_active: true,
-                  is_approved: true
-                };
-              }
+              userProfile = {
+                id: profileData.id,
+                email: profileData.email,
+                username: profileData.username,
+                role: profileData.role as UserRole,
+                created_at: profileData.created_at,
+                last_login: new Date().toISOString(),
+                is_active: profileData.is_active,
+                is_approved: profileData.is_approved,
+                bits_referral_code: profileData.bits_referral_code,
+                updated_at: profileData.updated_at,
+                deleted_at: profileData.deleted_at
+              };
             }
           }
           

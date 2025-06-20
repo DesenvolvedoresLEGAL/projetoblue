@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile, UserRole } from '@/types/auth';
 import { toUserRole } from '@/utils/roleUtils';
@@ -35,6 +36,7 @@ export const profileService = {
         return {
           id: data.id,
           email: data.email,
+          username: data.username || `user_${data.id.substring(0, 8)}`, // Fallback para username
           role: data.role as UserRole,
           created_at: data.created_at,
           last_login: data.last_login || new Date().toISOString(),
@@ -50,7 +52,7 @@ export const profileService = {
       
       // MELHORADO: Tentar criar perfil sem depender de auth.getUser()
       try {
-        console.log(`Tentando criar perfil via ensure_user_profile RPC para usuário ${userId}`);
+        console.log(`Tentando criar perfil diretamente na tabela profiles para usuário ${userId}`);
         
         // FALLBACK: Não tentar obter userData se temos problemas de auth
         // Em vez disso, usar o email da sessão atual se disponível
@@ -62,53 +64,45 @@ export const profileService = {
           return null;
         }
         
-        // Chamar a função RPC para garantir a criação do perfil
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('ensure_user_profile', {
-            user_id: userId,
-            user_email: userEmail,
-            user_role: 'cliente'
-          });
+        // Inserir diretamente na tabela profiles
+        const { data: newProfileData, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: userEmail,
+            role: 'cliente',
+            username: `user_${userId.substring(0, 8)}`,
+            is_active: true,
+            is_approved: true
+          })
+          .select()
+          .single();
           
-        if (rpcError) {
-          console.error('Falha ao criar perfil via RPC:', rpcError);
+        if (insertError) {
+          console.error('Falha ao criar perfil diretamente:', insertError);
         } else {
-          console.log('RPC ensure_user_profile executado:', rpcData);
-          
-          // Tentar buscar o perfil novamente após criação
-          let retryQuery = supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId);
-
-          if (!includeDeleted) {
-            retryQuery = retryQuery.is('deleted_at', null);
-          }
-
-          const { data: newProfileData } = await retryQuery.maybeSingle();
-            
-          if (newProfileData) {
-            console.log('Perfil encontrado após criação via RPC');
-            return {
-              id: newProfileData.id,
-              email: newProfileData.email,
-              role: newProfileData.role as UserRole,
-              created_at: newProfileData.created_at,
-              last_login: newProfileData.last_login || new Date().toISOString(),
-              is_active: newProfileData.is_active !== false,
-              is_approved: newProfileData.is_approved !== false,
-              bits_referral_code: newProfileData.bits_referral_code,
-              updated_at: newProfileData.updated_at,
-              deleted_at: newProfileData.deleted_at
-            };
-          }
+          console.log('Perfil criado diretamente na tabela');
+          return {
+            id: newProfileData.id,
+            email: newProfileData.email,
+            username: newProfileData.username,
+            role: newProfileData.role as UserRole,
+            created_at: newProfileData.created_at,
+            last_login: newProfileData.last_login || new Date().toISOString(),
+            is_active: newProfileData.is_active !== false,
+            is_approved: newProfileData.is_approved !== false,
+            bits_referral_code: newProfileData.bits_referral_code,
+            updated_at: newProfileData.updated_at,
+            deleted_at: newProfileData.deleted_at
+          };
         }
         
-        // Fallback final: criar um perfil mínimo se não conseguiu via RPC
+        // Fallback final: criar um perfil mínimo se não conseguiu via inserção direta
         if (userEmail) {
           return {
             id: userId,
             email: userEmail,
+            username: `user_${userId.substring(0, 8)}`,
             role: 'cliente', 
             created_at: new Date().toISOString(),
             last_login: new Date().toISOString(),
