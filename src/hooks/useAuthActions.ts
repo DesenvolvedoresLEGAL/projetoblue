@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -23,7 +22,7 @@ export function useAuthActions(updateState: (state: any) => void) {
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
 
-  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE, username?: string) => {
+  const signUp = useCallback(async (email: string, password: string, username?: string) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
@@ -59,15 +58,11 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
         email, 
-        username,
-        roleType: typeof role, 
-        role 
+        username
       });
       
-      role = toUserRole(role);
-      
       try {
-        const { data, error, profileCreated } = await authService.signUp(email, password, role, username);
+        const { data, error, profileCreated } = await authService.signUp(email, password, DEFAULT_USER_ROLE, username);
 
         if (error) {
           throw error;
@@ -77,7 +72,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           if (!profileCreated) {
             console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
             
-            const profileResult = await createProfileManually(data.user.id, email, role, username);
+            const profileResult = await createProfileManually(data.user.id, email, DEFAULT_USER_ROLE, username);
             if (profileResult.success) {
               console.log('Perfil criado manualmente com sucesso após falha do trigger');
               toast.success("Conta criada com sucesso! Você já pode fazer login.");
@@ -120,7 +115,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         message: error.message || 'Erro desconhecido durante o cadastro',
         category: errorCategory,
         timestamp: new Date().toISOString(),
-        context: { email, username, roleProvided: role, stack: error.stack }
+        context: { email, username, stack: error.stack }
       };
       
       setTechnicalError(techError);

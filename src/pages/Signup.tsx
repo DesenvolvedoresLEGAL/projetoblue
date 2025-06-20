@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -48,7 +47,8 @@ const Signup = () => {
       
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email, username });
       
-      const result = await signUp(email, password, 'cliente', username);
+      // Corrigido: usando apenas 3 argumentos conforme a assinatura esperada
+      const result = await signUp(email, password, username);
       
       if (result && result.technicalError) {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
