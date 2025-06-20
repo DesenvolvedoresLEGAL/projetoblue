@@ -8,6 +8,7 @@ interface SignUpData {
   email: string;
   password: string;
   role?: UserRole;
+  username?: string;
 }
 
 interface ValidationResult {
@@ -42,7 +43,7 @@ const categorizeError = (error: any) => {
 
 export const authService = {
   // Validation logic
-  validateSignUpData({ email, password }: SignUpData): ValidationResult {
+  validateSignUpData({ email, password, username }: SignUpData): ValidationResult {
     if (!email || !email.includes('@') || !email.includes('.')) {
       return {
         isValid: false,
@@ -68,14 +69,32 @@ export const authService = {
       };
     }
     
+    // Validação do username
+    if (username) {
+      if (username.length < 3) {
+        return {
+          isValid: false,
+          error: 'Nome de usuário deve ter pelo menos 3 caracteres.',
+          category: AuthErrorCategory.INVALID_EMAIL
+        };
+      }
+      
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return {
+          isValid: false,
+          error: 'Nome de usuário deve conter apenas letras, números e underscore.',
+          category: AuthErrorCategory.INVALID_EMAIL
+        };
+      }
+    }
+    
     return { isValid: true };
   },
 
   // Sign up with retry and profile verification
-  async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) {
-    console.log('Iniciando processo de cadastro:', { email, role });
+  async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE, username?: string) {
+    console.log('Iniciando processo de cadastro:', { email, role, username });
     
-
     // Converter role para valor reconhecido
     role = toUserRole(role);
     
@@ -86,7 +105,8 @@ export const authService = {
         password,
         options: {
           data: {
-            role // This will be used by the handle_new_user trigger
+            role, // This will be used by the handle_new_user trigger
+            username: username || `user_${Date.now()}` // Incluir username nos metadados
           },
           // NOVO: Adicionar emailRedirectTo para melhorar fluxo de confirmação
           emailRedirectTo: `${window.location.origin}/login`
@@ -135,6 +155,7 @@ export const authService = {
           console.log('Perfil confirmado para usuário:', { 
             id: data.user.id,
             email: data.user.email,
+            username: profileData.username,
             role: profileData.role
           });
           profileCreated = true;
@@ -148,6 +169,7 @@ export const authService = {
       console.log('Usuário criado com sucesso:', {
         id: data.user.id,
         email: data.user.email,
+        username: username,
         role: role,
         created_at: data.user.created_at,
         profile_verified: profileCreated

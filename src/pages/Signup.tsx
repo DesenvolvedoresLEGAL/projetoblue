@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -35,6 +36,7 @@ const Signup = () => {
     try {
       const form = e.target as HTMLFormElement;
       const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+      const username = (form.elements.namedItem('username') as HTMLInputElement).value;
       const password = (form.elements.namedItem('password') as HTMLInputElement).value;
       const confirmPassword = (form.elements.namedItem('confirm-password') as HTMLInputElement).value;
       
@@ -44,9 +46,9 @@ const Signup = () => {
         return;
       }
       
-      console.log('Validações do formulário passaram, enviando dados para cadastro:', { email });
+      console.log('Validações do formulário passaram, enviando dados para cadastro:', { email, username });
       
-      const result = await signUp(email, password, 'cliente');
+      const result = await signUp(email, password, 'cliente', username);
       
       if (result && result.technicalError) {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));

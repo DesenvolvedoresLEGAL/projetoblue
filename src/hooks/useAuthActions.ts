@@ -22,7 +22,7 @@ export function useAuthActions(updateState: (state: any) => void) {
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
 
-  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE) => {
+  const signUp = useCallback(async (email: string, password: string, role: UserRole = DEFAULT_USER_ROLE, username?: string) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
@@ -36,7 +36,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       
       setTechnicalError(null);
       
-      const validation = authService.validateSignUpData({ email, password });
+      const validation = authService.validateSignUpData({ email, password, username });
       if (!validation.isValid) {
         console.error('Erro de validação:', validation.error);
         
@@ -46,7 +46,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           message: validation.error || 'Erro de validação desconhecido',
           category: validation.category || AuthErrorCategory.UNKNOWN,
           timestamp: new Date().toISOString(),
-          context: { email, validationResult: validation }
+          context: { email, username, validationResult: validation }
         };
         
         setTechnicalError(techError);
@@ -58,6 +58,7 @@ export function useAuthActions(updateState: (state: any) => void) {
 
       console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
         email, 
+        username,
         roleType: typeof role, 
         role 
       });
@@ -65,7 +66,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       role = toUserRole(role);
       
       try {
-        const { data, error, profileCreated } = await authService.signUp(email, password, role);
+        const { data, error, profileCreated } = await authService.signUp(email, password, role, username);
 
         if (error) {
           throw error;
@@ -75,7 +76,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           if (!profileCreated) {
             console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
             
-            const profileResult = await createProfileManually(data.user.id, email, role);
+            const profileResult = await createProfileManually(data.user.id, email, role, username);
             if (profileResult.success) {
               console.log('Perfil criado manualmente com sucesso após falha do trigger');
               toast.success("Conta criada com sucesso! Você já pode fazer login.");
@@ -118,7 +119,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         message: error.message || 'Erro desconhecido durante o cadastro',
         category: errorCategory,
         timestamp: new Date().toISOString(),
-        context: { email, roleProvided: role, stack: error.stack }
+        context: { email, username, roleProvided: role, stack: error.stack }
       };
       
       setTechnicalError(techError);
@@ -133,8 +134,8 @@ export function useAuthActions(updateState: (state: any) => void) {
   }, [isAuthProcessing, navigate, updateState]);
 
   // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
-  const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
-    console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
+  const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole, username?: string): Promise<{success: boolean, error?: string}> => {
+    console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole, username});
     
     const maxRetries = 3;
     let attempt = 0;
@@ -150,7 +151,8 @@ export function useAuthActions(updateState: (state: any) => void) {
         const { data, error } = await supabase.rpc('ensure_user_profile', {
           user_id: userId,
           user_email: userEmail,
-          user_role: userRole
+          user_role: userRole,
+          user_username: username || `user_${userId.substring(0, 8)}`
         });
         
         if (error) {
@@ -225,7 +227,8 @@ export function useAuthActions(updateState: (state: any) => void) {
               .rpc('ensure_user_profile', {
                 user_id: data.user.id,
                 user_email: data.user.email || email,
-                user_role: DEFAULT_USER_ROLE
+                user_role: DEFAULT_USER_ROLE,
+                user_username: `user_${data.user.id.substring(0, 8)}`
               });
             
             if (rpcError) {
@@ -233,6 +236,7 @@ export function useAuthActions(updateState: (state: any) => void) {
               userProfile = {
                 id: data.user.id,
                 email: data.user.email || email,
+                username: `user_${data.user.id.substring(0, 8)}`,
                 role: DEFAULT_USER_ROLE as UserRole,
                 created_at: data.user.created_at || new Date().toISOString(),
                 last_login: new Date().toISOString(),
@@ -248,6 +252,7 @@ export function useAuthActions(updateState: (state: any) => void) {
                 userProfile = {
                   id: data.user.id,
                   email: data.user.email || email,
+                  username: `user_${data.user.id.substring(0, 8)}`,
                   role: DEFAULT_USER_ROLE as UserRole,
                   created_at: data.user.created_at || new Date().toISOString(),
                   last_login: new Date().toISOString(),
@@ -296,7 +301,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           
           profileService.updateLastLogin(data.user.id).catch(console.error);
           
-          toast.success(`Bem-vindo(a), ${userProfile.email}!`);
+          toast.success(`Bem-vindo(a), ${userProfile.username}!`);
           
           const from = window.history.state?.usr?.from?.pathname || '/';
           navigate(from, { replace: true });
@@ -319,6 +324,7 @@ export function useAuthActions(updateState: (state: any) => void) {
             const basicProfile = {
               id: data.user.id,
               email: data.user.email || email,
+              username: `user_${data.user.id.substring(0, 8)}`,
               role: DEFAULT_USER_ROLE as UserRole,
               created_at: data.user.created_at || new Date().toISOString(),
               last_login: new Date().toISOString(),

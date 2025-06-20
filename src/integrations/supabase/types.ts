@@ -1125,6 +1125,7 @@ export type Database = {
           last_login: string | null
           role: Database["public"]["Enums"]["user_role_enum"]
           updated_at: string
+          username: string
         }
         Insert: {
           bits_referral_code?: string | null
@@ -1137,6 +1138,7 @@ export type Database = {
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
           updated_at?: string
+          username: string
         }
         Update: {
           bits_referral_code?: string | null
@@ -1149,6 +1151,7 @@ export type Database = {
           last_login?: string | null
           role?: Database["public"]["Enums"]["user_role_enum"]
           updated_at?: string
+          username?: string
         }
         Relationships: []
       }

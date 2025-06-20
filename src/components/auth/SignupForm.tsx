@@ -9,6 +9,7 @@ import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import { PasswordMatch } from './PasswordMatch';
 import { PasswordInput } from './PasswordInput';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SignupFormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -19,12 +20,55 @@ interface SignupFormProps {
 export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormProps) => {
   
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
   const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [formIsValid, setFormIsValid] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  
+  // Verificar disponibilidade do username
+  const checkUsernameAvailability = async (usernameToCheck: string) => {
+    if (!usernameToCheck || usernameToCheck.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+    
+    setCheckingUsername(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', usernameToCheck)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao verificar username:', error);
+        setUsernameAvailable(null);
+      } else {
+        setUsernameAvailable(!data);
+      }
+    } catch (err) {
+      console.error('Erro na verificação de username:', err);
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Debounce para verificação de username
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (username) {
+        checkUsernameAvailability(username);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
   
   // Verifica a força da senha e se as senhas coincidem
   useEffect(() => {
@@ -44,17 +88,20 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
   // Valida o formulário completo
   useEffect(() => {
     const isEmailValid = email && email.includes('@') && email.includes('.');
+    const isUsernameValid = username && username.length >= 3 && /^[a-zA-Z0-9_]+$/.test(username) && usernameAvailable === true;
     const isPasswordValid = password && password.length >= 6;
     const isPasswordStrengthValid = passwordStrength === 'medium' || passwordStrength === 'strong';
     const isConfirmPasswordValid = confirmPassword && password === confirmPassword;
     
     const isValid = isEmailValid && 
+                    isUsernameValid &&
                     isPasswordValid && 
                     isPasswordStrengthValid && 
                     isConfirmPasswordValid;
     
     console.log('Validade do formulário:', {
       isEmailValid,
+      isUsernameValid,
       isPasswordValid,
       isPasswordStrengthValid,
       isConfirmPasswordValid,
@@ -62,7 +109,7 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
     });
     
     setFormIsValid(isValid);
-  }, [email, password, confirmPassword, passwordStrength]);
+  }, [email, username, password, confirmPassword, passwordStrength, usernameAvailable]);
 
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +118,16 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
     // Verifica novamente todos os campos antes de enviar
     if (!email || !email.includes('@') || !email.includes('.')) {
       console.log('Email inválido no envio:', email);
+      return;
+    }
+    
+    if (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+      console.log('Username inválido no envio:', username);
+      return;
+    }
+    
+    if (usernameAvailable !== true) {
+      console.log('Username não disponível no envio');
       return;
     }
     
@@ -91,7 +148,7 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
       return;
     }
     
-    console.log('Formulário válido, enviando dados:', { email });
+    console.log('Formulário válido, enviando dados:', { email, username });
     await onSubmit(e);
   };
 
@@ -111,6 +168,46 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
         {submitAttempted && (!email || !email.includes('@') || !email.includes('.')) && (
           <p className="text-sm text-red-500 mt-1">Por favor, insira um email válido</p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="username">Nome de usuário</Label>
+        <Input 
+          id="username" 
+          type="text" 
+          value={username}
+          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ''))}
+          placeholder="usuario123"
+          required
+          className={
+            submitAttempted && (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username) || usernameAvailable === false) 
+              ? "border-red-500" 
+              : usernameAvailable === true 
+                ? "border-green-500" 
+                : ""
+          }
+        />
+        {username && username.length >= 3 && (
+          <div className="text-xs mt-1">
+            {checkingUsername ? (
+              <span className="text-gray-500">Verificando disponibilidade...</span>
+            ) : usernameAvailable === true ? (
+              <span className="text-green-600">✓ Nome de usuário disponível</span>
+            ) : usernameAvailable === false ? (
+              <span className="text-red-500">✗ Nome de usuário já em uso</span>
+            ) : null}
+          </div>
+        )}
+        {submitAttempted && (!username || username.length < 3) && (
+          <p className="text-sm text-red-500 mt-1">Nome de usuário deve ter pelo menos 3 caracteres</p>
+        )}
+        {submitAttempted && username && username.length >= 3 && !/^[a-zA-Z0-9_]+$/.test(username) && (
+          <p className="text-sm text-red-500 mt-1">Nome de usuário deve conter apenas letras, números e underscore</p>
+        )}
+        {submitAttempted && usernameAvailable === false && (
+          <p className="text-sm text-red-500 mt-1">Este nome de usuário já está em uso</p>
+        )}
+        <p className="text-xs text-gray-500">Apenas letras, números e underscore. Mínimo 3 caracteres.</p>
       </div>
       
       <div className="space-y-2">
@@ -159,7 +256,7 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
       <Button 
         type="submit" 
         className="w-full" 
-        disabled={isLoading}
+        disabled={isLoading || !formIsValid}
       >
         {isLoading ? 'Processando...' : 'Criar Conta'}
       </Button>

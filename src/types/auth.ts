@@ -6,6 +6,7 @@ export type UserRole = 'admin' | 'suporte' | 'cliente' | 'user';
 export interface UserProfile {
   id: string;
   email: string;
+  username: string; // Adicionado campo username obrigatório
   role: UserRole;
   created_at: string;
   last_login?: string;
