@@ -49,7 +49,7 @@ const Signup = () => {
       console.log('Validações do formulário passaram, enviando dados para cadastro:', { email, username });
       
       // Corrigido: usando apenas 3 argumentos conforme a assinatura esperada
-      const result = await signUp(email, password, username);
+      const result = await signUp(email, password, 'cliente');
       
       if (result && result.technicalError) {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
