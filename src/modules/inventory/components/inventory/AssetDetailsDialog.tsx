@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Wifi, Router, SimCard, User, Info, AlertTriangle } from "lucide-react";
+import { CheckCircle, Wifi, Router, User, Info, AlertTriangle, IdCard } from "lucide-react";
 
 interface AssetDetailsDialogProps {
   asset: Asset | null;
@@ -40,7 +40,7 @@ const AssetDetailsDialog = ({ asset, isOpen, onClose }: AssetDetailsDialogProps)
           <DialogTitle className="flex items-center">
             {asset.type === "CHIP" ? (
               <>
-                <SimCard className="mr-2 h-6 w-6" />
+                <IdCard className="mr-2 h-6 w-6" />
                 Chip - ICCID: {(asset as ChipAsset).iccid}
               </>
             ) : (
