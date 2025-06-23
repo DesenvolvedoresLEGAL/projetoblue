@@ -1,6 +1,13 @@
 
 import { useContext } from "react";
-import { AssetProvider, useAssets as useAssetsContext } from "./AssetContext";
+import { AssetContext } from "./AssetContext";
 
-export const useAssets = useAssetsContext;
-export { AssetProvider };
+export const useAssets = () => {
+  const context = useContext(AssetContext);
+  if (context === undefined) {
+    throw new Error("useAssets must be used within an AssetProvider");
+  }
+  return context;
+};
+
+export { AssetProvider } from "./AssetContext";

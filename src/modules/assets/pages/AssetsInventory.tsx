@@ -20,9 +20,7 @@ const AssetsInventory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
-  // Implementa debounce de 500ms para o termo de busca
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  
   const queryClient = useQueryClient();
   
   const { 
@@ -33,7 +31,7 @@ const AssetsInventory = () => {
     isError,
     isFetching
   } = useAssetsData({
-    searchTerm: debouncedSearchTerm, // Usa o termo com debounce
+    searchTerm: debouncedSearchTerm,
     filterType,
     filterStatus,
     filterManufacturer,
@@ -53,8 +51,6 @@ const AssetsInventory = () => {
   const handleSearchTermChange = useCallback((value: string) => {
     console.log('Termo de busca alterado para:', value);
     setSearchTerm(value);
-    
-    // Reset para página 1 quando o termo muda
     setCurrentPage(1);
     setShouldFetch(true);
   }, []);
@@ -75,25 +71,20 @@ const AssetsInventory = () => {
 
   const handleAssetUpdated = useCallback(() => {
     console.log('Asset atualizado, invalidando cache e recarregando dados...');
-    
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
-    
     setShouldFetch(true);
     refetch();
   }, [queryClient, refetch]);
 
   const handleAssetDeleted = useCallback(() => {
     console.log('Asset deletado, invalidando cache e recarregando dados...');
-    
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
-    
     setShouldFetch(true);
     refetch();
   }, [queryClient, refetch]);
   
-  // Mostra loading apenas no carregamento inicial, não durante debounce
   if (isLoading && !debouncedSearchTerm && filterType === 'all' && filterStatus === 'all' && filterManufacturer === 'all') {
     return <AssetsLoading />;
   }
@@ -112,7 +103,6 @@ const AssetsInventory = () => {
     );
   }
   
-  // Determina se está buscando (durante debounce ou fetching)
   const isSearching = searchTerm !== debouncedSearchTerm || isFetching;
   
   return (

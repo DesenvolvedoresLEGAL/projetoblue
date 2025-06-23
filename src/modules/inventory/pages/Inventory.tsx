@@ -1,15 +1,45 @@
-
 import { useState } from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Asset } from "@/types/asset";
 import EditAssetDialog from "@modules/inventory/components/inventory/EditAssetDialog";
-import AssetDetailsDialog from "@modules/inventory/components/inventory/AssetDetailsDialog";
 import InventoryFilters from "@modules/inventory/components/inventory/InventoryFilters";
 import AssetList from "@modules/inventory/components/inventory/AssetList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/utils/toast";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle 
+} from "@/components/ui/dialog";
+
+interface AssetDetailsDialogProps {
+  asset: Asset | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Simple inline AssetDetailsDialog to replace the removed component
+const AssetDetailsDialog = ({ asset, isOpen, onClose }: AssetDetailsDialogProps) => {
+  if (!asset) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Detalhes do Ativo</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p>Tipo: {asset.type}</p>
+          <p>Status: {asset.status}</p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Inventory = () => {
   const { assets, updateAsset, deleteAsset, statusRecords, loading } = useAssets();

@@ -1,4 +1,5 @@
-import { useAssets } from "@/context/useAssets";
+
+import { useAssets } from "@/context/AssetContext";
 import { Client, Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
 import { 
@@ -24,7 +25,6 @@ import {
   Wifi 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
 import { useState } from "react";
 
 interface ClientDetailsDialogProps {
@@ -32,6 +32,31 @@ interface ClientDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+interface AssetDetailsDialogProps {
+  asset: Asset | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Simple inline AssetDetailsDialog to replace the removed component
+const AssetDetailsDialog = ({ asset, isOpen, onClose }: AssetDetailsDialogProps) => {
+  if (!asset) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Detalhes do Ativo</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p>Tipo: {asset.type}</p>
+          <p>Status: {asset.status}</p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function ClientDetailsDialog({
   client,
