@@ -20,7 +20,9 @@ import {
   Info,
   Loader2,
   FileUser,
-  UserPlus
+  UserPlus,
+  Calendar,
+  Database
 } from "lucide-react";
 import { useDashboardAssets } from '@modules/dashboard/hooks/useDashboardAssets';
 import { StandardPageHeader } from '@/components/ui/standard-page-header';
@@ -282,6 +284,53 @@ const AssetsManagement = () => {
                   >
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Ver Ranking
+                  </PermissionButton>
+                </div>
+              </CardContent>
+            </Card>
+          </RoleGuard>
+
+          {/* Card Gestão de Dias Alugados - NOVO */}
+          <RoleGuard requiredRole="suporte">
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-orange-500/40 cursor-pointer flex flex-col"
+              onClick={() => navigate('/assets/rented-days-management')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
+                    <Database className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                        Gestão de Dias Alugados
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Recalcule e monitore dados de rented_days</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <CardDescription className="legal-text text-sm">
+                  Atualize dados históricos de locação dos ativos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Recalcule os <code>rented_days</code> preservando valores históricos e adicionando apenas períodos finalizados do sistema Blue.
+                </p>
+                <div>
+                  <PermissionButton
+                    requiredRole="suporte"
+                    variant="outline"
+                    className="w-full h-10 sm:h-9 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white font-bold transition-all duration-200 text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/rented-days-management');
+                    }}
+                    tooltip="Você precisa ser suporte ou superior para gerenciar dados de locação"
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    Gerenciar Dados
                   </PermissionButton>
                 </div>
               </CardContent>

@@ -1284,9 +1284,27 @@ export type Database = {
           count: number
         }[]
       }
+      update_all_rented_days: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      update_asset_rented_days: {
+        Args: { asset_uuid: string }
+        Returns: Json
+      }
       user_has_profile: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      validate_rented_days_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          asset_id: string
+          current_rented_days: number
+          calculated_days: number
+          is_consistent: boolean
+          message: string
+        }[]
       }
     }
     Enums: {
