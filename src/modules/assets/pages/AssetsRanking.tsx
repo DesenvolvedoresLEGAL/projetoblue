@@ -97,7 +97,7 @@ const AssetsRanking: React.FC = () => {
       <StandardPageHeader
         icon={Trophy}
         title="Ranking de Locação"
-        description={`${assets.length} equipamentos ordenados por dias locados`}
+        description={`Equipamentos ordenados por dias locados`}
       />
 
       {/* Métricas */}
