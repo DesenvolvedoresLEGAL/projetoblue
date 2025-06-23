@@ -164,7 +164,7 @@ const Home: React.FC = () => {
             description="Cartões SIM para conectividade móvel"
             data={dashboard.assetsStats.data.chips}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory?solution=11"
+            actionLink="/assets/inventory?solution=CHIP"
             actionText="Gerenciar Chips"
           />
 
@@ -173,7 +173,7 @@ const Home: React.FC = () => {
             description="Roteadores 5G de alta velocidade"
             data={dashboard.assetsStats.data.speedys}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory?solution=1"
+            actionLink="/assets/inventory?solution=SPEEDY+5G"
             actionText="Gerenciar Speedys"
           />
 
@@ -182,7 +182,7 @@ const Home: React.FC = () => {
             description="Dispositivos e infraestrutura de rede"
             data={dashboard.assetsStats.data.equipment}
             isLoading={dashboard.assetsStats.isLoading}
-            actionLink="/assets/inventory?exclude_solutions=1,11"
+            actionLink="/assets/inventory?exclude_solutions=CHIP,SPEEDY+5G"
             actionText="Gerenciar Equipamentos"
           />
         </div>
