@@ -19,6 +19,7 @@ import RegisterAsset from "@modules/assets/pages/RegisterAsset";
 import AssetsDashboard from "@modules/assets/pages/AssetsDashboard";
 import AssetsInventory from "@modules/assets/pages/AssetsInventory";
 import AssetsManagement from "@modules/assets/pages/AssetsManagement";
+import AssetsRanking from "@modules/assets/pages/AssetsRanking";
 import AssetAssociation from "@modules/associations/pages/AssetAssociation";
 import AssociationsList from "@modules/associations/pages/AssociationsList";
 import Clients from "@modules/clients/pages/Clients";
@@ -137,6 +138,14 @@ const App = () => (
                         element={
                           <AuthRoute requiredRole="suporte">
                             <AssetsInventory />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="ranking"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <AssetsRanking />
                           </AuthRoute>
                         }
                       />
