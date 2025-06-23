@@ -1,7 +1,7 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useURLFilters } from '@/hooks/useURLFilters';
 import { useAssetsData } from '@modules/assets/hooks/useAssetsData';
 import AssetsHeader from '@modules/assets/components/assets/AssetsHeader';
 import AssetsSearchForm from '@modules/assets/components/assets/AssetsSearchForm';
@@ -23,6 +23,16 @@ const AssetsInventory = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const queryClient = useQueryClient();
   
+  // Hook para gerenciar filtros via URL
+  const { updateURLParams, excludeSolutions } = useURLFilters({
+    setFilterType,
+    setFilterStatus,
+    setFilterManufacturer,
+    filterType,
+    filterStatus,
+    filterManufacturer
+  });
+  
   const { 
     data: assetsData,
     isLoading, 
@@ -37,7 +47,8 @@ const AssetsInventory = () => {
     filterManufacturer,
     currentPage,
     pageSize: ASSETS_PER_PAGE,
-    enabled: shouldFetch
+    enabled: shouldFetch,
+    excludeSolutions // Aplicar exclusão de soluções
   });
   
   const handleSearch = useCallback((e: React.FormEvent) => {
@@ -60,6 +71,7 @@ const AssetsInventory = () => {
     setCurrentPage(1);
     setShouldFetch(true);
     
+    // Atualizar estado local
     if (type === 'type') {
       setFilterType(value);
     } else if (type === 'status') {
@@ -67,7 +79,12 @@ const AssetsInventory = () => {
     } else if (type === 'manufacturer') {
       setFilterManufacturer(value);
     }
-  }, []);
+
+    // Atualizar URL
+    updateURLParams({
+      [type]: value
+    });
+  }, [updateURLParams]);
 
   const handleAssetUpdated = useCallback(() => {
     console.log('Asset atualizado, invalidando cache e recarregando dados...');

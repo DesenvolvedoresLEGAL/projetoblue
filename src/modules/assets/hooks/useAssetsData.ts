@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -57,6 +56,7 @@ export interface UseAssetsDataParams {
   currentPage?: number;
   pageSize?: number;
   enabled?: boolean;
+  excludeSolutions?: string[]; // Nova propriedade para exclusão de soluções
 }
 
 export interface AssetsDataResponse {
@@ -115,10 +115,11 @@ export const useAssetsData = ({
   filterManufacturer = 'all',
   currentPage = 1,
   pageSize = 10,
-  enabled = true
+  enabled = true,
+  excludeSolutions = [] // Novo parâmetro
 }: UseAssetsDataParams = {}) => {
   return useQuery({
-    queryKey: ['assets', 'inventory', filterType, filterStatus, filterManufacturer, searchTerm, currentPage],
+    queryKey: ['assets', 'inventory', filterType, filterStatus, filterManufacturer, searchTerm, currentPage, excludeSolutions],
     queryFn: async (): Promise<AssetsDataResponse> => {
       try {
         console.log('Iniciando busca de assets com termo:', searchTerm);
@@ -154,6 +155,15 @@ export const useAssetsData = ({
           `)
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
+
+        // Apply exclude solutions filter
+        if (excludeSolutions.length > 0) {
+          console.log('Aplicando exclusão de soluções:', excludeSolutions);
+          const numericExclusions = excludeSolutions.map(id => parseInt(id)).filter(id => !isNaN(id));
+          if (numericExclusions.length > 0) {
+            query = query.not('solution_id', 'in', `(${numericExclusions.join(',')})`);
+          }
+        }
 
         // Apply filters
         if (filterType !== 'all') {
