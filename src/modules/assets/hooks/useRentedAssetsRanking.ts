@@ -51,7 +51,7 @@ export const useRentedAssetsRanking = () => {
             status:asset_status(id, status),
             solucao:asset_solutions(id, solution)
           `)
-          .in('solution_id', [1, 11]) // Speedys 5G (1) e CHIPs (11)
+          .not('solution_id', 'eq', '11') // retirando chips da lista
           .is('deleted_at', null)
           .order('rented_days', { ascending: false })
           .order('created_at', { ascending: false });
