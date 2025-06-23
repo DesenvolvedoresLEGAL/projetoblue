@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
@@ -29,7 +30,7 @@ interface AssetContextProps {
   extendSubscription: (assetId: string, newEndDate: string) => void;
 }
 
-const AssetContext = createContext<AssetContextProps | undefined>(undefined);
+export const AssetContext = createContext<AssetContextProps | undefined>(undefined);
 
 const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { hasMinimumRole, isAuthenticated } = useAuth();

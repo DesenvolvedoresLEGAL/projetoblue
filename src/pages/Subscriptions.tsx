@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import { Asset, Client, SubscriptionInfo } from "@/types/asset";
 import {
   Card,

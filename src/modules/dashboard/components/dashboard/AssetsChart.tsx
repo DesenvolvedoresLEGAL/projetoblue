@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import { cn } from "@/lib/utils";
 import { Clock, Package, Activity } from "lucide-react";
 

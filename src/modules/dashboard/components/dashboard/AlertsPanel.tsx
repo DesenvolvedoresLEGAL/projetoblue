@@ -1,17 +1,14 @@
-
 import React from "react";
-import { useAssets } from "@/context/useAssets";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, Wifi, Clock, Users } from "lucide-react";
+import { useAssets } from "@/context/AssetContext";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { isSameStatus } from "@/utils/assetUtils";
+import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 
 export function AlertsPanel() {
   const { assets } = useAssets();
   
   // Calculate alerts
-  const noDataChips = assets.filter(a => a.type === 'CHIP' && isSameStatus(a.status, 'SEM DADOS')).length;
+  const noDataChips = assets.filter(a => a.type === 'CHIP' && a.status === 'SEM DADOS').length;
   const unassignedAssets = assets.filter(a => !a.clientId).length;
   
   // Calculate subscriptions that expire in the next 7 days
@@ -32,13 +29,13 @@ export function AlertsPanel() {
 
   const alerts = [
     {
-      icon: <Wifi className="h-5 w-5 text-red-500" />,
+      icon: <CheckCircle2 className="h-5 w-5 text-red-500" />,
       title: "Chips Without Data",
       count: noDataChips,
       path: "/inventory/assets?status=SEM%20DADOS&type=CHIP"
     },
     {
-      icon: <Users className="h-5 w-5 text-amber-500" />,
+      icon: <CheckCircle2 className="h-5 w-5 text-amber-500" />,
       title: "Unassigned Assets",
       count: unassignedAssets,
       path: "/inventory/assets?unassigned=true"
@@ -50,7 +47,7 @@ export function AlertsPanel() {
       path: "/inventory/subscriptions?expiring=true"
     },
     {
-      icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+      icon: <AlertTriangle className="h-5 w-5 text-red-500" />,
       title: "Expired Subscriptions",
       count: expiredSubscriptions,
       path: "/inventory/subscriptions?expired=true"
@@ -64,9 +61,9 @@ export function AlertsPanel() {
       </CardHeader>
       <CardContent className="space-y-4">
         {alerts.map((alert, index) => (
-          <Link 
+          <a 
             key={index} 
-            to={alert.path}
+            href={alert.path}
             className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -76,12 +73,12 @@ export function AlertsPanel() {
             <Badge variant={alert.count > 0 ? "destructive" : "outline"}>
               {alert.count}
             </Badge>
-          </Link>
+          </a>
         ))}
         
         {alerts.every(a => a.count === 0) && (
           <div className="text-center py-6 text-muted-foreground">
-            <AlertCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+            <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-green-500" />
             <p>No active alerts</p>
           </div>
         )}

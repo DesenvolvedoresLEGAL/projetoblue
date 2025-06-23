@@ -1,6 +1,5 @@
-
 import React from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import {
   Card,
   CardContent,
@@ -17,6 +16,18 @@ import {
   Clock,
 } from "lucide-react";
 import { AssetType } from "@/types/asset"; // Import AssetType
+import {
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 /** Configuração visual de cada status */
 const STATUS_CONFIG: Record<
