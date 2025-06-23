@@ -21,7 +21,7 @@ export const RankingMetrics: React.FC<RankingMetricsProps> = ({ assets }) => {
       title: "Total de Equipamentos",
       value: totalAssets,
       icon: Trophy,
-      description: "Speedys 5G e CHIPs no ranking"
+      description: "Speedys 5G e equipamentos no ranking"
     },
     {
       title: "Alto Rendimento",
