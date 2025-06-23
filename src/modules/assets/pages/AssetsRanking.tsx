@@ -124,16 +124,7 @@ const AssetsRanking: React.FC = () => {
         </div>
       ) : (
         // Layout desktop - Tabela
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">
-              Ranking Completo
-            </h2>
-            <div className="text-sm text-muted-foreground">
-              {assets.filter(a => a.rented_days >= 30).length} equipamentos com alto rendimento (≥30 dias)
-            </div>
-          </div>
-          
+        <div className="space-y-4">          
           <RankingTable assets={assets} />
         </div>
       )}
