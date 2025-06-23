@@ -10,11 +10,13 @@ interface RankingMetricsProps {
 
 export const RankingMetrics: React.FC<RankingMetricsProps> = ({ assets }) => {
   const totalAssets = assets.length;
+  const lastAssetsArrayIndex = assets.length -1;
   const highRentedAssets = assets.filter(asset => asset.rented_days >= 30).length;
-  const averageRentedDays = totalAssets > 0 
-    ? Math.round(assets.reduce((sum, asset) => sum + asset.rented_days, 0) / totalAssets)
-    : 0;
+  const lessRentedAsset: RankedAsset = assets.sort(a =>  a.rented_days)[lastAssetsArrayIndex] || null;
+  const moreRentedAsset: RankedAsset = assets.sort(a =>  a.rented_days)[0] || null;
   const topRentedDays = assets.length > 0 ? assets[0]?.rented_days || 0 : 0;
+
+  console.log(`[DEBUG] ASSET MENOS ALUGADO -->>${lessRentedAsset}`);
 
   const metrics = [
     {
@@ -27,20 +29,20 @@ export const RankingMetrics: React.FC<RankingMetricsProps> = ({ assets }) => {
       title: "Alto Rendimento",
       value: highRentedAssets,
       icon: TrendingUp,
-      description: "Equipamentos com ≥30 dias locados",
+      description: "Equipamentos com ≥ 30 dias locados",
       highlight: highRentedAssets > 0
     },
     {
-      title: "Média de Dias",
-      value: averageRentedDays,
+      title: "Ativo menos alugado",
+      value: lessRentedAsset?.radio,
       icon: Clock,
-      description: "Média geral de locação"
+      description: `Em locação durante ${lessRentedAsset?.rented_days} dias` 
     },
     {
       title: "Líder do Ranking",
-      value: topRentedDays,
+      value: moreRentedAsset?.radio,
       icon: Target,
-      description: "Maior quantidade de dias locados",
+      description: `Em locação durante ${moreRentedAsset?.rented_days} dias` ,
       highlight: topRentedDays >= 30
     }
   ];
