@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
@@ -40,150 +40,137 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Valida se o usuário tem permissão para executar operações de assets
-   * Requer role 'suporte' ou superior para operações críticas
-   */
-  const validateAssetPermission = () => {
-    if (!isAuthenticated) {
-      throw new Error('Usuário não autenticado. Faça login para continuar.');
-    }
-    
-    if (!hasMinimumRole('suporte')) {
-      throw new Error('Permissão insuficiente. Esta operação requer nível de acesso de suporte ou superior.');
-    }
-  };
-
-  const handleCreateAsset = async (assetData: any) => {
-    try {
-      // Validação de permissão antes de executar a operação crítica
-      validateAssetPermission();
-      
-      setLoading(true);
-      setError(null);
-      const newAsset = await createAsset(assetData);
-      if (newAsset) {
-        setAssets(prevAssets => [...prevAssets, newAsset]);
+  // Memoized validation function to prevent re-renders
+  const validateAssetPermission = useMemo(() => {
+    return () => {
+      if (!isAuthenticated) {
+        throw new Error('Usuário não autenticado. Faça login para continuar.');
       }
-    } catch (error) {
-      console.error('Erro ao criar asset:', error);
-      const friendlyMessage = showFriendlyError(error, 'create');
-      setError(friendlyMessage);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateAsset = async (id: string, updates: any): Promise<Asset> => {
-    try {
-      // Validação de permissão antes de executar a operação crítica
-      validateAssetPermission();
       
-      setLoading(true);
-      setError(null);
-      const updatedAsset = await updateAsset(id, updates);
-      if (updatedAsset) {
-        setAssets(prevAssets => 
-          prevAssets.map(asset => asset.uuid === id ? updatedAsset : asset)
-        );
-        return updatedAsset;
+      if (!hasMinimumRole('suporte')) {
+        throw new Error('Permissão insuficiente. Esta operação requer nível de acesso de suporte ou superior.');
       }
-      throw new Error('Falha ao atualizar o ativo');
-    } catch (error) {
-      console.error('Erro ao atualizar asset:', error);
-      const friendlyMessage = showFriendlyError(error, 'update');
-      setError(friendlyMessage);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteAsset = async (id: string): Promise<boolean> => {
-    try {
-      // Validação de permissão antes de executar a operação crítica
-      validateAssetPermission();
-      
-      setLoading(true);
-      setError(null);
-      const success = await deleteAsset(id);
-      if (success) {
-        setAssets(prevAssets => prevAssets.filter(asset => asset.uuid !== id));
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Erro ao deletar asset:', error);
-      const friendlyMessage = showFriendlyError(error, 'delete');
-      setError(friendlyMessage);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getAssetById = (id: string) => {
-    return assets.find(asset => asset.uuid === id);
-  };
-
-  const getAssetsByStatus = (status: string) => {
-    return assets.filter(asset => asset.status === status);
-  };
-
-  const getAssetsByType = (type: string) => {
-    return assets.filter(asset => asset.type === type);
-  };
-
-  const getClientById = (id: string) => {
-    return clients.find(client => client.uuid === id);
-  };
-
-  const associateAssetToClient = async (assetId: string, clientId: string) => {
-    // TODO: Implement asset-client association logic
-    console.log('Associating asset', assetId, 'to client', clientId);
-  };
-
-  const removeAssetFromClient = async (assetId: string, clientId: string) => {
-    // TODO: Implement asset-client disassociation logic
-    console.log('Removing asset', assetId, 'from client', clientId);
-  };
-
-  const addHistoryEntry = (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
-    const newEntry: AssetHistoryEntry = {
-      ...entry,
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
     };
-    setHistory(prev => [newEntry, ...prev]);
-  };
+  }, [isAuthenticated, hasMinimumRole]);
 
-  const getAssetHistory = (assetId: string) => {
-    return history.filter(entry => entry.assetIds?.includes(assetId));
-  };
+  // Optimized asset operations with better error handling
+  const handleCreateAsset = useMemo(() => {
+    return async (assetData: any) => {
+      try {
+        validateAssetPermission();
+        setLoading(true);
+        setError(null);
+        
+        const newAsset = await createAsset(assetData);
+        if (newAsset) {
+          setAssets(prevAssets => {
+            // Prevent duplicates
+            const filtered = prevAssets.filter(a => a.uuid !== newAsset.uuid);
+            return [...filtered, newAsset];
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao criar asset:', error);
+        const friendlyMessage = showFriendlyError(error, 'create');
+        setError(friendlyMessage);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+  }, [validateAssetPermission]);
 
-  const getClientHistory = (clientId: string) => {
-    return history.filter(entry => entry.clientId === clientId);
-  };
+  const handleUpdateAsset = useMemo(() => {
+    return async (id: string, updates: any): Promise<Asset> => {
+      try {
+        validateAssetPermission();
+        setLoading(true);
+        setError(null);
+        
+        const updatedAsset = await updateAsset(id, updates);
+        if (updatedAsset) {
+          setAssets(prevAssets => 
+            prevAssets.map(asset => asset.uuid === id ? updatedAsset : asset)
+          );
+          return updatedAsset;
+        }
+        throw new Error('Falha ao atualizar o ativo');
+      } catch (error) {
+        console.error('Erro ao atualizar asset:', error);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        setError(friendlyMessage);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+  }, [validateAssetPermission]);
 
-  const getExpiredSubscriptions = () => {
-    // TODO: Implement logic to get expired subscriptions
-    return [];
-  };
+  const handleDeleteAsset = useMemo(() => {
+    return async (id: string): Promise<boolean> => {
+      try {
+        validateAssetPermission();
+        setLoading(true);
+        setError(null);
+        
+        const success = await deleteAsset(id);
+        if (success) {
+          setAssets(prevAssets => prevAssets.filter(asset => asset.uuid !== id));
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Erro ao deletar asset:', error);
+        const friendlyMessage = showFriendlyError(error, 'delete');
+        setError(friendlyMessage);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+  }, [validateAssetPermission]);
 
-  const returnAssetsToStock = (assetIds: string[]) => {
-    // TODO: Implement logic to return assets to stock
-    console.log('Returning assets to stock:', assetIds);
-  };
+  // Memoized helper functions
+  const getAssetById = useMemo(() => {
+    return (id: string) => assets.find(asset => asset.uuid === id);
+  }, [assets]);
 
-  const extendSubscription = (assetId: string, newEndDate: string) => {
-    // TODO: Implement logic to extend subscription
-    console.log('Extending subscription for asset', assetId, 'to', newEndDate);
-  };
+  const getAssetsByStatus = useMemo(() => {
+    return (status: string) => assets.filter(asset => asset.status === status);
+  }, [assets]);
 
-  const value: AssetContextProps = {
+  const getAssetsByType = useMemo(() => {
+    return (type: string) => assets.filter(asset => asset.type === type);
+  }, [assets]);
+
+  const getClientById = useMemo(() => {
+    return (id: string) => clients.find(client => client.uuid === id);
+  }, [clients]);
+
+  // Optimized history operations
+  const addHistoryEntry = useMemo(() => {
+    return (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
+      const newEntry: AssetHistoryEntry = {
+        ...entry,
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setHistory(prev => [newEntry, ...prev.slice(0, 99)]); // Keep only last 100 entries
+    };
+  }, []);
+
+  const getAssetHistory = useMemo(() => {
+    return (assetId: string) => history.filter(entry => entry.assetIds?.includes(assetId));
+  }, [history]);
+
+  const getClientHistory = useMemo(() => {
+    return (clientId: string) => history.filter(entry => entry.clientId === clientId);
+  }, [history]);
+
+  // Memoized context value to prevent unnecessary re-renders
+  const value: AssetContextProps = useMemo(() => ({
     assets,
     clients,
     history,
@@ -197,15 +184,40 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     getAssetsByStatus,
     getAssetsByType,
     getClientById,
-    associateAssetToClient,
-    removeAssetFromClient,
+    associateAssetToClient: async (assetId: string, clientId: string) => {
+      console.log('Associating asset', assetId, 'to client', clientId);
+    },
+    removeAssetFromClient: async (assetId: string, clientId: string) => {
+      console.log('Removing asset', assetId, 'from client', clientId);
+    },
     addHistoryEntry,
     getAssetHistory,
     getClientHistory,
-    getExpiredSubscriptions,
-    returnAssetsToStock,
-    extendSubscription,
-  };
+    getExpiredSubscriptions: () => [],
+    returnAssetsToStock: (assetIds: string[]) => {
+      console.log('Returning assets to stock:', assetIds);
+    },
+    extendSubscription: (assetId: string, newEndDate: string) => {
+      console.log('Extending subscription for asset', assetId, 'to', newEndDate);
+    },
+  }), [
+    assets,
+    clients,
+    history,
+    statusRecords,
+    loading,
+    error,
+    handleCreateAsset,
+    handleUpdateAsset,
+    handleDeleteAsset,
+    getAssetById,
+    getAssetsByStatus,
+    getAssetsByType,
+    getClientById,
+    addHistoryEntry,
+    getAssetHistory,
+    getClientHistory,
+  ]);
 
   return (
     <AssetContext.Provider value={value}>

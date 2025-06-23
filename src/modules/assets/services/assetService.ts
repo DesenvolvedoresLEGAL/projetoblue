@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { optimizedAssetService } from './optimizedAssetService';
 
 export const assetService = {
   listProblemAssets: async () => {
@@ -22,5 +23,20 @@ export const assetService = {
     
     if (error) throw error;
     return data || [];
-  }
+  },
+
+  statusByType: async () => {
+    const { data, error } = await supabase
+      .rpc('status_by_asset_type');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Delegate to optimized service for new methods
+  getAssetsByMultipleStatus: optimizedAssetService.getAssetsByMultipleStatus.bind(optimizedAssetService),
+  getStatusSummary: optimizedAssetService.getStatusSummary.bind(optimizedAssetService),
+  getRecentAssetsOptimized: optimizedAssetService.getRecentAssetsOptimized.bind(optimizedAssetService),
+  clearCache: optimizedAssetService.clearCache.bind(optimizedAssetService),
+  clearCacheByPattern: optimizedAssetService.clearCacheByPattern.bind(optimizedAssetService),
 };
