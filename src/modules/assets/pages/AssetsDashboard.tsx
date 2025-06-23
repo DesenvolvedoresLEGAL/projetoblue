@@ -1,14 +1,13 @@
-
-import React, { useEffect, useState } from 'react';
+import React from "react";
+import { useAssets } from "@/context/AssetContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useAssets } from "@/context/AssetContext";
 import { Asset } from '@/types/asset';
 import { AlertCircle, Clock, Users, Wifi } from 'lucide-react';
 import ProblemAssetsCard from '@modules/dashboard/components/dashboard/ProblemAssetsCard';
 import AssetsStatusCard from '@modules/dashboard/components/dashboard/AssetsStatusCard';
 
-const AssetsDashboard = () => {
+export default function AssetsDashboard() {
   const { assets, loading } = useAssets();
   const [stats, setStats] = useState({
     inUse: 0,

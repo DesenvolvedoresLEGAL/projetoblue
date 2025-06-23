@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useAssets } from "@/context/AssetContext";
 import {
   Card,
   CardContent,
@@ -10,11 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useAssets } from "@/context/AssetContext";
 import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { toast } from "sonner";
 
-const Association = () => {
+export default function Association() {
   const { assets, clients, associateAssetToClient, removeAssetFromClient, addHistoryEntry } = useAssets();
   const [assetId, setAssetId] = useState<string>('');
   const [clientId, setClientId] = useState<string>('');
@@ -217,5 +216,3 @@ const Association = () => {
     </div>
   );
 };
-
-export default Association;

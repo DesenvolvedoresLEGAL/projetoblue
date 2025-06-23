@@ -1,7 +1,6 @@
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useAssets } from '@/context/AssetContext';
 import { ChipAsset } from '@/types/asset';
-import { useAssets } from './AssetContext';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
 
 // Definição do contexto
@@ -17,7 +16,7 @@ export interface DataUsageContextType {
 
 export const DataUsageContext = createContext<DataUsageContextType | undefined>(undefined);
 
-export const DataUsageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DataUsageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { assets } = useAssets();
   const [dataUsage, setDataUsage] = useState<Record<string, { download: number; upload: number }>>({});
 

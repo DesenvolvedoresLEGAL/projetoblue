@@ -31,7 +31,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-export default function WifiAnalyzer() {
+const WifiAnalyzer = () => {
   const { assets, clients, getClientById, updateAsset } = useAssets();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -340,4 +340,6 @@ export default function WifiAnalyzer() {
       </Tabs>
     </div>
   );
-}
+};
+
+export default WifiAnalyzer;

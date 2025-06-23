@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAssets } from "@/context/AssetContext";
 import { Asset, Client, SubscriptionInfo } from "@/types/asset";
@@ -43,7 +42,7 @@ import {
 import { format, addMonths, addYears, formatDistanceToNow, isAfter, isBefore, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export default function Subscriptions() {
+const Subscriptions = () => {
   const { 
     assets, 
     clients, 
@@ -423,4 +422,6 @@ export default function Subscriptions() {
       </Dialog>
     </div>
   );
-}
+};
+
+export default Subscriptions;
