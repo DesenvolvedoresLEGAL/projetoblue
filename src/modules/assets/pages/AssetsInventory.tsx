@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -92,6 +93,7 @@ const AssetsInventory = () => {
     refetch();
   }, [queryClient, refetch]);
   
+  // Mostra loading apenas no carregamento inicial, não durante debounce
   if (isLoading && !debouncedSearchTerm && filterType === 'all' && filterStatus === 'all' && filterManufacturer === 'all') {
     return <AssetsLoading />;
   }

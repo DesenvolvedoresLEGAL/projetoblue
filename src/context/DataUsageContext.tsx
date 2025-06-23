@@ -1,6 +1,7 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { ChipAsset } from '@/types/asset';
-import { useAssets } from './AssetContext';
+import { useAssets } from './useAssets';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
 
 // Definição do contexto

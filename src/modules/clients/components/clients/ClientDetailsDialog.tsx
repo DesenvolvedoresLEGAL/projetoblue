@@ -24,7 +24,7 @@ import {
   Wifi 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AssetDetailsDialog from "@modules/assets/components/assets/AssetDetailsDialog";
+import AssetDetailsDialog from "@/components/inventory/AssetDetailsDialog";
 import { useState } from "react";
 
 interface ClientDetailsDialogProps {
