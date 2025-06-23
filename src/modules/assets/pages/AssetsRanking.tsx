@@ -84,7 +84,7 @@ const AssetsRanking: React.FC = () => {
               Nenhum equipamento encontrado
             </h2>
             <p className="text-sm text-muted-foreground">
-              Não há Speedys 5G ou CHIPs cadastrados no sistema.
+              Não há Speedys 5G ou equipamentos cadastrados no sistema.
             </p>
           </div>
         </div>
