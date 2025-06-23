@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAssets } from "@/context/useAssets";
+import { useAssets } from "@/context/AssetContext";
 import { Asset } from "@/types/asset";
 import { 
   Dialog,

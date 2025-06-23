@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAssets } from "@/context/AssetContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -170,7 +170,6 @@ export default function AssetsDashboard() {
   );
 };
 
-// Missing BarChart3 icon component
 const BarChart3 = ({ className }: { className?: string }) => {
   return (
     <svg
@@ -195,5 +194,3 @@ const BarChart3 = ({ className }: { className?: string }) => {
     </svg>
   );
 };
-
-export default AssetsDashboard;

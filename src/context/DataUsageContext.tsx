@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAssets } from '@/context/AssetContext';
 import { ChipAsset } from '@/types/asset';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
