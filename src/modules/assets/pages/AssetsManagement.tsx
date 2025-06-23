@@ -241,6 +241,53 @@ const AssetsManagement = () => {
               </Card>
             </RoleGuard>
 
+          {/* Card Ranking de Locação - Requer suporte ou superior */}
+          <RoleGuard requiredRole="suporte">
+            <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
+              onClick={() => navigate('/assets/ranking')}>
+              <CardHeader className="pb-3 sm:pb-4">
+                <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                  <div className="p-1.5 sm:p-2 bg-legal-secondary/10 rounded-lg group-hover:bg-legal-secondary/20 transition-colors">
+                    <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-legal-secondary" />
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <CardTitle className="legal-subtitle text-lg sm:text-xl cursor-help text-left">
+                        Ranking de Locação
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Veja quais ativos possuem maior tempo de locação.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <CardDescription className="legal-text text-sm">
+                  Descubra os equipamentos e speedys mais alugados da plataforma.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='flex flex-col flex-1'>
+                <p className="mt-auto text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  Visualize o ranking dos ativos por <b>dias alugados</b> (<code>rented_days</code>). Os itens com 30 dias ou mais de locação ganham destaque automático.
+                </p>
+                <div>
+                  <PermissionButton
+                    requiredRole="suporte"
+                    variant="outline"
+                    className="w-full h-10 sm:h-9 border-legal-secondary text-legal-secondary hover:bg-legal-secondary hover:text-white font-bold transition-all duration-200 text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/assets/ranking');
+                    }}
+                    tooltip="Você precisa ser suporte ou superior para ver o ranking de locação"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Ver Ranking
+                  </PermissionButton>
+                </div>
+              </CardContent>
+            </Card>
+          </RoleGuard>
+            
             {/* Card Histórico - Requer suporte ou superior */}
             <RoleGuard requiredRole="suporte">
               <Card className="legal-card group hover:shadow-xl transition-all duration-300 border-2 hover:border-legal-secondary/40 cursor-pointer flex flex-col"
