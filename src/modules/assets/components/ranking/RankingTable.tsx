@@ -97,7 +97,7 @@ export const RankingTable: React.FC<RankingTableProps> = ({ assets, className })
                 
                 <EnhancedTableCell>
                   <Badge variant="outline" className="text-xs">
-                    {asset.status.name}
+                    {asset.status.name.capitalize()}
                   </Badge>
                 </EnhancedTableCell>
               </EnhancedTableRow>
