@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight } from 'lucide-react';
-import { UnifiedAssetSearch } from './UnifiedAssetSearch';
+import { ResponsiveAssetModal } from './modal/ResponsiveAssetModal';
 import { SelectedAssetsGrid } from './SelectedAssetsGrid';
 import { AssociationGeneralConfigComponent } from './AssociationGeneralConfig';
 import { SelectedAsset } from '@modules/associations/types';
@@ -36,7 +36,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   multipleSelection = true,
   excludeAssociatedToClient
 }) => {
-  const [showAssetSearch, setShowAssetSearch] = useState(false);
+  const [showAssetModal, setShowAssetModal] = useState(false);
 
   const handleAssetSelected = (asset: SelectedAsset) => {
     if (multipleSelection) {
@@ -50,7 +50,6 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         onAssetsChange([asset]);
       }
     }
-    setShowAssetSearch(false);
   };
 
   const handleAssetRemoved = (assetId: string) => {
@@ -88,7 +87,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
               Ativos Selecionados ({selectedAssets.length})
             </CardTitle>
             <Button
-              onClick={() => setShowAssetSearch(true)}
+              onClick={() => setShowAssetModal(true)}
               className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -112,29 +111,19 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         </CardContent>
       </Card>
 
-      {/* Busca de Ativos */}
-      {showAssetSearch && (
-        <Card className="border-[#4D2BFB]/20">
-          <CardHeader>
-            <CardTitle>Buscar e Selecionar Ativos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <UnifiedAssetSearch
-              selectedAssets={selectedAssets}
-              onAssetSelected={handleAssetSelected}
-              excludeAssociatedToClient={excludeAssociatedToClient}
-            />
-            <div className="flex justify-end mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowAssetSearch(false)}
-              >
-                Fechar Busca
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Modal Responsivo para Busca de Ativos */}
+      <ResponsiveAssetModal
+        open={showAssetModal}
+        onOpenChange={setShowAssetModal}
+        title="Selecionar Ativos"
+        description="Busque e selecione os ativos que deseja associar"
+        selectedAssets={selectedAssets}
+        onAssetSelected={handleAssetSelected}
+        onAssetRemoved={handleAssetRemoved}
+        excludeAssociatedToClient={excludeAssociatedToClient}
+        multipleSelection={multipleSelection}
+        onCancel={() => setShowAssetModal(false)}
+      />
 
       {/* Botão de Prosseguir (apenas se fornecido) */}
       {onProceed && selectedAssets.length > 0 && (
