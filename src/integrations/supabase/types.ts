@@ -1044,6 +1044,39 @@ export type Database = {
         }
         Relationships: []
       }
+      operation_locks: {
+        Row: {
+          acquired_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          operation_data: Json | null
+          operation_type: string
+          resource_id: string
+          user_id: string | null
+        }
+        Insert: {
+          acquired_at?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          operation_data?: Json | null
+          operation_type: string
+          resource_id: string
+          user_id?: string | null
+        }
+        Update: {
+          acquired_at?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          operation_data?: Json | null
+          operation_type?: string
+          resource_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           created_at: string
@@ -1199,6 +1232,15 @@ export type Database = {
       }
     }
     Functions: {
+      acquire_operation_lock: {
+        Args: {
+          p_operation_type: string
+          p_resource_id: string
+          p_operation_data?: Json
+          p_timeout_minutes?: number
+        }
+        Returns: Json
+      }
       admin_delete_user: {
         Args: { user_id: string }
         Returns: boolean
@@ -1225,6 +1267,10 @@ export type Database = {
           new_role: Database["public"]["Enums"]["user_role_enum"]
         }
         Returns: boolean
+      }
+      cleanup_expired_locks: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       detect_association_inconsistencies: {
         Args: Record<PropertyKey, never>
@@ -1276,6 +1322,10 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
+      release_operation_lock: {
+        Args: { p_lock_id: string }
+        Returns: boolean
+      }
       status_by_asset_type: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1284,9 +1334,35 @@ export type Database = {
           count: number
         }[]
       }
+      update_all_rented_days: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      update_asset_rented_days: {
+        Args: { asset_uuid: string }
+        Returns: Json
+      }
       user_has_profile: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      validate_association_state: {
+        Args: {
+          p_asset_id: string
+          p_operation: string
+          p_association_id?: number
+        }
+        Returns: Json
+      }
+      validate_rented_days_integrity: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          asset_id: string
+          current_rented_days: number
+          calculated_days: number
+          is_consistent: boolean
+          message: string
+        }[]
       }
     }
     Enums: {
