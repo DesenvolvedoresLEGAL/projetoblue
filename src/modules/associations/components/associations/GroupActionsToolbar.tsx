@@ -11,12 +11,14 @@ import {
   MoreHorizontal, 
   Edit, 
   Trash2, 
-  X 
+  X,
+  Plus
 } from "lucide-react";
 import { AssociationGroup } from '@/types/associations';
 import { useGroupActions } from '../../hooks/useGroupActions';
 import { BulkEditDialog } from './BulkEditDialog';
 import { ConfirmationModal } from '../association/ConfirmationModal';
+import { AddAssetsDialog } from './AddAssetsDialog';
 
 interface GroupActionsToolbarProps {
   group: AssociationGroup;
@@ -31,6 +33,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
 }) => {
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showSoftDeleteConfirm, setShowSoftDeleteConfirm] = useState(false);
+  const [showAddAssets, setShowAddAssets] = useState(false);
   const { softDeleteGroup, changeGroupAssociationType } = useGroupActions();
 
   const handleSoftDelete = () => {
@@ -46,9 +49,31 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
     !a.exit_date || a.exit_date > new Date().toISOString().split('T')[0]
   ).length;
 
+  // Verificar se há pelo menos uma associação ativa para mostrar o botão
+  const hasActiveAssociations = activeAssociationsCount > 0;
+
+  // Obter dados da primeira associação ativa para usar como base
+  const firstActiveAssociation = group.associations.find(a => 
+    !a.exit_date || a.exit_date > new Date().toISOString().split('T')[0]
+  );
+
   return (
     <>
       <div className="flex items-center gap-2">
+        {/* Botão Adicionar Ativos */}
+        {hasActiveAssociations && firstActiveAssociation && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAddAssets(true)}
+            className="h-8 px-3 hover:bg-primary/10 text-primary hover:text-primary"
+            title="Adicionar mais ativos a esta associação"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar Ativos
+          </Button>
+        )}
+
         {/* Botão Encerrar Grupo */}
         {group.canEndGroup && activeAssociationsCount > 0 && (
           <Button
@@ -98,6 +123,29 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Dialog de Adicionar Ativos */}
+      {firstActiveAssociation && (
+        <AddAssetsDialog
+          open={showAddAssets}
+          onOpenChange={setShowAddAssets}
+          existingAssociation={{
+            client_id: firstActiveAssociation.client_id,
+            client_name: group.client_name,
+            association_id: firstActiveAssociation.association_id,
+            entry_date: firstActiveAssociation.entry_date,
+            exit_date: firstActiveAssociation.exit_date,
+            notes: firstActiveAssociation.notes,
+            ssid: firstActiveAssociation.ssid,
+            pass: firstActiveAssociation.pass,
+            gb: firstActiveAssociation.gb
+          }}
+          onSuccess={() => {
+            // Callback opcional para ações após sucesso
+            console.log('Ativos adicionados com sucesso!');
+          }}
+        />
+      )}
 
       {/* Dialog de Edição em Lote */}
       <BulkEditDialog

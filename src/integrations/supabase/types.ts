@@ -1241,6 +1241,20 @@ export type Database = {
         }
         Returns: Json
       }
+      add_assets_to_association: {
+        Args: {
+          p_client_id: string
+          p_association_id: number
+          p_entry_date: string
+          p_asset_ids: string[]
+          p_exit_date?: string
+          p_notes?: string
+          p_ssid?: string
+          p_pass?: string
+          p_gb?: number
+        }
+        Returns: Json
+      }
       admin_delete_user: {
         Args: { user_id: string }
         Returns: boolean

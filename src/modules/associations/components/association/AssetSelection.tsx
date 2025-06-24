@@ -1,305 +1,196 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { UnifiedAssetSearch } from './UnifiedAssetSearch';
-import { SelectedAssetsGrid } from './SelectedAssetsGrid';
-import { AssociationGeneralConfigComponent, AssociationGeneralConfig } from './AssociationGeneralConfig';
-import { AssetSpecificConfig } from './AssetSpecificConfig';
-import { AssetConfigurationForm } from './AssetConfigurationForm';
-import { SelectedAsset } from '@modules/associations/types';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { Wifi, Smartphone, ArrowRight, User } from 'lucide-react';
-import { toast } from 'sonner';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Search, Wifi, Smartphone, Router } from "lucide-react";
+import { useAssetSearch } from '@modules/associations/hooks/useAssetSearch';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface AssetSelectionProps {
-  client: any;
-  selectedAssets: SelectedAsset[];
-  generalConfig: AssociationGeneralConfig;
-  onAssetAdded: (asset: SelectedAsset) => void;
-  onAssetRemoved: (assetId: string) => void;
-  onAssetUpdated: (assetId: string, updates: any) => void;
-  onGeneralConfigUpdate: (updates: Partial<AssociationGeneralConfig>) => void;
-  onProceed: () => void;
+  selectedAssets: any[];
+  onAssetsChange: (assets: any[]) => void;
+  multipleSelection?: boolean;
+  excludeAssociatedToClient?: string; // Novo prop para excluir ativos já associados
 }
 
 export const AssetSelection: React.FC<AssetSelectionProps> = ({
-  client,
   selectedAssets,
-  generalConfig,
-  onAssetAdded,
-  onAssetRemoved,
-  onAssetUpdated,
-  onGeneralConfigUpdate,
-  onProceed
+  onAssetsChange,
+  multipleSelection = false,
+  excludeAssociatedToClient
 }) => {
-  const [editingAsset, setEditingAsset] = useState<SelectedAsset | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSolution, setSelectedSolution] = useState<string>('all');
   
-  // Convert SelectedAsset back to AssetWithRelations format for compatibility
-  const convertToAssetWithRelations = (selectedAsset: SelectedAsset): AssetWithRelations => {
-    return {
-      uuid: selectedAsset.uuid,
-      model: selectedAsset.model,
-      serial_number: selectedAsset.serial_number,
-      radio: selectedAsset.radio,
-      solution_id: selectedAsset.solution_id,
-      manufacturer_id: selectedAsset.manufacturer_id,
-      plan_id: selectedAsset.plan_id,
-      rented_days: selectedAsset.rented_days || 0,
-      admin_user: selectedAsset.admin_user || 'admin',
-      admin_pass: selectedAsset.admin_pass || '',
-      iccid: selectedAsset.iccid,
-      line_number: selectedAsset.line_number ? parseInt(selectedAsset.line_number) : undefined,
-      ssid_atual: selectedAsset.ssid_atual,
-      pass_atual: selectedAsset.pass_atual,
-      // Required fields for AssetWithRelations
-      status_id: selectedAsset.statusId || 1,
-      created_at: selectedAsset.registrationDate,
-      updated_at: new Date().toISOString(),
-      manufacturer: {
-        id: selectedAsset.manufacturer_id || 0,
-        name: selectedAsset.marca || selectedAsset.brand || ''
-      },
-      status: {
-        id: selectedAsset.statusId || 1,
-        name: selectedAsset.status
-      },
-      solucao: selectedAsset.solucao ? {
-        id: selectedAsset.solution_id || 0,
-        name: selectedAsset.solucao
-      } : undefined
-    };
-  };
+  const { 
+    assets, 
+    solutions, 
+    isLoading, 
+    isError 
+  } = useAssetSearch(searchTerm, selectedSolution, excludeAssociatedToClient);
 
-  const handleEditAsset = (asset: SelectedAsset) => {
-    setEditingAsset(asset);
-  };
-
-  const handleSaveAssetConfig = (assetId: string, config: any) => {
-    onAssetUpdated(assetId, config);
-    setEditingAsset(null);
-  };
-
-  const handleAssetSpecificUpdate = (assetId: string, updates: any) => {
-    onAssetUpdated(assetId, updates);
-  };
-
-  const handleProceed = () => {
-    if (selectedAssets.length === 0) {
-      toast.error('Selecione pelo menos um ativo para prosseguir');
-      return;
+  const handleAssetToggle = (asset: any) => {
+    if (multipleSelection) {
+      const isSelected = selectedAssets.some(a => a.uuid === asset.uuid);
+      if (isSelected) {
+        onAssetsChange(selectedAssets.filter(a => a.uuid !== asset.uuid));
+      } else {
+        onAssetsChange([...selectedAssets, asset]);
+      }
+    } else {
+      const isSelected = selectedAssets.some(a => a.uuid === asset.uuid);
+      onAssetsChange(isSelected ? [] : [asset]);
     }
-    
-    // Validar configuração geral
-    if (!generalConfig.startDate) {
-      toast.error('Data de início é obrigatória');
-      return;
-    }
-    
-    if (generalConfig.endDate && generalConfig.endDate < generalConfig.startDate) {
-      toast.error('Data de fim deve ser posterior à data de início');
-      return;
-    }
-    
-    console.log('🚀 AssetSelection - Proceeding with generalConfig:', generalConfig);
-    onProceed();
   };
 
-  const equipmentCount = selectedAssets.filter(asset => asset.type === 'EQUIPMENT').length;
-  const chipCount = selectedAssets.filter(asset => asset.type === 'CHIP').length;
+  const getAssetIcon = (solutionName: string) => {
+    const solution = solutionName?.toLowerCase();
+    if (solution?.includes('chip')) return <Smartphone className="h-4 w-4" />;
+    if (solution?.includes('speedy')) return <Wifi className="h-4 w-4" />;
+    return <Router className="h-4 w-4" />;
+  };
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header da seleção - informações do cliente */}
-      <Card className="border-[#4D2BFB]/20 bg-gradient-to-r from-[#4D2BFB]/5 to-[#03F9FF]/5">
+  const getAssetIdentifier = (asset: any) => {
+    const solutionName = asset.asset_solutions?.solution || '';
+    if (solutionName.toLowerCase().includes('chip') && asset.line_number) {
+      return formatPhoneForDisplay(asset.line_number.toString());
+    }
+    return asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
+  };
+
+  const getAssetSecondaryInfo = (asset: any) => {
+    const solution = asset.asset_solutions?.solution || 'Solução não encontrada';
+    const status = asset.asset_status?.status || 'Status não encontrado';
+    return `${solution} • ${status}`;
+  };
+
+  if (isError) {
+    return (
+      <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#4D2BFB]/10 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-[#4D2BFB]" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  Associar Ativos para {client?.nome}
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {client?.email && `${client.email} • `}
-                  {client?.telefone && `${client.telefone} • `}
-                  {client?.empresa || 'Cliente Individual'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                <Wifi className="h-3 w-3 mr-1" />
-                {equipmentCount} Equipamentos
-              </Badge>
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                <Smartphone className="h-3 w-3 mr-1" />
-                {chipCount} CHIPs
-              </Badge>
-            </div>
+          <div className="text-center text-muted-foreground">
+            Erro ao carregar ativos. Tente novamente.
           </div>
         </CardContent>
       </Card>
+    );
+  }
 
-      {/* Seção 1: Busca de Ativos */}
-      <div className="space-y-2">
-        <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-          Buscar e Selecionar Ativos
-        </h4>
-        <p className="text-sm text-gray-600 ml-10">
-          Use a busca direta ou os filtros avançados para encontrar e adicionar ativos à associação
-        </p>
-        <UnifiedAssetSearch
-          selectedAssets={selectedAssets}
-          onAssetSelected={onAssetAdded}
-        />
-      </div>
-
-      {/* Seção 2: Ativos Selecionados */}
-      {selectedAssets.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <span className="w-8 h-8 bg-[#03F9FF] text-[#020CBC] rounded-full flex items-center justify-center text-sm font-bold">2</span>
-            Ativos Selecionados ({selectedAssets.length})
-          </h4>
-          <p className="text-sm text-gray-600 ml-10">
-            Revise os ativos selecionados e faça ajustes se necessário
-          </p>
-          <SelectedAssetsGrid
-            assets={selectedAssets}
-            onRemoveAsset={onAssetRemoved}
-            onEditAsset={handleEditAsset}
-          />
-        </div>
-      )}
-
-      {/* Seção 3: Configuração Geral da Associação */}
-      {selectedAssets.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-            Configuração da Associação
-          </h4>
-          <p className="text-sm text-gray-600 ml-10">
-            Defina os parâmetros gerais que se aplicam a todos os ativos desta associação
-          </p>
-          <AssociationGeneralConfigComponent
-            config={generalConfig}
-            onUpdate={onGeneralConfigUpdate}
-          />
-        </div>
-      )}
-
-      {/* Seção 4: Configurações Específicas dos Ativos */}
-      {selectedAssets.length > 0 && (
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Selecionar Ativos</CardTitle>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <span className="w-8 h-8 bg-[#03F9FF] text-[#020CBC] rounded-full flex items-center justify-center text-sm font-bold">4</span>
-              Configurações Específicas dos Ativos
-            </h4>
-            <p className="text-sm text-gray-600 ml-10">
-              Configure cada ativo individualmente conforme suas necessidades específicas
-            </p>
+          {/* Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por identificador, serial, rádio..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-          
-          <div className="space-y-4 ml-10">
-            {selectedAssets.map((asset, index) => (
-              <div key={asset.uuid} className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {index + 1}. {asset.type === 'CHIP' ? 'CHIP' : 'Equipamento'}:
-                  </span>
-                  <span className="text-sm text-gray-900 font-medium">
-                    {asset.type === 'CHIP' 
-                      ? (asset.iccid || asset.line_number || asset.uuid.substring(0, 8))
-                      : (asset.radio || asset.serial_number || asset.uuid.substring(0, 8))
-                    }
-                  </span>
-                </div>
-                <AssetSpecificConfig
-                  asset={convertToAssetWithRelations(asset)}
-                  associationType={generalConfig.associationType}
-                  onUpdate={(updates) => handleAssetSpecificUpdate(asset.uuid, updates)}
-                />
+
+          {/* Filtro por Solução */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={selectedSolution === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedSolution('all')}
+            >
+              Todos
+            </Button>
+            {solutions.map(solution => (
+              <Button
+                key={solution.id}
+                variant={selectedSolution === solution.id.toString() ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedSolution(solution.id.toString())}
+              >
+                {solution.solution}
+              </Button>
+            ))}
+          </div>
+
+          {selectedAssets.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {selectedAssets.length} ativo{selectedAssets.length > 1 ? 's' : ''} selecionado{selectedAssets.length > 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-16 bg-muted rounded-lg"></div>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Seção 5: Resumo e Finalização */}
-      {selectedAssets.length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <span className="w-8 h-8 bg-[#4D2BFB] text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
-            Finalizar Associação
-          </h4>
-          <p className="text-sm text-gray-600 ml-10">
-            Revise todas as configurações e confirme a criação da associação
-          </p>
-          
-          <Card className="border-[#03F9FF]/30 bg-gradient-to-r from-[#03F9FF]/5 to-[#4D2BFB]/5 ml-10">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <h5 className="font-semibold text-gray-900">
-                    Resumo da Associação
-                  </h5>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <span className="font-medium">{selectedAssets.length} ativos selecionados</span>
-                    <Separator orientation="vertical" className="h-4" />
-                    <span>{equipmentCount} equipamentos</span>
-                    <Separator orientation="vertical" className="h-4" />
-                    <span>{chipCount} CHIPs</span>
-                  </div>
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <div>
-                      <strong>Cliente:</strong> {client?.nome} • <strong>Tipo:</strong> {generalConfig.associationType}
-                    </div>
-                    <div>
-                      <strong>Início:</strong> {generalConfig.startDate.toLocaleDateString('pt-BR')}
-                      {generalConfig.endDate && (
-                        <>
-                          {' • '}
-                          <strong>Fim:</strong> {generalConfig.endDate.toLocaleDateString('pt-BR')}
-                        </>
-                      )}
-                    </div>
-                    {generalConfig.notes && (
-                      <div>
-                        <strong>Observações:</strong> {generalConfig.notes}
+        ) : assets.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-muted-foreground">
+              {excludeAssociatedToClient 
+                ? "Nenhum ativo disponível encontrado para este cliente"
+                : "Nenhum ativo disponível encontrado"
+              }
+            </div>
+            {searchTerm && (
+              <div className="text-sm text-muted-foreground mt-2">
+                Tente ajustar os filtros de busca
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {assets.map((asset) => {
+              const isSelected = selectedAssets.some(a => a.uuid === asset.uuid);
+              
+              return (
+                <div
+                  key={asset.uuid}
+                  className={`
+                    p-3 border rounded-lg cursor-pointer transition-colors
+                    ${isSelected 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                    }
+                  `}
+                  onClick={() => handleAssetToggle(asset)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      checked={isSelected} 
+                      onChange={() => handleAssetToggle(asset)}
+                    />
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {getAssetIcon(asset.asset_solutions?.solution)}
+                        <span className="font-medium">
+                          {getAssetIdentifier(asset)}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {asset.asset_status?.status}
+                        </Badge>
                       </div>
-                    )}
+                      
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {getAssetSecondaryInfo(asset)}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <Button
-                  onClick={handleProceed}
-                  className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
-                  size="lg"
-                >
-                  Criar Associação
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Modal de configuração avançada */}
-      {editingAsset && (
-        <AssetConfigurationForm
-          asset={editingAsset}
-          open={!!editingAsset}
-          onClose={() => setEditingAsset(null)}
-          onSave={(config) => handleSaveAssetConfig(editingAsset.uuid, config)}
-        />
-      )}
-    </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
