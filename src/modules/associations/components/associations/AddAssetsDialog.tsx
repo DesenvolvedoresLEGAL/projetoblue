@@ -4,7 +4,7 @@ import { useAddAssetsToAssociation } from '../../hooks/useAddAssetsToAssociation
 import { ResponsiveAssetModal } from '../association/modal/ResponsiveAssetModal';
 import { AddAssetsConfirmationDialog } from './AddAssetsConfirmationDialog';
 import { SelectedAsset } from '@modules/associations/types';
-import { toast } from 'sonner';
+import { toast } from 'sonner'; // Corrigido: usar sonner consistentemente
 
 interface ExistingAssociation {
   client_id: string;
@@ -91,20 +91,27 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
       console.log('AddAssetsDialog: Resultado da adição:', result);
 
-      // A lógica de toasts agora está no hook useAddAssetsToAssociation
-      // Apenas chamar onSuccess se algum ativo foi inserido
-      if (result.success && result.inserted_count > 0) {
-        onSuccess?.();
-        handleCloseAll();
-      } else if (result.success && result.inserted_count === 0) {
-        // Fechar modal mesmo se nenhum ativo foi inserido (falhas)
-        handleCloseAll();
+      // Lógica de fechamento do modal mais rigorosa
+      if (result.success) {
+        if (result.inserted_count > 0) {
+          // Só chamar onSuccess se pelo menos um ativo foi inserido
+          onSuccess?.();
+          handleCloseAll();
+        } else {
+          // Se nenhum ativo foi inserido (todos falharam), não fechar o modal
+          // Permitir que o usuário veja os erros e tente novamente
+          setShowConfirmation(false);
+          // Não chamar handleCloseAll() para manter o modal aberto
+        }
       } else {
+        // Se a operação falhou completamente, mostrar erro e não fechar
         toast.error(result.message || 'Erro ao adicionar ativos');
+        setShowConfirmation(false);
       }
     } catch (error) {
       console.error('AddAssetsDialog: Erro ao adicionar ativos:', error);
-      toast.error('Erro interno ao adicionar ativos');
+      // Em caso de erro de rede/sistema, não fechar o modal
+      setShowConfirmation(false);
     }
   };
 
