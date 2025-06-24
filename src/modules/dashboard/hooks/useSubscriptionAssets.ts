@@ -14,7 +14,7 @@ export const useSubscriptionAssets = () => {
     queryKey: ['dashboard', 'subscription-assets'],
     queryFn: async () => {
       try {
-        console.log('🔍 Fetching subscription assets data...');
+        process.env.NODE_ENV === 'development' && console.log('🔍 Fetching subscription assets data...');
         
         // Query para buscar ativos atualmente em assinatura (association_id = 2)
         // Usando asset_client_assoc para identificar ativos associados
@@ -38,7 +38,7 @@ export const useSubscriptionAssets = () => {
           throw new Error(`Failed to fetch subscription assets: ${error.message}`);
         }
 
-        console.log('📊 Raw subscription associations data:', subscriptionAssociations);
+        process.env.NODE_ENV === 'development' && console.log('📊 Raw subscription associations data:', subscriptionAssociations);
 
         // Contar por tipo de solução
         const counts = {
@@ -61,7 +61,7 @@ export const useSubscriptionAssets = () => {
           counts.total++;
         });
 
-        console.log('📈 Subscription assets summary:', counts);
+        process.env.NODE_ENV === 'development' && console.log('📈 Subscription assets summary:', counts);
         return counts;
         
       } catch (error) {

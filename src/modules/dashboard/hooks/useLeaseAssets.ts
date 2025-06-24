@@ -14,7 +14,7 @@ export const useLeaseAssets = () => {
     queryKey: ['dashboard', 'lease-assets'],
     queryFn: async () => {
       try {
-        console.log('🔍 Fetching lease assets data...');
+        process.env.NODE_ENV === 'development' && console.log('🔍 Fetching lease assets data...');
         
         // Query para buscar ativos atualmente em locação (association_id = 1)
         // Usando asset_client_assoc para identificar ativos associados
@@ -38,7 +38,7 @@ export const useLeaseAssets = () => {
           throw new Error(`Failed to fetch lease assets: ${error.message}`);
         }
 
-        console.log('📊 Raw lease associations data:', leaseAssociations);
+        process.env.NODE_ENV === 'development' && console.log('📊 Raw lease associations data:', leaseAssociations);
 
         // Contar por tipo de solução
         const counts = {
@@ -61,7 +61,7 @@ export const useLeaseAssets = () => {
           counts.total++;
         });
 
-        console.log('📈 Lease assets summary:', counts);
+        process.env.NODE_ENV === 'development' && console.log('📈 Lease assets summary:', counts);
         return counts;
         
       } catch (error) {

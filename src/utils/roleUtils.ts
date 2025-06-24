@@ -81,18 +81,10 @@ export const getAssignableRoles = (userRole: UserRole): UserRole[] => {
  * Verifica se um role é válido
  */
 export const isValidRole = (role: string): role is UserRole => {
-  console.log('🔍 [DEBUG] isValidRole - Input role:', role);
-  console.log('🔍 [DEBUG] isValidRole - ROLE_HIERARCHY keys:', Object.keys(ROLE_HIERARCHY));
-  console.log('🔍 [DEBUG] isValidRole - ROLE_SYNONYMS keys:', Object.keys(ROLE_SYNONYMS));
-  
   // Verificação direta usando 'in' operator que é mais confiável
   const inHierarchy = role in ROLE_HIERARCHY;
   const inSynonyms = role in ROLE_SYNONYMS;
-  
-  console.log('🔍 [DEBUG] isValidRole - Role in ROLE_HIERARCHY:', inHierarchy);
-  console.log('🔍 [DEBUG] isValidRole - Role in ROLE_SYNONYMS:', inSynonyms);
-  console.log('🔍 [DEBUG] isValidRole - Final result:', inHierarchy || inSynonyms);
-  
+
   return inHierarchy || inSynonyms;
 };
 
@@ -100,32 +92,21 @@ export const isValidRole = (role: string): role is UserRole => {
  * Converte string para UserRole com validação
  */
 export const toUserRole = (role: string): UserRole => {
-  console.log('🎯 [DEBUG] toUserRole - Starting with input role:', role);
-  console.log('🎯 [DEBUG] toUserRole - Type of input role:', typeof role);
-  console.log('🎯 [DEBUG] toUserRole - ROLE_HIERARCHY object:', ROLE_HIERARCHY);
-  console.log('🎯 [DEBUG] toUserRole - ROLE_SYNONYMS object:', ROLE_SYNONYMS);
-  
   // Primeira verificação: role está diretamente em ROLE_HIERARCHY usando 'in' operator
   const roleInHierarchy = role in ROLE_HIERARCHY;
-  console.log('🎯 [DEBUG] toUserRole - Role in ROLE_HIERARCHY check:', roleInHierarchy);
-  
+
   if (roleInHierarchy) {
-    console.log('🎯 [DEBUG] toUserRole - Returning role from ROLE_HIERARCHY:', role);
     return role as UserRole;
   }
-  
+
   // Segunda verificação: role está em ROLE_SYNONYMS usando 'in' operator
   const roleInSynonyms = role in ROLE_SYNONYMS;
-  console.log('🎯 [DEBUG] toUserRole - Role in ROLE_SYNONYMS check:', roleInSynonyms);
-  
+
   if (roleInSynonyms) {
     const mappedRole = ROLE_SYNONYMS[role as keyof typeof ROLE_SYNONYMS];
-    console.log('🎯 [DEBUG] toUserRole - Returning mapped role from ROLE_SYNONYMS:', mappedRole);
     return mappedRole;
   }
-  
+
   // Fallback final
-  console.log('🎯 [DEBUG] toUserRole - No match found, falling back to cliente');
-  console.log('🎯 [DEBUG] toUserRole - This should NOT happen for role "suporte"');
   return 'cliente'; // fallback seguro
 };

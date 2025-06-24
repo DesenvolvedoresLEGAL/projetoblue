@@ -22,7 +22,7 @@ export const useRentedAssets = () => {
   return useQuery({
     queryKey: ['rented-assets'],
     queryFn: async () => {
-      console.log('Fetching rented assets...');
+      process.env.NODE_ENV === 'development' && console.log('Fetching rented assets...');
       
       const { data, error } = await supabase
         .from('assets')
@@ -45,7 +45,7 @@ export const useRentedAssets = () => {
         throw error;
       }
 
-      console.log('Rented assets fetched:', data?.length);
+      process.env.NODE_ENV === 'development' && console.log('Rented assets fetched:', data?.length);
       return data as RentedAsset[] || [];
     },
     staleTime: 30 * 1000, // 30 seconds

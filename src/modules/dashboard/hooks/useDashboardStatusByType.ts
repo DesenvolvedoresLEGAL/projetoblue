@@ -25,7 +25,7 @@ export function useDashboardStatusByType() {
     queryKey: ['dashboard', 'status-by-type'],
     queryFn: async () => {
       try {
-        console.log('Fetching status by type data...');
+        process.env.NODE_ENV === 'development' && console.log('Fetching status by type data...');
         
         // Use the detailed breakdown query that includes both asset_solutions and asset_status
         const detailedBreakdownResult = await dashboardQueries.fetchDetailedStatusBreakdown();
