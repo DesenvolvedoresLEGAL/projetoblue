@@ -127,9 +127,9 @@ export async function fetchDetailedStatusBreakdown() {
   return result;
 }
 
-// NEW: Fetch active associations - CORRIGIDO para usar asset_client_assoc
+// NEW: Fetch active associations - OTIMIZADO para evitar N+1 queries
 export async function fetchActiveAssociations() {
-  console.log('Executing fetchActiveAssociations query');
+  console.log('Executing fetchActiveAssociations query (optimized)');
   const result = await supabase
     .from('asset_client_assoc')
     .select(`
@@ -142,14 +142,21 @@ export async function fetchActiveAssociations() {
       clients!inner(empresa),
       association_types!inner(type),
       assets!inner(
+        uuid,
+        serial_number,
+        radio,
+        line_number,
+        rented_days,
+        status_id,
         solution_id,
-        asset_solutions!inner(solution)
+        asset_solutions!inner(solution),
+        asset_status!inner(status)
       )
     `)
     .is('exit_date', null)
     .is('deleted_at', null);
   
-  console.log('fetchActiveAssociations result:', result);
+  console.log('fetchActiveAssociations result (optimized):', result);
   return result;
 }
 
