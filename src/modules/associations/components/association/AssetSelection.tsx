@@ -5,16 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight } from 'lucide-react';
 import { UnifiedAssetSearch } from './UnifiedAssetSearch';
 import { SelectedAssetsGrid } from './SelectedAssetsGrid';
-import { AssociationGeneralConfig } from './AssociationGeneralConfig';
+import { AssociationGeneralConfig as AssociationGeneralConfigComponent } from './AssociationGeneralConfig';
 import { SelectedAsset } from '@modules/associations/types';
+
+// Import the type separately to avoid naming conflicts
+import type { AssociationGeneralConfig } from './AssociationGeneralConfig';
 
 export interface AssetSelectionProps {
   selectedAssets: SelectedAsset[];
-  generalConfig?: any;
+  generalConfig?: AssociationGeneralConfig;
   onAssetAdded?: (asset: SelectedAsset) => void;
   onAssetRemoved?: (assetId: string) => void;
   onAssetUpdated?: (assetId: string, updates: Partial<SelectedAsset>) => void;
-  onGeneralConfigUpdate?: (updates: any) => void;
+  onGeneralConfigUpdate?: (updates: Partial<AssociationGeneralConfig>) => void;
   onProceed?: () => void;
   onAssetsChange?: (assets: SelectedAsset[]) => void;
   multipleSelection?: boolean;
@@ -70,7 +73,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     <div className="space-y-6">
       {/* Configuração Geral (apenas se fornecida) */}
       {generalConfig && onGeneralConfigUpdate && (
-        <AssociationGeneralConfig
+        <AssociationGeneralConfigComponent
           config={generalConfig}
           onUpdate={onGeneralConfigUpdate}
         />
@@ -96,8 +99,8 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
           {selectedAssets.length > 0 ? (
             <SelectedAssetsGrid
               assets={selectedAssets}
-              onAssetRemoved={handleAssetRemoved}
-              onAssetUpdated={handleAssetUpdated}
+              onRemoveAsset={handleAssetRemoved}
+              onEditAsset={handleAssetUpdated}
             />
           ) : (
             <div className="text-center py-8 text-gray-500">
