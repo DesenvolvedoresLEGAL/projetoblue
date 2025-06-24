@@ -12,7 +12,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetSearchStep } from './steps/AssetSearchStep';
 import { AssetSelectionStep } from './steps/AssetSelectionStep';
-import { AssetConfirmationStep } from './steps/AssetConfirmationStep';
 
 interface MobileAssetModalProps {
   open: boolean;
@@ -31,7 +30,7 @@ interface MobileAssetModalProps {
   cancelText?: string;
 }
 
-type Step = 'search' | 'selection' | 'confirmation';
+type Step = 'search' | 'selection';
 
 export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
   open,
@@ -54,16 +53,12 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
   const handleBack = () => {
     if (currentStep === 'selection') {
       setCurrentStep('search');
-    } else if (currentStep === 'confirmation') {
-      setCurrentStep('selection');
     }
   };
 
   const handleNext = () => {
     if (currentStep === 'search' && selectedAssets.length > 0) {
       setCurrentStep('selection');
-    } else if (currentStep === 'selection' && selectedAssets.length > 0) {
-      setCurrentStep('confirmation');
     }
   };
 
@@ -71,7 +66,6 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
     switch (currentStep) {
       case 'search': return 'Buscar Ativos';
       case 'selection': return `Selecionados (${selectedAssets.length})`;
-      case 'confirmation': return 'Confirmar Adição';
       default: return title;
     }
   };
@@ -92,14 +86,6 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
             selectedAssets={selectedAssets}
             onAssetRemoved={onAssetRemoved}
             multipleSelection={multipleSelection}
-          />
-        );
-      case 'confirmation':
-        return (
-          <AssetConfirmationStep
-            selectedAssets={selectedAssets}
-            onConfirm={onConfirm}
-            isLoading={isLoading}
           />
         );
       default:
@@ -160,7 +146,7 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
             >
               {cancelText}
             </Button>
-            {currentStep === 'confirmation' && onConfirm && (
+            {currentStep === 'selection' && onConfirm && (
               <Button
                 onClick={onConfirm}
                 className="flex-1"
@@ -169,13 +155,13 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
                 {isLoading ? 'Processando...' : confirmText}
               </Button>
             )}
-            {currentStep !== 'confirmation' && selectedAssets.length > 0 && (
+            {currentStep === 'search' && selectedAssets.length > 0 && (
               <Button
                 onClick={handleNext}
                 className="flex-1"
                 disabled={isLoading}
               >
-                {currentStep === 'search' ? 'Ver Selecionados' : 'Confirmar Adição'}
+                Ver Selecionados
               </Button>
             )}
           </div>

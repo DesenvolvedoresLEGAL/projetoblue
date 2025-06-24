@@ -10,11 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, CheckSquare, Check } from "lucide-react";
+import { Search, CheckSquare } from "lucide-react";
 import { SelectedAsset } from '@modules/associations/types';
 import { AssetSearchStep } from './steps/AssetSearchStep';
 import { AssetSelectionStep } from './steps/AssetSelectionStep';
-import { AssetConfirmationStep } from './steps/AssetConfirmationStep';
 
 interface DesktopAssetModalProps {
   open: boolean;
@@ -60,7 +59,7 @@ export const DesktopAssetModal: React.FC<DesktopAssetModalProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="search" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
               Buscar Ativos
@@ -68,14 +67,6 @@ export const DesktopAssetModal: React.FC<DesktopAssetModalProps> = ({
             <TabsTrigger value="selected" className="flex items-center gap-2">
               <CheckSquare className="h-4 w-4" />
               Selecionados ({selectedAssets.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="confirmation" 
-              className="flex items-center gap-2"
-              disabled={selectedAssets.length === 0}
-            >
-              <Check className="h-4 w-4" />
-              Confirmar
             </TabsTrigger>
           </TabsList>
 
@@ -92,14 +83,6 @@ export const DesktopAssetModal: React.FC<DesktopAssetModalProps> = ({
               selectedAssets={selectedAssets}
               onAssetRemoved={onAssetRemoved}
               multipleSelection={multipleSelection}
-            />
-          </TabsContent>
-
-          <TabsContent value="confirmation" className="flex-1 overflow-hidden mt-4">
-            <AssetConfirmationStep
-              selectedAssets={selectedAssets}
-              onConfirm={onConfirm}
-              isLoading={isLoading}
             />
           </TabsContent>
         </Tabs>
