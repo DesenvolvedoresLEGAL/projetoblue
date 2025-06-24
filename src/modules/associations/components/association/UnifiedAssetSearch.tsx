@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       return;
     }
 
+    console.log('Iniciando busca direta:', { term: directSearchTerm, type: directSearchType });
     setIsDirectSearching(true);
     try {
       const asset = await searchSpecificAsset(directSearchTerm, directSearchType);
@@ -84,13 +86,24 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
     }
   };
 
-  // Atualizar filtros
+  // Atualizar filtros - MELHORADO com logs
   const updateFilters = (updates: Partial<AssetSearchFilters>) => {
-    setFilters(prev => ({ ...prev, ...updates }));
+    const newFilters = { ...filters, ...updates };
+    console.log('Atualizando filtros:', { old: filters, new: newFilters, updates });
+    setFilters(newFilters);
   };
 
   const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
+
+  // Log para debug
+  console.log('Estado atual:', {
+    filters,
+    assetsCount: assets.length,
+    equipmentCount,
+    chipCount,
+    isLoading
+  });
 
   return (
     <div className="space-y-6">
@@ -225,7 +238,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
                 <Input
                   value={filters.searchTerm}
                   onChange={(e) => updateFilters({ searchTerm: e.target.value })}
-                  placeholder="ICCID, rádio, serial, modelo..."
+                  placeholder="ICCID, rádio, serial, linha..."
                   className="w-full"
                 />
               </div>
@@ -254,7 +267,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
               </div>
             </div>
 
-            {/* Estatísticas */}
+            {/* Estatísticas - MELHORADAS */}
             <div className="flex items-center gap-4 pt-2">
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                 <Wifi className="h-3 w-3 mr-1" />
@@ -263,6 +276,9 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 <Smartphone className="h-3 w-3 mr-1" />
                 {chipCount} CHIPs
+              </Badge>
+              <Badge variant="outline">
+                Total: {assets.length}
               </Badge>
             </div>
           </CardContent>

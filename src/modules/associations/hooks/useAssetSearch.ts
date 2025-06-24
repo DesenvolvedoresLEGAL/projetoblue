@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@modules/associations/types';
 import { toast } from '@/utils/toast';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export interface AssetSearchFilters {
   type: 'all' | 'equipment' | 'chip';
@@ -16,6 +17,9 @@ export const useAssetSearch = (
   excludeAssociatedToClient?: string,
   options?: { selectedAssets?: SelectedAsset[] }
 ) => {
+  // Debounce para os filtros
+  const debouncedFilters = useDebounce(filters, 300);
+
   // Query para buscar soluções
   const solutionsQuery = useQuery({
     queryKey: ['asset-solutions'],
@@ -32,8 +36,10 @@ export const useAssetSearch = (
 
   // Query para buscar ativos
   const assetsQuery = useQuery({
-    queryKey: ['available-assets', filters, solutionFilter, excludeAssociatedToClient],
+    queryKey: ['available-assets', JSON.stringify(debouncedFilters), solutionFilter, excludeAssociatedToClient],
     queryFn: async () => {
+      console.log('Filtros aplicados:', debouncedFilters);
+      
       let query = supabase
         .from('assets')
         .select(`
@@ -57,15 +63,17 @@ export const useAssetSearch = (
         .is('deleted_at', null);
 
       // Aplicar filtro de status
-      if (filters.status === 'available') {
+      if (debouncedFilters.status === 'available') {
         query = query.eq('asset_status.status', 'disponível');
       }
 
-      // Aplicar filtro de tipo
-      if (filters.type === 'equipment') {
-        query = query.is('iccid', null);
-      } else if (filters.type === 'chip') {
-        query = query.not('iccid', 'is', null);
+      // Aplicar filtro de tipo - CORRIGIDO
+      if (debouncedFilters.type === 'equipment') {
+        // Equipamentos: iccid é null ou string vazia
+        query = query.or('iccid.is.null,iccid.eq.');
+      } else if (debouncedFilters.type === 'chip') {
+        // CHIPs: iccid não é null e não é string vazia
+        query = query.not('iccid', 'is', null).neq('iccid', '');
       }
 
       // Filtrar por solução se especificado
@@ -73,25 +81,35 @@ export const useAssetSearch = (
         query = query.eq('solution_id', parseInt(solutionFilter));
       }
 
-      // Aplicar busca por termo se especificado
-      if (filters.searchTerm.trim()) {
-        const cleanTerm = filters.searchTerm.trim();
+      // Aplicar busca por termo se especificado - CORRIGIDO
+      if (debouncedFilters.searchTerm.trim()) {
+        const cleanTerm = debouncedFilters.searchTerm.trim();
         
-        query = query.or(`
-          radio.ilike.%${cleanTerm}%,
-          serial_number.ilike.%${cleanTerm}%,
-          iccid.ilike.%${cleanTerm}%,
-          line_number.eq.${cleanTerm}
-        `);
+        const conditions = [
+          `radio.ilike.%${cleanTerm}%`,
+          `serial_number.ilike.%${cleanTerm}%`,
+          `iccid.ilike.%${cleanTerm}%`
+        ];
+        
+        // Adicionar line_number apenas se for numérico
+        if (!isNaN(Number(cleanTerm))) {
+          conditions.push(`line_number.eq.${cleanTerm}`);
+        }
+        
+        query = query.or(conditions.join(','));
       }
 
       const { data: assets, error } = await query
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na query de assets:', error);
+        throw error;
+      }
 
       let filteredAssets = assets || [];
+      console.log('Assets encontrados antes do filtro de cliente:', filteredAssets.length);
 
       // Excluir ativos já associados ao cliente específico, se fornecido
       if (excludeAssociatedToClient) {
@@ -113,6 +131,8 @@ export const useAssetSearch = (
         );
       }
 
+      console.log('Assets encontrados após filtros:', filteredAssets.length);
+
       // Mapear para SelectedAsset format
       return filteredAssets.map(asset => ({
         id: asset.uuid,
@@ -132,9 +152,11 @@ export const useAssetSearch = (
     enabled: true
   });
 
-  // Função para buscar ativo específico
+  // Função para buscar ativo específico - CORRIGIDO
   const searchSpecificAsset = async (term: string, type: 'chip' | 'equipment'): Promise<SelectedAsset | null> => {
     try {
+      console.log('Busca direta:', { term, type });
+      
       let query = supabase
         .from('assets')
         .select(`
@@ -150,10 +172,10 @@ export const useAssetSearch = (
           asset_status!inner(status)
         `)
         .is('deleted_at', null)
-        .eq('asset_status.status', 'Disponível');
+        .eq('asset_status.status', 'disponível'); // CORRIGIDO: case sensitive
 
       if (type === 'chip') {
-        query = query.ilike('iccid', `%${term}%`).not('iccid', 'is', null);
+        query = query.ilike('iccid', `%${term}%`).not('iccid', 'is', null).neq('iccid', '');
       } else {
         query = query.eq('radio', term);
       }
@@ -165,8 +187,11 @@ export const useAssetSearch = (
           toast.error(`${type === 'chip' ? 'CHIP' : 'Equipamento'} não encontrado`);
           return null;
         }
+        console.error('Erro na busca direta:', error);
         throw error;
       }
+
+      console.log('Ativo encontrado na busca direta:', data);
 
       return {
         id: data.uuid,
