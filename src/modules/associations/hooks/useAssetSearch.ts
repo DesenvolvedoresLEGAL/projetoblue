@@ -11,7 +11,7 @@ export interface AssetSearchFilters {
 }
 
 export const useAssetSearch = (
-  searchTerm: string = '', 
+  filters: AssetSearchFilters = { type: 'all', searchTerm: '', status: 'available' },
   solutionFilter: string = 'all',
   excludeAssociatedToClient?: string,
   options?: { selectedAssets?: SelectedAsset[] }
@@ -32,7 +32,7 @@ export const useAssetSearch = (
 
   // Query para buscar ativos
   const assetsQuery = useQuery({
-    queryKey: ['available-assets', searchTerm, solutionFilter, excludeAssociatedToClient],
+    queryKey: ['available-assets', filters, solutionFilter, excludeAssociatedToClient],
     queryFn: async () => {
       let query = supabase
         .from('assets')
@@ -54,8 +54,19 @@ export const useAssetSearch = (
             status
           )
         `)
-        .is('deleted_at', null)
-        .eq('asset_status.status', 'Disponível');
+        .is('deleted_at', null);
+
+      // Aplicar filtro de status
+      if (filters.status === 'available') {
+        query = query.eq('asset_status.status', 'Disponível');
+      }
+
+      // Aplicar filtro de tipo
+      if (filters.type === 'equipment') {
+        query = query.is('iccid', null);
+      } else if (filters.type === 'chip') {
+        query = query.not('iccid', 'is', null);
+      }
 
       // Filtrar por solução se especificado
       if (solutionFilter !== 'all') {
@@ -63,8 +74,8 @@ export const useAssetSearch = (
       }
 
       // Aplicar busca por termo se especificado
-      if (searchTerm.trim()) {
-        const cleanTerm = searchTerm.trim();
+      if (filters.searchTerm.trim()) {
+        const cleanTerm = filters.searchTerm.trim();
         
         query = query.or(`
           radio.ilike.%${cleanTerm}%,
