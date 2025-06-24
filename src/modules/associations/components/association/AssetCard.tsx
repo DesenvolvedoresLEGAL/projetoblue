@@ -53,7 +53,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({
   return (
     <Card className={cardClassName} onClick={mode === 'select' ? handleSelect : undefined}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Ícone do tipo */}
             <div className="flex-shrink-0">
@@ -106,7 +106,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({
           </div>
 
           {/* Ações */}
-          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+          <div className="flex items-center gap-1 flex-shrink-0 ml-0 sm:ml-2 mt-2 sm:mt-0">
             {mode === 'select' ? (
               <Button
                 size="sm"
@@ -147,7 +147,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({
         {/* Configurações específicas quando selecionado */}
         {mode === 'selected' && (asset.ssid || asset.password || asset.associationType) && (
           <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               {asset.ssid && (
                 <div>
                   <span className="text-gray-500">SSID:</span>
