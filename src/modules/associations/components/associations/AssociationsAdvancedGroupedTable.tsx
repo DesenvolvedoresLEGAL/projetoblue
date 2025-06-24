@@ -43,7 +43,7 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
   console.log(`Total de grupos por empresa -> ${totalCompanyGroups}`);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Estatísticas */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         {/* Estatísticas comentadas temporariamente
@@ -64,25 +64,25 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
       </div>
 
       {/* Grupos por Cliente e Data de Entrada */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {clientStartDateGroups.map((clientGroup, groupIndex) => (
           <div key={clientGroup.groupKey}>
             {/* Separador visual entre grupos (exceto antes do primeiro) */}
             {groupIndex > 0 && (
-              <div className="client-group-separator h-3 bg-gradient-to-r from-green-200 via-green-300 to-green-200 shadow-sm rounded-full mx-4 my-4" 
+              <div className="client-group-separator h-4 bg-gradient-to-r from-legal-primary/20 via-legal-primary/40 to-legal-primary/20 shadow-legal-sm rounded-full mx-6 my-6" 
                    aria-hidden="true" />
             )}
             
             {/* Card para o grupo de cliente + data de entrada */}
-            <Card className="shadow-sm border-l-4 border-l-green-500">
-              <CardContent className="p-4">
+            <Card className="shadow-legal border-l-4 border-l-legal-primary bg-card dark:bg-bg-secondary-dark transition-all duration-200 hover:shadow-legal-md dark:hover:shadow-legal-dark">
+              <CardContent className="p-6">
                 {/* Header do grupo */}
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
+                <div className="mb-6">
+                  <h3 className="text-legal-h3 lg:text-legal-h3-lg font-semibold text-legal-dark dark:text-text-primary-dark">
                     {clientGroup.client_name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Data de entrada: {clientGroup.entry_date} • {clientGroup.totalAssociations} associações
+                  <p className="text-legal-label lg:text-legal-label-lg text-muted-foreground mt-2">
+                    Data de entrada: <span className="font-medium text-legal-primary">{clientGroup.entry_date}</span> • <span className="font-medium text-legal-secondary">{clientGroup.totalAssociations} associações</span>
                   </p>
                 </div>
 
@@ -104,16 +104,17 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
 
       {/* Paginação */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Página {currentPage} de {totalPages}
+        <div className="flex items-center justify-between p-4 bg-muted/20 dark:bg-bg-tertiary-dark rounded-lg border border-legal-primary/20">
+          <div className="text-legal-label lg:text-legal-label-lg text-muted-foreground">
+            Página <span className="font-medium text-legal-primary">{currentPage}</span> de <span className="font-medium text-legal-primary">{totalPages}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
+              className="border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Anterior
             </Button>
@@ -122,6 +123,7 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
               size="sm"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
+              className="border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Próxima
             </Button>
