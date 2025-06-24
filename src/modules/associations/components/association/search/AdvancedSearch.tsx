@@ -100,6 +100,11 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <Badge variant="outline">
           Total: {totalCount}
         </Badge>
+        {filters.status === 'available' && (
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+            ✓ Apenas Disponíveis
+          </Badge>
+        )}
       </div>
     </div>
   );
