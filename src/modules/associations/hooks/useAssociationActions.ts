@@ -31,10 +31,7 @@ export const useAssociationActions = () => {
 
           const availableStatusId = statusData.id;
 
-          // Usar transação para garantir atomicidade
-          const { error: beginError } = await supabase.rpc('begin_transaction');
-          if (beginError) throw beginError;
-
+          // Usar transação manual sem RPC functions
           try {
             // Encerrar associação (definir exit_date)
             const { data: assocData, error: assocError } = await supabase
@@ -63,14 +60,8 @@ export const useAssociationActions = () => {
 
             if (assetError) throw assetError;
 
-            // Commit da transação
-            const { error: commitError } = await supabase.rpc('commit_transaction');
-            if (commitError) throw commitError;
-
             return assocData;
           } catch (txError) {
-            // Rollback em caso de erro
-            await supabase.rpc('rollback_transaction');
             throw txError;
           }
         },
@@ -134,8 +125,16 @@ export const useAssociationActions = () => {
     }
   });
 
+  // Função helper para compatibilidade com o código existente
+  const handleEndAssociation = async (associationId: number, assetId: string) => {
+    return endAssociation.mutateAsync({ associationId, assetId });
+  };
+
   return {
     endAssociation,
-    bulkEndAssociations
+    bulkEndAssociations,
+    handleEndAssociation,
+    isEndingAssociation: endAssociation.isPending,
+    operationProgress: { current: 0, total: 0 } // Mock para compatibilidade
   };
 };

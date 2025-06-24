@@ -50,7 +50,7 @@ export const idempotencyService = {
         };
       }
 
-      return data as ValidationResult;
+      return data as unknown as ValidationResult;
     } catch (error) {
       console.error('Exception validating association state:', error);
       return {
@@ -88,7 +88,7 @@ export const idempotencyService = {
         };
       }
 
-      return data as OperationLockResult;
+      return data as unknown as OperationLockResult;
     } catch (error) {
       console.error('Exception acquiring operation lock:', error);
       return {

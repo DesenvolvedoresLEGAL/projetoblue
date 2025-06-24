@@ -48,66 +48,34 @@ export const useCreateAssociation = () => {
             mapped_status_id: statusId
           });
 
-          // Usar transação para garantir atomicidade
-          const { data, error } = await supabase.rpc('create_association_with_status', {
-            p_asset_id: params.assetId,
-            p_client_id: params.clientId,
-            p_association_id: associationId,
-            p_entry_date: params.startDate,
-            p_notes: params.notes || null,
-            p_new_status_id: statusId
-          }).single();
+          try {
+            // Atualizar status do ativo
+            const { error: assetError } = await supabase
+              .from('assets')
+              .update({ status_id: statusId })
+              .eq('uuid', params.assetId);
 
-          // Se a RPC não existe, fazer manualmente com transação
-          if (error && error.code === '42883') { // função não encontrada
-            console.log('RPC not found, using manual transaction');
-            
-            // Iniciar transação manual
-            const { error: beginError } = await supabase.rpc('begin_transaction');
-            if (beginError) throw beginError;
+            if (assetError) throw assetError;
 
-            try {
-              // Atualizar status do ativo
-              const { error: assetError } = await supabase
-                .from('assets')
-                .update({ status_id: statusId })
-                .eq('uuid', params.assetId);
+            // Criar associação
+            const { data: assocData, error: assocError } = await supabase
+              .from('asset_client_assoc')
+              .insert({
+                asset_id: params.assetId,
+                client_id: params.clientId,
+                association_id: associationId,
+                entry_date: params.startDate,
+                notes: params.notes
+              })
+              .select()
+              .single();
 
-              if (assetError) throw assetError;
+            if (assocError) throw assocError;
 
-              // Criar associação
-              const { data: assocData, error: assocError } = await supabase
-                .from('asset_client_assoc')
-                .insert({
-                  asset_id: params.assetId,
-                  client_id: params.clientId,
-                  association_id: associationId,
-                  entry_date: params.startDate,
-                  notes: params.notes
-                })
-                .select()
-                .single();
-
-              if (assocError) throw assocError;
-
-              // Commit da transação
-              const { error: commitError } = await supabase.rpc('commit_transaction');
-              if (commitError) throw commitError;
-
-              return assocData;
-            } catch (txError) {
-              // Rollback em caso de erro
-              await supabase.rpc('rollback_transaction');
-              throw txError;
-            }
+            return assocData;
+          } catch (txError) {
+            throw txError;
           }
-
-          if (error) {
-            console.error('❌ Error creating association:', error);
-            throw error;
-          }
-
-          return data;
         },
         undefined, // associationId não é necessário para CREATE
         'CREATE_ASSOCIATION'
