@@ -1,8 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useURLFilters } from '@/hooks/useURLFilters';
 import { useAssetsData } from '@modules/assets/hooks/useAssetsData';
+import { useInventoryFiltersState } from '@modules/assets/hooks/useInventoryFiltersState';
 import AssetsHeader from '@modules/assets/components/assets/AssetsHeader';
 import AssetsSearchForm from '@modules/assets/components/assets/AssetsSearchForm';
 import AssetsTable from '@modules/assets/components/assets/AssetsTable';
@@ -13,10 +14,16 @@ import AssetsError from '@modules/assets/components/assets/AssetsError';
 const ASSETS_PER_PAGE = 10;
 
 const AssetsInventory = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterManufacturer, setFilterManufacturer] = useState("all");
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterType,
+    setFilterType,
+    filterStatus,
+    setFilterStatus,
+    filterManufacturer,
+    setFilterManufacturer
+  } = useInventoryFiltersState();
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
