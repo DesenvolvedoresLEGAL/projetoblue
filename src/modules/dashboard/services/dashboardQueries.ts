@@ -249,7 +249,7 @@ export async function fetchEnhancedRecentEvents() {
   });
 
   // Fetch user profiles if we have user IDs
-  let usersMap = new Map<string, string>();
+  const usersMap = new Map<string, string>();
   if (userIds.size > 0) {
     const usersResult = await supabase
       .from('profiles')

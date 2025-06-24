@@ -6,15 +6,20 @@ import { toast } from '@/utils/toast';
 import { toUserRole } from '@/utils/roleUtils';
 
 // Debounce function to prevent multiple redirects
-const debounce = (fn: Function, ms = 300) => {
+const debounce = <T extends (...args: unknown[]) => unknown>(
+  fn: T,
+  ms = 300,
+) => {
   let timeoutId: ReturnType<typeof setTimeout>;
-  return function(this: any, ...args: any[]) {
+  return function(this: unknown, ...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn.apply(this, args), ms);
   };
 };
 
-export function useAuthSession(updateState: (state: any) => void) {
+import type { AuthState } from '@/types/auth';
+
+export function useAuthSession(updateState: (state: Partial<AuthState>) => void) {
   useEffect(() => {
     let isMounted = true;
     
@@ -72,7 +77,7 @@ export function useAuthSession(updateState: (state: any) => void) {
             console.warn('Profile fetch failed but continuing with basic auth state');
           }
         }
-      } catch (error: any) {
+        } catch (error: unknown) {
         if (!isMounted) return;
         
         console.error('Error fetching profile:', error);

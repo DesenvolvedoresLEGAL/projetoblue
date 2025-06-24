@@ -47,13 +47,14 @@ const AssetsTable = ({
           return asset.serial_number || 'N/A';
         case "model":
           return asset.model || 'N/A';
-        default:
+        default: {
           const value = asset[fieldName as keyof AssetWithRelations];
           if (typeof value === 'object' && value !== null) {
             if ('name' in value) return value.name || 'N/A';
             return 'N/A';
           }
           return value?.toString() || 'N/A';
+        }
       }
     };
 

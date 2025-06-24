@@ -14,10 +14,12 @@ interface TechnicalErrorInfo {
   message: string;
   category?: AuthErrorCategory;
   timestamp: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
-export function useAuthActions(updateState: (state: any) => void) {
+import type { AuthState } from '@/types/auth';
+
+export function useAuthActions(updateState: (state: Partial<AuthState>) => void) {
   const navigate = useNavigate();
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
@@ -102,11 +104,11 @@ export function useAuthActions(updateState: (state: any) => void) {
           setTechnicalError(techError);
           throw new Error(friendlyMessage);
         }
-      } catch (serviceError: any) {
-        throw serviceError;
-      }
-    } catch (error: any) {
-      console.error('Erro não tratado no processo de cadastro:', error);
+        } catch (serviceError: unknown) {
+          throw serviceError;
+        }
+      } catch (error: unknown) {
+        console.error('Erro não tratado no processo de cadastro:', error);
       
       const friendlyMessage = showFriendlyError(error, 'create');
       const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
@@ -313,7 +315,7 @@ export function useAuthActions(updateState: (state: any) => void) {
           const from = window.history.state?.usr?.from?.pathname || '/';
           navigate(from, { replace: true });
           
-        } catch (profileError: any) {
+        } catch (profileError: unknown) {
           console.error('Erro ao verificar perfil após login:', profileError);
           
           // Se o erro é relacionado a conta excluída/inativa, não permitir login
@@ -379,7 +381,7 @@ export function useAuthActions(updateState: (state: any) => void) {
         };
       }
       
-    } catch (error: any) {
+      } catch (error: unknown) {
       console.error('Erro durante o login:', error);
       
       const friendlyMessage = showFriendlyError(error, 'authentication');
@@ -411,7 +413,7 @@ export function useAuthActions(updateState: (state: any) => void) {
       
       toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
-    } catch (error: any) {
+      } catch (error: unknown) {
       console.error('Erro ao fazer logout:', error);
       const friendlyMessage = showFriendlyError(error, 'authentication');
       toast.error(friendlyMessage);
