@@ -56,6 +56,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
         status_id,
         solution_id,
         manufacturer_id,
+        created_at,
         asset_status!inner(status),
         asset_solutions!inner(solution),
         manufacturers(name)
@@ -81,19 +82,21 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
 
     const asset = data[0];
     return {
+      id: asset.uuid, // Map uuid to id for compatibility
       uuid: asset.uuid,
       radio: asset.radio,
       line_number: asset.line_number?.toString(),
       serial_number: asset.serial_number,
       iccid: asset.iccid,
       model: asset.model,
-      status_id: asset.status_id,
+      statusId: asset.status_id, // Correct property name
       solution_id: asset.solution_id,
       manufacturer_id: asset.manufacturer_id,
       status: asset.asset_status?.status,
       solution: asset.asset_solutions?.solution,
       brand: asset.manufacturers?.name,
-      type: asset.iccid ? 'CHIP' : 'EQUIPMENT'
+      type: asset.iccid ? 'CHIP' : 'EQUIPMENT',
+      registrationDate: asset.created_at || new Date().toISOString() // Required property
     };
   };
 
