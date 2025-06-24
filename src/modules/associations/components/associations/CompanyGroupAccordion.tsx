@@ -18,7 +18,7 @@ import { GroupActionsToolbar } from './GroupActionsToolbar';
 interface CompanyGroupAccordionProps {
   companyGroups: CompanyGroup[];
   onEditAssociation: (association: Association) => void;
-  onEndAssociation: (associationId: number) => void;
+  onEndAssociation: (associationId: number, assetId: string) => void;
   onEndGroup: (groupKey: string) => void;
   debouncedSearchTerm: string;
   isEndingAssociation: boolean;

@@ -28,7 +28,7 @@ interface Association {
 interface AssociationTableRowProps {
   association: Association;
   onEdit: (association: Association) => void;
-  onEndAssociation: (associationId: number) => void;
+  onEndAssociation: (associationId: number, assetiId: string) => void;
   isEndingAssociation?: boolean;
 }
 
@@ -75,7 +75,7 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
   };
 
   const handleEndAssociation = () => {
-    onEndAssociation(association.id);
+    onEndAssociation(association.id, association.asset_id);
     setShowEndConfirmation(false);
   };
 

@@ -14,7 +14,7 @@ interface AssociationsAdvancedGroupedTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onEditAssociation: (association: Association) => void;
-  onEndAssociation: (associationId: number) => void;
+  onEndAssociation: (associationId: number, assetId: string) => void;
   onEndGroup: (groupKey: string) => void;
   debouncedSearchTerm: string;
   isEndingAssociation: boolean;
