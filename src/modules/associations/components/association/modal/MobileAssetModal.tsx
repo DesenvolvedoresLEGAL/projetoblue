@@ -71,7 +71,7 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
     switch (currentStep) {
       case 'search': return 'Buscar Ativos';
       case 'selection': return `Selecionados (${selectedAssets.length})`;
-      case 'confirmation': return 'Confirmar Seleção';
+      case 'confirmation': return 'Confirmar Adição';
       default: return title;
     }
   };
@@ -118,6 +118,7 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
                 size="sm"
                 onClick={handleBack}
                 className="p-2"
+                disabled={isLoading}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -136,6 +137,7 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
                 size="sm"
                 onClick={handleNext}
                 className="p-2"
+                disabled={isLoading}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -171,8 +173,9 @@ export const MobileAssetModal: React.FC<MobileAssetModalProps> = ({
               <Button
                 onClick={handleNext}
                 className="flex-1"
+                disabled={isLoading}
               >
-                {currentStep === 'search' ? 'Ver Selecionados' : 'Confirmar'}
+                {currentStep === 'search' ? 'Ver Selecionados' : 'Confirmar Adição'}
               </Button>
             )}
           </div>
