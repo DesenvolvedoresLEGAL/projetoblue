@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
+import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 interface StandardStatusBadgeProps {
@@ -54,11 +55,12 @@ export const StandardStatusBadge: React.FC<StandardStatusBadgeProps> = ({
     }
   };
 
-  const variant = getStatusVariant(status, type);
+  const variant: VariantProps<typeof badgeVariants>["variant"] =
+    getStatusVariant(status, type);
 
   return (
-    <Badge 
-      variant={variant as any} 
+    <Badge
+      variant={variant}
       className={cn("text-xs font-neue-haas", className)}
     >
       {status}

@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Copy } from "lucide-react";
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, type FieldValues } from 'react-hook-form';
 import { toast } from "@/utils/toast";
 
 interface AdminCredentialsFieldsProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<FieldValues>;
   isLoading: boolean;
   isMobile: boolean;
   title: string;

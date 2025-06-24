@@ -1,10 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Asset } from '@/types/asset';
+import type { AssetCreateParams, AssetUpdateParams } from './types';
 import { showFriendlyError } from '@/utils/errorTranslator';
 import { mapDatabaseAssetToFrontend } from '@/utils/databaseMappers';
 
-export async function createAsset(assetData: any): Promise<Asset | null> {
+export async function createAsset(assetData: AssetCreateParams): Promise<Asset | null> {
   try {
     const { data, error } = await supabase
       .from('assets')
@@ -26,7 +27,10 @@ export async function createAsset(assetData: any): Promise<Asset | null> {
   }
 }
 
-export async function updateAsset(id: string, updates: any): Promise<Asset | null> {
+export async function updateAsset(
+  id: string,
+  updates: AssetUpdateParams,
+): Promise<Asset | null> {
   try {
     const { data, error } = await supabase
       .from('assets')

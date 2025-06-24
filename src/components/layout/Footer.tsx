@@ -3,7 +3,7 @@ import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-interface FooterProps extends React.HTMLAttributes<HTMLElement> {}
+type FooterProps = React.HTMLAttributes<HTMLElement>
 export function Footer({
   className,
   ...props

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useMemo, ReactNode } from '
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
+import type { AssetCreateParams, AssetUpdateParams } from '@/modules/assets/services/asset/types';
 import { showFriendlyError } from '@/utils/errorTranslator';
 import { useAuth } from '@/context/AuthContext';
 
@@ -12,8 +13,8 @@ interface AssetContextProps {
   statusRecords: StatusRecord[];
   loading: boolean;
   error: string | null;
-  createAsset: (assetData: any) => Promise<void>;
-  updateAsset: (id: string, updates: any) => Promise<Asset>;
+  createAsset: (assetData: AssetCreateParams) => Promise<void>;
+  updateAsset: (id: string, updates: AssetUpdateParams) => Promise<Asset>;
   deleteAsset: (id: string) => Promise<boolean>;
   getAssetById: (id: string) => Asset | undefined;
   getAssetsByStatus: (status: string) => Asset[];
@@ -55,7 +56,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   // Optimized asset operations with better error handling
   const handleCreateAsset = useMemo(() => {
-    return async (assetData: any) => {
+    return async (assetData: AssetCreateParams) => {
       try {
         validateAssetPermission();
         setLoading(true);
@@ -81,7 +82,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   }, [validateAssetPermission]);
 
   const handleUpdateAsset = useMemo(() => {
-    return async (id: string, updates: any): Promise<Asset> => {
+    return async (id: string, updates: AssetUpdateParams): Promise<Asset> => {
       try {
         validateAssetPermission();
         setLoading(true);
