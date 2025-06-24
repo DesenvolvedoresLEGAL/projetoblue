@@ -36,20 +36,33 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
   const addAssetsMutation = useAddAssetsToAssociation();
 
   const handleAssetSelected = (asset: SelectedAsset) => {
+    console.log('AddAssetsDialog: Tentando adicionar asset', asset.uuid);
+    
     // Verificar se o asset já foi selecionado (evitar duplicatas)
     const isAlreadySelected = selectedAssets.some(selectedAsset => selectedAsset.uuid === asset.uuid);
     
     if (isAlreadySelected) {
+      console.log('AddAssetsDialog: Asset já selecionado', asset.uuid);
       toast.warning('Este ativo já foi selecionado');
       return;
     }
 
-    setSelectedAssets(prev => [...prev, asset]);
+    console.log('AddAssetsDialog: Adicionando novo asset', asset.uuid);
+    setSelectedAssets(prev => {
+      const newList = [...prev, asset];
+      console.log('AddAssetsDialog: Nova lista de assets selecionados', newList.map(a => a.uuid));
+      return newList;
+    });
     toast.success('Ativo adicionado à seleção');
   };
 
   const handleAssetRemoved = (assetId: string) => {
-    setSelectedAssets(prev => prev.filter(asset => asset.uuid !== assetId));
+    console.log('AddAssetsDialog: Removendo asset', assetId);
+    setSelectedAssets(prev => {
+      const newList = prev.filter(asset => asset.uuid !== assetId);
+      console.log('AddAssetsDialog: Nova lista após remoção', newList.map(a => a.uuid));
+      return newList;
+    });
   };
 
   const handleProceedToConfirmation = () => {
@@ -62,6 +75,8 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
   const handleConfirm = async () => {
     try {
+      console.log('AddAssetsDialog: Iniciando adição de assets', selectedAssets.map(a => a.uuid));
+      
       const result = await addAssetsMutation.mutateAsync({
         client_id: existingAssociation.client_id,
         association_id: existingAssociation.association_id,
@@ -74,12 +89,18 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
         gb: existingAssociation.gb
       });
 
+      console.log('AddAssetsDialog: Resultado da adição:', result);
+
       if (result.success) {
+        toast.success(`${result.inserted_count} ativo(s) adicionado(s) com sucesso`);
         onSuccess?.();
         handleCloseAll();
+      } else {
+        toast.error(result.message || 'Erro ao adicionar ativos');
       }
     } catch (error) {
-      console.error('Erro ao adicionar ativos:', error);
+      console.error('AddAssetsDialog: Erro ao adicionar ativos:', error);
+      toast.error('Erro interno ao adicionar ativos');
     }
   };
 

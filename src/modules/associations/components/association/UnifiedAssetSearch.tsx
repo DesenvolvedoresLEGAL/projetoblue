@@ -1,9 +1,7 @@
 
-import React, { useState } from 'react';
-import { useAssetSearch, AssetSearchFilters } from '@modules/associations/hooks/useAssetSearch';
-import { SearchTabs } from './search/SearchTabs';
+import React from 'react';
 import { SelectedAsset } from '@modules/associations/types';
-import { toast } from 'sonner';
+import { SearchTabs } from './search/SearchTabs';
 
 interface UnifiedAssetSearchProps {
   selectedAssets: SelectedAsset[];
@@ -16,68 +14,19 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
   onAssetSelected,
   excludeAssociatedToClient
 }) => {
-  const [selectingAssetId, setSelectingAssetId] = useState<string | null>(null);
-  
-  // Filtros para busca avançada
-  const [filters, setFilters] = useState<AssetSearchFilters>({
-    type: 'all',
-    searchTerm: '',
-    status: 'available'
-  });
-
-  const {
-    assets,
-    isLoading,
-    searchSpecificAsset,
-    validateAssetSelection
-  } = useAssetSearch(
-    filters,
-    'all',
-    excludeAssociatedToClient,
-    { selectedAssets }
-  );
-
-  // Busca direta (exata)
-  const handleDirectAssetFound = async (asset: SelectedAsset) => {
-    console.log('Asset encontrado na busca direta:', asset);
-    const isValid = await validateAssetSelection(asset);
-    if (isValid) {
-      onAssetSelected(asset);
-      toast.success(`${asset.type === 'CHIP' ? 'CHIP' : 'Equipamento'} encontrado e adicionado!`);
-    }
-  };
-
-  // Selecionar ativo da lista
-  const handleAssetSelect = async (asset: SelectedAsset) => {
-    setSelectingAssetId(asset.uuid);
-    try {
-      const isValid = await validateAssetSelection(asset);
-      if (isValid) {
-        onAssetSelected(asset);
-        toast.success('Ativo adicionado com sucesso!');
-      }
-    } finally {
-      setSelectingAssetId(null);
-    }
-  };
-
-  // Atualizar filtros
-  const updateFilters = (updates: Partial<AssetSearchFilters>) => {
-    const newFilters = { ...filters, ...updates };
-    console.log('Atualizando filtros:', { old: filters, new: newFilters, updates });
-    setFilters(newFilters);
+  const handleAssetSelect = (asset: SelectedAsset) => {
+    console.log('UnifiedAssetSearch: Asset selecionado', asset.uuid);
+    // Remover a validação de duplicata daqui - deixar apenas no AddAssetsDialog
+    onAssetSelected(asset);
   };
 
   return (
-    <SearchTabs
-      onAssetFound={handleDirectAssetFound}
-      searchSpecificAsset={searchSpecificAsset}
-      filters={filters}
-      onFiltersUpdate={updateFilters}
-      assets={assets}
-      isLoading={isLoading}
-      onAssetSelect={handleAssetSelect}
-      selectingAssetId={selectingAssetId}
-    />
+    <div className="h-full overflow-hidden">
+      <SearchTabs
+        selectedAssets={selectedAssets}
+        onAssetSelected={handleAssetSelect}
+        excludeAssociatedToClient={excludeAssociatedToClient}
+      />
+    </div>
   );
 };

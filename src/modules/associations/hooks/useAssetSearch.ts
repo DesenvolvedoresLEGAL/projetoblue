@@ -1,235 +1,139 @@
 
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@modules/associations/types';
-import { toast } from '@/utils/toast';
-import { useDebounce } from '@/hooks/useDebounce';
 
-export interface AssetSearchFilters {
-  type: 'all' | 'equipment' | 'chip';
-  searchTerm: string;
-  status: 'available' | 'all';
+interface UseAssetSearchOptions {
+  excludeAssociatedToClient?: string;
+  selectedAssets?: SelectedAsset[];
 }
 
-export const useAssetSearch = (
-  filters: AssetSearchFilters = { type: 'all', searchTerm: '', status: 'available' },
-  solutionFilter: string = 'all',
-  excludeAssociatedToClient?: string,
-  options?: { selectedAssets?: SelectedAsset[] }
-) => {
-  // Debounce para os filtros
-  const debouncedFilters = useDebounce(filters, 300);
+export const useAssetSearch = ({ 
+  excludeAssociatedToClient, 
+  selectedAssets = [] 
+}: UseAssetSearchOptions = {}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSolution, setSelectedSolution] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  // Query para buscar soluções
-  const solutionsQuery = useQuery({
-    queryKey: ['asset-solutions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_solutions')
-        .select('id, solution')
-        .order('solution');
-      
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  // Criar um Set dos UUIDs selecionados para performance
+  const selectedAssetIds = useMemo(() => 
+    new Set(selectedAssets.map(asset => asset.uuid)), 
+    [selectedAssets]
+  );
 
-  // Query para buscar ativos
-  const assetsQuery = useQuery({
-    queryKey: ['available-assets', JSON.stringify(debouncedFilters), solutionFilter, excludeAssociatedToClient],
+  const { data: assets = [], isLoading, error } = useQuery({
+    queryKey: ['assets-search', searchTerm, selectedSolution, selectedStatus, excludeAssociatedToClient],
     queryFn: async () => {
-      console.log('Filtros aplicados:', debouncedFilters);
-      
+      console.log('useAssetSearch: Buscando assets', { 
+        searchTerm, 
+        selectedSolution, 
+        selectedStatus, 
+        excludeAssociatedToClient 
+      });
+
       let query = supabase
         .from('assets')
         .select(`
           uuid,
-          serial_number,
           radio,
           line_number,
+          serial_number,
           iccid,
-          solution_id,
+          model,
           status_id,
-          created_at,
-          asset_solutions!inner(
-            id,
-            solution
-          ),
-          asset_status!inner(
-            id,
-            status
-          )
+          solution_id,
+          manufacturer_id,
+          asset_status!inner(status),
+          asset_solutions!inner(solution),
+          manufacturers(name)
         `)
         .is('deleted_at', null);
 
-      // Aplicar filtro de status
-      if (debouncedFilters.status === 'available') {
-        query = query.eq('asset_status.status', 'disponível');
+      // Filtros de busca
+      if (searchTerm.trim()) {
+        query = query.or(`radio.ilike.%${searchTerm}%,line_number.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%`);
       }
 
-      // Aplicar filtro de tipo - CORRIGIDO
-      if (debouncedFilters.type === 'equipment') {
-        // Equipamentos: iccid é null ou string vazia
-        query = query.or('iccid.is.null,iccid.eq.');
-      } else if (debouncedFilters.type === 'chip') {
-        // CHIPs: iccid não é null e não é string vazia
-        query = query.not('iccid', 'is', null).neq('iccid', '');
+      if (selectedSolution) {
+        query = query.eq('solution_id', selectedSolution);
       }
 
-      // Filtrar por solução se especificado
-      if (solutionFilter !== 'all') {
-        query = query.eq('solution_id', parseInt(solutionFilter));
+      if (selectedStatus) {
+        query = query.eq('status_id', selectedStatus);
       }
 
-      // Aplicar busca por termo se especificado - CORRIGIDO
-      if (debouncedFilters.searchTerm.trim()) {
-        const cleanTerm = debouncedFilters.searchTerm.trim();
-        
-        const conditions = [
-          `radio.ilike.%${cleanTerm}%`,
-          `serial_number.ilike.%${cleanTerm}%`,
-          `iccid.ilike.%${cleanTerm}%`
-        ];
-        
-        // Adicionar line_number apenas se for numérico
-        if (!isNaN(Number(cleanTerm))) {
-          conditions.push(`line_number.eq.${cleanTerm}`);
-        }
-        
-        query = query.or(conditions.join(','));
-      }
-
-      const { data: assets, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        console.error('Erro na query de assets:', error);
-        throw error;
-      }
-
-      let filteredAssets = assets || [];
-      console.log('Assets encontrados antes do filtro de cliente:', filteredAssets.length);
-
-      // Excluir ativos já associados ao cliente específico, se fornecido
+      // Excluir assets já associados ao cliente (se fornecido)
       if (excludeAssociatedToClient) {
-        const { data: associatedAssets, error: assocError } = await supabase
+        const { data: associatedAssets } = await supabase
           .from('asset_client_assoc')
           .select('asset_id')
           .eq('client_id', excludeAssociatedToClient)
           .is('exit_date', null)
           .is('deleted_at', null);
 
-        if (assocError) throw assocError;
-
-        const associatedAssetIds = new Set(
-          (associatedAssets || []).map(a => a.asset_id)
-        );
-
-        filteredAssets = filteredAssets.filter(
-          asset => !associatedAssetIds.has(asset.uuid)
-        );
+        if (associatedAssets && associatedAssets.length > 0) {
+          const associatedAssetIds = associatedAssets.map(assoc => assoc.asset_id);
+          query = query.not('uuid', 'in', `(${associatedAssetIds.join(',')})`);
+        }
       }
 
-      console.log('Assets encontrados após filtros:', filteredAssets.length);
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-      // Mapear para SelectedAsset format
-      return filteredAssets.map(asset => ({
-        id: asset.uuid,
+      if (error) {
+        console.error('Erro ao buscar assets:', error);
+        throw error;
+      }
+
+      return data?.map(asset => ({
         uuid: asset.uuid,
-        type: asset.iccid ? 'CHIP' : 'EQUIPMENT' as 'CHIP' | 'EQUIPMENT',
-        registrationDate: asset.created_at,
-        status: asset.asset_status.status,
-        statusId: asset.status_id,
         radio: asset.radio,
+        line_number: asset.line_number?.toString(),
         serial_number: asset.serial_number,
         iccid: asset.iccid,
-        line_number: asset.line_number?.toString(),
+        model: asset.model,
+        status_id: asset.status_id,
         solution_id: asset.solution_id,
-        solucao: asset.asset_solutions.solution
-      })) as SelectedAsset[];
+        manufacturer_id: asset.manufacturer_id,
+        status: asset.asset_status?.status,
+        solution: asset.asset_solutions?.solution,
+        brand: asset.manufacturers?.name,
+        type: asset.iccid ? 'CHIP' : 'EQUIPMENT'
+      })) || [];
     },
     enabled: true
   });
 
-  // Função para buscar ativo específico - CORRIGIDO
-  const searchSpecificAsset = async (term: string, type: 'chip' | 'equipment'): Promise<SelectedAsset | null> => {
-    try {
-      console.log('Busca direta:', { term, type });
-      
-      let query = supabase
-        .from('assets')
-        .select(`
-          uuid,
-          serial_number,
-          radio,
-          line_number,
-          iccid,
-          solution_id,
-          status_id,
-          created_at,
-          asset_solutions!inner(solution),
-          asset_status!inner(status)
-        `)
-        .is('deleted_at', null)
-        .eq('asset_status.status', 'disponível'); // CORRIGIDO: case sensitive
+  // Filtrar assets já selecionados apenas na exibição
+  const availableAssets = useMemo(() => {
+    const filtered = assets.filter(asset => !selectedAssetIds.has(asset.uuid));
+    console.log('useAssetSearch: Assets disponíveis após filtro', {
+      total: assets.length,
+      selectedCount: selectedAssets.length,
+      availableCount: filtered.length
+    });
+    return filtered;
+  }, [assets, selectedAssetIds, selectedAssets.length]);
 
-      if (type === 'chip') {
-        query = query.ilike('iccid', `%${term}%`).not('iccid', 'is', null).neq('iccid', '');
-      } else {
-        query = query.eq('radio', term);
-      }
-
-      const { data, error } = await query.single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          toast.error(`${type === 'chip' ? 'CHIP' : 'Equipamento'} não encontrado`);
-          return null;
-        }
-        console.error('Erro na busca direta:', error);
-        throw error;
-      }
-
-      console.log('Ativo encontrado na busca direta:', data);
-
-      return {
-        id: data.uuid,
-        uuid: data.uuid,
-        type: data.iccid ? 'CHIP' : 'EQUIPMENT',
-        registrationDate: data.created_at,
-        status: data.asset_status.status,
-        statusId: data.status_id,
-        radio: data.radio,
-        serial_number: data.serial_number,
-        iccid: data.iccid,
-        line_number: data.line_number?.toString(),
-        solution_id: data.solution_id,
-        solucao: data.asset_solutions.solution
-      } as SelectedAsset;
-    } catch (error) {
-      console.error('Erro ao buscar ativo específico:', error);
-      toast.error('Erro ao buscar ativo');
-      return null;
-    }
-  };
-
-  // Função para validar seleção de ativo
-  const validateAssetSelection = async (asset: SelectedAsset): Promise<boolean> => {
-    if (options?.selectedAssets?.some(selected => selected.uuid === asset.uuid)) {
-      toast.warning('Este ativo já foi selecionado');
-      return false;
-    }
-    return true;
-  };
+  const resetFilters = useCallback(() => {
+    setSearchTerm('');
+    setSelectedSolution('');
+    setSelectedStatus('');
+  }, []);
 
   return {
-    assets: assetsQuery.data || [],
-    solutions: solutionsQuery.data || [],
-    isLoading: assetsQuery.isLoading || solutionsQuery.isLoading,
-    isError: assetsQuery.isError || solutionsQuery.isError,
-    error: assetsQuery.error || solutionsQuery.error,
-    searchSpecificAsset,
-    validateAssetSelection
+    assets: availableAssets,
+    searchTerm,
+    setSearchTerm,
+    selectedSolution,
+    setSelectedSolution,
+    selectedStatus,
+    setSelectedStatus,
+    isLoading,
+    error,
+    resetFilters
   };
 };
