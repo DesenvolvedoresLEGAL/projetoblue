@@ -4,6 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@modules/associations/types';
 
+export interface AssetSearchFilters {
+  searchTerm: string;
+  selectedSolution: string;
+  selectedStatus: string;
+  type: 'all' | 'equipment' | 'chip';
+  status: 'all' | 'available';
+}
+
 interface UseAssetSearchOptions {
   excludeAssociatedToClient?: string;
   selectedAssets?: SelectedAsset[];
@@ -57,11 +65,11 @@ export const useAssetSearch = ({
       }
 
       if (selectedSolution) {
-        query = query.eq('solution_id', selectedSolution);
+        query = query.eq('solution_id', parseInt(selectedSolution));
       }
 
       if (selectedStatus) {
-        query = query.eq('status_id', selectedStatus);
+        query = query.eq('status_id', parseInt(selectedStatus));
       }
 
       // Excluir assets já associados ao cliente (se fornecido)
@@ -124,6 +132,20 @@ export const useAssetSearch = ({
     setSelectedStatus('');
   }, []);
 
+  const filters: AssetSearchFilters = {
+    searchTerm,
+    selectedSolution,
+    selectedStatus,
+    type: 'all',
+    status: 'all'
+  };
+
+  const onFiltersUpdate = useCallback((updates: Partial<AssetSearchFilters>) => {
+    if (updates.searchTerm !== undefined) setSearchTerm(updates.searchTerm);
+    if (updates.selectedSolution !== undefined) setSelectedSolution(updates.selectedSolution);
+    if (updates.selectedStatus !== undefined) setSelectedStatus(updates.selectedStatus);
+  }, []);
+
   return {
     assets: availableAssets,
     searchTerm,
@@ -134,6 +156,8 @@ export const useAssetSearch = ({
     setSelectedStatus,
     isLoading,
     error,
-    resetFilters
+    resetFilters,
+    filters,
+    onFiltersUpdate
   };
 };
