@@ -13,6 +13,7 @@ import { Loader2, Building2, Calendar, Hash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAddAssetsToAssociation } from '../../hooks/useAddAssetsToAssociation';
 import { AssetSelection } from '../association/AssetSelection';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ExistingAssociation {
   client_id: string;
@@ -41,6 +42,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 }) => {
   const [selectedAssets, setSelectedAssets] = useState<any[]>([]);
   const addAssetsMutation = useAddAssetsToAssociation();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async () => {
     if (selectedAssets.length === 0) {
@@ -79,23 +81,30 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent 
+        className={`
+          ${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full m-2' : 'max-w-4xl max-h-[90vh]'} 
+          overflow-hidden flex flex-col
+        `}
+      >
+        <DialogHeader className={isMobile ? 'pb-2' : ''}>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
-            Adicionar Ativos à Associação
+            {isMobile ? 'Adicionar Ativos' : 'Adicionar Ativos à Associação'}
           </DialogTitle>
           <DialogDescription>
-            Selecione os ativos que deseja adicionar à associação existente
+            {isMobile ? 'Selecione os ativos para adicionar' : 'Selecione os ativos que deseja adicionar à associação existente'}
           </DialogDescription>
         </DialogHeader>
 
         {/* Informações da Associação Existente */}
-        <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-          <div className="flex items-center gap-4 flex-wrap">
+        <div className={`bg-muted/50 rounded-lg space-y-2 ${isMobile ? 'p-3' : 'p-4'}`}>
+          <div className={`flex items-center gap-4 ${isMobile ? 'flex-col items-start gap-2' : 'flex-wrap'}`}>
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{existingAssociation.client_name}</span>
+              <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>
+                {existingAssociation.client_name}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Hash className="h-4 w-4 text-muted-foreground" />
@@ -103,7 +112,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+              <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 Início: {existingAssociation.entry_date}
                 {existingAssociation.exit_date && ` • Fim: ${existingAssociation.exit_date}`}
               </span>
@@ -111,8 +120,8 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
           </div>
         </div>
 
-        {/* Seleção de Ativos */}
-        <div className="space-y-4">
+        {/* Seleção de Ativos - com scroll */}
+        <div className="flex-1 overflow-y-auto">
           <AssetSelection
             selectedAssets={selectedAssets}
             onAssetsChange={setSelectedAssets}
@@ -121,17 +130,19 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
           />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className={`${isMobile ? 'flex-col gap-2 pt-4' : ''} border-t mt-4 pt-4`}>
           <Button 
             variant="outline" 
             onClick={handleCancel}
             disabled={addAssetsMutation.isPending}
+            className={isMobile ? 'w-full order-2' : ''}
           >
             Cancelar
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={selectedAssets.length === 0 || addAssetsMutation.isPending}
+            className={isMobile ? 'w-full order-1' : ''}
           >
             {addAssetsMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
