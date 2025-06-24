@@ -15,29 +15,39 @@ export const useAddAssetsToAssociation = () => {
     onSuccess: (data) => {
       const { inserted_count, failed_count, message } = data;
       
-      if (inserted_count > 0) {
+      console.log('Resultado da adição:', message);
+
+      // Lógica de toasts baseada nos resultados
+      if (inserted_count > 0 && failed_count === 0) {
+        // Todos os ativos foram adicionados com sucesso
         toast.success(
           `${inserted_count} ativo${inserted_count > 1 ? 's' : ''} adicionado${inserted_count > 1 ? 's' : ''} com sucesso!`
         );
-      }
-      
-      if (failed_count > 0) {
+      } else if (inserted_count > 0 && failed_count > 0) {
+        // Alguns ativos foram adicionados, outros falharam
         toast.warning(
-          `${failed_count} ativo${failed_count > 1 ? 's' : ''} não puderam ser adicionados. Verifique os detalhes.`
+          `${inserted_count} ativo${inserted_count > 1 ? 's' : ''} adicionado${inserted_count > 1 ? 's' : ''}, mas ${failed_count} falharam. Verifique os detalhes.`
         );
+      } else if (inserted_count === 0 && failed_count > 0) {
+        // Nenhum ativo foi adicionado - todos falharam
+        toast.error(
+          `Nenhum ativo foi adicionado. ${failed_count} ativo${failed_count > 1 ? 's' : ''} falharam. Verifique se os ativos estão disponíveis.`
+        );
+      } else if (inserted_count === 0 && failed_count === 0) {
+        // Caso edge - nada processado
+        toast.warning('Nenhum ativo foi processado.');
       }
 
-      console.log('Resultado da adição:', message);
-
-      // Invalidar caches relacionados às associações
-      queryClient.invalidateQueries({
-        queryKey: ['associations-list-optimized']
-      });
-      
-      // Invalidar também queries de dashboard que podem usar dados de associações
-      queryClient.invalidateQueries({
-        queryKey: ['dashboard']
-      });
+      // Apenas invalidar queries se pelo menos um ativo foi inserido
+      if (inserted_count > 0) {
+        queryClient.invalidateQueries({
+          queryKey: ['associations-list-optimized']
+        });
+        
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard']
+        });
+      }
     },
     onError: (error) => {
       console.error('Erro ao adicionar ativos:', error);

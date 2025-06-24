@@ -91,9 +91,13 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
       console.log('AddAssetsDialog: Resultado da adição:', result);
 
-      if (result.success) {
-        toast.success(`${result.inserted_count} ativo(s) adicionado(s) com sucesso`);
+      // A lógica de toasts agora está no hook useAddAssetsToAssociation
+      // Apenas chamar onSuccess se algum ativo foi inserido
+      if (result.success && result.inserted_count > 0) {
         onSuccess?.();
+        handleCloseAll();
+      } else if (result.success && result.inserted_count === 0) {
+        // Fechar modal mesmo se nenhum ativo foi inserido (falhas)
         handleCloseAll();
       } else {
         toast.error(result.message || 'Erro ao adicionar ativos');

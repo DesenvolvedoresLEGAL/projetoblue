@@ -141,8 +141,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
             gb: firstActiveAssociation.gb
           }}
           onSuccess={() => {
-            // Callback opcional para ações após sucesso
-            console.log('Ativos adicionados com sucesso!');
+            // Removido o console.log daqui - agora a mensagem vem do hook
           }}
         />
       )}
