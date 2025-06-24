@@ -74,6 +74,11 @@ export default function AssociationsListContent() {
     isProcessing: isEndingGroup 
   } = useGroupActions();
 
+  // Create a wrapper function that matches the expected signature
+  const handleEndAssociationWrapper = (associationId: number, assetId: string) => {
+    return handleEndAssociation(associationId, assetId);
+  };
+
   // Handle group end using group actions hook
   const handleEndGroup = (groupKey: string) => {
     // Find the group in timestampGroups and convert it to AssociationGroup
@@ -201,7 +206,7 @@ export default function AssociationsListContent() {
               totalPages={totalPages}
               onPageChange={setCurrentPage}
               onEditAssociation={handleEditAssociation}
-              onEndAssociation={handleEndAssociation}
+              onEndAssociation={handleEndAssociationWrapper}
               onEndGroup={handleEndGroup}
               debouncedSearchTerm={debouncedSearchTerm}
               isEndingAssociation={isEndingAssociation}
