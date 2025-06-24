@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@modules/dashboard/services/dashboardQueries';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 // Tipo otimizado para associação com dados completos do ativo
 interface OptimizedAssociationData {
@@ -93,7 +94,7 @@ export function useDashboardAssociationsDetailed() {
               // Usar identificador mais apropriado baseado no tipo
               let assetName = 'Asset';
               if (type === 'CHIP') {
-                assetName = asset.line_number?.toString() || asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
+                assetName = formatPhoneForDisplay(asset.line_number?.toString()) || asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
               } else {
                 assetName = asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
               }
