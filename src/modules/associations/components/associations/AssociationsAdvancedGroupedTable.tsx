@@ -4,11 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Association } from '@/types/associations';
-import { TimestampGroup, getTimestampGroupStats } from '@/utils/timestampGroupingUtils';
+import { ClientStartDateGroup, getClientStartDateGroupStats } from '@/utils/timestampGroupingUtils';
 import { CompanyGroupAccordion } from './CompanyGroupAccordion';
 
 interface AssociationsAdvancedGroupedTableProps {
-  timestampGroups: TimestampGroup[];
+  clientStartDateGroups: ClientStartDateGroup[];
   totalCount: number;
   currentPage: number;
   totalPages: number;
@@ -23,7 +23,7 @@ interface AssociationsAdvancedGroupedTableProps {
 }
 
 export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGroupedTableProps> = ({
-  timestampGroups,
+  clientStartDateGroups,
   totalCount,
   currentPage,
   totalPages,
@@ -36,19 +36,20 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
   isEndingGroup,
   operationProgress
 }) => {
-  const { totalAssociations, totalTimestampGroups, totalCompanyGroups } = getTimestampGroupStats(timestampGroups);
+  const { totalAssociations, totalClientStartDateGroups, totalCompanyGroups } = getClientStartDateGroupStats(clientStartDateGroups);
 
   console.log(`Total de associações -> ${totalAssociations}`);
-  console.log(`Total de grupos por data de criação -> ${totalTimestampGroups}`);
-  console.log(`Total de grupos por cliente -> ${totalCompanyGroups}`);
+  console.log(`Total de grupos por cliente e data de entrada -> ${totalClientStartDateGroups}`);
+  console.log(`Total de grupos por empresa -> ${totalCompanyGroups}`);
 
   return (
     <div className="space-y-4">
       {/* Estatísticas */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        {/* <span>{totalAssociations} associações</span>
+        {/* Estatísticas comentadas temporariamente
+        <span>{totalAssociations} associações</span>
         <span>•</span>
-        <span>{totalTimestampGroups} grupos por timestamp</span>
+        <span>{totalClientStartDateGroups} grupos por cliente/data</span>
         <span>•</span>
         <span>{totalCompanyGroups} grupos por empresa</span> */}
         {/* {operationProgress && (
@@ -62,22 +63,32 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
         )} */}
       </div>
 
-      {/* Grupos por Timestamp */}
-      <div className="space-y-6">
-        {timestampGroups.map((timestampGroup, groupIndex) => (
-          <div key={timestampGroup.timestamp}>
-            {/* Separador visual forte entre grupos de timestamp (exceto antes do primeiro) */}
+      {/* Grupos por Cliente e Data de Entrada */}
+      <div className="space-y-4">
+        {clientStartDateGroups.map((clientGroup, groupIndex) => (
+          <div key={clientGroup.groupKey}>
+            {/* Separador visual entre grupos (exceto antes do primeiro) */}
             {groupIndex > 0 && (
-              <div className="timestamp-group-separator h-4 bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200 shadow-sm rounded-full mx-4 my-6" 
+              <div className="client-group-separator h-3 bg-gradient-to-r from-green-200 via-green-300 to-green-200 shadow-sm rounded-full mx-4 my-4" 
                    aria-hidden="true" />
             )}
             
-            {/* Card para o grupo de timestamp */}
-            <Card className="shadow-sm border-l-4 border-l-blue-500">
+            {/* Card para o grupo de cliente + data de entrada */}
+            <Card className="shadow-sm border-l-4 border-l-green-500">
               <CardContent className="p-4">
+                {/* Header do grupo */}
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {clientGroup.client_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Data de entrada: {clientGroup.entry_date} • {clientGroup.totalAssociations} associações
+                  </p>
+                </div>
+
                 {/* Accordion de empresas */}
                 <CompanyGroupAccordion
-                  companyGroups={timestampGroup.companyGroups}
+                  companyGroups={clientGroup.companyGroups}
                   onEditAssociation={onEditAssociation}
                   onEndAssociation={onEndAssociation}
                   onEndGroup={onEndGroup}

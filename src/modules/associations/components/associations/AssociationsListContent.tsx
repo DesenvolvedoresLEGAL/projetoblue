@@ -15,7 +15,7 @@ import { useGroupActions } from "@modules/associations/hooks/useGroupActions";
 import { useDateFilters } from "@/hooks/useDateFilters";
 import { Association, StatusFilterType } from '@/types/associations';
 import { filterMultiField } from '@/utils/associationsUtils';
-import { groupAssociationsByTimestampAndCompany } from '@/utils/timestampGroupingUtils';
+import { groupAssociationsByClientAndStartDate } from '@/utils/timestampGroupingUtils';
 
 export default function AssociationsListContent() {
   const [searchInput, setSearchInput] = useState('');
@@ -81,9 +81,9 @@ export default function AssociationsListContent() {
 
   // Handle group end using group actions hook
   const handleEndGroup = (groupKey: string) => {
-    // Find the group in timestampGroups and convert it to AssociationGroup
-    const allAssociations = timestampGroups.flatMap(tg => 
-      tg.companyGroups.flatMap(cg => cg.associations)
+    // Find the group in clientStartDateGroups and convert it to AssociationGroup
+    const allAssociations = clientStartDateGroups.flatMap(csg => 
+      csg.companyGroups.flatMap(cg => cg.associations)
     );
     
     const groupAssociations = allAssociations.filter(a => a.client_id === groupKey);
@@ -115,19 +115,19 @@ export default function AssociationsListContent() {
     endGroup.mutate(associationGroup);
   };
 
-  // Aplicar filtro multicampo no frontend e agrupar por timestamp e empresa
-  const { timestampGroups, totalAssociations } = useMemo(() => {
+  // Aplicar filtro multicampo no frontend e agrupar por cliente e data de entrada
+  const { clientStartDateGroups, totalAssociations } = useMemo(() => {
     const rawData = associationsData?.data || [];
     
     // Aplicar filtro multicampo
     const filteredData = debouncedSearchTerm ? 
       filterMultiField(rawData, debouncedSearchTerm) : rawData;
     
-    // Agrupar por timestamp e empresa
-    const grouped = groupAssociationsByTimestampAndCompany(filteredData);
+    // Agrupar por cliente e data de entrada
+    const grouped = groupAssociationsByClientAndStartDate(filteredData);
     
     return {
-      timestampGroups: grouped,
+      clientStartDateGroups: grouped,
       totalAssociations: filteredData.length
     };
   }, [associationsData?.data, debouncedSearchTerm]);
@@ -193,14 +193,14 @@ export default function AssociationsListContent() {
 
       <Card className="shadow-sm">
         <CardContent className="space-y-6 pt-6">
-          {/* Tabela Agrupada Avançada */}
+          {/* Tabela Agrupada por Cliente e Data de Entrada */}
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground font-neue-haas">
               Carregando associações...
             </div>
-          ) : timestampGroups.length > 0 ? (
+          ) : clientStartDateGroups.length > 0 ? (
             <AssociationsAdvancedGroupedTable
-              timestampGroups={timestampGroups}
+              clientStartDateGroups={clientStartDateGroups}
               totalCount={totalCount}
               currentPage={currentPage}
               totalPages={totalPages}
