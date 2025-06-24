@@ -14,26 +14,39 @@ import { toast } from 'sonner';
 interface UnifiedAssetSearchProps {
   selectedAssets: SelectedAsset[];
   onAssetSelected: (asset: SelectedAsset) => void;
+  excludeAssociatedToClient?: string;
 }
 
 export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
   selectedAssets,
-  onAssetSelected
+  onAssetSelected,
+  excludeAssociatedToClient
 }) => {
   const [directSearchTerm, setDirectSearchTerm] = useState('');
   const [directSearchType, setDirectSearchType] = useState<'chip' | 'equipment'>('equipment');
   const [isDirectSearching, setIsDirectSearching] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(true);
   const [selectingAssetId, setSelectingAssetId] = useState<string | null>(null);
+  
+  // Filtros para busca avançada
+  const [filters, setFilters] = useState<AssetSearchFilters>({
+    type: 'all',
+    searchTerm: '',
+    status: 'available'
+  });
 
   const {
-    filters,
-    setFilters,
     assets,
+    solutions,
     isLoading,
     searchSpecificAsset,
     validateAssetSelection
-  } = useAssetSearch({ selectedAssets });
+  } = useAssetSearch(
+    filters.searchTerm,
+    'all',
+    excludeAssociatedToClient,
+    { selectedAssets }
+  );
 
   // Busca direta (exata)
   const handleDirectSearch = async () => {

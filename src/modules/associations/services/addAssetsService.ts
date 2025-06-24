@@ -52,5 +52,5 @@ export const addAssetsToAssociation = async (
   }
 
   console.log('Resultado da adição de ativos:', data);
-  return data as AddAssetsToAssociationResult;
+  return data as unknown as AddAssetsToAssociationResult;
 };

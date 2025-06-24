@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -233,7 +232,6 @@ const AssetAssociation = () => {
           
           {currentStep === 'assets' && selectedClient && (
             <AssetSelection
-              client={selectedClient}
               selectedAssets={selectedAssets}
               generalConfig={generalConfig}
               onAssetAdded={(asset) => setSelectedAssets([...selectedAssets, asset])}
@@ -241,6 +239,7 @@ const AssetAssociation = () => {
               onAssetUpdated={(assetId, updates) => setSelectedAssets(selectedAssets.map(a => a.uuid === assetId ? { ...a, ...updates } : a))}
               onGeneralConfigUpdate={handleGeneralConfigUpdate}
               onProceed={() => setCurrentStep('summary')}
+              excludeAssociatedToClient={selectedClient.uuid}
             />
           )}
           
