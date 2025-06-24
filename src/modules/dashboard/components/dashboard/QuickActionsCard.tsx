@@ -19,7 +19,7 @@ export const QuickActionsCard: React.FC = () => {
   const { canCreateAssets, canManageAssociations, canExportData } = usePermissions();
 
   const handleImportCSV = () => {
-    console.log("IMPORT CSV");
+    process.env.NODE_ENV === 'development' && console.log("IMPORT CSV");
   };
 
   const handleExport = (format: 'csv' | 'excel') => {
@@ -78,7 +78,7 @@ export const QuickActionsCard: React.FC = () => {
         XLSX.writeFile(wb, `${fileName}.xlsx`);
       }
     } catch (error) {
-      console.log(`ERRO DE EXPORTAÇÃO:===>>>> ${error}`);
+      process.env.NODE_ENV === 'development' && console.log(`ERRO DE EXPORTAÇÃO:===>>>> ${error}`);
     }
   };
 

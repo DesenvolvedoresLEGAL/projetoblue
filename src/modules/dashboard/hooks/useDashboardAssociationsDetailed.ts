@@ -52,7 +52,7 @@ export function useDashboardAssociationsDetailed() {
     queryKey: ['dashboard', 'associations-detailed-optimized'],
     queryFn: async () => {
       try {
-        console.log('Fetching detailed associations data (optimized - single query)...');
+        process.env.NODE_ENV === 'development' && console.log('Fetching detailed associations data (optimized - single query)...');
         
         const activeAssociationsResult = await dashboardQueries.fetchActiveAssociations();
         
@@ -113,8 +113,8 @@ export function useDashboardAssociationsDetailed() {
           };
         };
         
-        console.log(`Processando ${associations.length} associações ativas sem queries adicionais`);
-        console.log(`Locações: ${rentalAssociations.length}, Assinaturas: ${subscriptionAssociations.length}`);
+        process.env.NODE_ENV === 'development' && console.log(`Processando ${associations.length} associações ativas sem queries adicionais`);
+        process.env.NODE_ENV === 'development' && console.log(`Locações: ${rentalAssociations.length}, Assinaturas: ${subscriptionAssociations.length}`);
         
         return {
           rental: processAssociationsOptimized(rentalAssociations),

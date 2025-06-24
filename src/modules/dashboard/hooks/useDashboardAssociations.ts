@@ -22,7 +22,7 @@ export function useDashboardAssociations() {
     queryKey: ['dashboard', 'associations'],
     queryFn: async () => {
       try {
-        console.log('Fetching dashboard associations data...');
+        process.env.NODE_ENV === 'development' && console.log('Fetching dashboard associations data...');
         
         const [
           activeAssociationsResult,

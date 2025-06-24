@@ -21,7 +21,7 @@ export function useDashboardCharts() {
     queryKey: ['dashboard', 'charts'],
     queryFn: async () => {
       try {
-        console.log('Fetching dashboard charts data...');
+        process.env.NODE_ENV === 'development' && console.log('Fetching dashboard charts data...');
         
         const [
           statusSummaryResult,

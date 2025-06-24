@@ -32,7 +32,8 @@ export interface AddAssetsToAssociationResult {
 export const addAssetsToAssociation = async (
   params: AddAssetsToAssociationParams
 ): Promise<AddAssetsToAssociationResult> => {
-  console.log('Chamando add_assets_to_association com parâmetros:', params);
+  process.env.NODE_ENV === 'development' &&
+    console.log('Chamando add_assets_to_association com parâmetros:', params);
 
   const { data, error } = await supabase.rpc('add_assets_to_association', {
     p_client_id: params.client_id,
@@ -51,6 +52,7 @@ export const addAssetsToAssociation = async (
     throw error;
   }
 
-  console.log('Resultado da adição de ativos:', data);
+  process.env.NODE_ENV === 'development' &&
+    console.log('Resultado da adição de ativos:', data);
   return data as unknown as AddAssetsToAssociationResult;
 };

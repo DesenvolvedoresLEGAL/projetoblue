@@ -18,7 +18,7 @@ export function useDashboardRecentActivities() {
     queryKey: ['dashboard', 'recent-activities'],
     queryFn: async () => {
       try {
-        console.log('Fetching recent activities...');
+        process.env.NODE_ENV === 'development' && console.log('Fetching recent activities...');
         
         const recentEventsResult = await dashboardQueries.fetchEnhancedRecentEvents();
         
