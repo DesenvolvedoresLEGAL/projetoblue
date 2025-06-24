@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight } from 'lucide-react';
 import { UnifiedAssetSearch } from './UnifiedAssetSearch';
 import { SelectedAssetsGrid } from './SelectedAssetsGrid';
-import { AssociationGeneralConfig as AssociationGeneralConfigComponent } from './AssociationGeneralConfig';
+import { AssociationGeneralConfigComponent } from './AssociationGeneralConfig';
 import { SelectedAsset } from '@modules/associations/types';
 
 // Import the type separately to avoid naming conflicts
@@ -61,11 +61,12 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
     }
   };
 
-  const handleAssetUpdated = (assetId: string, updates: Partial<SelectedAsset>) => {
+  const handleAssetUpdated = (asset: SelectedAsset) => {
     if (onAssetUpdated) {
-      onAssetUpdated(assetId, updates);
+      const { uuid, ...updates } = asset;
+      onAssetUpdated(uuid, updates);
     } else if (onAssetsChange) {
-      onAssetsChange(selectedAssets.map(a => a.uuid === assetId ? { ...a, ...updates } : a));
+      onAssetsChange(selectedAssets.map(a => a.uuid === asset.uuid ? asset : a));
     }
   };
 
