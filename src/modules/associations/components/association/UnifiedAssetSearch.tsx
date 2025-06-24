@@ -93,9 +93,9 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       solution_id: asset.solution_id,
       manufacturer_id: asset.manufacturer_id,
       status: asset.asset_status?.status,
-      solution: asset.asset_solutions?.solution,
+      solucao: asset.asset_solutions?.solution, // Changed from 'solution' to 'solucao'
       brand: asset.manufacturers?.name,
-      type: asset.iccid ? 'CHIP' : 'EQUIPMENT',
+      type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT', // Explicit type casting
       registrationDate: asset.created_at || new Date().toISOString() // Required property
     };
   };
