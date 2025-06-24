@@ -58,7 +58,7 @@ export const useAssetSearch = (
 
       // Aplicar filtro de status
       if (filters.status === 'available') {
-        query = query.eq('asset_status.status', 'Disponível');
+        query = query.eq('asset_status.status', 'disponível');
       }
 
       // Aplicar filtro de tipo
