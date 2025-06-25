@@ -36,37 +36,49 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
   const addAssetsMutation = useAddAssetsToAssociation();
 
   const handleAssetSelected = (asset: SelectedAsset) => {
-    process.env.NODE_ENV === 'development' &&
+    if (process.env.NODE_ENV === 'development') {
       console.log('AddAssetsDialog: Tentando adicionar asset', asset.uuid);
+    }
     
     // Verificar se o asset já foi selecionado (evitar duplicatas)
     const isAlreadySelected = selectedAssets.some(selectedAsset => selectedAsset.uuid === asset.uuid);
     
     if (isAlreadySelected) {
-      process.env.NODE_ENV === 'development' &&
+      if (process.env.NODE_ENV === 'development') {
         console.log('AddAssetsDialog: Asset já selecionado', asset.uuid);
+      }
       toast.warning('Este ativo já foi selecionado');
       return;
     }
 
-    process.env.NODE_ENV === 'development' &&
+    if (process.env.NODE_ENV === 'development') {
       console.log('AddAssetsDialog: Adicionando novo asset', asset.uuid);
+    }
     setSelectedAssets(prev => {
       const newList = [...prev, asset];
-      process.env.NODE_ENV === 'development' &&
-        console.log('AddAssetsDialog: Nova lista de assets selecionados', newList.map(a => a.uuid));
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          'AddAssetsDialog: Nova lista de assets selecionados',
+          newList.map(a => a.uuid)
+        );
+      }
       return newList;
     });
     toast.success('Ativo adicionado à seleção');
   };
 
   const handleAssetRemoved = (assetId: string) => {
-    process.env.NODE_ENV === 'development' &&
+    if (process.env.NODE_ENV === 'development') {
       console.log('AddAssetsDialog: Removendo asset', assetId);
+    }
     setSelectedAssets(prev => {
       const newList = prev.filter(asset => asset.uuid !== assetId);
-      process.env.NODE_ENV === 'development' &&
-        console.log('AddAssetsDialog: Nova lista após remoção', newList.map(a => a.uuid));
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          'AddAssetsDialog: Nova lista após remoção',
+          newList.map(a => a.uuid)
+        );
+      }
       return newList;
     });
   };
@@ -81,8 +93,12 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
   const handleConfirm = async () => {
     try {
-      process.env.NODE_ENV === 'development' &&
-        console.log('AddAssetsDialog: Iniciando adição de assets', selectedAssets.map(a => a.uuid));
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          'AddAssetsDialog: Iniciando adição de assets',
+          selectedAssets.map(a => a.uuid)
+        );
+      }
       
       const result = await addAssetsMutation.mutateAsync({
         client_id: existingAssociation.client_id,
@@ -96,8 +112,9 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
         gb: existingAssociation.gb
       });
 
-      process.env.NODE_ENV === 'development' &&
+      if (process.env.NODE_ENV === 'development') {
         console.log('AddAssetsDialog: Resultado da adição:', result);
+      }
 
       // Lógica de fechamento do modal mais rigorosa
       if (result.success) {
