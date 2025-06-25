@@ -85,7 +85,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     
     try {
       // Prepare data to update based on the asset type
-      const dataToUpdate: any = {
+      const dataToUpdate: Record<string, unknown> = {
         status_id: formData.status_id,
         manufacturer_id: formData.manufacturer_id
       };

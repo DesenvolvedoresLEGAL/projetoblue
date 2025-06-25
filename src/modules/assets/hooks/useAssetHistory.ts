@@ -15,7 +15,7 @@ export interface ProcessedHistoryLog {
   old_status: string | null;
   new_status: string | null;
   user_email: string | null;
-  details: any;
+  details: Record<string, unknown> | null;
 }
 
 export const useAssetHistory = () => {
@@ -55,7 +55,7 @@ export const useAssetHistory = () => {
     // Extrair email do usuário dos detalhes ou usar informação padrão
     let userEmail = 'Sistema Automático';
     if (log.details && typeof log.details === 'object') {
-      const details = log.details as any;
+      const details = log.details as Record<string, unknown>;
       if (details.user_email) {
         userEmail = details.user_email;
       } else if (details.username && details.username !== 'system') {

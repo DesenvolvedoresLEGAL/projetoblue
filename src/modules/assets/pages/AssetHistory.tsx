@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { AssetHistoryEntry } from '@/types/assetHistory';
 import { History, RefreshCw, Calendar, User, Settings, Edit } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -22,6 +23,18 @@ interface HistoryFilters {
   dateTo: string;
 }
 
+interface LogDetails {
+  line_number?: string | number;
+  radio?: string;
+  asset_id?: string;
+  solution_name?: string;
+  solution?: string;
+  username?: string;
+  event_description?: string;
+  old_status_name?: string;
+  new_status_name?: string;
+}
+
 const AssetHistory = () => {
   const [filters, setFilters] = useState<HistoryFilters>({
     search: '',
@@ -31,9 +44,9 @@ const AssetHistory = () => {
   });
 
   // Buscar logs de ativos
-  const { data: logs = [], isLoading, refetch } = useQuery({
+  const { data: logs = [], isLoading, refetch } = useQuery<AssetHistoryEntry[]>({
     queryKey: ['asset-logs', filters],
-    queryFn: async () => {
+    queryFn: async (): Promise<AssetHistoryEntry[]> => {
       let query = supabase
         .from('asset_logs')
         .select(`
@@ -117,7 +130,7 @@ const AssetHistory = () => {
     return eventMap[event] || event;
   };
 
-  const getAssetIdentifier = (details: any) => {
+  const getAssetIdentifier = (details: LogDetails | null): string => {
     if (!details || typeof details !== 'object') return 'N/A';
     
     if (details.line_number) {
@@ -132,7 +145,7 @@ const AssetHistory = () => {
     return 'N/A';
   };
 
-  const getUserInfo = (details: any) => {
+  const getUserInfo = (details: LogDetails | null): string => {
     if (!details || typeof details !== 'object') return 'Sistema';
     
     if (details.username && details.username !== 'system') {
@@ -316,11 +329,11 @@ const AssetHistory = () => {
                             {getAssetIdentifier(log.details)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {log.details && typeof log.details === 'object' && (log.details as any).solution_name ? 
-                              (log.details as any).solution_name : 
-                              log.details && typeof log.details === 'object' && (log.details as any).solution ? 
-                                (log.details as any).solution : 'N/A'
-                            }
+                              {log.details && typeof log.details === 'object' && (log.details as LogDetails).solution_name
+                                ? (log.details as LogDetails).solution_name
+                                : log.details && typeof log.details === 'object' && (log.details as LogDetails).solution
+                                  ? (log.details as LogDetails).solution
+                                  : 'N/A'}
                           </div>
                         </div>
                       </TableCell>
@@ -336,25 +349,25 @@ const AssetHistory = () => {
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="space-y-2 text-xs">
-                          {log.details && typeof log.details === 'object' && (log.details as any).event_description && (
-                            <div className="text-muted-foreground">
-                              {(log.details as any).event_description}
-                            </div>
-                          )}
-                          {log.details && typeof log.details === 'object' && 
-                           (log.details as any).old_status_name && (log.details as any).new_status_name && (
-                            <div className="flex items-center gap-2">
-                              <StandardStatusBadge 
-                                status={(log.details as any).old_status_name} 
-                                className="text-xs"
-                              />
-                              <span className="text-legal-secondary dark:text-legal-secondary font-bold">→</span>
-                              <StandardStatusBadge 
-                                status={(log.details as any).new_status_name} 
-                                className="text-xs"
-                              />
-                            </div>
-                          )}
+                            {log.details && typeof log.details === 'object' && (log.details as LogDetails).event_description && (
+                              <div className="text-muted-foreground">
+                                {(log.details as LogDetails).event_description}
+                              </div>
+                            )}
+                            {log.details && typeof log.details === 'object' &&
+                             (log.details as LogDetails).old_status_name && (log.details as LogDetails).new_status_name && (
+                              <div className="flex items-center gap-2">
+                                <StandardStatusBadge
+                                  status={(log.details as LogDetails).old_status_name}
+                                  className="text-xs"
+                                />
+                                <span className="text-legal-secondary dark:text-legal-secondary font-bold">→</span>
+                                <StandardStatusBadge
+                                  status={(log.details as LogDetails).new_status_name}
+                                  className="text-xs"
+                                />
+                              </div>
+                            )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
+import type { Asset } from '@/types/asset';
 
 export type AssetWithRelations = {
   uuid: string;
@@ -83,7 +84,7 @@ const isNumericTerm = (term: string): boolean => {
 };
 
 // Função para detectar qual campo correspondeu à busca
-const detectMatchedField = (asset: any, searchTerm: string): string => {
+const detectMatchedField = (asset: Asset, searchTerm: string): string => {
   if (!searchTerm) return '';
   
   const term = searchTerm.toLowerCase();

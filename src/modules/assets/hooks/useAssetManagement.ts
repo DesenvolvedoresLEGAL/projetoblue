@@ -229,7 +229,7 @@ export function useAssetManagement() {
    */
   const updateAsset = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateAssetData }) => {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
       // Map frontend fields to database fields
       if (data.statusId !== undefined) updateData.status_id = data.statusId;
@@ -408,7 +408,7 @@ export function usePlans() {
 /**
  * Transform database record to frontend Asset type
  */
-function mapDbToAsset(dbAsset: any): Asset {
+function mapDbToAsset(dbAsset: Record<string, unknown>): Asset {
   const baseAsset = {
     id: dbAsset.uuid,
     uuid: dbAsset.uuid,

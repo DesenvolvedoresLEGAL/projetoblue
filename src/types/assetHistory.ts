@@ -10,7 +10,7 @@ export interface AssetHistoryEntry {
   assoc_id?: number | null; // bigint opcional no banco, PODE SER NULL
   date?: string; // timestamp with time zone
   event?: string; // text
-  details?: any; // jsonb
+  details?: Record<string, unknown>; // jsonb
   status_before_id?: number; // bigint
   status_after_id?: number; // bigint
   created_at: string; // timestamp with time zone
@@ -39,8 +39,8 @@ export interface ProfileLogEntry {
   email?: string;
   operation: string;
   table_name: string;
-  old_data?: any; // jsonb
-  new_data?: any; // jsonb
+  old_data?: Record<string, unknown>; // jsonb
+  new_data?: Record<string, unknown>; // jsonb
   changed_at: string; // timestamp with time zone
   created_at: string;
   updated_at: string;

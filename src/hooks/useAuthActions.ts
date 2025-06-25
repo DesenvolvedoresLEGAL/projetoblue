@@ -63,8 +63,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         username
       });
       
-      try {
-        const { data, error, profileCreated } = await authService.signUp(email, password, DEFAULT_USER_ROLE, username);
+      const { data, error, profileCreated } = await authService.signUp(email, password, DEFAULT_USER_ROLE, username);
 
         if (error) {
           throw error;
@@ -103,9 +102,6 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           };
           setTechnicalError(techError);
           throw new Error(friendlyMessage);
-        }
-        } catch (serviceError: unknown) {
-          throw serviceError;
         }
       } catch (error: unknown) {
         console.error('Erro não tratado no processo de cadastro:', error);

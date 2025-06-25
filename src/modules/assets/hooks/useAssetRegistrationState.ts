@@ -133,7 +133,10 @@ export const useAssetRegistrationState = () => {
   };
 
   // Sync form data with React Hook Form - restaurar dados automaticamente
-  const syncWithForm = (form: UseFormReturn<any>, formType: 'chip' | 'equipment') => {
+  const syncWithForm = (
+    form: UseFormReturn<ChipFormValues> | UseFormReturn<EquipmentFormValues>,
+    formType: 'chip' | 'equipment'
+  ) => {
     const formData = formType === 'chip' ? state.chipFormData : state.equipmentFormData;
     
     Object.entries(formData).forEach(([key, value]) => {
@@ -144,7 +147,10 @@ export const useAssetRegistrationState = () => {
   };
 
   // Update persisted data when form changes - salvar dados em tempo real
-  const updateFormData = (data: any, formType: 'chip' | 'equipment') => {
+  const updateFormData = (
+    data: Partial<ChipFormValues> | Partial<EquipmentFormValues>,
+    formType: 'chip' | 'equipment'
+  ) => {
     if (formType === 'chip') {
       setChipFormData(data);
     } else {

@@ -1,6 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { AssetAssociationState } from '@modules/associations/types';
+import {
+  AssetAssociationState,
+  SelectedAsset,
+} from '@modules/associations/types';
+import type { Client } from '@/types/client';
+import type { AssociationGeneralConfig } from '@modules/associations/components/association/AssociationGeneralConfig';
 
 const STORAGE_KEY = 'asset_association_state';
 
@@ -45,17 +50,17 @@ export const useAssetAssociationState = () => {
     setState(prevState => ({ ...prevState, currentStep: step }));
   };
 
-  const setSelectedClient = (client: any) => {
+  const setSelectedClient = (client: Client | null) => {
     console.log('👤 Setting selected client:', client);
     setState(prevState => ({ ...prevState, selectedClient: client }));
   };
 
-  const setSelectedAssets = (assets: any[]) => {
+  const setSelectedAssets = (assets: SelectedAsset[]) => {
     console.log('📦 Setting selected assets:', assets.length, 'assets');
     setState(prevState => ({ ...prevState, selectedAssets: assets }));
   };
 
-  const setGeneralConfig = (config: any) => {
+  const setGeneralConfig = (config: AssociationGeneralConfig | null) => {
     console.log('⚙️ Setting general config:', config);
     setState(prevState => ({ ...prevState, generalConfig: config }));
   };
