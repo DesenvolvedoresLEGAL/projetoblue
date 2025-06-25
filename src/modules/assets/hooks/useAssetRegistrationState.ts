@@ -1,6 +1,4 @@
-
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { useEffect, useReducer } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
 interface RegistrationFormData {
@@ -11,24 +9,24 @@ interface AssetRegistrationState {
   // Form type management
   currentFormType: 'chip' | 'equipment';
   isInitialized: boolean;
-  
+
   // Asset type (for compatibility)
   assetType: 'CHIP' | 'ROTEADOR';
-  
+
   // Password strength management
   passwordStrength: 'weak' | 'medium' | 'strong';
   allowWeakPassword: boolean;
-  
+
   // UI state management
   basicInfoOpen: boolean;
   technicalInfoOpen: boolean;
   securityInfoOpen: boolean;
   networkInfoOpen: boolean;
-  
+
   // Form data
   chipFormData: RegistrationFormData;
   equipmentFormData: RegistrationFormData;
-  
+
   // Actions
   setCurrentFormType: (formType: 'chip' | 'equipment') => void;
   setIsInitialized: (initialized: boolean) => void;
@@ -45,89 +43,149 @@ interface AssetRegistrationState {
   clearState: () => void;
 }
 
-export const useAssetRegistrationState = create<AssetRegistrationState>()(
-  devtools(
-    (set, get) => ({
-      // Initial state
-      currentFormType: 'chip',
-      isInitialized: false,
-      assetType: 'CHIP',
-      passwordStrength: 'weak',
-      allowWeakPassword: false,
-      basicInfoOpen: true,
-      technicalInfoOpen: false,
-      securityInfoOpen: false,
-      networkInfoOpen: false,
-      chipFormData: {},
-      equipmentFormData: {},
-      
-      // Actions
-      setCurrentFormType: (formType) => {
-        set({ 
-          currentFormType: formType,
-          assetType: formType === 'chip' ? 'CHIP' : 'ROTEADOR'
-        });
-      },
-      
-      setIsInitialized: (initialized) => set({ isInitialized: initialized }),
-      
-      setAssetType: (type) => {
-        set({ 
-          assetType: type,
-          currentFormType: type === 'CHIP' ? 'chip' : 'equipment'
-        });
-      },
-      
-      setPasswordStrength: (strength) => set({ passwordStrength: strength }),
-      setAllowWeakPassword: (allow) => set({ allowWeakPassword: allow }),
-      setBasicInfoOpen: (open) => set({ basicInfoOpen: open }),
-      setTechnicalInfoOpen: (open) => set({ technicalInfoOpen: open }),
-      setSecurityInfoOpen: (open) => set({ securityInfoOpen: open }),
-      setNetworkInfoOpen: (open) => set({ networkInfoOpen: open }),
-      
-      setFormValue: (form, key, value) => {
-        try {
-          form.setValue(key as any, value);
-        } catch (error) {
-          console.warn(`Could not set form value for key: ${key}`, error);
-        }
-      },
-      
-      updateFormData: (data, formType) => {
-        if (formType === 'chip') {
-          set({ chipFormData: { ...get().chipFormData, ...data } });
-        } else {
-          set({ equipmentFormData: { ...get().equipmentFormData, ...data } });
-        }
-      },
-      
-      syncWithForm: (form, formType) => {
-        const currentValues = form.getValues();
-        if (formType === 'chip') {
-          set({ chipFormData: currentValues });
-        } else {
-          set({ equipmentFormData: currentValues });
-        }
-      },
-      
-      clearState: () => {
-        set({
-          currentFormType: 'chip',
-          isInitialized: false,
-          assetType: 'CHIP',
-          passwordStrength: 'weak',
-          allowWeakPassword: false,
-          basicInfoOpen: true,
-          technicalInfoOpen: false,
-          securityInfoOpen: false,
-          networkInfoOpen: false,
-          chipFormData: {},
-          equipmentFormData: {},
-        });
-      },
-    }),
-    {
-      name: 'asset-registration-state',
+type InternalState = Omit<AssetRegistrationState,
+  | 'setCurrentFormType'
+  | 'setIsInitialized'
+  | 'setAssetType'
+  | 'setPasswordStrength'
+  | 'setAllowWeakPassword'
+  | 'setBasicInfoOpen'
+  | 'setTechnicalInfoOpen'
+  | 'setSecurityInfoOpen'
+  | 'setNetworkInfoOpen'
+  | 'setFormValue'
+  | 'updateFormData'
+  | 'syncWithForm'
+  | 'clearState'>;
+
+const initialState: InternalState = {
+  currentFormType: 'chip',
+  isInitialized: false,
+  assetType: 'CHIP',
+  passwordStrength: 'weak',
+  allowWeakPassword: false,
+  basicInfoOpen: true,
+  technicalInfoOpen: false,
+  securityInfoOpen: false,
+  networkInfoOpen: false,
+  chipFormData: {},
+  equipmentFormData: {},
+};
+
+let state: InternalState = { ...initialState };
+const listeners = new Set<() => void>();
+
+function notify() {
+  listeners.forEach(listener => listener());
+}
+
+function setState(partial: Partial<InternalState>) {
+  state = { ...state, ...partial };
+  notify();
+}
+
+export function useAssetRegistrationState(): AssetRegistrationState {
+  const [, forceUpdate] = useReducer(v => v + 1, 0);
+
+  useEffect(() => {
+    listeners.add(forceUpdate);
+    return () => {
+      listeners.delete(forceUpdate);
+    };
+  }, []);
+
+  const setCurrentFormType = (formType: 'chip' | 'equipment') => {
+    setState({
+      currentFormType: formType,
+      assetType: formType === 'chip' ? 'CHIP' : 'ROTEADOR',
+    });
+  };
+
+  const setIsInitialized = (initialized: boolean) => {
+    setState({ isInitialized: initialized });
+  };
+
+  const setAssetType = (type: 'CHIP' | 'ROTEADOR') => {
+    setState({
+      assetType: type,
+      currentFormType: type === 'CHIP' ? 'chip' : 'equipment',
+    });
+  };
+
+  const setPasswordStrength = (strength: 'weak' | 'medium' | 'strong') => {
+    setState({ passwordStrength: strength });
+  };
+
+  const setAllowWeakPassword = (allow: boolean) => {
+    setState({ allowWeakPassword: allow });
+  };
+
+  const setBasicInfoOpen = (open: boolean) => {
+    setState({ basicInfoOpen: open });
+  };
+
+  const setTechnicalInfoOpen = (open: boolean) => {
+    setState({ technicalInfoOpen: open });
+  };
+
+  const setSecurityInfoOpen = (open: boolean) => {
+    setState({ securityInfoOpen: open });
+  };
+
+  const setNetworkInfoOpen = (open: boolean) => {
+    setState({ networkInfoOpen: open });
+  };
+
+  const setFormValue = (form: UseFormReturn<any>, key: string, value: any) => {
+    try {
+      form.setValue(key as any, value);
+    } catch (error) {
+      console.warn(`Could not set form value for key: ${key}`, error);
     }
-  )
-);
+  };
+
+  const updateFormData = (
+    data: RegistrationFormData,
+    formType: 'chip' | 'equipment',
+  ) => {
+    if (formType === 'chip') {
+      setState({ chipFormData: { ...state.chipFormData, ...data } });
+    } else {
+      setState({ equipmentFormData: { ...state.equipmentFormData, ...data } });
+    }
+  };
+
+  const syncWithForm = (
+    form: UseFormReturn<any>,
+    formType: 'chip' | 'equipment',
+  ) => {
+    const currentValues = form.getValues();
+    if (formType === 'chip') {
+      setState({ chipFormData: currentValues });
+    } else {
+      setState({ equipmentFormData: currentValues });
+    }
+  };
+
+  const clearState = () => {
+    state = { ...initialState };
+    notify();
+  };
+
+  return {
+    ...state,
+    setCurrentFormType,
+    setIsInitialized,
+    setAssetType,
+    setPasswordStrength,
+    setAllowWeakPassword,
+    setBasicInfoOpen,
+    setTechnicalInfoOpen,
+    setSecurityInfoOpen,
+    setNetworkInfoOpen,
+    setFormValue,
+    updateFormData,
+    syncWithForm,
+    clearState,
+  };
+}
