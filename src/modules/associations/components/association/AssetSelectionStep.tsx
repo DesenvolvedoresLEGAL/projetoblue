@@ -7,6 +7,7 @@ import { Package, ArrowRight } from "lucide-react";
 import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
 import { UnifiedAssetSearch } from './UnifiedAssetSearch';
 import { SelectedAsset } from '@modules/associations/types';
+import { toast } from '@/utils/toast';
 
 export const AssetSelectionStep: React.FC = () => {
   const { 
@@ -23,6 +24,7 @@ export const AssetSelectionStep: React.FC = () => {
     const alreadySelected = selectedAssets.some(a => a.uuid === asset.uuid);
     if (alreadySelected) {
       console.log('AssetSelectionStep: Ativo já selecionado, ignorando');
+      toast.info(`Ativo já selecionado.`);
       return;
     }
 
