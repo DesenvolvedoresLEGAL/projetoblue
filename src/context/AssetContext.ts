@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import type { AssetCreateParams, AssetUpdateParams } from '@/modules/assets/services/asset/types';
@@ -28,3 +28,11 @@ export interface AssetContextProps {
 }
 
 export const AssetContext = createContext<AssetContextProps | undefined>(undefined);
+
+export const useAssets = (): AssetContextProps => {
+  const context = useContext(AssetContext);
+  if (!context) {
+    throw new Error('useAssets must be used within an AssetProvider');
+  }
+  return context;
+};

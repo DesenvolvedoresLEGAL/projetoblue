@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAssets } from "@/context/AssetProvider";
+import { useAssets } from "@/context/AssetContext";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Asset } from "@/types/asset";

@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useAssets } from "@/context/AssetProvider";
+import { useAssets } from "@/context/AssetContext";
 import { StatusRecord, Asset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { Check, ChevronDown, Loader2 } from "lucide-react";

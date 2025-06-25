@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import type { ChipWithMetrics } from '@/types/dataUsage';
 
 export interface DataUsageContextType {
@@ -11,3 +11,11 @@ export interface DataUsageContextType {
 }
 
 export const DataUsageContext = createContext<DataUsageContextType | undefined>(undefined);
+
+export const useDataUsage = (): DataUsageContextType => {
+  const context = useContext(DataUsageContext);
+  if (!context) {
+    throw new Error('useDataUsage must be used within a DataUsageProvider');
+  }
+  return context;
+};

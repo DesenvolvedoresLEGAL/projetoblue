@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/context/ThemeProvider";
+import { useTheme } from "@/context/ThemeContext";
 
 export interface NamedLogoProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "md" | "lg";

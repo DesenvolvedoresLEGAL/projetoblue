@@ -1,5 +1,5 @@
-import React, { useContext, useState, useEffect, ReactNode } from 'react';
-import { useAssets } from '@/context/AssetProvider';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { useAssets } from '@/context/AssetContext';
 import { ChipAsset } from '@/types/asset';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
 import { DataUsageContext } from './DataUsageContext';
@@ -107,10 +107,3 @@ export const DataUsageProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
-export const useDataUsage = () => {
-  const context = useContext(DataUsageContext);
-  if (!context) {
-    throw new Error("useDataUsage must be used within a DataUsageProvider");
-  }
-  return context;
-};
