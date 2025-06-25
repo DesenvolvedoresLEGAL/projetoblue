@@ -57,7 +57,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Total de {title.toLowerCase()} no sistema</p>
+                <p>{title.toLowerCase().capitalize()} no sistema</p>
               </TooltipContent>
             </Tooltip>
           </CardTitle>
