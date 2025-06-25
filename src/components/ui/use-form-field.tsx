@@ -8,8 +8,8 @@ export type FormFieldContextValue<
   name: TName
 }
 
-const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue)
-const FormItemContext = React.createContext<{ id: string }>({} as { id: string })
+export const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue)
+export const FormItemContext = React.createContext<{ id: string }>({} as { id: string })
 
 export const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
@@ -34,5 +34,5 @@ export const useFormField = () => {
   }
 }
 
-export { FormFieldContext, FormItemContext }
+
 
