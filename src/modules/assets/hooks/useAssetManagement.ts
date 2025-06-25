@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -408,19 +409,19 @@ export function usePlans() {
 /**
  * Transform database record to frontend Asset type
  */
-function mapDbToAsset(dbAsset: Record<string, unknown>): Asset {
+function mapDbToAsset(dbAsset: any): Asset {
   const baseAsset = {
-    id: dbAsset.uuid,
-    uuid: dbAsset.uuid,
-    registrationDate: dbAsset.created_at,
-    status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
+    id: String(dbAsset.uuid || ''),
+    uuid: String(dbAsset.uuid || ''),
+    registrationDate: String(dbAsset.created_at || ''),
+    status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as const,
     statusId: dbAsset.status_id,
-    notes: dbAsset.notes,
-    solucao: dbAsset.asset_solutions?.solution,
-    marca: dbAsset.manufacturers?.name,
-    modelo: dbAsset.model,
-    serial_number: dbAsset.serial_number,
-    radio: dbAsset.radio,
+    notes: String(dbAsset.notes || ''),
+    solucao: String((dbAsset.asset_solutions as any)?.solution || ''),
+    marca: String((dbAsset.manufacturers as any)?.name || ''),
+    modelo: String(dbAsset.model || ''),
+    serial_number: String(dbAsset.serial_number || ''),
+    radio: String(dbAsset.radio || ''),
   };
 
   if (dbAsset.solution_id === 11) {
@@ -428,8 +429,8 @@ function mapDbToAsset(dbAsset: Record<string, unknown>): Asset {
     return {
       ...baseAsset,
       type: "CHIP",
-      iccid: dbAsset.iccid || '',
-      phoneNumber: dbAsset.line_number?.toString() || '',
+      iccid: String(dbAsset.iccid || ''),
+      phoneNumber: String(dbAsset.line_number || ''),
       carrier: "Unknown",
     };
   } else {
@@ -437,14 +438,14 @@ function mapDbToAsset(dbAsset: Record<string, unknown>): Asset {
     return {
       ...baseAsset,
       type: "ROTEADOR",
-      uniqueId: dbAsset.uuid,
-      brand: dbAsset.manufacturers?.name || '',
-      model: dbAsset.model || '',
-      ssid: '',
-      password: '',
-      serialNumber: dbAsset.serial_number || '',
-      adminUser: dbAsset.admin_user,
-      adminPassword: dbAsset.admin_pass,
+      uniqueId: String(dbAsset.uuid || ''),
+      brand: String((dbAsset.manufacturers as any)?.name || ''),
+      model: String(dbAsset.model || ''),
+      ssid: String(dbAsset.ssid_atual || ''),
+      password: String(dbAsset.pass_atual || ''),
+      serialNumber: String(dbAsset.serial_number || ''),
+      adminUser: String(dbAsset.admin_user || ''),
+      adminPassword: String(dbAsset.admin_pass || ''),
     };
   }
 }

@@ -32,9 +32,9 @@ export const useAssetAssociationState = () => {
     }
     
     // Default state com configuração inicial correta
-    const defaultState = {
+    const defaultState: AssetAssociationState = {
       selectedAssets: [],
-      currentStep: 'client',
+      currentStep: 'client' as const,
       isLoading: false,
       selectedClient: null,
       generalConfig: {
@@ -95,9 +95,9 @@ export const useAssetAssociationState = () => {
 
   const clearState = () => {
     console.log('🗑️ Clearing asset association state');
-    const defaultState = {
+    const defaultState: AssetAssociationState = {
       selectedAssets: [],
-      currentStep: 'client',
+      currentStep: 'client' as const,
       isLoading: false,
       selectedClient: null,
       generalConfig: {
