@@ -11,7 +11,7 @@ import { Client } from '@/types/client';
 
 export const ClientSelectionStep: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: clients = [], isLoading } = useClientsData();
+  const { clients = [], isLoading } = useClientsData();
   const { selectedClient, setSelectedClient, setCurrentStep } = useAssetAssociationState();
 
   const filteredClients = clients.filter(client => 

@@ -1,7 +1,9 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset, ChipAsset, EquipamentAsset, AssetStatus } from '@/types/asset';
 import { AssetWithRelations } from '@/types/assetWithRelations';
+import { mapSolutionToSolutionType, mapStatusIdToAssetStatus } from '@/utils/databaseMappers';
 
 // Database structure interface  
 interface DatabaseAsset {
@@ -44,6 +46,8 @@ interface DatabaseAsset {
 const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
   // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
+  const status = mapStatusIdToAssetStatus(dbAsset.status_id, dbAsset.status?.status);
+  const solucao = mapSolutionToSolutionType(dbAsset.solucao?.solution, dbAsset.solution_id);
 
   if (isChip) {
     const chipAsset: ChipAsset = {
@@ -51,10 +55,10 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       uuid: dbAsset.uuid,
       type: 'CHIP' as const,
       registrationDate: dbAsset.created_at,
-      status: (dbAsset.status?.status || 'DISPONÍVEL') as AssetStatus,
+      status,
       statusId: dbAsset.status_id,
       notes: '',
-      solucao: 'CHIP',
+      solucao,
       marca: dbAsset.manufacturer?.name || '',
       modelo: dbAsset.model || '',
       serial_number: dbAsset.serial_number || '',
@@ -69,10 +73,10 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       uuid: dbAsset.uuid,
       type: 'ROTEADOR' as const,  
       registrationDate: dbAsset.created_at,
-      status: (dbAsset.status?.status || 'DISPONÍVEL') as AssetStatus,
+      status,
       statusId: dbAsset.status_id,
       notes: '',
-      solucao: 'ROTEADOR',
+      solucao,
       marca: dbAsset.manufacturer?.name || '',
       modelo: dbAsset.model || '',
       serial_number: dbAsset.serial_number || '',
@@ -95,7 +99,7 @@ const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
   return {
     uuid: dbAsset.uuid,
     model: dbAsset.model,
-    rented_days: dbAsset.rented_days,
+    rented_days: dbAsset.rented_days || 0,
     serial_number: dbAsset.serial_number,
     line_number: dbAsset.line_number,
     iccid: dbAsset.iccid,
@@ -180,7 +184,7 @@ export const useAssetsData = (options?: {
           manufacturer:manufacturers(id, name),
           status:asset_status!inner(id, status),
           plan:plans(id, nome)
-        `)
+        `, { count: 'exact' })
         .is('deleted_at', null);
 
       // Apply filters if provided

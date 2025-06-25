@@ -1,9 +1,11 @@
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
 import { Asset, AssetStatus, AssetType } from "@/types/asset";
 import { referenceDataService } from "@modules/assets/services/referenceDataService";
 import { showFriendlyError } from '@/utils/errorTranslator';
+import { mapDatabaseAssetToFrontend, mapSolutionToSolutionType } from '@/utils/databaseMappers';
 
 // Types for asset operations
 interface CreateAssetData {
@@ -12,7 +14,6 @@ interface CreateAssetData {
   status_id?: number;
   manufacturer_id?: number;
   plan_id?: number;
-  notes?: string;
   
   // CHIP specific fields
   iccid?: string;
@@ -41,7 +42,6 @@ interface CreateAssetData {
 
 interface UpdateAssetData {
   statusId?: number;
-  notes?: string;
   
   // CHIP fields
   iccid?: string;
@@ -59,8 +59,9 @@ interface UpdateAssetData {
   // Common fields
   rented_days?: number;
   
-  // Campos removidos que não existem no banco:
-  // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
+  // Campos de configurações de rede - atuais (editáveis)
+  ssid_atual?: string;
+  pass_atual?: string;
 }
 
 interface AssetFilters {
@@ -99,6 +100,7 @@ export function useAssetManagement() {
           .select(`
             uuid, serial_number, model, iccid, solution_id, status_id, 
             line_number, radio, manufacturer_id, created_at, updated_at,
+            rented_days, admin_user, admin_pass,
             manufacturers(id, name),
             asset_status(id, status),
             asset_solutions(id, solution)
@@ -127,7 +129,7 @@ export function useAssetManagement() {
         }
 
         // Transform database records to Asset type
-        return (data || []).map(mapDbToAsset);
+        return (data || []).map(mapDatabaseAssetToFrontend);
       },
     });
   };
@@ -144,6 +146,7 @@ export function useAssetManagement() {
           .select(`
             uuid, serial_number, model, iccid, solution_id, status_id,
             line_number, radio, manufacturer_id, created_at, updated_at,
+            rented_days, admin_user, admin_pass,
             manufacturers(id, name),
             asset_status(id, status),
             asset_solutions(id, solution)
@@ -157,7 +160,7 @@ export function useAssetManagement() {
           throw new Error(error.message);
         }
 
-        return mapDbToAsset(data);
+        return mapDatabaseAssetToFrontend(data);
       },
       enabled: !!id,
     });
@@ -173,7 +176,6 @@ export function useAssetManagement() {
         status_id: assetData.status_id || 1,
         manufacturer_id: assetData.manufacturer_id,
         plan_id: assetData.plan_id,
-        notes: assetData.notes,
         
         // CHIP fields
         iccid: assetData.iccid,
@@ -242,6 +244,8 @@ export function useAssetManagement() {
       if (data.plan_id !== undefined) updateData.plan_id = data.plan_id;
       if (data.admin_user !== undefined) updateData.admin_user = data.admin_user;
       if (data.admin_pass !== undefined) updateData.admin_pass = data.admin_pass;
+      if (data.ssid_atual !== undefined) updateData.ssid_atual = data.ssid_atual;
+      if (data.pass_atual !== undefined) updateData.pass_atual = data.pass_atual;
 
       const { error } = await supabase
         .from('assets')

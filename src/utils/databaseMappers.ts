@@ -1,3 +1,4 @@
+
 import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
@@ -31,22 +32,35 @@ export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string):
   }
 };
 
+// Map database solution to frontend SolutionType
+export const mapSolutionToSolutionType = (solution?: string, solutionId?: number): SolutionType => {
+  // First check by solution_id for more reliable mapping
+  if (solutionId === 11) return 'CHIP';
+  
+  if (!solution) return 'CHIP'; // Default fallback
+  
+  const solutionUpper = solution.toUpperCase();
+  
+  // Map known solutions
+  switch (solutionUpper) {
+    case 'CHIP': return 'CHIP';
+    case 'SPEEDY 5G': return 'SPEEDY 5G';
+    case '4BLACK': return '4BLACK';
+    case '4LITE': return '4LITE';
+    case '4PLUS': return '4PLUS';
+    case 'AP BLUE': return 'AP BLUE';
+    case 'POWERBANK': return 'POWERBANK';
+    case 'SWITCH': return 'SWITCH';
+    case 'HUB USB': return 'HUB USB';
+    case 'ANTENA': return 'ANTENA';
+    case 'LOAD BALANCE': return 'LOAD BALANCE';
+    default: return 'CHIP'; // Default fallback
+  }
+};
+
 // Map database solution to AssetType based on solution_id
 export const mapSolutionIdToAssetType = (solutionId: number): AssetType => {
   return solutionId === 11 ? 'CHIP' : 'ROTEADOR';
-};
-
-// Map database solution to frontend SolutionType
-export const mapSolutionToSolutionType = (solution?: string): SolutionType | undefined => {
-  if (!solution) return undefined;
-  
-  const solutionUpper = solution.toUpperCase();
-  const validSolutions: SolutionType[] = [
-    'SPEEDY 5G', '4BLACK', '4LITE', '4PLUS', 'AP BLUE', 
-    'POWERBANK', 'SWITCH', 'HUB USB', 'ANTENA', 'LOAD BALANCE', 'CHIP'
-  ];
-  
-  return validSolutions.find(s => s === solutionUpper);
 };
 
 // Map database asset record to frontend Asset type
@@ -59,6 +73,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
   const isChip = dbAsset.solution_id === SOLUTION_IDS.CHIP;
   const type: AssetType = isChip ? 'CHIP' : 'ROTEADOR';
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
+  const solucao = mapSolutionToSolutionType(solutionName, dbAsset.solution_id);
   
   const baseAsset = {
     id: dbAsset.uuid || dbAsset.id,
@@ -67,10 +82,9 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
     status,
     statusId: dbAsset.status_id,
     registrationDate: dbAsset.created_at || new Date().toISOString(),
-    notes: dbAsset.notes,
     lastSeen: dbAsset.last_seen,
     isOnline: dbAsset.is_online,
-    solucao: mapSolutionToSolutionType(solutionName),
+    solucao,
     marca: dbAsset.manufacturers?.name || dbAsset.manufacturer?.name,
     modelo: dbAsset.model,
     serial_number: dbAsset.serial_number,
@@ -179,7 +193,6 @@ export const mapFrontendToDatabase = (frontendData: any, isUpdate: boolean = fal
   if (frontendData.solution_id !== undefined) dbData.solution_id = frontendData.solution_id;
   if (frontendData.manufacturer_id !== undefined) dbData.manufacturer_id = frontendData.manufacturer_id;
   if (frontendData.plan_id !== undefined) dbData.plan_id = frontendData.plan_id;
-  if (frontendData.notes !== undefined) dbData.notes = frontendData.notes;
   
   if (frontendData.iccid !== undefined) dbData.iccid = frontendData.iccid;
   if (frontendData.line_number !== undefined) dbData.line_number = frontendData.line_number;

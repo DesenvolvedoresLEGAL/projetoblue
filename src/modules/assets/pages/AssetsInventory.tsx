@@ -56,7 +56,7 @@ const AssetsInventory = () => {
     currentPage,
     pageSize: ASSETS_PER_PAGE,
     enabled: shouldFetch,
-    excludeSolutions // Aplicar exclusão de soluções
+    excludeSolutions: excludeSolutions?.map(id => Number(id)) || [] // Convert to numbers
   });
   
   const handleSearch = useCallback((e: React.FormEvent) => {
