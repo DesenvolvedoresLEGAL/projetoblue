@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useTheme } from '@/context/ThemeProvider';
+import { useAccessibilityValidator } from './useAccessibilityValidator';
 
 interface ThemeValidatorProps {
   children: React.ReactNode;
@@ -73,30 +74,3 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-// Hook para validação de acessibilidade
-export const useAccessibilityValidator = () => {
-  useEffect(() => {
-    // Verificar se elementos interativos têm labels adequados
-    const validateAccessibility = () => {
-      const buttons = document.querySelectorAll('button:not([aria-label]):not([aria-labelledby])');
-      const inputs = document.querySelectorAll('input:not([aria-label]):not([aria-labelledby]):not([id])');
-      
-      if (buttons.length > 0) {
-        console.warn('🔍 A11y: Botões sem labels de acessibilidade encontrados:', buttons.length);
-      }
-      
-      if (inputs.length > 0) {
-        console.warn('🔍 A11y: Inputs sem labels de acessibilidade encontrados:', inputs.length);
-      }
-      
-      // Verificar contraste de foco
-      const focusableElements = document.querySelectorAll('[tabindex], button, input, select, textarea, a[href]');
-      console.log(`🔍 A11y: ${focusableElements.length} elementos focáveis encontrados`);
-    };
-
-    // Executar após um breve delay para permitir renderização
-    const timeoutId = setTimeout(validateAccessibility, 1000);
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
-};
