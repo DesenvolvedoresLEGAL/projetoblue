@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from "react";
-import { useDataUsage } from "@/context/DataUsageContext";
+import { useDataUsage } from "@/context/DataUsageProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ChipWithMetrics, TimeRange, GroupByOption } from "@/types/dataUsage";

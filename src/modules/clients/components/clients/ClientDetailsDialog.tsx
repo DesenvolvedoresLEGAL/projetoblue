@@ -1,5 +1,5 @@
 
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/AssetProvider";
 import { Client, Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
 import { 

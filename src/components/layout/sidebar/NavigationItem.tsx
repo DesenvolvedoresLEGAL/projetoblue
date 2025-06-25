@@ -2,7 +2,7 @@
 import { NavLink } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthProvider";
 import { UserRole } from "@/types/auth";
 
 interface NavigationItemProps {

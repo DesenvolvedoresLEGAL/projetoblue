@@ -1,20 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAssets } from '@/context/AssetContext';
+import React, { useContext, useState, useEffect, ReactNode } from 'react';
+import { useAssets } from '@/context/AssetProvider';
 import { ChipAsset } from '@/types/asset';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
+import { DataUsageContext } from './DataUsageContext';
 
 // Definição do contexto
-export interface DataUsageContextType {
-  dataUsage: Record<string, { download: number; upload: number }>;
-  updateDataUsage: (assetId: string, download: number, upload: number) => void;
-  // Added missing methods
-  getActiveChipsWithMetrics: () => ChipWithMetrics[];
-  getAvailableCarriers: () => string[];
-  getAvailableClients: () => string[];
-  getAvailableRegions: () => string[];
-}
-
-export const DataUsageContext = createContext<DataUsageContextType | undefined>(undefined);
 
 export const DataUsageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { assets } = useAssets();

@@ -2,7 +2,7 @@
 import { useQuery, useMutation, QueryClient } from '@tanstack/react-query';
 import { bitsService } from '../services/bitsService';
 import { Referral } from '../types';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthProvider';
 import { toast } from '@/utils/toast';
 
 // Create a queryClient instance

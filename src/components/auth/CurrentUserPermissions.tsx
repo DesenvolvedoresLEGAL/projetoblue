@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthProvider';
 import { usePermissions } from '@/hooks/usePermissions';
 import { RoleBadge } from '@/components/ui/role-badge';
 import { Shield, User, CheckCircle, XCircle } from 'lucide-react';

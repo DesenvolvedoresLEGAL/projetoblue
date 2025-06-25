@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/AssetProvider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Wifi, AlertTriangle, Clock, PackageSearch } from "lucide-react";
 import { SOLUTION_IDS, isSameStatus } from "@/utils/assetUtils";
