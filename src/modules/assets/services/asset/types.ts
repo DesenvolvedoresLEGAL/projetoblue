@@ -1,5 +1,5 @@
 
-import { AssetType, AssetStatus } from "@/types/asset";
+import { AssetType, AssetStatus, SubscriptionInfo } from "@/types/asset";
 
 // Interface corrigida para criação de assets, alinhada com campos do banco
 export interface CreateAssetData {
@@ -43,7 +43,7 @@ export interface AssetUpdateParams {
   model?: string;
   serial_number?: string;
   clientId?: string; // Mantido para compatibilidade (não existe no banco assets)
-  subscription?: any; // Mantido para compatibilidade
+  subscription?: SubscriptionInfo; // Mantido para compatibilidade
   // Apenas campos atuais podem ser editados - campos de fábrica nunca
   ssid_atual?: string;
   pass_atual?: string;
@@ -51,7 +51,7 @@ export interface AssetUpdateParams {
   // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
 }
 
-export interface AssetCreateParams extends CreateAssetData {}
+export type AssetCreateParams = CreateAssetData;
 
 export interface AssetListParams {
   page?: number;
