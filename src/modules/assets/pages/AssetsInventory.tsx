@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -144,7 +145,7 @@ const AssetsInventory = () => {
         isSearching={isSearching}
       />
       
-      {assetsData?.assets && (
+      {assetsData && (
         <AssetsTable 
           assets={assetsData.assets} 
           totalCount={assetsData.totalCount}

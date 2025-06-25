@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useAssetsData } from '@modules/assets/hooks/useAssetsData';
@@ -17,8 +16,8 @@ export interface UseAssetsOptimizedOptions {
 export const useAssetsOptimized = (options: UseAssetsOptimizedOptions = {}) => {
   const queryClient = useQueryClient();
   
-  // Use existing useAssetsData for main data fetching (no parameters)
-  const assetsQuery = useAssetsData();
+  // Use existing useAssetsData for main data fetching with parameters
+  const assetsQuery = useAssetsData(options);
   
   // Optimized status breakdown query with caching
   const statusBreakdownQuery = useQuery({
@@ -68,17 +67,17 @@ export const useAssetsOptimized = (options: UseAssetsOptimizedOptions = {}) => {
 
   // Computed stats for dashboard optimization
   const computedStats = useMemo(() => {
-    const assets = assetsQuery.data || [];
+    const assets = assetsQuery.data?.assets || [];
     
     return {
       total: assets.length,
       byStatus: assets.reduce((acc, asset) => {
-        const statusName = asset.status || 'Unknown';
+        const statusName = asset.status?.name || 'Unknown';
         acc[statusName] = (acc[statusName] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
       byType: assets.reduce((acc, asset) => {
-        const typeName = asset.type || 'Unknown';
+        const typeName = asset.solucao?.name || 'Unknown';
         acc[typeName] = (acc[typeName] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
@@ -87,9 +86,9 @@ export const useAssetsOptimized = (options: UseAssetsOptimizedOptions = {}) => {
 
   return {
     // Main data
-    assets: assetsQuery.data || [],
-    totalCount: assetsQuery.data?.length || 0,
-    totalPages: Math.ceil((assetsQuery.data?.length || 0) / (options.pageSize || 10)),
+    assets: assetsQuery.data?.assets || [],
+    totalCount: assetsQuery.data?.totalCount || 0,
+    totalPages: assetsQuery.data?.totalPages || 1,
     
     // Loading states
     isLoading: assetsQuery.isLoading,

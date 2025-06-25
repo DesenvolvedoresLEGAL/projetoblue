@@ -35,6 +35,10 @@ export interface AssetWithRelations {
     id: number;
     name: string;
   };
+  plan?: {
+    id: number;
+    nome: string;
+  };
   // Optional field for search highlighting
   matchedField?: string;
 }

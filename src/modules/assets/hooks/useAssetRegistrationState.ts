@@ -1,89 +1,133 @@
 
-import { useState, useEffect } from 'react';
-import { ChipFormValues, EquipmentFormValues } from '@modules/assets/pages/assets/register/types';
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 import { UseFormReturn } from 'react-hook-form';
 
-export interface AssetRegistrationState {
-  currentFormType: 'chip' | 'equipment';
-  isInitialized: boolean;
+interface RegistrationFormData {
+  [key: string]: any;
 }
 
-const STORAGE_KEY = 'asset_registration_state';
+interface AssetRegistrationState {
+  // Form type management
+  currentFormType: 'chip' | 'equipment';
+  isInitialized: boolean;
+  
+  // Asset type (for compatibility)
+  assetType: 'CHIP' | 'ROTEADOR';
+  
+  // Password strength management
+  passwordStrength: 'weak' | 'medium' | 'strong';
+  allowWeakPassword: boolean;
+  
+  // UI state management
+  basicInfoOpen: boolean;
+  technicalInfoOpen: boolean;
+  securityInfoOpen: boolean;
+  networkInfoOpen: boolean;
+  
+  // Form data
+  chipFormData: RegistrationFormData;
+  equipmentFormData: RegistrationFormData;
+  
+  // Actions
+  setCurrentFormType: (formType: 'chip' | 'equipment') => void;
+  setIsInitialized: (initialized: boolean) => void;
+  setAssetType: (type: 'CHIP' | 'ROTEADOR') => void;
+  setPasswordStrength: (strength: 'weak' | 'medium' | 'strong') => void;
+  setAllowWeakPassword: (allow: boolean) => void;
+  setBasicInfoOpen: (open: boolean) => void;
+  setTechnicalInfoOpen: (open: boolean) => void;
+  setSecurityInfoOpen: (open: boolean) => void;
+  setNetworkInfoOpen: (open: boolean) => void;
+  setFormValue: (form: UseFormReturn<any>, key: string, value: any) => void;
+  updateFormData: (data: RegistrationFormData, formType: 'chip' | 'equipment') => void;
+  syncWithForm: (form: UseFormReturn<any>, formType: 'chip' | 'equipment') => void;
+  clearState: () => void;
+}
 
-export const useAssetRegistrationState = () => {
-  const [state, setState] = useState<AssetRegistrationState>(() => {
-    // Initialize from sessionStorage if available
-    try {
-      const savedState = sessionStorage.getItem(STORAGE_KEY);
-      if (savedState) {
-        return JSON.parse(savedState);
-      }
-    } catch (error) {
-      console.warn('Failed to restore asset registration state from sessionStorage:', error);
-    }
-    
-    // Default state
-    return {
+export const useAssetRegistrationState = create<AssetRegistrationState>()(
+  devtools(
+    (set, get) => ({
+      // Initial state
       currentFormType: 'chip',
-      isInitialized: false
-    };
-  });
-
-  // Persist state to sessionStorage whenever it changes
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.warn('Failed to save asset registration state to sessionStorage:', error);
+      isInitialized: false,
+      assetType: 'CHIP',
+      passwordStrength: 'weak',
+      allowWeakPassword: false,
+      basicInfoOpen: true,
+      technicalInfoOpen: false,
+      securityInfoOpen: false,
+      networkInfoOpen: false,
+      chipFormData: {},
+      equipmentFormData: {},
+      
+      // Actions
+      setCurrentFormType: (formType) => {
+        set({ 
+          currentFormType: formType,
+          assetType: formType === 'chip' ? 'CHIP' : 'ROTEADOR'
+        });
+      },
+      
+      setIsInitialized: (initialized) => set({ isInitialized: initialized }),
+      
+      setAssetType: (type) => {
+        set({ 
+          assetType: type,
+          currentFormType: type === 'CHIP' ? 'chip' : 'equipment'
+        });
+      },
+      
+      setPasswordStrength: (strength) => set({ passwordStrength: strength }),
+      setAllowWeakPassword: (allow) => set({ allowWeakPassword: allow }),
+      setBasicInfoOpen: (open) => set({ basicInfoOpen: open }),
+      setTechnicalInfoOpen: (open) => set({ technicalInfoOpen: open }),
+      setSecurityInfoOpen: (open) => set({ securityInfoOpen: open }),
+      setNetworkInfoOpen: (open) => set({ networkInfoOpen: open }),
+      
+      setFormValue: (form, key, value) => {
+        try {
+          form.setValue(key as any, value);
+        } catch (error) {
+          console.warn(`Could not set form value for key: ${key}`, error);
+        }
+      },
+      
+      updateFormData: (data, formType) => {
+        if (formType === 'chip') {
+          set({ chipFormData: { ...get().chipFormData, ...data } });
+        } else {
+          set({ equipmentFormData: { ...get().equipmentFormData, ...data } });
+        }
+      },
+      
+      syncWithForm: (form, formType) => {
+        const currentValues = form.getValues();
+        if (formType === 'chip') {
+          set({ chipFormData: currentValues });
+        } else {
+          set({ equipmentFormData: currentValues });
+        }
+      },
+      
+      clearState: () => {
+        set({
+          currentFormType: 'chip',
+          isInitialized: false,
+          assetType: 'CHIP',
+          passwordStrength: 'weak',
+          allowWeakPassword: false,
+          basicInfoOpen: true,
+          technicalInfoOpen: false,
+          securityInfoOpen: false,
+          networkInfoOpen: false,
+          chipFormData: {},
+          equipmentFormData: {},
+        });
+      },
+    }),
+    {
+      name: 'asset-registration-state',
     }
-  }, [state]);
-
-  const setCurrentFormType = (formType: 'chip' | 'equipment') => {
-    setState(prevState => ({ ...prevState, currentFormType: formType }));
-  };
-
-  const setIsInitialized = (initialized: boolean) => {
-    setState(prevState => ({ ...prevState, isInitialized: initialized }));
-  };
-
-  const clearState = () => {
-    setState({
-      currentFormType: 'chip',
-      isInitialized: false
-    });
-    
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.warn('Failed to clear asset registration state from sessionStorage:', error);
-    }
-  };
-
-  // Helper function to handle setValue for different form types
-  const setFormValue = (
-    form: UseFormReturn<ChipFormValues> | UseFormReturn<EquipmentFormValues>,
-    key: string,
-    value: any
-  ) => {
-    if (state.currentFormType === 'chip') {
-      const chipForm = form as UseFormReturn<ChipFormValues>;
-      if (key in chipForm.getValues()) {
-        chipForm.setValue(key as keyof ChipFormValues, value);
-      }
-    } else {
-      const equipmentForm = form as UseFormReturn<EquipmentFormValues>;
-      if (key in equipmentForm.getValues()) {
-        equipmentForm.setValue(key as keyof EquipmentFormValues, value);
-      }
-    }
-  };
-
-  return {
-    currentFormType: state.currentFormType,
-    isInitialized: state.isInitialized,
-    setCurrentFormType,
-    setIsInitialized,
-    setFormValue,
-    clearState
-  };
-};
+  )
+);

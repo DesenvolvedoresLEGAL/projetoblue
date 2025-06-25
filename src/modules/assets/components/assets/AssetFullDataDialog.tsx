@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AssetWithRelations } from '@/types/assetWithRelations';
@@ -7,7 +6,7 @@ import { Eye, EyeOff, Wifi, Smartphone, Router } from "lucide-react";
 import { AssetBasicInfo } from './dialog/AssetBasicInfo';
 import { AssetTechnicalDetails } from './dialog/AssetTechnicalDetails';
 import { AssetNetworkConfig } from './dialog/AssetNetworkConfig';
-import { AssetSystemInfo } from './dialog/AssetSystemInfo';
+import AssetSystemInfo from './dialog/AssetSystemInfo';
 
 interface AssetFullDataDialogProps {
   isOpen: boolean;
