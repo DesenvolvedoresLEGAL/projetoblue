@@ -45,7 +45,9 @@ export function useDashboardStats() {
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
       try {
-        process.env.NODE_ENV === 'development' && console.log('Fetching dashboard stats...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetching dashboard stats...');
+        }
         
         // Parallel queries for better performance
         const [
@@ -67,13 +69,15 @@ export function useDashboardStats() {
         ]);
 
         // Log query results for debugging
-        process.env.NODE_ENV === 'development' && console.log('Total assets result:', totalAssetsResult);
-        process.env.NODE_ENV === 'development' && console.log('Active clients result:', activeClientsResult);
-        process.env.NODE_ENV === 'development' && console.log('Assets with issues result:', assetsWithIssuesResult);
-        process.env.NODE_ENV === 'development' && console.log('Recent assets result:', recentAssetsResult);
-        process.env.NODE_ENV === 'development' && console.log('Recent events result:', recentEventsResult);
-        process.env.NODE_ENV === 'development' && console.log('Status summary result:', statusSummaryResult);
-        process.env.NODE_ENV === 'development' && console.log('Detailed breakdown result:', detailedBreakdownResult);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Total assets result:', totalAssetsResult);
+          console.log('Active clients result:', activeClientsResult);
+          console.log('Assets with issues result:', assetsWithIssuesResult);
+          console.log('Recent assets result:', recentAssetsResult);
+          console.log('Recent events result:', recentEventsResult);
+          console.log('Status summary result:', statusSummaryResult);
+          console.log('Detailed breakdown result:', detailedBreakdownResult);
+        }
 
         // Error handling for individual queries
         if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
@@ -88,8 +92,10 @@ export function useDashboardStats() {
         const solutionsResult = await dashboardQueries.fetchSolutions();
         const statusResult = await dashboardQueries.fetchStatuses();
         
-        process.env.NODE_ENV === 'development' && console.log('Solutions result:', solutionsResult);
-        process.env.NODE_ENV === 'development' && console.log('Status result:', statusResult);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Solutions result:', solutionsResult);
+          console.log('Status result:', statusResult);
+        }
         
         if (solutionsResult.error) throw new Error(`Solutions query error: ${solutionsResult.error.message}`);
         if (statusResult.error) throw new Error(`Status query error: ${statusResult.error.message}`);

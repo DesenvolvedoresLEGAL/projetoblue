@@ -49,7 +49,9 @@ export const useDashboardCards = () => {
       try {
         // Use the API service to fetch problem assets
         const assets = await assetService.listProblemAssets();
-        process.env.NODE_ENV === 'development' && console.log("Raw problem assets data:", assets);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Raw problem assets data:', assets);
+        }
         
         // Get status names for mapping
         const { data: statuses } = await supabase
@@ -72,7 +74,9 @@ export const useDashboardCards = () => {
           };
         });
         
-        process.env.NODE_ENV === 'development' && console.log("Transformed problem assets:", items);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Transformed problem assets:', items);
+        }
         return {
           count: items.length,
           items: items.slice(0, 5) // Keep slice only for display items, not count
@@ -90,7 +94,9 @@ export const useDashboardCards = () => {
     queryFn: async () => {
       try {
         const assets = await assetService.getAssetsByStatus(2);
-        process.env.NODE_ENV === 'development' && console.log("Raw on-lease assets:", assets);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Raw on-lease assets:', assets);
+        }
 
         const items = assets.map((asset) => {
           const normalized = normalizeAsset(asset);
@@ -102,7 +108,9 @@ export const useDashboardCards = () => {
           };
         });
         
-        process.env.NODE_ENV === 'development' && console.log("Transformed on-lease assets:", items);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Transformed on-lease assets:', items);
+        }
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
@@ -120,7 +128,9 @@ export const useDashboardCards = () => {
     queryFn: async () => {
       try {
         const assets = await assetService.getAssetsByStatus(3);
-        process.env.NODE_ENV === 'development' && console.log("Raw subscription assets:", assets);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Raw subscription assets:', assets);
+        }
 
         const items = assets.map((asset) => {
           const normalized = normalizeAsset(asset);
@@ -132,7 +142,9 @@ export const useDashboardCards = () => {
           };
         });
         
-        process.env.NODE_ENV === 'development' && console.log("Transformed subscription assets:", items);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Transformed subscription assets:', items);
+        }
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
@@ -207,11 +219,13 @@ export const useDashboardCards = () => {
         // Equipamentos: tudo que não é chip nem speedy
         const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
         
-        process.env.NODE_ENV === 'development' && console.log('Assets categorization debug:');
-        process.env.NODE_ENV === 'development' && console.log('Total assets:', assets?.length);
-        process.env.NODE_ENV === 'development' && console.log('Chips (solution_id=11):', chips.length);
-        process.env.NODE_ENV === 'development' && console.log('Speedys (solution_id=1):', speedy.length);
-        process.env.NODE_ENV === 'development' && console.log('Equipment (outros):', equipment.length);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Assets categorization debug:');
+          console.log('Total assets:', assets?.length);
+          console.log('Chips (solution_id=11):', chips.length);
+          console.log('Speedys (solution_id=1):', speedy.length);
+          console.log('Equipment (outros):', equipment.length);
+        }
         
         // Count available and unavailable assets
         const availableChips = chips.filter(a => a.status_id === availableStatusId);
@@ -251,7 +265,9 @@ export const useDashboardCards = () => {
           }
         };
         
-        process.env.NODE_ENV === 'development' && console.log('Final stats result:', result);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Final stats result:', result);
+        }
         return result;
       } catch (error) {
         console.error("Error fetching assets statistics:", error);
