@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { toast } from 'sonner';
 
 interface UnifiedAssetSearchProps {
   selectedAssets: SelectedAsset[];
@@ -36,6 +37,11 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
 
   const handleAssetSelect = (asset: SelectedAsset) => {
     console.log('UnifiedAssetSearch: Asset selecionado', asset.uuid);
+    if (asset.iccid) {
+      toast.info(`CHIP selecionado.`);
+    } else {
+      toast.info(`${asset.radio} selecionado.`);
+    }
     setSelectingAssetId(asset.uuid);
     onAssetSelected(asset);
     setSelectingAssetId(null);
