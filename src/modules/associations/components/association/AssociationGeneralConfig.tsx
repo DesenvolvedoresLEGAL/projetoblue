@@ -8,10 +8,11 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Settings, Calendar } from "lucide-react";
 
 export interface AssociationGeneralConfig {
-  associationType: 'ALUGUEL' | 'ASSINATURA';
+  associationType: number; // Mudado para number (1 = ALUGUEL, 2 = ASSINATURA)
   startDate: Date;
   endDate?: Date;
   notes: string;
+  rentedDays?: number; // Adicionado campo faltante
 }
 
 interface AssociationGeneralConfigProps {
@@ -26,9 +27,16 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
   // Validação de datas
   const isEndDateValid = !config.endDate || config.endDate >= config.startDate;
 
-  const handleAssociationTypeChange = (value: 'ALUGUEL' | 'ASSINATURA') => {
-    console.log('🔄 AssociationGeneralConfig - Type changed to:', value);
-    onUpdate({ associationType: value });
+  const handleAssociationTypeChange = (value: string) => {
+    // Mapear string para número
+    const numericValue = value === 'ALUGUEL' ? 1 : 2;
+    console.log('🔄 AssociationGeneralConfig - Type changed to:', value, '-> ID:', numericValue);
+    onUpdate({ associationType: numericValue });
+  };
+
+  // Converter número de volta para string para exibição
+  const getDisplayValue = (numericType: number): string => {
+    return numericType === 1 ? 'ALUGUEL' : 'ASSINATURA';
   };
 
   return (
@@ -48,7 +56,7 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
           <div className="space-y-2">
             <Label htmlFor="association-type" className="text-sm">Tipo de Associação *</Label>
             <Select 
-              value={config.associationType} 
+              value={getDisplayValue(config.associationType)} 
               onValueChange={handleAssociationTypeChange}
             >
               <SelectTrigger>

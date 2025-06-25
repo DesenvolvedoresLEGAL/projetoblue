@@ -31,13 +31,19 @@ export const useAssetAssociationState = () => {
       console.warn('⚠️ Failed to restore asset association state from sessionStorage:', error);
     }
     
-    // Default state
+    // Default state com configuração inicial correta
     const defaultState = {
       selectedAssets: [],
       currentStep: 'client',
       isLoading: false,
       selectedClient: null,
-      generalConfig: null
+      generalConfig: {
+        associationType: 1, // Padrão: ALUGUEL (ID = 1)
+        startDate: new Date(),
+        endDate: undefined,
+        notes: '',
+        rentedDays: 0
+      } as AssociationGeneralConfig
     };
     console.log('🆕 Initialized new asset association state:', defaultState);
     return defaultState;
@@ -73,6 +79,20 @@ export const useAssetAssociationState = () => {
     setState(prevState => ({ ...prevState, generalConfig: config }));
   };
 
+  // Validação para verificar se os dados estão completos
+  const validateCurrentStep = (): boolean => {
+    switch (state.currentStep) {
+      case 'client':
+        return !!state.selectedClient;
+      case 'assets':
+        return state.selectedAssets.length > 0;
+      case 'summary':
+        return !!(state.selectedClient && state.selectedAssets.length > 0 && state.generalConfig);
+      default:
+        return false;
+    }
+  };
+
   const clearState = () => {
     console.log('🗑️ Clearing asset association state');
     const defaultState = {
@@ -80,7 +100,13 @@ export const useAssetAssociationState = () => {
       currentStep: 'client',
       isLoading: false,
       selectedClient: null,
-      generalConfig: null
+      generalConfig: {
+        associationType: 1,
+        startDate: new Date(),
+        endDate: undefined,
+        notes: '',
+        rentedDays: 0
+      } as AssociationGeneralConfig
     };
     setState(defaultState);
     
@@ -102,6 +128,7 @@ export const useAssetAssociationState = () => {
     setSelectedClient,
     setSelectedAssets,
     setGeneralConfig,
+    validateCurrentStep,
     clearState
   };
 };

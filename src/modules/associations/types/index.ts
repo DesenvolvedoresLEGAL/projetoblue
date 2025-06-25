@@ -40,14 +40,16 @@ export interface SelectedAsset {
   ssid_atual?: string;
   pass_atual?: string;
   isPrincipalChip?: boolean;
+  // Propriedade para exibição amigável
+  identifier?: string;
 }
 
 export interface AssetAssociationState {
   selectedAssets: SelectedAsset[];
-  currentStep: string; // Changed from number to string
+  currentStep: 'client' | 'assets' | 'summary'; // Mais específico
   isLoading: boolean;
-  selectedClient?: Client;
-  generalConfig?: AssociationGeneralConfig;
+  selectedClient: Client | null; // Mais específico
+  generalConfig: AssociationGeneralConfig | null; // Mais específico
 }
 
 export interface AssetConfiguration {

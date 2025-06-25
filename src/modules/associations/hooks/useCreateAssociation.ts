@@ -6,7 +6,7 @@ import { useIdempotentAssociation } from './useIdempotentAssociation';
 
 interface CreateAssociationData {
   clientId: string;
-  associationTypeId: number;
+  associationTypeId: number; // Mudado para number
   startDate: string; // Deve ser ISO string completa
   endDate?: string;
   selectedAssets: Array<{
@@ -39,10 +39,35 @@ export const useCreateAssociation = () => {
     mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
       console.log('[useCreateAssociation] Iniciando criação de associação com dados:', data);
 
-      // Validação de entrada mais rigorosa
-      if (!data.clientId || !data.associationTypeId || !data.startDate || !data.selectedAssets?.length) {
-        const errorMsg = 'Dados obrigatórios não fornecidos';
+      // Validação de entrada mais rigorosa com logs detalhados
+      const validationErrors: string[] = [];
+      
+      if (!data.clientId) {
+        validationErrors.push('clientId não fornecido');
+      }
+      
+      if (!data.associationTypeId || typeof data.associationTypeId !== 'number') {
+        validationErrors.push(`associationTypeId inválido: ${data.associationTypeId} (tipo: ${typeof data.associationTypeId})`);
+      }
+      
+      if (!data.startDate) {
+        validationErrors.push('startDate não fornecida');
+      }
+      
+      if (!data.selectedAssets?.length) {
+        validationErrors.push('selectedAssets vazio ou não fornecido');
+      }
+
+      if (validationErrors.length > 0) {
+        const errorMsg = `Dados obrigatórios não fornecidos: ${validationErrors.join(', ')}`;
         console.error('[useCreateAssociation] Erro de validação:', errorMsg);
+        console.error('[useCreateAssociation] Dados recebidos:', {
+          clientId: data.clientId,
+          associationTypeId: data.associationTypeId,
+          startDate: data.startDate,
+          selectedAssetsLength: data.selectedAssets?.length,
+          selectedAssets: data.selectedAssets
+        });
         throw new Error(errorMsg);
       }
 
@@ -67,7 +92,7 @@ export const useCreateAssociation = () => {
       // Preparar dados para o RPC
       const rpcData = {
         p_client_id: data.clientId,
-        p_association_id: data.associationTypeId,
+        p_association_id: data.associationTypeId, // Agora é number
         p_entry_date: formattedStartDate,
         p_asset_ids: data.selectedAssets.map(asset => asset.id),
         p_exit_date: data.endDate ? new Date(data.endDate).toISOString() : null,

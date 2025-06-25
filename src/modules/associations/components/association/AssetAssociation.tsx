@@ -21,6 +21,7 @@ export const AssetAssociation: React.FC = () => {
     selectedAssets,
     generalConfig,
     setCurrentStep,
+    validateCurrentStep,
     clearState
   } = useAssetAssociationState();
 
@@ -33,8 +34,10 @@ export const AssetAssociation: React.FC = () => {
 
   const handleNext = () => {
     if (currentStep === 'client' && selectedClient) {
+      console.log('AssetAssociation: Avançando para seleção de ativos');
       setCurrentStep('assets');
     } else if (currentStep === 'assets' && selectedAssets.length > 0) {
+      console.log('AssetAssociation: Avançando para resumo');
       setCurrentStep('summary');
     }
   };
@@ -48,15 +51,21 @@ export const AssetAssociation: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedClient || !selectedAssets.length || !generalConfig) {
-      toast.error('Dados incompletos para criar associação');
-      return;
-    }
-
     console.log('[AssetAssociation] Iniciando submissão da associação');
     console.log('[AssetAssociation] Cliente selecionado:', selectedClient);
     console.log('[AssetAssociation] Assets selecionados:', selectedAssets);
     console.log('[AssetAssociation] Configuração geral:', generalConfig);
+
+    if (!selectedClient || !selectedAssets.length || !generalConfig) {
+      const errorMsg = 'Dados incompletos para criar associação';
+      console.error('[AssetAssociation] Validação falhou:', {
+        hasClient: !!selectedClient,
+        assetsCount: selectedAssets.length,
+        hasGeneralConfig: !!generalConfig
+      });
+      toast.error(errorMsg);
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -78,14 +87,10 @@ export const AssetAssociation: React.FC = () => {
 
       console.log('[AssetAssociation] Data formatada:', formattedStartDate);
 
-      // Garantir que rentedDays seja numérico
-      const rentedDays = Number(generalConfig.rentedDays) || 0;
-      console.log('[AssetAssociation] RentedDays normalizado:', rentedDays);
-
       // Preparar dados para envio
       const associationData = {
         clientId: selectedClient.uuid,
-        associationTypeId: generalConfig.associationType,
+        associationTypeId: generalConfig.associationType, // Agora é number
         startDate: formattedStartDate,
         endDate: generalConfig.endDate ? 
           (generalConfig.endDate instanceof Date ? 
@@ -93,16 +98,18 @@ export const AssetAssociation: React.FC = () => {
             new Date(generalConfig.endDate).toISOString()
           ) : undefined,
         selectedAssets: selectedAssets.map(asset => ({
-          id: asset.id,
+          id: asset.uuid, // Usar uuid como id
           type: asset.type,
-          identifier: asset.identifier
+          identifier: asset.type === 'CHIP' 
+            ? (asset.line_number?.toString() || asset.iccid || asset.uuid)
+            : (asset.radio || asset.serial_number || asset.uuid)
         })),
         generalConfig: {
           notes: generalConfig.notes || undefined,
-          ssid: generalConfig.ssid || undefined,
-          password: generalConfig.password || undefined,
-          dataLimit: generalConfig.dataLimit || undefined,
-          rentedDays: rentedDays
+          ssid: undefined, // Não implementado ainda
+          password: undefined, // Não implementado ainda
+          dataLimit: undefined, // Não implementado ainda
+          rentedDays: generalConfig.rentedDays || 0
         }
       };
 
@@ -138,18 +145,7 @@ export const AssetAssociation: React.FC = () => {
     }
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 'client':
-        return !!selectedClient;
-      case 'assets':
-        return selectedAssets.length > 0;
-      case 'summary':
-        return !!(selectedClient && selectedAssets.length > 0 && generalConfig);
-      default:
-        return false;
-    }
-  };
+  const canProceed = validateCurrentStep();
 
   const getStepTitle = () => {
     switch (currentStep) {
@@ -222,7 +218,7 @@ export const AssetAssociation: React.FC = () => {
             {currentStep !== 'summary' ? (
               <Button
                 onClick={handleNext}
-                disabled={!canProceed() || isSubmitting}
+                disabled={!canProceed || isSubmitting}
               >
                 Próximo
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -230,7 +226,7 @@ export const AssetAssociation: React.FC = () => {
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!canProceed() || isSubmitting}
+                disabled={!canProceed || isSubmitting}
               >
                 {isSubmitting ? (
                   <>
