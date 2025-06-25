@@ -67,15 +67,18 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
         asset_solutions!inner(solution),
         manufacturers(name)
       `)
+      .not('status_id', 'eq', 2)
+      .not('status_id', 'eq', 3)
       .is('deleted_at', null);
 
-    if (type === 'chip') {
-      query = query.or(`iccid.ilike.%${term}%,line_number.eq.${term}`);
-    } else {
-      query = query.or(`radio.eq.${term},serial_number.eq.${term}`);
-    }
-
-    const { data, error } = await query.limit(1);
+      
+      if (type === 'chip') {
+        query = query.or(`iccid.ilike.%${term}%,line_number.eq.${term}`);
+      } else {
+        query = query.or(`radio.eq.${term},serial_number.eq.${term}`);
+      }
+      
+      const { data, error } = await query.limit(1);
 
     if (error) {
       console.error('Erro na busca direta:', error);
@@ -83,6 +86,8 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
     }
 
     if (!data || data.length === 0) {
+      if (type == "equipment") toast.warning(`Ativo ${term} não encontrado, ou já associado.`);
+      if (type == "chip") toast.warning(`Chip não encontrado, ou já associado.`);
       return null;
     }
 
@@ -101,12 +106,12 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       status: asset.asset_status?.status,
       solucao: asset.asset_solutions?.solution, // Changed from 'solution' to 'solucao'
       brand: asset.manufacturers?.name,
-      type: (asset.iccid ? 'CHIP' : 'ROTEADOR') as 'CHIP' | 'ROTEADOR', // Explicit type casting
+      type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT', // Explicit type casting
       registrationDate: asset.created_at || new Date().toISOString() // Required property
     };
   };
 
-  const equipmentCount = assets.filter(asset => asset.type === 'ROTEADOR').length;
+  const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   return (
