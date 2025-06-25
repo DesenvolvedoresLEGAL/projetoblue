@@ -17,6 +17,14 @@ export const useAssetAssociationState = () => {
       if (savedState) {
         const parsedState = JSON.parse(savedState);
         console.log('🔄 Restored asset association state from sessionStorage:', parsedState);
+
+        if (parsedState.generalConfig) {
+          parsedState.generalConfig.startDate = new Date(parsedState.generalConfig.startDate);
+          if (parsedState.generalConfig.endDate) {
+            parsedState.generalConfig.endDate = new Date(parsedState.generalConfig.endDate);
+          }
+        }
+
         return parsedState;
       }
     } catch (error) {
