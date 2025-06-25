@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useTheme } from '@/context/ThemeProvider';
+import { useTheme } from '@/context/useTheme';
 import { useAccessibilityValidator } from './useAccessibilityValidator';
 
 interface ThemeValidatorProps {

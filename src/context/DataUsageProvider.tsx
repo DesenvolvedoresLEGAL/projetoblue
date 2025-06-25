@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, ReactNode } from 'react';
-import { useAssets } from '@/context/AssetProvider';
+import { useAssets } from '@/context/useAssets';
 import { ChipAsset } from '@/types/asset';
 import { ChipWithMetrics, SignalQuality } from '@/types/dataUsage';
 import { DataUsageContext } from './DataUsageContext';

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo, ReactNode } from 'react';
+import React, { useState, useMemo, ReactNode } from 'react';
 import { Asset, Client, StatusRecord } from '@/types/asset';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
@@ -7,7 +7,7 @@ import { showFriendlyError } from '@/utils/errorTranslator';
 import { useAuth } from '@/context/AuthProvider';
 import { AssetContext, AssetContextProps } from './AssetContext';
 
-const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { hasMinimumRole, isAuthenticated } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -202,12 +202,4 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const useAssets = () => {
-  const context = useContext(AssetContext);
-  if (!context) {
-    throw new Error('useAssets must be used within an AssetProvider');
-  }
-  return context;
-};
-
-export { AssetProvider, useAssets };
+export { AssetProvider };
