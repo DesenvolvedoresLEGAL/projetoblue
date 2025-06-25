@@ -32,38 +32,34 @@ export const useAssociationActions = () => {
           const availableStatusId = statusData.id;
 
           // Usar transação manual sem RPC functions
-          try {
-            // Encerrar associação (definir exit_date)
-            const { data: assocData, error: assocError } = await supabase
-              .from('asset_client_assoc')
-              .update({ 
-                exit_date: new Date().toISOString().split('T')[0] // Data atual
-              })
-              .eq('id', associationId)
-              .eq('asset_id', assetId)
-              .is('exit_date', null) // Só atualizar se ainda não tem exit_date
-              .select()
-              .single();
+          // Encerrar associação (definir exit_date)
+          const { data: assocData, error: assocError } = await supabase
+            .from('asset_client_assoc')
+            .update({
+              exit_date: new Date().toISOString().split('T')[0] // Data atual
+            })
+            .eq('id', associationId)
+            .eq('asset_id', assetId)
+            .is('exit_date', null) // Só atualizar se ainda não tem exit_date
+            .select()
+            .single();
 
-            if (assocError) throw assocError;
+          if (assocError) throw assocError;
 
-            // Verificar se a associação realmente foi atualizada
-            if (!assocData) {
-              throw new Error('Associação não encontrada ou já foi encerrada');
-            }
-
-            // Atualizar status do ativo para DISPONÍVEL
-            const { error: assetError } = await supabase
-              .from('assets')
-              .update({ status_id: availableStatusId })
-              .eq('uuid', assetId);
-
-            if (assetError) throw assetError;
-
-            return assocData;
-          } catch (txError) {
-            throw txError;
+          // Verificar se a associação realmente foi atualizada
+          if (!assocData) {
+            throw new Error('Associação não encontrada ou já foi encerrada');
           }
+
+          // Atualizar status do ativo para DISPONÍVEL
+          const { error: assetError } = await supabase
+            .from('assets')
+            .update({ status_id: availableStatusId })
+            .eq('uuid', assetId);
+
+          if (assetError) throw assetError;
+
+          return assocData;
         },
         associationId,
         'END_ASSOCIATION'

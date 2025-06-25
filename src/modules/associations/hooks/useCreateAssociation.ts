@@ -48,34 +48,30 @@ export const useCreateAssociation = () => {
             mapped_status_id: statusId
           });
 
-          try {
-            // Atualizar status do ativo
-            const { error: assetError } = await supabase
-              .from('assets')
-              .update({ status_id: statusId })
-              .eq('uuid', params.assetId);
+          // Atualizar status do ativo
+          const { error: assetError } = await supabase
+            .from('assets')
+            .update({ status_id: statusId })
+            .eq('uuid', params.assetId);
 
-            if (assetError) throw assetError;
+          if (assetError) throw assetError;
 
-            // Criar associação
-            const { data: assocData, error: assocError } = await supabase
-              .from('asset_client_assoc')
-              .insert({
-                asset_id: params.assetId,
-                client_id: params.clientId,
-                association_id: associationId,
-                entry_date: params.startDate,
-                notes: params.notes
-              })
-              .select()
-              .single();
+          // Criar associação
+          const { data: assocData, error: assocError } = await supabase
+            .from('asset_client_assoc')
+            .insert({
+              asset_id: params.assetId,
+              client_id: params.clientId,
+              association_id: associationId,
+              entry_date: params.startDate,
+              notes: params.notes
+            })
+            .select()
+            .single();
 
-            if (assocError) throw assocError;
+          if (assocError) throw assocError;
 
-            return assocData;
-          } catch (txError) {
-            throw txError;
-          }
+          return assocData;
         },
         undefined, // associationId não é necessário para CREATE
         'CREATE_ASSOCIATION'
