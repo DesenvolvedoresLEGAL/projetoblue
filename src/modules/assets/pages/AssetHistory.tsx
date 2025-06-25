@@ -218,6 +218,8 @@ const AssetHistory = () => {
                   size="sm"
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === totalPages}
+                >
+                  Próxima
                 </Button>
               </div>
             </div>
