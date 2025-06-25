@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useURLFilters } from '@/hooks/useURLFilters';
@@ -23,23 +23,53 @@ const AssetsInventory = () => {
     filterStatus,
     setFilterStatus,
     filterManufacturer,
-    setFilterManufacturer
-  } = useInventoryFiltersState();
+    setFilterManufacturer,
+    resetFilters
+  } = useInventoryFiltersState({ 
+    shouldPersist: false, // Não persistir no localStorage
+    resetOnMount: true    // Resetar na montagem
+  });
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [shouldFetch, setShouldFetch] = useState(true);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const queryClient = useQueryClient();
   
-  // Hook para gerenciar filtros via URL
-  const { updateURLParams, excludeSolutions } = useURLFilters({
+  // Hook para gerenciar filtros via URL - configurado para limpar na montagem
+  const { updateURLParams, excludeSolutions, clearAllURLParams } = useURLFilters({
     setFilterType,
     setFilterStatus,
     setFilterManufacturer,
     filterType,
     filterStatus,
     filterManufacturer
+  }, { 
+    clearOnMount: true // Limpar URL na montagem
   });
+
+  // Reset completo na montagem do componente
+  useEffect(() => {
+    console.log('🔄 AssetsInventory mounted - performing complete reset');
+    
+    // Reset filtros
+    resetFilters();
+    
+    // Limpar URL
+    clearAllURLParams();
+    
+    // Reset página
+    setCurrentPage(1);
+    
+    // Invalidar e refazer queries
+    queryClient.invalidateQueries({ queryKey: ['assets'] });
+    queryClient.invalidateQueries({ queryKey: ['assets-data'] });
+    
+    // Forçar refetch
+    setShouldFetch(true);
+    
+    console.log('✅ Complete reset performed on AssetsInventory mount');
+  }, []); // Array vazio para executar apenas na montagem
   
   const { 
     data: assetsData,
@@ -56,7 +86,7 @@ const AssetsInventory = () => {
     currentPage,
     pageSize: ASSETS_PER_PAGE,
     enabled: shouldFetch,
-    excludeSolutions: excludeSolutions?.map(id => Number(id)) || [] // Convert to numbers
+    excludeSolutions: excludeSolutions?.map(id => Number(id)) || []
   });
   
   const handleSearch = useCallback((e: React.FormEvent) => {

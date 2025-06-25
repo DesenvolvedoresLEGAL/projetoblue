@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 export interface InventoryFiltersState {
@@ -9,47 +10,71 @@ export interface InventoryFiltersState {
 
 const STORAGE_KEY = 'inventory-filters';
 
-export const useInventoryFiltersState = () => {
-  const [state, setState] = useState<InventoryFiltersState>(() => {
-    if (typeof window === 'undefined') {
-      return {
-        searchTerm: '',
-        filterType: 'all',
-        filterStatus: 'all',
-        filterManufacturer: 'all'
-      };
-    }
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          searchTerm: '',
-          filterType: 'all',
-          filterStatus: 'all',
-          filterManufacturer: 'all',
-          ...parsed
-        } as InventoryFiltersState;
-      }
-    } catch (error) {
-      console.warn('Failed to load inventory filters from localStorage:', error);
-    }
-    return {
-      searchTerm: '',
-      filterType: 'all',
-      filterStatus: 'all',
-      filterManufacturer: 'all'
-    };
+interface UseInventoryFiltersStateOptions {
+  shouldPersist?: boolean;
+  resetOnMount?: boolean;
+}
+
+export const useInventoryFiltersState = (options: UseInventoryFiltersStateOptions = {}) => {
+  const { shouldPersist = false, resetOnMount = true } = options;
+  
+  const getDefaultState = (): InventoryFiltersState => ({
+    searchTerm: '',
+    filterType: 'all',
+    filterStatus: 'all',
+    filterManufacturer: 'all'
   });
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.warn('Failed to save inventory filters to localStorage:', error);
+  const [state, setState] = useState<InventoryFiltersState>(() => {
+    // Se resetOnMount é true, sempre começar com estado limpo
+    if (resetOnMount) {
+      console.log('🔄 Resetting inventory filters on mount');
+      return getDefaultState();
     }
-  }, [state]);
+
+    // Só tentar carregar do localStorage se shouldPersist for true
+    if (shouldPersist && typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          console.log('📁 Loaded inventory filters from localStorage:', parsed);
+          return {
+            ...getDefaultState(),
+            ...parsed
+          } as InventoryFiltersState;
+        }
+      } catch (error) {
+        console.warn('Failed to load inventory filters from localStorage:', error);
+      }
+    }
+    
+    return getDefaultState();
+  });
+
+  // Limpar localStorage existente no primeiro mount se resetOnMount for true
+  useEffect(() => {
+    if (resetOnMount && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        console.log('🗑️ Cleared existing inventory filters from localStorage');
+      } catch (error) {
+        console.warn('Failed to clear inventory filters from localStorage:', error);
+      }
+    }
+  }, [resetOnMount]);
+
+  // Salvar no localStorage apenas se shouldPersist for true
+  useEffect(() => {
+    if (shouldPersist && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        console.log('💾 Saved inventory filters to localStorage:', state);
+      } catch (error) {
+        console.warn('Failed to save inventory filters to localStorage:', error);
+      }
+    }
+  }, [state, shouldPersist]);
 
   const setSearchTerm = (term: string) => {
     setState(prev => ({ ...prev, searchTerm: term }));
@@ -68,12 +93,8 @@ export const useInventoryFiltersState = () => {
   };
 
   const resetFilters = () => {
-    setState({
-      searchTerm: '',
-      filterType: 'all',
-      filterStatus: 'all',
-      filterManufacturer: 'all'
-    });
+    console.log('🔄 Resetting all inventory filters');
+    setState(getDefaultState());
   };
 
   return {

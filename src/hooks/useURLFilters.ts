@@ -11,40 +11,73 @@ interface URLFiltersParams {
   filterManufacturer: string;
 }
 
-export const useURLFilters = ({
-  setFilterType,
-  setFilterStatus,
-  setFilterManufacturer,
-  filterType,
-  filterStatus,
-  filterManufacturer
-}: URLFiltersParams) => {
+interface UseURLFiltersOptions {
+  clearOnMount?: boolean;
+}
+
+export const useURLFilters = (
+  {
+    setFilterType,
+    setFilterStatus,
+    setFilterManufacturer,
+    filterType,
+    filterStatus,
+    filterManufacturer
+  }: URLFiltersParams,
+  options: UseURLFiltersOptions = {}
+) => {
+  const { clearOnMount = true } = options;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Ler parâmetros da URL no carregamento inicial
+  // Limpar parâmetros da URL na montagem se clearOnMount for true
   useEffect(() => {
-    const solution = searchParams.get('solution');
-    const type = searchParams.get('type');
-    const status = searchParams.get('status');
-    const manufacturer = searchParams.get('manufacturer');
-
-    // Aplicar solution ou type (aliases)
-    if (solution && solution !== filterType) {
-      setFilterType(solution);
-    } else if (type && type !== filterType) {
-      setFilterType(type);
+    if (clearOnMount) {
+      const hasFilterParams = searchParams.has('solution') || 
+                             searchParams.has('type') || 
+                             searchParams.has('status') || 
+                             searchParams.has('manufacturer') ||
+                             searchParams.has('exclude_solutions');
+      
+      if (hasFilterParams) {
+        console.log('🧹 Clearing URL filter parameters on mount');
+        const newParams = new URLSearchParams();
+        // Manter apenas parâmetros que não são de filtro (se houver)
+        for (const [key, value] of searchParams.entries()) {
+          if (!['solution', 'type', 'status', 'manufacturer', 'exclude_solutions'].includes(key)) {
+            newParams.set(key, value);
+          }
+        }
+        setSearchParams(newParams, { replace: true });
+      }
     }
+  }, [clearOnMount, searchParams, setSearchParams]);
 
-    // Aplicar status
-    if (status && status !== filterStatus) {
-      setFilterStatus(status);
-    }
+  // Ler parâmetros da URL no carregamento inicial (apenas se clearOnMount for false)
+  useEffect(() => {
+    if (!clearOnMount) {
+      const solution = searchParams.get('solution');
+      const type = searchParams.get('type');
+      const status = searchParams.get('status');
+      const manufacturer = searchParams.get('manufacturer');
 
-    // Aplicar manufacturer
-    if (manufacturer && manufacturer !== filterManufacturer) {
-      setFilterManufacturer(manufacturer);
+      // Aplicar solution ou type (aliases)
+      if (solution && solution !== filterType) {
+        setFilterType(solution);
+      } else if (type && type !== filterType) {
+        setFilterType(type);
+      }
+
+      // Aplicar status
+      if (status && status !== filterStatus) {
+        setFilterStatus(status);
+      }
+
+      // Aplicar manufacturer
+      if (manufacturer && manufacturer !== filterManufacturer) {
+        setFilterManufacturer(manufacturer);
+      }
     }
-  }, [searchParams, setFilterType, setFilterStatus, setFilterManufacturer, filterType, filterStatus, filterManufacturer]);
+  }, [clearOnMount, searchParams, setFilterType, setFilterStatus, setFilterManufacturer, filterType, filterStatus, filterManufacturer]);
 
   // Função para atualizar URL quando filtros mudarem
   const updateURLParams = (newFilters: {
@@ -84,6 +117,19 @@ export const useURLFilters = ({
     setSearchParams(params);
   };
 
+  // Função para limpar todos os parâmetros de filtro da URL
+  const clearAllURLParams = () => {
+    console.log('🧹 Clearing all URL filter parameters');
+    const params = new URLSearchParams();
+    // Manter apenas parâmetros que não são de filtro
+    for (const [key, value] of searchParams.entries()) {
+      if (!['solution', 'type', 'status', 'manufacturer', 'exclude_solutions'].includes(key)) {
+        params.set(key, value);
+      }
+    }
+    setSearchParams(params, { replace: true });
+  };
+
   // Obter excludeSolutions da URL
   const getExcludeSolutions = (): string[] => {
     const excludeParam = searchParams.get('exclude_solutions');
@@ -92,6 +138,7 @@ export const useURLFilters = ({
 
   return {
     updateURLParams,
+    clearAllURLParams,
     excludeSolutions: getExcludeSolutions()
   };
 };
