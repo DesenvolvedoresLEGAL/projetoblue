@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ReferralLink } from '@modules/bits/components/components/ReferralLink';
 import { useBitsProfile } from '@modules/bits/hooks/useBits';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 
 const BitsSettings: React.FC = () => {

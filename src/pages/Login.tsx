@@ -10,7 +10,7 @@ import { MoonStar, Sun } from 'lucide-react';
 import { useTheme } from '@/context/ThemeProvider';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { toast } from '@/utils/toast';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');

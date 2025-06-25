@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types/auth';
 import {
   hasMinimumRole,
