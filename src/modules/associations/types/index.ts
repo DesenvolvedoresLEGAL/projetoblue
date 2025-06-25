@@ -1,17 +1,7 @@
 
 // Tipos para o módulo de associações
-export interface AssetAssociationState {
-  selectedAssets: any[];
-  currentStep: string; // Changed from number to string
-  isLoading: boolean;
-  selectedClient?: any; // Added missing property
-  generalConfig?: any; // Added missing property
-}
-
-export interface AssetConfiguration {
-  assetId: string;
-  configuration: any;
-}
+import type { Client } from '@/types/client';
+import type { AssociationGeneralConfig } from '../components/association/AssociationGeneralConfig';
 
 // Type for SelectedAsset from AssetAssociation page
 export interface SelectedAsset {
@@ -50,4 +40,17 @@ export interface SelectedAsset {
   ssid_atual?: string;
   pass_atual?: string;
   isPrincipalChip?: boolean;
+}
+
+export interface AssetAssociationState {
+  selectedAssets: SelectedAsset[];
+  currentStep: string; // Changed from number to string
+  isLoading: boolean;
+  selectedClient?: Client;
+  generalConfig?: AssociationGeneralConfig;
+}
+
+export interface AssetConfiguration {
+  assetId: string;
+  configuration: Record<string, unknown>;
 }
