@@ -1,5 +1,5 @@
 import React from "react";
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/AssetProvider";
 import {
   Card,
   CardContent,

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme } from '@/context/ThemeProvider';
 
 interface ThemeValidatorProps {
   children: React.ReactNode;

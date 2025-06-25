@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAssets } from "@/context/AssetContext";
+import { useAssets } from "@/context/AssetProvider";
 import { Asset, EquipamentAsset, Client } from "@/types/asset";
 import {
   Card,

@@ -1,13 +1,11 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
-import { AuthContextType } from '@/types/authContext';
+import React, { useContext, useEffect } from 'react';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAuthActions } from '@/hooks/useAuthActions';
 import { UserRole } from '@/types/auth';
 import { hasMinimumRole } from '@/utils/roleUtils';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './AuthContext';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { state, updateState } = useAuthState();
