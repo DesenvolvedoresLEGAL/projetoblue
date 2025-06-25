@@ -80,7 +80,6 @@ export interface BaseAsset {
   solucao?: SolutionType;
   marca?: string; 
   modelo?: string;
-  model?: string; // Adicionado para compatibilidade
   serial_number?: string;
   radio?: string;
   solution_id?: number;

@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
 import { authService } from '@/services/authService';
@@ -9,7 +8,6 @@ import { DEFAULT_USER_ROLE, AUTH_ERROR_MESSAGES, AuthErrorCategory } from '@/con
 import { toUserRole } from '@/utils/roleUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { showFriendlyError } from '@/utils/errorTranslator';
-import { AuthResponse, AuthError } from '@supabase/supabase-js';
 
 // Tipo para armazenar informações técnicas de erro para diagnóstico
 interface TechnicalErrorInfo {
@@ -26,15 +24,11 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [technicalError, setTechnicalError] = useState<TechnicalErrorInfo | null>(null);
 
-  const signUp = useCallback(async (email: string, password: string, role?: UserRole): Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }> => {
+  const signUp = useCallback(async (email: string, password: string, username?: string) => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
       console.log('Auth operation already in progress. Ignoring duplicate request.');
-      return { 
-        data: { user: null, session: null }, 
-        error: { message: 'Operation in progress', name: 'OperationInProgress', status: 409 } as AuthError,
-        profileCreated: false 
-      };
+      return { success: false, message: 'Operation in progress' };
     }
     
     try {
@@ -44,7 +38,6 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       
       setTechnicalError(null);
       
-      const username = `user_${Date.now()}`;
       const validation = authService.validateSignUpData({ email, password, username });
       if (!validation.isValid) {
         console.error('Erro de validação:', validation.error);
@@ -62,11 +55,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         
         updateState({ error: friendlyMessage, isLoading: false });
         toast.error(friendlyMessage);
-        return { 
-          data: { user: null, session: null }, 
-          error: { message: friendlyMessage, name: 'ValidationError', status: 400 } as AuthError,
-          profileCreated: false 
-        };
+        return { success: false, message: friendlyMessage, technicalError: techError };
       }
 
       console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
@@ -74,69 +63,64 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         username
       });
       
-      const { data, error, profileCreated } = await authService.signUp(email, password, role || DEFAULT_USER_ROLE, username);
+      const { data, error, profileCreated } = await authService.signUp(email, password, DEFAULT_USER_ROLE, username);
 
-      if (error) {
-        throw error;
-      }
-
-      if (data?.user) {
-        if (!profileCreated) {
-          console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
-          
-          const profileResult = await createProfileManually(data.user.id, email, role || DEFAULT_USER_ROLE, username);
-          if (profileResult.success) {
-            console.log('Perfil criado manualmente com sucesso após falha do trigger');
-            toast.success("Conta criada com sucesso! Você já pode fazer login.");
-          } else {
-            console.warn('Falha ao criar perfil manualmente:', profileResult.error);
-            toast.warning("Conta criada, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
-          }
-        } else {
-          console.log('Usuário e perfil criados com sucesso:', data.user.id);
-          toast.success("Conta criada com sucesso! Você já pode fazer login.");
+        if (error) {
+          throw error;
         }
-        
-        setTimeout(() => {
-          navigate('/login');
-        }, 1500);
-        
-        return { data, error: null, profileCreated };
-      } else {
-        console.error('Usuário não foi criado, dados incompletos:', data);
-        const friendlyMessage = showFriendlyError('Falha ao criar usuário: dados incompletos retornados', 'create');
-        const techError = {
-          message: 'Falha ao criar usuário: dados incompletos retornados',
-          category: AuthErrorCategory.UNKNOWN,
-          timestamp: new Date().toISOString(),
-          context: { data }
-        };
-        setTechnicalError(techError);
-        throw new Error(friendlyMessage);
-      }
-    } catch (error: unknown) {
-      console.error('Erro não tratado no processo de cadastro:', error);
-    
-      const errorObj = error as { message?: string; category?: AuthErrorCategory; stack?: string };
+
+        if (data?.user) {
+          if (!profileCreated) {
+            console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
+            
+            const profileResult = await createProfileManually(data.user.id, email, DEFAULT_USER_ROLE, username);
+            if (profileResult.success) {
+              console.log('Perfil criado manualmente com sucesso após falha do trigger');
+              toast.success("Conta criada com sucesso! Você já pode fazer login.");
+            } else {
+              console.warn('Falha ao criar perfil manualmente:', profileResult.error);
+              toast.warning("Conta criada, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
+            }
+          } else {
+            console.log('Usuário e perfil criados com sucesso:', data.user.id);
+            toast.success("Conta criada com sucesso! Você já pode fazer login.");
+          }
+          
+          setTimeout(() => {
+            navigate('/login');
+          }, 1500);
+          
+          return { success: true, message: 'Cadastro realizado com sucesso' };
+        } else {
+          console.error('Usuário não foi criado, dados incompletos:', data);
+          const friendlyMessage = showFriendlyError('Falha ao criar usuário: dados incompletos retornados', 'create');
+          const techError = {
+            message: 'Falha ao criar usuário: dados incompletos retornados',
+            category: AuthErrorCategory.UNKNOWN,
+            timestamp: new Date().toISOString(),
+            context: { data }
+          };
+          setTechnicalError(techError);
+          throw new Error(friendlyMessage);
+        }
+      } catch (error: unknown) {
+        console.error('Erro não tratado no processo de cadastro:', error);
+      
       const friendlyMessage = showFriendlyError(error, 'create');
-      const errorCategory = errorObj.category || AuthErrorCategory.UNKNOWN;
+      const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
       
       const techError = {
-        message: errorObj.message || 'Erro desconhecido durante o cadastro',
+        message: error.message || 'Erro desconhecido durante o cadastro',
         category: errorCategory,
         timestamp: new Date().toISOString(),
-        context: { email, stack: errorObj.stack }
+        context: { email, username, stack: error.stack }
       };
       
       setTechnicalError(techError);
       
       updateState({ error: friendlyMessage, isLoading: false });
       toast.error(friendlyMessage);
-      return { 
-        data: { user: null, session: null }, 
-        error: { message: friendlyMessage, name: 'SignUpError', status: 500 } as AuthError,
-        profileCreated: false 
-      };
+      return { success: false, message: friendlyMessage, technicalError: techError };
     } finally {
       updateState({ isLoading: false });
       setIsAuthProcessing(false);
@@ -219,10 +203,10 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       
       if (error) {
         const friendlyMessage = showFriendlyError(error, 'authentication');
-        const errorCategory = (error as any).category || AuthErrorCategory.UNKNOWN;
+        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
         
         setTechnicalError({
-          message: (error as any).message || 'Erro desconhecido durante login',
+          message: error.message || 'Erro desconhecido durante login',
           category: errorCategory,
           timestamp: new Date().toISOString()
         });
@@ -330,18 +314,16 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         } catch (profileError: unknown) {
           console.error('Erro ao verificar perfil após login:', profileError);
           
-          const errorObj = profileError as { message?: string; category?: AuthErrorCategory };
-          
           // Se o erro é relacionado a conta excluída/inativa, não permitir login
-          if (errorObj.message?.includes('desativada') || 
-              errorObj.message?.includes('excluída') || 
-              errorObj.message?.includes('aprovada')) {
-            updateState({ error: errorObj.message, isLoading: false });
-            toast.error(errorObj.message);
+          if (profileError?.message?.includes('desativada') || 
+              profileError?.message?.includes('excluída') || 
+              profileError?.message?.includes('aprovada')) {
+            updateState({ error: profileError.message, isLoading: false });
+            toast.error(profileError.message);
             return;
           }
           
-          if (errorObj.message?.includes('403') || errorObj.message?.includes('profile')) {
+          if (profileError?.message?.includes('403') || profileError?.message?.includes('profile')) {
             console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
             
             const basicProfile = {
@@ -372,8 +354,8 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           const friendlyMessage = showFriendlyError(profileError, 'authentication');
           
           setTechnicalError({
-            message: errorObj.message || 'Erro ao verificar perfil',
-            category: errorObj.category || AuthErrorCategory.PROFILE_CREATION,
+            message: profileError.message || 'Erro ao verificar perfil',
+            category: profileError.category || AuthErrorCategory.PROFILE_CREATION,
             timestamp: new Date().toISOString(),
             context: { userId: data.user.id, email: data.user.email }
           });
@@ -395,10 +377,9 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         };
       }
       
-    } catch (error: unknown) {
+      } catch (error: unknown) {
       console.error('Erro durante o login:', error);
       
-      const errorObj = error as { message?: string; category?: AuthErrorCategory };
       const friendlyMessage = showFriendlyError(error, 'authentication');
       
       updateState({ error: friendlyMessage, isLoading: false });
@@ -428,7 +409,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       
       toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
-    } catch (error: unknown) {
+      } catch (error: unknown) {
       console.error('Erro ao fazer logout:', error);
       const friendlyMessage = showFriendlyError(error, 'authentication');
       toast.error(friendlyMessage);

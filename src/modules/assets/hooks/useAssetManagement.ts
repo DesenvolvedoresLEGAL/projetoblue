@@ -1,361 +1,453 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/utils/toast";
+import { Asset, AssetStatus, AssetType } from "@/types/asset";
+import { referenceDataService } from "@modules/assets/services/referenceDataService";
+import { showFriendlyError } from '@/utils/errorTranslator';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/utils/toast';
-import { Asset, AssetStatus, DatabaseAsset } from '@/types/asset';
-import { mapDatabaseAssetToFrontend, mapAssetStatusToId } from '@/utils/databaseMappers';
-import { AssetUpdateParams } from '../services/asset/types';
-
-interface UpdateAssetStatusParams {
-  id: string;
-  status: AssetStatus;
-}
-
-interface CreateAssetParams {
-  type: 'CHIP' | 'ROTEADOR';
-  solution_id?: number;
-  model?: string;
-  line_number?: number;
-  iccid?: string;
-  manufacturer_id?: number;
+// Types for asset operations
+interface CreateAssetData {
+  type: AssetType;
+  solution_id: number; // Obrigatório no banco
   status_id?: number;
+  manufacturer_id?: number;
+  plan_id?: number;
+  notes?: string;
+  
+  // CHIP specific fields
+  iccid?: string;
+  line_number?: number; // Corrigido para number apenas
+  
+  // ROUTER specific fields
   serial_number?: string;
-  rented_days?: number;
+  model?: string;
   radio?: string;
+  admin_user?: string;
+  admin_pass?: string;
+  
+  // Common fields
+  rented_days?: number;
+  
+  // Campos de configurações de rede - Fábrica (obrigatórios para equipamentos)
   ssid_fabrica?: string;
   pass_fabrica?: string;
   admin_user_fabrica?: string;
   admin_pass_fabrica?: string;
+  
+  // Campos de configurações de rede - Atuais (opcionais)
   ssid_atual?: string;
   pass_atual?: string;
-  admin_user?: string;
-  admin_pass?: string;
 }
 
-export const useAssetManagement = () => {
+interface UpdateAssetData {
+  statusId?: number;
+  notes?: string;
+  
+  // CHIP fields
+  iccid?: string;
+  line_number?: number; // Corrigido para number apenas
+  
+  // ROUTER fields
+  serial_number?: string;
+  model?: string;
+  radio?: string;
+  manufacturer_id?: number;
+  plan_id?: number;
+  admin_user?: string;
+  admin_pass?: string;
+  
+  // Common fields
+  rented_days?: number;
+  
+  // Campos removidos que não existem no banco:
+  // phoneNumber, carrier, uniqueId, brand, ssid, password, serialNumber
+}
+
+interface AssetFilters {
+  type?: AssetType;
+  status?: AssetStatus;
+  search?: string;
+  statusId?: number;
+  manufacturerId?: number;
+}
+
+/**
+ * Modern asset management hook providing CRUD operations and data fetching
+ * Uses React Query for efficient caching and state management
+ */
+export function useAssetManagement() {
   const queryClient = useQueryClient();
 
-  const updateAssetStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: UpdateAssetStatusParams) => {
-      const statusId = mapAssetStatusToId(status);
+  // Core query key factory for consistent cache management
+  const assetKeys = {
+    all: ['assets'] as const,
+    lists: () => [...assetKeys.all, 'list'] as const,
+    list: (filters: AssetFilters) => [...assetKeys.lists(), { ...filters }] as const,
+    details: () => [...assetKeys.all, 'detail'] as const,
+    detail: (id: string) => [...assetKeys.details(), id] as const,
+  };
+
+  /**
+   * Fetch all assets with optional filtering
+   */
+  const useAssets = (filters: AssetFilters = {}) => {
+    return useQuery({
+      queryKey: assetKeys.list(filters),
+      queryFn: async () => {
+        let query = supabase
+          .from('assets')
+          .select(`
+            uuid, serial_number, model, iccid, solution_id, status_id, 
+            line_number, radio, manufacturer_id, created_at, updated_at,
+            manufacturers(id, name),
+            asset_status(id, status),
+            asset_solutions(id, solution)
+          `)
+          .is('deleted_at', null);
+
+        // Apply filters
+        if (filters.statusId) {
+          query = query.eq('status_id', filters.statusId);
+        }
+        
+        if (filters.manufacturerId) {
+          query = query.eq('manufacturer_id', filters.manufacturerId);
+        }
+
+        if (filters.search) {
+          const searchTerm = `%${filters.search}%`;
+          query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm}`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching assets:', error);
+          throw new Error(error.message);
+        }
+
+        // Transform database records to Asset type
+        return (data || []).map(mapDbToAsset);
+      },
+    });
+  };
+
+  /**
+   * Fetch single asset by ID
+   */
+  const useAsset = (id: string) => {
+    return useQuery({
+      queryKey: assetKeys.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('assets')
+          .select(`
+            uuid, serial_number, model, iccid, solution_id, status_id,
+            line_number, radio, manufacturer_id, created_at, updated_at,
+            manufacturers(id, name),
+            asset_status(id, status),
+            asset_solutions(id, solution)
+          `)
+          .eq('uuid', id)
+          .is('deleted_at', null)
+          .single();
+
+        if (error) {
+          console.error(`Error fetching asset ${id}:`, error);
+          throw new Error(error.message);
+        }
+
+        return mapDbToAsset(data);
+      },
+      enabled: !!id,
+    });
+  };
+
+  /**
+   * Create new asset mutation
+   */
+  const createAsset = useMutation({
+    mutationFn: async (assetData: CreateAssetData) => {
+      const dbData = {
+        solution_id: assetData.solution_id,
+        status_id: assetData.status_id || 1,
+        manufacturer_id: assetData.manufacturer_id,
+        plan_id: assetData.plan_id,
+        notes: assetData.notes,
+        
+        // CHIP fields
+        iccid: assetData.iccid,
+        line_number: assetData.line_number,
+        
+        // ROUTER fields
+        serial_number: assetData.serial_number,
+        model: assetData.model,
+        radio: assetData.radio,
+        admin_user: assetData.admin_user || 'admin',
+        admin_pass: assetData.admin_pass || '',
+        
+        // Common fields
+        rented_days: assetData.rented_days || 0,
+        
+        // Campos de configurações de rede - Fábrica
+        ssid_fabrica: assetData.ssid_fabrica,
+        pass_fabrica: assetData.pass_fabrica,
+        admin_user_fabrica: assetData.admin_user_fabrica,
+        admin_pass_fabrica: assetData.admin_pass_fabrica,
+        
+        // Campos de configurações de rede - Atuais
+        ssid_atual: assetData.ssid_atual,
+        pass_atual: assetData.pass_atual,
+      };
+
       const { data, error } = await supabase
         .from('assets')
-        .update({ status_id: statusId })
-        .eq('uuid', id)
-        .select()
+        .insert(dbData)
+        .select('uuid')
         .single();
 
       if (error) {
-        console.error('Erro ao atualizar status do asset:', error);
-        throw new Error('Falha ao atualizar o status do ativo');
+        console.error('Error creating asset:', error);
+        const friendlyMessage = showFriendlyError(error, 'create');
+        throw new Error(friendlyMessage);
       }
 
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Status do ativo atualizado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      toast.success('Ativo criado com sucesso');
     },
     onError: (error: Error) => {
+      console.error('Asset creation failed:', error);
       toast.error(error.message);
     },
   });
 
-  const updateAssetMutation = useMutation({
-    mutationFn: async (params: AssetUpdateParams & { id: string }) => {
-      const { id, ...updates } = params;
-      const dbUpdates = { ...updates };
+  /**
+   * Update asset mutation
+   */
+  const updateAsset = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateAssetData }) => {
+      const updateData: Record<string, unknown> = {};
 
-      const { data, error } = await supabase
+      // Map frontend fields to database fields
+      if (data.statusId !== undefined) updateData.status_id = data.statusId;
+      if (data.iccid !== undefined) updateData.iccid = data.iccid;
+      if (data.line_number !== undefined) updateData.line_number = data.line_number;
+      if (data.model !== undefined) updateData.model = data.model;
+      if (data.serial_number !== undefined) updateData.serial_number = data.serial_number;
+      if (data.radio !== undefined) updateData.radio = data.radio;
+      if (data.manufacturer_id !== undefined) updateData.manufacturer_id = data.manufacturer_id;
+      if (data.plan_id !== undefined) updateData.plan_id = data.plan_id;
+      if (data.admin_user !== undefined) updateData.admin_user = data.admin_user;
+      if (data.admin_pass !== undefined) updateData.admin_pass = data.admin_pass;
+
+      const { error } = await supabase
         .from('assets')
-        .update(dbUpdates)
-        .eq('uuid', id)
-        .select()
-        .single();
+        .update(updateData)
+        .eq('uuid', id);
 
       if (error) {
-        console.error('Erro ao atualizar o asset:', error);
-        throw new Error('Falha ao atualizar o ativo');
+        console.error(`Error updating asset ${id}:`, error);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw new Error(friendlyMessage);
       }
 
-      return data;
+      return { id };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Ativo atualizado com sucesso!');
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.detail(data.id) });
+      toast.success('Ativo atualizado com sucesso');
     },
     onError: (error: Error) => {
+      console.error('Asset update failed:', error);
       toast.error(error.message);
     },
   });
 
-  const deleteAssetMutation = useMutation({
+  /**
+   * Delete asset mutation (soft delete)
+   */
+  const deleteAsset = useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('assets')
         .update({ deleted_at: new Date().toISOString() })
-        .eq('uuid', id)
-        .select()
-        .single();
+        .eq('uuid', id);
 
       if (error) {
-        console.error('Erro ao deletar o asset:', error);
-        throw new Error('Falha ao deletar o ativo');
+        console.error(`Error deleting asset ${id}:`, error);
+        const friendlyMessage = showFriendlyError(error, 'delete');
+        throw new Error(friendlyMessage);
       }
 
-      return data;
+      return { id };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Ativo deletado com sucesso!');
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.removeQueries({ queryKey: assetKeys.detail(data.id) });
+      toast.success('Ativo excluído com sucesso');
     },
     onError: (error: Error) => {
+      console.error('Asset deletion failed:', error);
       toast.error(error.message);
     },
   });
 
-  const createAssetMutation = useMutation({
-    mutationFn: async (createData: CreateAssetParams) => {
-      const { data, error } = await supabase
+  /**
+   * Update asset status mutation
+   */
+  const updateAssetStatus = useMutation({
+    mutationFn: async ({ id, statusId }: { id: string; statusId: number }) => {
+      const { error } = await supabase
         .from('assets')
-        .insert(createData)
-        .select()
-        .single();
+        .update({ status_id: statusId })
+        .eq('uuid', id);
 
       if (error) {
-        console.error('Erro ao criar o asset:', error);
-        throw new Error('Falha ao criar o ativo');
+        console.error(`Error updating asset status ${id}:`, error);
+        const friendlyMessage = showFriendlyError(error, 'update');
+        throw new Error(friendlyMessage);
       }
 
-      return data;
+      return { id, statusId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Ativo criado com sucesso!');
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.detail(data.id) });
+      toast.success('Status atualizado com sucesso');
     },
     onError: (error: Error) => {
+      console.error('Status update failed:', error);
       toast.error(error.message);
     },
-  });
-
-  const { data: assets = [], isLoading, error } = useQuery({
-    queryKey: ['assets'],
-    queryFn: async (): Promise<Asset[]> => {
-      console.log('[useAssetManagement] Buscando assets...');
-      
-      const { data, error } = await supabase
-        .from('assets')
-        .select(`
-          *,
-          asset_status:status_id(
-            id,
-            status
-          ),
-          asset_solutions:solution_id(
-            id, 
-            solution
-          ),
-          manufacturers:manufacturer_id(
-            id,
-            name
-          )
-        `)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('[useAssetManagement] Erro ao buscar assets:', error);
-        throw error;
-      }
-
-      console.log('[useAssetManagement] Assets encontrados:', data?.length || 0);
-      
-      return data?.map(asset => {
-        console.log('[useAssetManagement] Processando asset:', asset.uuid);
-        
-        try {
-          // Verificar e converter tipos com validação
-          const statusData = asset.asset_status as { id?: number; status?: string } | null;
-          const solutionData = asset.asset_solutions as { id?: number; solution?: string } | null;
-          const manufacturerData = asset.manufacturers as { id?: number; name?: string } | null;
-          
-          const processedAsset = {
-            ...asset,
-            asset_status: statusData,
-            asset_solutions: solutionData,
-            manufacturers: manufacturerData
-          };
-          
-          return mapDatabaseAssetToFrontend(processedAsset);
-        } catch (err) {
-          console.error('[useAssetManagement] Erro ao processar asset:', asset.uuid, err);
-          
-          // Fallback com dados mínimos válidos
-          const fallbackAsset: Asset = {
-            id: asset.uuid || 'unknown',
-            uuid: asset.uuid || 'unknown',
-            type: asset.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
-            status: 'DISPONÍVEL',
-            statusId: asset.status_id || 1,
-            registrationDate: asset.created_at || new Date().toISOString(),
-            solucao: (solutionData?.solution as any) || undefined,
-            marca: (manufacturerData?.name as string) || '',
-            modelo: asset.model || '',
-            model: asset.model || '',
-            serial_number: asset.serial_number || '',
-            radio: asset.radio || '',
-            solution_id: asset.solution_id,
-            manufacturer_id: asset.manufacturer_id,
-            plan_id: asset.plan_id,
-            rented_days: asset.rented_days || 0,
-            admin_user: asset.admin_user || '',
-            admin_pass: asset.admin_pass || '',
-            ssid_fabrica: asset.ssid_fabrica || '',
-            pass_fabrica: asset.pass_fabrica || '',
-            admin_user_fabrica: asset.admin_user_fabrica || '',
-            admin_pass_fabrica: asset.admin_pass_fabrica || '',
-            ssid_atual: asset.ssid_atual || '',
-            pass_atual: asset.pass_atual || '',
-            created_at: asset.created_at,
-            updated_at: asset.updated_at,
-            deleted_at: asset.deleted_at
-          } as Asset;
-          
-          // Adicionar campos específicos para CHIP
-          if (fallbackAsset.type === 'CHIP') {
-            (fallbackAsset as any).iccid = asset.iccid || '';
-            (fallbackAsset as any).phoneNumber = asset.line_number?.toString() || '';
-            (fallbackAsset as any).carrier = (manufacturerData?.name as string) || '';
-            (fallbackAsset as any).line_number = asset.line_number;
-          } else {
-            // Campos específicos para ROTEADOR
-            (fallbackAsset as any).uniqueId = asset.uuid;
-            (fallbackAsset as any).brand = (manufacturerData?.name as string) || '';
-            (fallbackAsset as any).model = asset.model || '';
-            (fallbackAsset as any).ssid = asset.ssid_atual || '';
-            (fallbackAsset as any).password = asset.pass_atual || '';
-            (fallbackAsset as any).serialNumber = asset.serial_number || '';
-            (fallbackAsset as any).adminUser = asset.admin_user || '';
-            (fallbackAsset as any).adminPassword = asset.admin_pass || '';
-          }
-          
-          return fallbackAsset;
-        }
-      }) || [];
-    },
-    retry: 2,
-    staleTime: 5 * 60 * 1000,
   });
 
   return {
-    assets,
-    isLoading,
-    error,
-    updateAssetStatus: updateAssetStatusMutation.mutate,
-    updateAsset: updateAssetMutation.mutate,
-    deleteAsset: deleteAssetMutation.mutate,
-    createAsset: createAssetMutation.mutate,
-    isUpdatingStatus: updateAssetStatusMutation.isPending,
-    isUpdatingAsset: updateAssetMutation.isPending,
-    isDeletingAsset: deleteAssetMutation.isPending,
-    isCreatingAsset: createAssetMutation.isPending,
+    // Query hooks
+    useAssets,
+    useAsset,
+    
+    // Mutation hooks
+    createAsset,
+    updateAsset,
+    deleteAsset,
+    updateAssetStatus,
+    
+    // Query keys for external cache management
+    assetKeys,
   };
-};
+}
 
-// Hook para buscar fabricantes
-export const useManufacturers = () => {
+/**
+ * Hook for creating assets with convenience wrapper around useMutation
+ */
+export function useCreateAsset() {
+  const { createAsset } = useAssetManagement();
+  return createAsset;
+}
+
+/**
+ * Hook to fetch all available manufacturers
+ */
+export function useManufacturers() {
   return useQuery({
     queryKey: ['manufacturers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('manufacturers')
-        .select('*')
-        .is('deleted_at', null)
-        .order('name');
-
-      if (error) {
-        console.error('Erro ao buscar fabricantes:', error);
-        throw error;
-      }
-
-      return data || [];
-    },
-    retry: 2,
-    staleTime: 10 * 60 * 1000, // 10 minutos
+      return await referenceDataService.getManufacturers();
+    }
   });
-};
+}
 
-// Hook para buscar soluções de assets
-export const useAssetSolutions = () => {
+/**
+ * Hook to fetch all available asset solutions (types)
+ */
+export function useAssetSolutions() {
   return useQuery({
-    queryKey: ['asset-solutions'],
+    queryKey: ['assetSolutions'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_solutions')
-        .select('*')
-        .is('deleted_at', null)
-        .order('solution');
-
-      if (error) {
-        console.error('Erro ao buscar soluções:', error);
-        throw error;
-      }
-
-      return data || [];
-    },
-    retry: 2,
-    staleTime: 10 * 60 * 1000,
+      return await referenceDataService.getAssetSolutions();
+    }
   });
-};
+}
 
-// Hook para buscar status de assets
-export const useStatusRecords = () => {
+/**
+ * Hook to fetch all available asset status options
+ */
+export function useStatusRecords() {
   return useQuery({
-    queryKey: ['asset-status'],
+    queryKey: ['statusRecords'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_status')
-        .select('*')
-        .is('deleted_at', null)
-        .order('status');
+      return await referenceDataService.getStatusRecords();
+    }
+  });
+}
 
+/**
+ * Hook to fetch all available data plans
+ */
+export function usePlans() {
+  return useQuery({
+    queryKey: ['plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('plans').select('*').is('deleted_at', null);
+      
       if (error) {
-        console.error('Erro ao buscar status:', error);
-        throw error;
+        console.error("Error fetching plans:", error);
+        toast.error("Failed to fetch plans");
+        return [];
       }
-
+      
       return data || [];
-    },
-    retry: 2,
-    staleTime: 10 * 60 * 1000,
+    }
   });
-};
+}
 
-// Hook para criar asset
-export const useCreateAsset = () => {
-  const queryClient = useQueryClient();
+/**
+ * Transform database record to frontend Asset type
+ */
+function mapDbToAsset(dbAsset: Record<string, unknown>): Asset {
+  const baseAsset = {
+    id: dbAsset.uuid,
+    uuid: dbAsset.uuid,
+    registrationDate: dbAsset.created_at,
+    status: dbAsset.asset_status?.status || "DISPONÍVEL" as const,
+    statusId: dbAsset.status_id,
+    notes: dbAsset.notes,
+    solucao: dbAsset.asset_solutions?.solution,
+    marca: dbAsset.manufacturers?.name,
+    modelo: dbAsset.model,
+    serial_number: dbAsset.serial_number,
+    radio: dbAsset.radio,
+  };
 
-  return useMutation({
-    mutationFn: async (createData: CreateAssetParams) => {
-      const { data, error } = await supabase
-        .from('assets')
-        .insert(createData)
-        .select()
-        .single();
+  if (dbAsset.solution_id === 11) {
+    // CHIP asset
+    return {
+      ...baseAsset,
+      type: "CHIP",
+      iccid: dbAsset.iccid || '',
+      phoneNumber: dbAsset.line_number?.toString() || '',
+      carrier: "Unknown",
+    };
+  } else {
+    // ROUTER asset
+    return {
+      ...baseAsset,
+      type: "ROTEADOR",
+      uniqueId: dbAsset.uuid,
+      brand: dbAsset.manufacturers?.name || '',
+      model: dbAsset.model || '',
+      ssid: '',
+      password: '',
+      serialNumber: dbAsset.serial_number || '',
+      adminUser: dbAsset.admin_user,
+      adminPassword: dbAsset.admin_pass,
+    };
+  }
+}
 
-      if (error) {
-        console.error('Erro ao criar o asset:', error);
-        throw new Error('Falha ao criar o ativo');
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
-      toast.success('Ativo criado com sucesso!');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-};
+// Export the main hook and utility hooks
+export default useAssetManagement;

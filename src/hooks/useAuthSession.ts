@@ -77,15 +77,13 @@ export function useAuthSession(updateState: (state: Partial<AuthState>) => void)
             console.warn('Profile fetch failed but continuing with basic auth state');
           }
         }
-      } catch (error: unknown) {
+        } catch (error: unknown) {
         if (!isMounted) return;
         
         console.error('Error fetching profile:', error);
         
-        const errorObj = error as { message?: string };
-        
         // Se o erro é relacionado a auth (403, token issues), não fazer retry
-        if (errorObj.message?.includes('403') || errorObj.message?.includes('Forbidden')) {
+        if (error?.message?.includes('403') || error?.message?.includes('Forbidden')) {
           console.warn('Auth error detected, stopping retries and continuing with basic state');
           updateState({ 
             isLoading: false,

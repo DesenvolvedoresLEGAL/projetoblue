@@ -1,226 +1,398 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Asset, ChipAsset, EquipamentAsset } from '@/types/asset';
-import { mapDatabaseAssetToFrontend } from '@/utils/databaseMappers';
+import { toast } from '@/utils/toast';
+import type { Asset } from '@/types/asset';
 
-interface UseAssetsDataOptions {
+export type AssetWithRelations = {
+  uuid: string;
+  solution_id: number;
+  status_id: number;
+  model?: string;
+  serial_number?: string;
+  admin_pass?: string;
+  iccid?: string;
+  line_number?: number;
+  manufacturer_id?: number;
+  plan_id?: number;
+  rented_days?: number;
+  radio?: string;
+  admin_user?: string;
+  // Novos campos de configurações de rede - Fábrica
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  // Novos campos de configurações de rede - Atuais
+  ssid_atual?: string;
+  pass_atual?: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  solucao: {
+    id: number;
+    name: string;
+  };
+  status: {
+    id: number;
+    name: string;
+  };
+  manufacturer: {
+    id: number;
+    name: string;
+  };
+  plan?: {
+    id: number;
+    name: string;
+    size_gb?: number;
+  };
+  // Propriedade para destacar qual campo correspondeu à busca
+  matchedField?: string;
+};
+
+export interface UseAssetsDataParams {
   searchTerm?: string;
-  statusFilter?: string;
-  typeFilter?: string;
-  manufacturerFilter?: string;
-  solutionFilter?: string;
-  page?: number;
+  filterType?: string;
+  filterStatus?: string;
+  filterManufacturer?: string;
+  currentPage?: number;
   pageSize?: number;
+  enabled?: boolean;
+  excludeSolutions?: string[]; // Nova propriedade para exclusão de soluções
 }
 
-interface AssetsDataResponse {
-  assets: Asset[];
+export interface AssetsDataResponse {
+  assets: AssetWithRelations[];
   totalCount: number;
   totalPages: number;
-  currentPage: number;
 }
 
-export const useAssetsData = (options: UseAssetsDataOptions = {}) => {
-  const {
-    searchTerm = '',
-    statusFilter = 'all',
-    typeFilter = 'all',
-    manufacturerFilter = 'all',
-    solutionFilter = 'all',
-    page = 1,
-    pageSize = 50
-  } = options;
+// Função para sanitizar o termo de busca
+const sanitizeSearchTerm = (term: string): string => {
+  if (!term || typeof term !== 'string') return '';
+  
+  // Remove caracteres especiais que podem quebrar a query
+  // Mantém apenas letras, números, espaços e alguns caracteres comuns
+  return term
+    .trim()
+    .replace(/[^\w\s\-._@]/g, '') // Remove caracteres especiais perigosos
+    .substring(0, 50); // Limita o tamanho máximo
+};
 
+// Função para detectar se o termo é numérico
+const isNumericTerm = (term: string): boolean => {
+  return /^\d+$/.test(term.trim());
+};
+
+// Função para detectar qual campo correspondeu à busca
+const detectMatchedField = (asset: Asset, searchTerm: string): string => {
+  if (!searchTerm) return '';
+  
+  const term = searchTerm.toLowerCase();
+  
+  // Verifica cada campo em ordem de prioridade
+  if (asset.line_number && String(asset.line_number).toLowerCase().includes(term)) {
+    return 'line_number';
+  }
+  if (asset.iccid && asset.iccid.toLowerCase().includes(term)) {
+    return 'iccid';
+  }
+  if (asset.radio && asset.radio.toLowerCase().includes(term)) {
+    return 'radio';
+  }
+  if (asset.serial_number && asset.serial_number.toLowerCase().includes(term)) {
+    return 'serial_number';
+  }
+  if (asset.model && asset.model.toLowerCase().includes(term)) {
+    return 'model';
+  }
+  
+  return '';
+};
+
+export const useAssetsData = ({
+  searchTerm = '',
+  filterType = 'all',
+  filterStatus = 'all',
+  filterManufacturer = 'all',
+  currentPage = 1,
+  pageSize = 10,
+  enabled = true,
+  excludeSolutions = [] // Novo parâmetro
+}: UseAssetsDataParams = {}) => {
   return useQuery({
-    queryKey: ['assets-data', {
-      searchTerm,
-      statusFilter,
-      typeFilter,
-      manufacturerFilter,
-      solutionFilter,
-      page,
-      pageSize
-    }],
+    queryKey: ['assets', 'inventory', filterType, filterStatus, filterManufacturer, searchTerm, currentPage, excludeSolutions],
     queryFn: async (): Promise<AssetsDataResponse> => {
-      console.log('[useAssetsData] Fetching assets with filters:', options);
-
-      let query = supabase
-        .from('assets')
-        .select(`
-          *,
-          asset_status:status_id(id, status),
-          asset_solutions:solution_id(id, solution),
-          manufacturers:manufacturer_id(id, name)
-        `, { count: 'exact' })
-        .is('deleted_at', null);
-
-      // Apply filters
-      if (searchTerm) {
-        const isNumeric = /^\d+$/.test(searchTerm);
+      try {
+        console.log('Iniciando busca de assets com termo:', searchTerm);
         
-        if (isNumeric) {
-          // Search by line_number for CHIP assets
-          query = query.or(`line_number.eq.${parseInt(searchTerm)}`);
-        } else {
-          // Search by text fields
-          query = query.or([
-            `iccid.ilike.%${searchTerm}%`,
-            `serial_number.ilike.%${searchTerm}%`,
-            `model.ilike.%${searchTerm}%`,
-            `radio.ilike.%${searchTerm}%`
-          ].join(','));
-        }
-      }
+        let query = supabase
+          .from('assets')
+          .select(`
+            uuid,
+            model,
+            rented_days,
+            serial_number,
+            line_number,
+            iccid,
+            radio,
+            created_at,
+            updated_at,
+            admin_user,
+            admin_pass,
+            solution_id,
+            status_id,
+            manufacturer_id,
+            plan_id,
+            ssid_fabrica,
+            pass_fabrica,
+            admin_user_fabrica,
+            admin_pass_fabrica,
+            ssid_atual,
+            pass_atual,
+            manufacturer:manufacturers(id, name),
+            plano:plans(id, nome, tamanho_gb),
+            status:asset_status(id, status),
+            solucao:asset_solutions(id, solution)
+          `)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false });
 
-      if (statusFilter !== 'all') {
-        const statusId = getStatusIdByName(statusFilter);
-        if (statusId) {
-          query = query.eq('status_id', statusId);
-        }
-      }
-
-      if (manufacturerFilter !== 'all') {
-        query = query.eq('manufacturer_id', parseInt(manufacturerFilter));
-      }
-
-      if (solutionFilter !== 'all') {
-        query = query.eq('solution_id', getSolutionIdByName(solutionFilter));
-      }
-
-      // Apply pagination
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
-
-      // Order by creation date
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error('[useAssetsData] Error fetching assets:', error);
-        throw error;
-      }
-
-      console.log('[useAssetsData] Raw data received:', {
-        count: data?.length || 0,
-        totalCount: count || 0
-      });
-
-      const mappedAssets = data?.map(asset => {
-        try {
-          const statusData = asset.asset_status as { id?: number; status?: string } | null;
-          const solutionData = asset.asset_solutions as { id?: number; solution?: string } | null;
-          const manufacturerData = asset.manufacturers as { id?: number; name?: string } | null;
-          
-          const processedAsset = {
-            ...asset,
-            asset_status: statusData,
-            asset_solutions: solutionData,
-            manufacturers: manufacturerData
-          };
-          
-          return mapDatabaseAssetToFrontend(processedAsset);
-        } catch (err) {
-          console.error('[useAssetsData] Error processing asset:', asset.uuid, err);
-          
-          // Return fallback asset
-          const fallbackAsset: Asset = {
-            id: asset.uuid || 'unknown',
-            uuid: asset.uuid || 'unknown',
-            type: asset.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
-            status: 'DISPONÍVEL',
-            statusId: asset.status_id || 1,
-            registrationDate: asset.created_at || new Date().toISOString(),
-            solucao: undefined,
-            marca: '',
-            modelo: asset.model || '',
-            model: asset.model || '',
-            serial_number: asset.serial_number || '',
-            radio: asset.radio || '',
-            solution_id: asset.solution_id,
-            manufacturer_id: asset.manufacturer_id,
-            plan_id: asset.plan_id,
-            rented_days: asset.rented_days || 0,
-            admin_user: asset.admin_user || '',
-            admin_pass: asset.admin_pass || '',
-            ssid_fabrica: asset.ssid_fabrica || '',
-            pass_fabrica: asset.pass_fabrica || '',
-            admin_user_fabrica: asset.admin_user_fabrica || '',
-            admin_pass_fabrica: asset.admin_pass_fabrica || '',
-            ssid_atual: asset.ssid_atual || '',
-            pass_atual: asset.pass_atual || '',
-            created_at: asset.created_at,
-            updated_at: asset.updated_at,
-            deleted_at: asset.deleted_at
-          } as Asset;
-          
-          // Type-specific fields
-          if (fallbackAsset.type === 'CHIP') {
-            const chipAsset = fallbackAsset as ChipAsset;
-            chipAsset.iccid = asset.iccid || '';
-            chipAsset.phoneNumber = asset.line_number?.toString() || '';
-            chipAsset.carrier = (asset.manufacturers as any)?.name || '';
-            chipAsset.line_number = asset.line_number;
-          } else {
-            const routerAsset = fallbackAsset as EquipamentAsset;
-            routerAsset.uniqueId = asset.uuid;
-            routerAsset.brand = (asset.manufacturers as any)?.name || '';
-            routerAsset.model = asset.model || '';
-            routerAsset.ssid = asset.ssid_atual || '';
-            routerAsset.password = asset.pass_atual || '';
-            routerAsset.serialNumber = asset.serial_number || '';
-            routerAsset.adminUser = asset.admin_user || '';
-            routerAsset.adminPassword = asset.admin_pass || '';
+        // Apply exclude solutions filter
+        if (excludeSolutions.length > 0) {
+          console.log('Aplicando exclusão de soluções:', excludeSolutions);
+          const numericExclusions = excludeSolutions.map(id => parseInt(id)).filter(id => !isNaN(id));
+          if (numericExclusions.length > 0) {
+            query = query.not('solution_id', 'in', `(${numericExclusions.join(',')})`);
           }
-          
-          return fallbackAsset;
         }
-      }) || [];
 
-      const totalPages = Math.ceil((count || 0) / pageSize);
+        // Apply filters
+        if (filterType !== 'all') {
+          if (!isNaN(Number(filterType))) {
+            query = query.eq('solution_id', Number(filterType));
+          } else {
+            const { data: solutionData } = await supabase
+              .from('asset_solutions')
+              .select('id')
+              .eq('solution', filterType)
+              .single();
+            
+            if (solutionData) {
+              query = query.eq('solution_id', solutionData.id);
+            }
+          }
+        }
 
-      return {
-        assets: mappedAssets,
-        totalCount: count || 0,
-        totalPages,
-        currentPage: page
-      };
+        if (filterStatus !== 'all') {
+          const { data: statusData } = await supabase
+            .from('asset_status')
+            .select('id')
+            .ilike('status', filterStatus)
+            .single();
+
+          if (statusData) {
+            query = query.eq('status_id', statusData.id);
+          }
+        }
+
+        if (filterManufacturer !== 'all') {
+          if (!isNaN(Number(filterManufacturer))) {
+            query = query.eq('manufacturer_id', Number(filterManufacturer));
+          } else {
+            const { data: manufacturerData } = await supabase
+              .from('manufacturers')
+              .select('id')
+              .ilike('name', filterManufacturer)
+              .single();
+
+            if (manufacturerData) {
+              query = query.eq('manufacturer_id', manufacturerData.id);
+            }
+          }
+        }
+
+        // Implementação corrigida da busca multi-campo
+        if (searchTerm) {
+          const sanitizedTerm = sanitizeSearchTerm(searchTerm);
+          
+          if (sanitizedTerm.length >= 1) {
+            console.log('Aplicando busca multi-campo com termo sanitizado:', sanitizedTerm);
+            
+            const isNumeric = isNumericTerm(sanitizedTerm);
+            
+            if (isNumeric) {
+              // Para termos numéricos, busca principalmente em line_number e também em outros campos
+              console.log('Termo numérico detectado, priorizando line_number');
+              
+              // Busca exata em line_number (bigint)
+              const numericValue = parseInt(sanitizedTerm);
+              
+              // Combinamos busca exata em line_number com busca textual em outros campos
+              query = query.or(
+                `line_number.eq.${numericValue},` +
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            } else {
+              // Para termos não-numéricos, busca apenas em campos textuais
+              console.log('Termo textual detectado, buscando em campos de texto');
+              
+              query = query.or(
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            }
+          }
+        }
+
+        // Add pagination
+        const startIndex = (currentPage - 1) * pageSize;
+        query = query.range(startIndex, startIndex + pageSize - 1);
+
+        console.log('Executando query Supabase...');
+        const { data, error, count } = await query;
+
+        if (error) {
+          console.error('Erro na query Supabase:', error);
+          toast.error(`Erro ao carregar ativos: ${error.message}`);
+          throw error;
+        }
+
+        console.log(`Query executada com sucesso. Retornados ${data?.length || 0} assets`);
+
+        // Map the response to provide consistent property names and 
+        // determine which field matched the search term
+        const mappedAssets = data?.map(asset => {
+          const matchedField = detectMatchedField(asset, searchTerm);
+          
+          return {
+            ...asset,
+            solucao: {
+              id: asset.solucao?.id || 0,
+              name: asset.solucao?.solution || 'Desconhecido'
+            },
+            status: {
+              id: asset.status?.id || 0,
+              name: asset.status?.status || 'Desconhecido'
+            },
+            manufacturer: {
+              id: asset.manufacturer?.id || 0,
+              name: asset.manufacturer?.name || 'Desconhecido'
+            },
+            plan: {
+              id: asset.plano?.id || 0,
+              name: asset.plano?.nome || 'Desconhecido',
+              size_gb: asset.plano?.tamanho_gb || 0
+            },
+            admin_user: asset.admin_user,
+            admin_pass: asset.admin_pass,
+            matchedField
+          };
+        }) || [];
+
+        // Get total count for pagination, excluding deleted items
+        let countQuery = supabase
+          .from('assets')
+          .select('uuid', { count: 'exact', head: true })
+          .is('deleted_at', null);
+
+        // Apply same filters to count query
+        if (filterType !== 'all') {
+          if (!isNaN(Number(filterType))) {
+            countQuery = countQuery.eq('solution_id', Number(filterType));
+          }
+        }
+
+        if (filterStatus !== 'all') {
+          const { data: statusData } = await supabase
+            .from('asset_status')
+            .select('id')
+            .ilike('status', filterStatus)
+            .single();
+
+          if (statusData) {
+            countQuery = countQuery.eq('status_id', statusData.id);
+          }
+        }
+
+        if (filterManufacturer !== 'all') {
+          if (!isNaN(Number(filterManufacturer))) {
+            countQuery = countQuery.eq('manufacturer_id', Number(filterManufacturer));
+          }
+        }
+
+        if (searchTerm) {
+          const sanitizedTerm = sanitizeSearchTerm(searchTerm);
+          if (sanitizedTerm.length >= 1) {
+            const isNumeric = isNumericTerm(sanitizedTerm);
+            
+            if (isNumeric) {
+              const numericValue = parseInt(sanitizedTerm);
+              countQuery = countQuery.or(
+                `line_number.eq.${numericValue},` +
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            } else {
+              countQuery = countQuery.or(
+                `iccid.ilike.%${sanitizedTerm}%,` +
+                `radio.ilike.%${sanitizedTerm}%,` +
+                `serial_number.ilike.%${sanitizedTerm}%,` +
+                `model.ilike.%${sanitizedTerm}%`
+              );
+            }
+          }
+        }
+
+        const { count: totalCount } = await countQuery;
+
+        console.log(`Total de assets encontrados: ${totalCount || 0}`);
+
+        return {
+          assets: mappedAssets,
+          totalCount: totalCount || 0,
+          totalPages: Math.ceil((totalCount || 0) / pageSize)
+        };
+      } catch (err) {
+        console.error('Erro detalhado ao buscar ativos:', err);
+        
+        // Tratamento robusto de diferentes tipos de erro
+        if (err instanceof Error) {
+          if (err.message.includes('failed to parse logic tree')) {
+            toast.error('Erro na sintaxe de busca. Termo simplificado automaticamente.');
+          } else if (err.message.includes('timeout')) {
+            toast.error('Busca demorou muito para responder. Tente novamente.');
+          } else {
+            toast.error(`Erro ao buscar ativos: ${err.message}`);
+          }
+        } else {
+          toast.error('Erro desconhecido ao buscar ativos. Tente novamente.');
+        }
+        
+        throw new Error('Falha ao buscar ativos. Por favor, tente novamente.');
+      }
     },
-    retry: 2,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: enabled,
+    retry: (failureCount, error) => {
+      // Implementa retry inteligente
+      if (failureCount >= 2) return false;
+      
+      // Não faz retry para erros de sintaxe
+      if (error instanceof Error && error.message.includes('failed to parse logic tree')) {
+        return false;
+      }
+      
+      return true;
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-// Helper functions
-function getStatusIdByName(statusName: string): number | null {
-  const statusMap: Record<string, number> = {
-    'DISPONÍVEL': 1,
-    'EM LOCAÇÃO': 2,
-    'EM ASSINATURA': 3,
-    'SEM DADOS': 4,
-    'BLOQUEADO': 5,
-    'EM MANUTENÇÃO': 6
-  };
-  
-  return statusMap[statusName.toUpperCase()] || null;
-}
-
-function getSolutionIdByName(solutionName: string): number | null {
-  const solutionMap: Record<string, number> = {
-    'CHIP': 11,
-    'SPEEDY 5G': 1,
-    '4BLACK': 2,
-    '4LITE': 3,
-    '4PLUS': 4,
-    'AP BLUE': 5,
-    'POWERBANK': 6,
-    'SWITCH': 7,
-    'HUB USB': 8,
-    'ANTENA': 9,
-    'LOAD BALANCE': 10
-  };
-  
-  return solutionMap[solutionName.toUpperCase()] || null;
-}
+export default useAssetsData;
