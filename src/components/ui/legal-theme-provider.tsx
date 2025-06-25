@@ -1,20 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ThemeValidator } from './theme-validator';
+import { LegalThemeContext, type LegalThemeConfig } from './useLegalTheme';
 
-interface LegalThemeConfig {
-  enableAnimations: boolean;
-  enableRippleEffect: boolean;
-  contrastMode: 'normal' | 'high';
-  reducedMotion: boolean;
-}
-
-interface LegalThemeContextType {
-  config: LegalThemeConfig;
-  updateConfig: (newConfig: Partial<LegalThemeConfig>) => void;
-}
-
-const LegalThemeContext = createContext<LegalThemeContextType | undefined>(undefined);
 
 interface LegalThemeProviderProps {
   children: React.ReactNode;
@@ -108,10 +96,3 @@ export const LegalThemeProvider: React.FC<LegalThemeProviderProps> = ({ children
   );
 };
 
-export const useLegalTheme = () => {
-  const context = useContext(LegalThemeContext);
-  if (context === undefined) {
-    throw new Error('useLegalTheme deve ser usado dentro de um LegalThemeProvider');
-  }
-  return context;
-};

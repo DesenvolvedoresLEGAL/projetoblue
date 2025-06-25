@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge-variants";
 import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
