@@ -7,7 +7,7 @@ import type { AssociationGeneralConfig } from '../components/association/Associa
 export interface SelectedAsset {
   id: string;
   uuid: string;
-  type: 'CHIP' | 'ROTEADOR'; // Corrigido de 'EQUIPMENT' para 'ROTEADOR'
+  type: 'CHIP' | 'ROTEADOR';
   registrationDate: string;
   status: string;
   statusId?: number;

@@ -1,40 +1,28 @@
 
-// Tipos para a nova estrutura de clientes
 export interface Client {
   uuid: string;
+  nome: string;
   empresa: string;
   responsavel: string;
-  telefones: string[]; // Array de telefones
+  contato: number;
   email?: string;
   cnpj?: string;
+  telefones: string[];
   created_at: string;
   updated_at: string;
-  deleted_at?: string; // Added this property
-  // Campos legados mantidos para compatibilidade durante transição
-  nome?: string;
-  contato?: number;
+  deleted_at?: string;
 }
 
-export interface ClientFormData {
+export interface CreateClientRequest {
+  nome: string;
   empresa: string;
   responsavel: string;
-  telefones: string[];
+  contato: number;
   email?: string;
   cnpj?: string;
+  telefones: string[];
 }
 
-export interface ClientCreateData {
-  empresa: string;
-  responsavel: string;
-  telefones: string[];
-  email?: string;
-  cnpj?: string;
-}
-
-export interface ClientUpdateData {
-  empresa?: string;
-  responsavel?: string;
-  telefones?: string[];
-  email?: string;
-  cnpj?: string;
+export interface UpdateClientRequest extends Partial<CreateClientRequest> {
+  uuid: string;
 }

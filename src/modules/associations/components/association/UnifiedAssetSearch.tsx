@@ -101,12 +101,12 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       status: asset.asset_status?.status,
       solucao: asset.asset_solutions?.solution, // Changed from 'solution' to 'solucao'
       brand: asset.manufacturers?.name,
-      type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT', // Explicit type casting
+      type: (asset.iccid ? 'CHIP' : 'ROTEADOR') as 'CHIP' | 'ROTEADOR', // Explicit type casting
       registrationDate: asset.created_at || new Date().toISOString() // Required property
     };
   };
 
-  const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
+  const equipmentCount = assets.filter(asset => asset.type === 'ROTEADOR').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   return (
