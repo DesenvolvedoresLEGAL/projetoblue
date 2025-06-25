@@ -1,677 +1,435 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useToast } from "@/components/ui/use-toast"
 import {
-  AlertTriangle,
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Info,
-  Zap,
-  Shield,
-  Smartphone,
-  Router,
-  Loader2,
-  Wifi,
-  Copy
-} from "lucide-react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { PasswordInput } from "@/components/auth/PasswordInput";
-import { NetworkFields } from "@/components/ui/network-fields";
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { useRegisterAsset } from "./useRegisterAsset";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useSolutionsData } from '@modules/solutions/hooks/useSolutionsData';
+import { useManufacturersData } from '@modules/manufacturers/hooks/useManufacturersData';
+import { useAssetStatusesData } from '@modules/assets/hooks/useAssetStatusesData';
+import { usePlansData } from '@modules/plans/hooks/usePlansData';
+import { CreateAssetData } from '@modules/assets/services/asset/types';
+import { assetService } from '@modules/assets/services/assetService';
+import { AssetType } from '@/types/asset';
 
-const capitalize = (text: string): string => {
-  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-};
+const formSchema = z.object({
+  solution_id: z.string().min(1, {
+    message: "Selecione uma solução.",
+  }),
+  status_id: z.string().min(1, {
+    message: "Selecione um status.",
+  }),
+  manufacturer_id: z.string().optional(),
+  plan_id: z.string().optional(),
+  iccid: z.string().optional(),
+  line_number: z.string().optional(),
+  serial_number: z.string().optional(),
+  model: z.string().optional(),
+  admin_pass: z.string().optional(),
+  radio: z.string().optional(),
+  admin_user: z.string().optional(),
+  rented_days: z.string().optional(),
+  notes: z.string().optional(),
+  ssid_atual: z.string().optional(),
+  pass_atual: z.string().optional(),
+});
 
-export function RegisterAssetForm() {
-  const {
-    showSuccess,
-    assetType,
-    passwordStrength,
-    allowWeakPassword,
-    basicInfoOpen,
-    technicalInfoOpen,
-    securityInfoOpen,
-    networkInfoOpen,
-    setAssetType,
-    setPasswordStrength,
-    setAllowWeakPassword,
-    setBasicInfoOpen,
-    setTechnicalInfoOpen,
-    setSecurityInfoOpen,
-    setNetworkInfoOpen,
-    chipForm,
-    equipmentForm,
-    createAssetMutation,
-    isReferenceDataLoading,
-    operators,
-    equipmentManufacturers,
-    equipmentSolutions,
-    statuses,
-    handlePasswordChange,
-    copyFactoryToCurrentFields,
-    onSubmitChip,
-    onSubmitEquipment,
-  } = useRegisterAsset();
-  const isMobile = useIsMobile();
+const RegisterAssetForm: React.FC = () => {
+  const [solution, setSolution] = useState<number | null>(null);
+  const [assetType, setAssetType] = useState<'CHIP' | 'EQUIPMENT'>('EQUIPMENT');
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { solutions, isLoading: isLoadingSolutions } = useSolutionsData();
+  const { manufacturers, isLoading: isLoadingManufacturers } = useManufacturersData();
+  const { assetStatuses, isLoading: isLoadingAssetStatuses } = useAssetStatusesData();
+  const { plans, isLoading: isLoadingPlans } = usePlansData();
 
-  // Success Alert - Mobile Optimized
-  if (showSuccess) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <Card className={`${isMobile ? 'w-full max-w-sm' : 'max-w-md w-full'} legal-card border-green-200`}>
-          <CardContent className={`${isMobile ? 'p-6' : 'p-8'} text-center`}>
-            <div className={`p-4 bg-green-100 rounded-full ${isMobile ? 'w-16 h-16' : 'w-20 h-20'} mx-auto mb-4 flex items-center justify-center`}>
-              <CheckCircle2 className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-green-600`} />
-            </div>
-            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-700 mb-2 legal-title`}>
-              Ativo Cadastrado!
-            </h2>
-            <p className={`text-green-600 mb-4 ${isMobile ? 'text-sm' : ''}`}>
-              {assetType === 'CHIP' ? 'Chip registrado' : 'Equipamento registrado'} com sucesso no sistema.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Redirecionando para o painel de gestão...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      solution_id: "",
+      status_id: "",
+      manufacturer_id: "",
+      plan_id: "",
+      iccid: "",
+      line_number: "",
+      serial_number: "",
+      model: "",
+      admin_pass: "",
+      radio: "",
+      admin_user: "",
+      rented_days: "0",
+      notes: "",
+      ssid_atual: "",
+      pass_atual: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const assetData: CreateAssetData = {
+        solution_id: parseInt(values.solution_id),
+        status_id: parseInt(values.status_id),
+        manufacturer_id: values.manufacturer_id ? parseInt(values.manufacturer_id) : undefined,
+        plan_id: values.plan_id ? parseInt(values.plan_id) : undefined,
+        iccid: values.iccid,
+        line_number: values.line_number ? parseInt(values.line_number) : undefined,
+        serial_number: values.serial_number,
+        model: values.model,
+        admin_pass: values.admin_pass,
+        radio: values.radio,
+        admin_user: values.admin_user,
+        rented_days: values.rented_days ? parseInt(values.rented_days) : 0,
+        notes: values.notes,
+        ssid_atual: values.ssid_atual,
+        pass_atual: values.pass_atual,
+      };
+
+      await assetService.createAsset(assetData);
+      toast({
+        title: "Sucesso",
+        description: "Ativo criado com sucesso!",
+      });
+      navigate('/assets');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error.message || "Erro ao criar ativo.",
+      });
+    }
+  };
+
+  const handleSolutionChange = (solutionId: string) => {
+    const newSolutionId = parseInt(solutionId);
+    setSolution(newSolutionId);
+    setFormData(prev => ({ ...prev, solution_id: newSolutionId }));
+    
+    // Determinar o tipo baseado na solução selecionada
+    const selectedSol = solutions.find(s => s.id === newSolutionId);
+    let newType: 'CHIP' | 'EQUIPMENT' = 'EQUIPMENT';
+    
+    if (selectedSol?.solution.toLowerCase().includes('chip') || 
+        selectedSol?.solution.toLowerCase() === 'vivo') {
+      newType = 'CHIP';
+    }
+    
+    setAssetType(newType);
+    console.log('Tipo de ativo determinado:', newType, 'para solução:', selectedSol?.solution);
+  };
+
+  const setFormData = (updater: (prevState: z.infer<typeof formSchema>) => z.infer<typeof formSchema>) => {
+    form.setValue("solution_id", updater(form.getValues()).solution_id);
+    form.setValue("status_id", updater(form.getValues()).status_id);
+    form.setValue("manufacturer_id", updater(form.getValues()).manufacturer_id);
+    form.setValue("plan_id", updater(form.getValues()).plan_id);
+    form.setValue("iccid", updater(form.getValues()).iccid);
+    form.setValue("line_number", updater(form.getValues()).line_number);
+    form.setValue("serial_number", updater(form.getValues()).serial_number);
+    form.setValue("model", updater(form.getValues()).model);
+    form.setValue("admin_pass", updater(form.getValues()).admin_pass);
+    form.setValue("radio", updater(form.getValues()).radio);
+    form.setValue("admin_user", updater(form.getValues()).admin_user);
+    form.setValue("rented_days", updater(form.getValues()).rented_days);
+    form.setValue("notes", updater(form.getValues()).notes);
+    form.setValue("ssid_atual", updater(form.getValues()).ssid_atual);
+    form.setValue("pass_atual", updater(form.getValues()).pass_atual);
+  };
 
   return (
-    <TooltipProvider>
-      <Card className="legal-card border-2">
-          <CardHeader className="bg-gradient-to-r from-legal-primary/5 to-legal-secondary/5">
-            <CardTitle className={`legal-subtitle flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
-              <Zap className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-legal-primary`} />
-              Detalhes do Ativo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
-            <Tabs
-              value={assetType}
-              onValueChange={(value) => {
-                const newAssetType = value as 'CHIP' | 'EQUIPAMENTO';
-                console.log('Trocando tipo de ativo para:', newAssetType);
-                setAssetType(newAssetType);
-                
-                if (newAssetType === 'CHIP') {
-                  equipmentForm.reset();
-                } else {
-                  chipForm.reset();
-                }
-                
-                setPasswordStrength(null);
-                setAllowWeakPassword(false);
-                setBasicInfoOpen(true);
-                setTechnicalInfoOpen(false);
-                setSecurityInfoOpen(false);
-                setNetworkInfoOpen(false);
-              }}
-              className="w-full"
-            >
-              <TabsList className={`grid grid-cols-2 mb-6 md:mb-8 ${isMobile ? 'h-12' : 'h-14'} bg-muted/50`}>
-                <TabsTrigger 
-                  value="CHIP" 
-                  className={`flex items-center gap-2 ${isMobile ? 'text-sm px-2' : 'text-base px-4'} font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white`}
-                >
-                  <Smartphone className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  {isMobile ? 'CHIP' : 'Chip / SIM Card'}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="EQUIPAMENTO"
-                  className={`flex items-center gap-2 ${isMobile ? 'text-sm px-2' : 'text-base px-4'} font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white`}
-                >
-                  <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  {isMobile ? 'EQUIPAMENTO' : 'Equipamento'}
-                </TabsTrigger>
-              </TabsList>
+    <div className="container mx-auto py-10">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="solution_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Solução</FormLabel>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    handleSolutionChange(value);
+                  }} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma solução" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {solutions?.map((solution) => (
+                        <SelectItem key={solution.id} value={solution.id.toString()}>
+                          {solution.solution}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* FORMULÁRIO DE CHIP - Mobile Optimized */}
-              <TabsContent value="CHIP" className="space-y-4 md:space-y-6">
-                <Alert className="bg-blue-50 border-legal-primary/30">
-                  <Smartphone className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                  <AlertDescription className={`text-legal-dark ${isMobile ? 'text-sm' : ''}`}>
-                    <strong>Chips/SIM Cards:</strong> Cadastre cartões SIM para conectividade móvel. 
-                    {!isMobile && " Inclua informações da operadora e dados técnicos."}
-                  </AlertDescription>
-                </Alert>
+            <FormField
+              control={form.control}
+              name="status_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {assetStatuses?.map((status) => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          {status.status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <Form {...chipForm}>
-                  <form onSubmit={chipForm.handleSubmit(onSubmitChip)} className="space-y-4 md:space-y-6">
-                    
-                    {/* Seção Informações Básicas - Mobile Responsive */}
-                    <Collapsible open={basicInfoOpen} onOpenChange={setBasicInfoOpen}>
-                      <CollapsibleTrigger className="w-full">
-                        <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20 ${isMobile ? 'touch-manipulation' : ''}`}>
-                          <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-legal-primary/10 rounded-lg`}>
-                                  <Info className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                                </div>
-                                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold legal-subtitle`}>
-                                  Informações Básicas
-                                </h3>
-                              </div>
-                              {basicInfoOpen ? 
-                                <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} /> : 
-                                <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                              }
-                            </div>
-                          </CardHeader>
-                        </Card>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-4">
-                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'} bg-muted/20 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
-                          <FormField
-                            control={chipForm.control}
-                            name="line_number"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                                  <Tooltip>
-                                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                      Número da linha *
-                                      <Info className="h-3 w-3" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Número de telefone da linha móvel</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="Ex: 11987654321"
-                                    disabled={createAssetMutation.isPending}
-                                    value={field.value || ""}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      field.onChange(value === "" ? undefined : Number(value));
-                                    }}
-                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  Número de telefone da linha móvel
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+            <FormField
+              control={form.control}
+              name="manufacturer_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fabricante</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um fabricante" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {manufacturers?.map((manufacturer) => (
+                        <SelectItem key={manufacturer.id} value={manufacturer.id.toString()}>
+                          {manufacturer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                          <FormField
-                            control={chipForm.control}
-                            name="iccid"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                                  <Tooltip>
-                                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                                      ICCID *
-                                      <Info className="h-3 w-3" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Número único de identificação do chip SIM</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Ex: 89550421180216543847"
-                                    disabled={createAssetMutation.isPending}
-                                    {...field}
-                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  {isMobile ? 'Código do SIM (19-20 dígitos)' : 'Código impresso no cartão SIM (19-20 dígitos)'}
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+            <FormField
+              control={form.control}
+              name="plan_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plano</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um plano" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {plans?.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id.toString()}>
+                          {plan.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-                          <FormField
-                            control={chipForm.control}
-                            name="manufacturer_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Operadora *</FormLabel>
-                                {isReferenceDataLoading ? (
-                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
-                                ) : (
-                                  <Select
-                                    value={field.value?.toString() || ""}
-                                    onValueChange={(value) => field.onChange(Number(value))}
-                                    disabled={createAssetMutation.isPending}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
-                                        <SelectValue placeholder="Escolha a operadora de telefonia" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {operators.map((operator) => (
-                                        <SelectItem
-                                          key={operator.id}
-                                          value={operator.id.toString()}
-                                        >
-                                          {capitalize(operator.name)}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  Ex: Vivo, Claro, TIM, Oi
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+          {assetType === 'CHIP' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="iccid"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ICCID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ICCID do chip" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                          <FormField
-                            control={chipForm.control}
-                            name="status_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Status Inicial *</FormLabel>
-                                {isReferenceDataLoading ? (
-                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
-                                ) : (
-                                  <Select
-                                    value={field.value?.toString() || ""}
-                                    onValueChange={(value) => field.onChange(Number(value))}
-                                    disabled={createAssetMutation.isPending}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
-                                        <SelectValue placeholder="Escolha o status do chip" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {statuses.map((status) => (
-                                        <SelectItem
-                                          key={status.id}
-                                          value={status.id.toString()}
-                                        >
-                                          {capitalize(status.status)}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  Estado atual do chip no inventário
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+              <FormField
+                control={form.control}
+                name="line_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número da Linha</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Número da linha" type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="serial_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número de Série</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Número de série" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                    <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} pt-4`}>
-                      <Button
-                        type="submit"
-                        disabled={createAssetMutation.isPending}
-                        className={`legal-button text-white font-bold ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-base'} shadow-lg hover:shadow-xl transition-all duration-200`}
-                      >
-                        {createAssetMutation.isPending ? (
-                          <>
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                            Cadastrando Chip...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-5 w-5 mr-2" />
-                            Cadastrar Chip
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </TabsContent>
+              <FormField
+                control={form.control}
+                name="radio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rádio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Rádio" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
-              {/* FORMULÁRIO DE EQUIPAMENTO - Mobile Optimized */}
-              <TabsContent value="EQUIPAMENTO" className="space-y-4 md:space-y-6">
-                <Alert className="bg-blue-50 border-legal-primary/30">
-                  <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                  <AlertDescription className={`text-legal-dark ${isMobile ? 'text-sm' : ''}`}>
-                    <strong>Equipamentos:</strong> Cadastre roteadores, switches e outros dispositivos de rede.
-                    {!isMobile && " Complete todas as seções para um registro completo."}
-                  </AlertDescription>
-                </Alert>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="model"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Modelo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Modelo" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <Form {...equipmentForm}>
-                  <form onSubmit={equipmentForm.handleSubmit(onSubmitEquipment)} className="space-y-4 md:space-y-6">
+            <FormField
+              control={form.control}
+              name="admin_user"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Usuário Admin</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Usuário administrador" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                    {/* Seção Informações Básicas - Mobile Responsive */}
-                    <Collapsible open={basicInfoOpen} onOpenChange={setBasicInfoOpen}>
-                      <CollapsibleTrigger className="w-full">
-                        <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-legal-primary/20 ${isMobile ? 'touch-manipulation' : ''}`}>
-                          <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-legal-primary/10 rounded-lg`}>
-                                  <Info className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                                </div>
-                                <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold legal-subtitle`}>
-                                  Informações Básicas
-                                </h3>
-                              </div>
-                              {basicInfoOpen ? 
-                                <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} /> : 
-                                <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
-                              }
-                            </div>
-                          </CardHeader>
-                        </Card>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-4">
-                        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'} bg-muted/20 ${isMobile ? 'p-4' : 'p-6'} rounded-lg`}>
-                        
-                        <FormField
-                          control={equipmentForm.control}
-                          name="radio"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>
-                                Rádio *
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Ex: SPEEDY01, 4BLACK69"
-                                  disabled={createAssetMutation.isPending}
-                                  {...field}
-                                  className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                />
-                              </FormControl>
-                              <p className="text-xs text-muted-foreground">
-                                {isMobile ? 'ID único (etiqueta LEGAL)' : 'Identificador único do equipamento (etiqueta da LEGAL)'}
-                              </p>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+            <FormField
+              control={form.control}
+              name="admin_pass"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha Admin</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Senha administrador" type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="serial_number"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Número de Série *</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Ex: SN123456789"
-                                    disabled={createAssetMutation.isPending}
-                                    {...field}
-                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  {isMobile ? 'Número único do equipamento' : 'Número único do equipamento (etiqueta do fabricante)'}
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
+            <FormField
+              control={form.control}
+              name="rented_days"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dias Alugados</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Dias alugados" type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="model"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Modelo *</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Ex: Archer C6, WRT54G"
-                                    disabled={createAssetMutation.isPending}
-                                    {...field}
-                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  Modelo específico do equipamento
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="ssid_atual"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SSID Atual</FormLabel>
+                  <FormControl>
+                    <Input placeholder="SSID atual" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="manufacturer_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Fabricante *</FormLabel>
-                                {isReferenceDataLoading ? (
-                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
-                                ) : (
-                                  <Select
-                                    value={field.value?.toString() || ""}
-                                    onValueChange={(value) => field.onChange(Number(value))}
-                                    disabled={createAssetMutation.isPending}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
-                                        <SelectValue placeholder="Escolha o fabricante" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {equipmentManufacturers.map((manufacturer) => (
-                                        <SelectItem
-                                          key={manufacturer.id}
-                                          value={manufacturer.id.toString()}
-                                        >
-                                          {capitalize(manufacturer.name)}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  Ex: TP-Link, D-Link, Cisco
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+            <FormField
+              control={form.control}
+              name="pass_atual"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha Atual</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Senha atual" type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="status_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Status Inicial *</FormLabel>
-                                {isReferenceDataLoading ? (
-                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
-                                ) : (
-                                  <Select
-                                    value={field.value?.toString() || ""}
-                                    onValueChange={(value) => field.onChange(Number(value))}
-                                    disabled={createAssetMutation.isPending}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
-                                        <SelectValue placeholder="Escolha o status" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {statuses.map((status) => (
-                                        <SelectItem
-                                          key={status.id}
-                                          value={status.id.toString()}
-                                        >
-                                          {capitalize(status.status)}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  Estado atual no inventário
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={equipmentForm.control}
-                            name="solution_id"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Tipo de Solução *</FormLabel>
-                                {isReferenceDataLoading ? (
-                                  <Skeleton className={`${isMobile ? 'h-11' : 'h-10'} w-full`} />
-                                ) : (
-                                  <Select
-                                    value={field.value?.toString() || ""}
-                                    onValueChange={(value) => field.onChange(Number(value))}
-                                    disabled={createAssetMutation.isPending}
-                                  >
-                                    <FormControl>
-                                      <SelectTrigger className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}>
-                                        <SelectValue placeholder="Escolha o tipo de solução" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {equipmentSolutions.map((solution) => (
-                                        <SelectItem
-                                          key={solution.id}
-                                          value={solution.id.toString()}
-                                        >
-                                          {solution.solution.toUpperCase()}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                  Categoria do serviço prestado
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Observações sobre o ativo"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-                          <FormField
-                            control={equipmentForm.control}
-                            name="rented_days"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className={`text-legal-dark font-semibold ${isMobile ? 'text-sm' : ''}`}>Dias de Locação</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="0"
-                                    disabled={createAssetMutation.isPending}
-                                    value={field.value || ""}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      field.onChange(value === "" ? 0 : Number(value));
-                                    }}
-                                    className={`form-input ${isMobile ? 'h-11 text-base' : 'h-10'}`}
-                                  />
-                                </FormControl>
-                                <p className="text-xs text-muted-foreground">
-                                  {isMobile ? '0 = equipamento próprio' : 'Tempo de locação (0 = equipamento próprio)'}
-                                </p>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                      </CollapsibleContent>
-                    </Collapsible>
-                        {/* Nova Seção: Configurações de Rede */}
-                        <Collapsible open={networkInfoOpen} onOpenChange={setNetworkInfoOpen}>
-                          <CollapsibleTrigger className="w-full">
-                            <Card className={`cursor-pointer hover:bg-muted/30 transition-colors border-blue-200 ${isMobile ? 'touch-manipulation' : ''}`}>
-                              <CardHeader className={`${isMobile ? 'pb-2' : 'pb-3'}`}>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-blue-100 rounded-lg`}>
-                                      <Wifi className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
-                                    </div>
-                                    <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-blue-700`}>
-                                      Configurações de Rede
-                                    </h3>
-                                  </div>
-                                  {networkInfoOpen ? 
-                                    <ChevronDown className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} /> : 
-                                    <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600`} />
-                                  }
-                                </div>
-                              </CardHeader>
-                            </Card>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-4 space-y-4">
-                            {/* Configurações de Fábrica */}
-                            <NetworkFields
-                              form={equipmentForm}
-                              isLoading={createAssetMutation.isPending}
-                              isMobile={isMobile}
-                              fieldPrefix="fabrica"
-                              title="Configurações Originais de Fábrica"
-                              description="Dados originais do equipamento (não alteráveis após cadastro)"
-                            />
-
-                            {/* Configurações Atuais */}
-                            <NetworkFields
-                              form={equipmentForm}
-                              isLoading={createAssetMutation.isPending}
-                              isMobile={isMobile}
-                              fieldPrefix="atual"
-                              title="Configurações Atuais"
-                              description="Configurações aplicadas atualmente no equipamento"
-                              showCopyButton={true}
-                              onCopyFromFactory={copyFactoryToCurrentFields}
-                            />
-                          </CollapsibleContent>
-                        </Collapsible>
-
-                    <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} pt-6`}>
-                      <Button
-                        type="submit"
-                        disabled={createAssetMutation.isPending}
-                        className={`legal-button text-white font-bold ${isMobile ? 'w-full py-3 text-base' : 'px-8 py-3 text-base'} shadow-lg hover:shadow-xl transition-all duration-200`}
-                      >
-                        {createAssetMutation.isPending ? (
-                          <>
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                            Cadastrando Equipamento...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-5 w-5 mr-2" />
-                            Cadastrar Equipamento
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-    </TooltipProvider>
+          <Button type="submit">Cadastrar Ativo</Button>
+        </form>
+      </Form>
+    </div>
   );
-}
+};
+
+export default RegisterAssetForm;

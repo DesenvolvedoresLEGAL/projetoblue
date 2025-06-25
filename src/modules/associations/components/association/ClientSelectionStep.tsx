@@ -15,7 +15,7 @@ export const ClientSelectionStep: React.FC = () => {
   const { selectedClient, setSelectedClient, setCurrentStep } = useAssetAssociationState();
 
   const filteredClients = clients.filter(client => 
-    client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.cnpj && client.cnpj.includes(searchTerm)) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -46,7 +46,7 @@ export const ClientSelectionStep: React.FC = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder="Buscar cliente por nome, CNPJ ou email..."
+          placeholder="Buscar cliente por empresa, CNPJ ou email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 border-[#4D2BFB]/20 focus:border-[#4D2BFB]"
@@ -65,13 +65,16 @@ export const ClientSelectionStep: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">{selectedClient.nome}</h3>
+                <h3 className="font-medium">{selectedClient.empresa}</h3>
                 {selectedClient.cnpj && (
                   <p className="text-sm text-muted-foreground">CNPJ: {selectedClient.cnpj}</p>
                 )}
                 {selectedClient.email && (
                   <p className="text-sm text-muted-foreground">Email: {selectedClient.email}</p>
                 )}
+                <p className="text-sm text-muted-foreground">
+                  Responsável: {selectedClient.responsavel}
+                </p>
               </div>
               <Button
                 variant="outline"
@@ -111,7 +114,7 @@ export const ClientSelectionStep: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-[#020CBC]">{client.nome}</h3>
+                        <h3 className="font-medium text-[#020CBC]">{client.empresa}</h3>
                         <Badge variant="outline" className="text-xs">
                           {client.cnpj ? 'PJ' : 'PF'}
                         </Badge>
@@ -123,7 +126,7 @@ export const ClientSelectionStep: React.FC = () => {
                         <p className="text-sm text-muted-foreground">Email: {client.email}</p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Contato: {client.contato}
+                        Responsável: {client.responsavel}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm" className="text-[#4D2BFB]">

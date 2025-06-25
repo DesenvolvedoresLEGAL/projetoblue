@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 
@@ -39,6 +38,7 @@ class OptimizedAssetService {
         line_number,
         iccid,
         radio,
+        rented_days,
         created_at,
         updated_at,
         solution_id,
@@ -58,6 +58,7 @@ class OptimizedAssetService {
 
     const mappedAssets = (data || []).map(asset => ({
       ...asset,
+      rented_days: asset.rented_days || 0, // Garantir rented_days
       solucao: {
         id: asset.solucao?.id || 0,
         name: asset.solucao?.solution || 'Desconhecido'
@@ -133,6 +134,7 @@ class OptimizedAssetService {
         line_number,
         iccid,
         radio,
+        rented_days,
         created_at,
         updated_at,
         solution_id,
@@ -152,6 +154,7 @@ class OptimizedAssetService {
 
     const mappedAssets = (data || []).map(asset => ({
       ...asset,
+      rented_days: asset.rented_days || 0, // Garantir rented_days
       solucao: {
         id: asset.solucao?.id || 0,
         name: asset.solucao?.solution || 'Desconhecido'

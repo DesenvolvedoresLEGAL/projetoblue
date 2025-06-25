@@ -1,12 +1,29 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Asset, ChipAsset, EquipamentAsset, AssetStatus } from '@/types/asset';
-import { AssetWithRelations } from '@/types/assetWithRelations';
-import { mapSolutionToSolutionType, mapStatusIdToAssetStatus } from '@/utils/databaseMappers';
+import { Database } from '@/types/supabase';
 
-// Database structure interface  
-interface DatabaseAsset {
+export interface Manufacturer {
+  id: number;
+  name: string;
+}
+
+export interface Solution {
+  id: number;
+  solution: string;
+}
+
+export interface Status {
+  id: number;
+  status: string;
+}
+
+export interface Plan {
+  id: number;
+  nome: string;
+  tamanho_gb: number;
+}
+
+export interface AssetWithRelations {
   uuid: string;
   model: string;
   rented_days: number;
@@ -14,132 +31,25 @@ interface DatabaseAsset {
   line_number: number;
   iccid: string;
   radio: string;
-  created_at: string;
-  updated_at: string;
   admin_user: string;
   admin_pass: string;
   ssid_atual: string;
   pass_atual: string;
-  ssid_fabrica: string;
-  pass_fabrica: string;
-  admin_user_fabrica: string;
-  admin_pass_fabrica: string;
-  plan_id: number;
-  manufacturer_id: number;
-  status_id: number;
+  created_at: string;
+  updated_at: string;
   solution_id: number;
-  solucao: {
-    id: number;
-    solution: string;
-  };
-  manufacturer: {
-    id: number;
-    name: string;
-  };
-  status: {
-    id: number;
-    status: string;
-  };
+  status_id: number;
+  manufacturer_id: number;
+  plan_id: number;
+  manufacturer: Manufacturer;
+  plano: Plan;
+  status: Status;
+  solucao: Solution;
 }
 
-// Transform database record to frontend Asset type
-const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
-  // Determine type based on solution_id
-  const isChip = dbAsset.solution_id === 11;
-  const status = mapStatusIdToAssetStatus(dbAsset.status_id, dbAsset.status?.status);
-  const solucao = mapSolutionToSolutionType(dbAsset.solucao?.solution, dbAsset.solution_id);
+type DatabaseAsset = Database['public']['Tables']['assets']['Row'];
 
-  if (isChip) {
-    const chipAsset: ChipAsset = {
-      id: dbAsset.uuid,
-      uuid: dbAsset.uuid,
-      type: 'CHIP' as const,
-      registrationDate: dbAsset.created_at,
-      status,
-      statusId: dbAsset.status_id,
-      notes: '',
-      solucao,
-      marca: dbAsset.manufacturer?.name || '',
-      modelo: dbAsset.model || '',
-      serial_number: dbAsset.serial_number || '',
-      iccid: dbAsset.iccid || '',
-      phoneNumber: dbAsset.line_number?.toString() || '',
-      carrier: 'Unknown',
-    };
-    return chipAsset;
-  } else {
-    const equipmentAsset: EquipamentAsset = {
-      id: dbAsset.uuid,
-      uuid: dbAsset.uuid,
-      type: 'ROTEADOR' as const,  
-      registrationDate: dbAsset.created_at,
-      status,
-      statusId: dbAsset.status_id,
-      notes: '',
-      solucao,
-      marca: dbAsset.manufacturer?.name || '',
-      modelo: dbAsset.model || '',
-      serial_number: dbAsset.serial_number || '',
-      radio: dbAsset.radio || '',
-      uniqueId: dbAsset.uuid,
-      brand: dbAsset.manufacturer?.name || '',
-      model: dbAsset.model || '',
-      ssid: dbAsset.ssid_atual || '',
-      password: dbAsset.pass_atual || '',
-      serialNumber: dbAsset.serial_number || '',
-      adminUser: dbAsset.admin_user || '',
-      adminPassword: dbAsset.admin_pass || '',
-    };
-    return equipmentAsset;
-  }
-};
-
-// Transform database record to AssetWithRelations
-const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
-  return {
-    uuid: dbAsset.uuid,
-    model: dbAsset.model,
-    rented_days: dbAsset.rented_days || 0,
-    serial_number: dbAsset.serial_number,
-    line_number: dbAsset.line_number,
-    iccid: dbAsset.iccid,
-    radio: dbAsset.radio,
-    created_at: dbAsset.created_at,
-    updated_at: dbAsset.updated_at,
-    admin_user: dbAsset.admin_user,
-    admin_pass: dbAsset.admin_pass,
-    notes: '',
-    ssid_atual: dbAsset.ssid_atual,
-    pass_atual: dbAsset.pass_atual,
-    ssid_fabrica: dbAsset.ssid_fabrica,
-    pass_fabrica: dbAsset.pass_fabrica,
-    admin_user_fabrica: dbAsset.admin_user_fabrica,
-    admin_pass_fabrica: dbAsset.admin_pass_fabrica,
-    plan_id: dbAsset.plan_id,
-    manufacturer_id: dbAsset.manufacturer_id,
-    status_id: dbAsset.status_id,
-    solution_id: dbAsset.solution_id,
-    solucao: {
-      id: dbAsset.solucao?.id || dbAsset.solution_id,
-      name: dbAsset.solucao?.solution || 'Unknown'
-    },
-    manufacturer: {
-      id: dbAsset.manufacturer?.id || dbAsset.manufacturer_id,
-      name: dbAsset.manufacturer?.name || 'Unknown'
-    },
-    status: {
-      id: dbAsset.status?.id || dbAsset.status_id,
-      name: dbAsset.status?.status || 'DISPONÍVEL'
-    },
-    plan: dbAsset.plan ? {
-      id: dbAsset.plan.id,
-      nome: dbAsset.plan.nome
-    } : undefined
-  };
-};
-
-// Hook to fetch all assets
-export const useAssetsData = (options?: {
+interface UseAssetsDataParams {
   searchTerm?: string;
   filterType?: string;
   filterStatus?: string;
@@ -148,14 +58,25 @@ export const useAssetsData = (options?: {
   pageSize?: number;
   enabled?: boolean;
   excludeSolutions?: number[];
-}) => {
+}
+
+export const useAssetsData = ({
+  searchTerm = '',
+  filterType = 'all',
+  filterStatus = 'all',
+  filterManufacturer = 'all',
+  currentPage = 1,
+  pageSize = 10,
+  enabled = true,
+  excludeSolutions = []
+}: UseAssetsDataParams = {}) => {
   return useQuery({
-    queryKey: ['assets-data', options],
-    queryFn: async (): Promise<{
-      assets: AssetWithRelations[];
-      totalCount: number;
-      totalPages: number;
-    }> => {
+    queryKey: ['assets-data', searchTerm, filterType, filterStatus, filterManufacturer, currentPage, pageSize, excludeSolutions],
+    queryFn: async () => {
+      console.log('🔍 Executando query de assets com parâmetros:', {
+        searchTerm, filterType, filterStatus, filterManufacturer, currentPage, pageSize, excludeSolutions
+      });
+
       let query = supabase
         .from('assets')
         .select(`
@@ -166,280 +87,173 @@ export const useAssetsData = (options?: {
           line_number,
           iccid,
           radio,
-          created_at,
-          updated_at,
           admin_user,
           admin_pass,
           ssid_atual,
           pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
+          created_at,
+          updated_at,
           solution_id,
-          solucao:asset_solutions!inner(id, solution),
+          status_id,
+          manufacturer_id,
+          plan_id,
           manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status),
-          plan:plans(id, nome)
-        `, { count: 'exact' })
+          plano:plans(id, nome, tamanho_gb),
+          status:asset_status(id, status),
+          solucao:asset_solutions(id, solution)
+        `)
         .is('deleted_at', null);
 
-      // Apply filters if provided
-      if (options?.excludeSolutions?.length) {
-        query = query.not('solution_id', 'in', `(${options.excludeSolutions.join(',')})`);
+      if (searchTerm) {
+        query = query.ilike('model', `%${searchTerm}%`);
       }
 
-      if (options?.filterType && options.filterType !== 'all') {
-        if (options.filterType === 'CHIP') {
-          query = query.eq('solution_id', 11);
-        } else if (options.filterType === 'ROTEADOR') {
-          query = query.neq('solution_id', 11);
+      if (filterType !== 'all') {
+        // Subquery para filtrar pelo solution_id
+        const solutionQuery = supabase
+          .from('asset_solutions')
+          .select('id')
+          .ilike('solution', `%${filterType}%`);
+
+        const { data: solutionData, error: solutionError } = await solutionQuery;
+
+        if (solutionError) {
+          console.error('Erro ao buscar solution_id:', solutionError);
+          throw solutionError;
+        }
+
+        if (solutionData && solutionData.length > 0) {
+          const solutionIds = solutionData.map(s => s.id);
+          query = query.in('solution_id', solutionIds);
+        } else {
+          // Se não encontrar a solução, retorna um array vazio
+          return {
+            assets: [],
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            pageSize: 10,
+            hasNextPage: false,
+            hasPreviousPage: false
+          };
         }
       }
 
-      if (options?.filterStatus && options.filterStatus !== 'all') {
-        query = query.eq('status_id', parseInt(options.filterStatus));
+      if (filterStatus !== 'all') {
+        // Subquery para filtrar pelo status_id
+        const statusQuery = supabase
+          .from('asset_status')
+          .select('id')
+          .ilike('status', `%${filterStatus}%`);
+
+        const { data: statusData, error: statusError } = await statusQuery;
+
+        if (statusError) {
+          console.error('Erro ao buscar status_id:', statusError);
+          throw statusError;
+        }
+
+        if (statusData && statusData.length > 0) {
+          const statusIds = statusData.map(s => s.id);
+          query = query.in('status_id', statusIds);
+        } else {
+          // Se não encontrar o status, retorna um array vazio
+          return {
+            assets: [],
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            pageSize: 10,
+            hasNextPage: false,
+            hasPreviousPage: false
+          };
+        }
       }
 
-      if (options?.filterManufacturer && options.filterManufacturer !== 'all') {
-        query = query.eq('manufacturer_id', parseInt(options.filterManufacturer));
+      if (filterManufacturer !== 'all') {
+        // Subquery para filtrar pelo manufacturer_id
+        const manufacturerQuery = supabase
+          .from('manufacturers')
+          .select('id')
+          .ilike('name', `%${filterManufacturer}%`);
+
+        const { data: manufacturerData, error: manufacturerError } = await manufacturerQuery;
+
+        if (manufacturerError) {
+          console.error('Erro ao buscar manufacturer_id:', manufacturerError);
+          throw manufacturerError;
+        }
+
+        if (manufacturerData && manufacturerData.length > 0) {
+          const manufacturerIds = manufacturerData.map(m => m.id);
+          query = query.in('manufacturer_id', manufacturerIds);
+        } else {
+          // Se não encontrar o fabricante, retorna um array vazio
+          return {
+            assets: [],
+            totalCount: 0,
+            totalPages: 0,
+            currentPage: 1,
+            pageSize: 10,
+            hasNextPage: false,
+            hasPreviousPage: false
+          };
+        }
+      }
+      
+      if (excludeSolutions && excludeSolutions.length > 0) {
+        query = query.not('solution_id', 'in', `(${excludeSolutions.join(',')})`);
       }
 
-      if (options?.searchTerm) {
-        const searchTerm = `%${options.searchTerm}%`;
-        query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm}`);
-      }
-
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range(
-          options?.currentPage ? (options.currentPage - 1) * (options?.pageSize || 10) : 0,
-          options?.currentPage ? options.currentPage * (options?.pageSize || 10) - 1 : (options?.pageSize || 10) - 1
-        );
-
-      if (error) {
-        console.error('Error fetching assets data:', error);
-        throw error;
-      }
-
-      const assets = (data || []).map(transformToAssetWithRelations);
-      const totalCount = count || assets.length;
-      const totalPages = Math.ceil(totalCount / (options?.pageSize || 10));
-
-      return {
-        assets,
-        totalCount,
-        totalPages
-      };
-    },
-    enabled: options?.enabled !== false,
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook to fetch assets with relations (for components that need full data)
-export const useAssetsWithRelations = () => {
-  return useQuery({
-    queryKey: ['assets-with-relations'],
-    queryFn: async (): Promise<AssetWithRelations[]> => {
-      const { data, error } = await supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status),
-          plan:plans(id, nome)
-        `)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching assets with relations:', error);
-        throw error;
-      }
-
-      return (data || []).map(transformToAssetWithRelations);
-    },
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook to fetch single asset
-export const useAssetData = (assetId: string) => {
-  return useQuery({
-    queryKey: ['asset-data', assetId],
-    queryFn: async (): Promise<Asset | null> => {
-      if (!assetId) return null;
-
-      const { data, error } = await supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          notes,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status)
-        `)
-        .eq('uuid', assetId)
-        .is('deleted_at', null)
-        .single();
-
-      if (error) {
-        console.error(`Error fetching asset data for ${assetId}:`, error);
-        throw error;
-      }
-
-      return data ? transformDatabaseAsset(data as unknown as DatabaseAsset) : null;
-    },
-    enabled: !!assetId,
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook to fetch filtered assets
-export const useFilteredAssetsData = (filters: {
-  type?: 'CHIP' | 'ROTEADOR';
-  status?: string;
-  search?: string;
-}) => {
-  return useQuery({
-    queryKey: ['filtered-assets-data', filters],
-    queryFn: async (): Promise<Asset[]> => {
-      let query = supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          notes,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status)
-        `)
-        .is('deleted_at', null);
-
-      // Apply filters
-      if (filters.type === 'CHIP') {
-        query = query.eq('solution_id', 11);
-      } else if (filters.type === 'ROTEADOR') {
-        query = query.neq('solution_id', 11);
-      }
-
-      if (filters.search) {
-        const searchTerm = `%${filters.search}%`;
-        query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm}`);
-      }
+      query = query.range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       query = query.order('created_at', { ascending: false });
 
-      const { data, error } = await query;
+      const { data: assets, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching filtered assets data:', error);
+        console.error('❌ Erro ao buscar assets:', error);
         throw error;
       }
 
-      return (data || []).map(transformDatabaseAsset);
-    },
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
+      console.log('📊 Assets retornados:', assets?.length || 0);
 
-// Hook to fetch asset stats
-export const useAssetsStats = () => {
-  return useQuery({
-    queryKey: ['assets-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('assets')
-        .select('solution_id, status_id')
-        .is('deleted_at', null);
+      const mappedAssets = (assets || []).map((dbAsset: any) => ({
+        ...dbAsset,
+        rented_days: dbAsset.rented_days || 0, // Garantir que rented_days existe
+        solucao: {
+          id: dbAsset.solucao?.id || 0,
+          name: dbAsset.solucao?.solution || 'Desconhecido'
+        },
+        status: {
+          id: dbAsset.status?.id || 0,
+          name: dbAsset.status?.status || 'Desconhecido'
+        },
+        manufacturer: {
+          id: dbAsset.manufacturer?.id || 0,
+          name: dbAsset.manufacturer?.name || 'Desconhecido'
+        },
+        plan: {
+          id: dbAsset.plano?.id || 0,
+          name: dbAsset.plano?.nome || 'Desconhecido',
+          size_gb: dbAsset.plano?.tamanho_gb || 0
+        }
+      }));
 
-      if (error) {
-        console.error('Error fetching assets stats:', error);
-        throw error;
-      }
+      const totalPages = Math.ceil((count || 0) / pageSize);
 
-      const stats = {
-        total: data?.length || 0,
-        chips: data?.filter(a => a.solution_id === 11).length || 0,
-        routers: data?.filter(a => a.solution_id !== 11).length || 0,
-        available: data?.filter(a => a.status_id === 1).length || 0, // Assuming status_id 1 = available
-        rented: data?.filter(a => a.status_id === 2).length || 0, // Assuming status_id 2 = rented
+      return {
+        assets: mappedAssets,
+        totalCount: count || 0,
+        totalPages,
+        currentPage,
+        pageSize,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1
       };
-
-      return stats;
     },
-    staleTime: 60 * 1000, // 1 minute
-    gcTime: 5 * 60 * 1000,
+    enabled,
+    staleTime: 30000,
+    gcTime: 300000,
   });
 };
-
-// Export the AssetWithRelations type for other components
-export type { AssetWithRelations };
