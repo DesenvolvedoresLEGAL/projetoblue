@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
@@ -8,6 +9,27 @@ import { AssetUpdateParams } from '../services/asset/types';
 interface UpdateAssetStatusParams {
   id: string;
   status: AssetStatus;
+}
+
+interface CreateAssetParams {
+  type: 'CHIP' | 'ROTEADOR';
+  solution_id?: number;
+  model?: string;
+  line_number?: number;
+  iccid?: string;
+  manufacturer_id?: number;
+  status_id?: number;
+  serial_number?: string;
+  rented_days?: number;
+  radio?: string;
+  ssid_fabrica?: string;
+  pass_fabrica?: string;
+  admin_user_fabrica?: string;
+  admin_pass_fabrica?: string;
+  ssid_atual?: string;
+  pass_atual?: string;
+  admin_user?: string;
+  admin_pass?: string;
 }
 
 export const useAssetManagement = () => {
@@ -40,7 +62,8 @@ export const useAssetManagement = () => {
   });
 
   const updateAssetMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: AssetUpdateParams) => {
+    mutationFn: async (params: AssetUpdateParams & { id: string }) => {
+      const { id, ...updates } = params;
       const dbUpdates = { ...updates };
 
       const { data, error } = await supabase
@@ -85,6 +108,30 @@ export const useAssetManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       toast.success('Ativo deletado com sucesso!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createAssetMutation = useMutation({
+    mutationFn: async (createData: CreateAssetParams) => {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert(createData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar o asset:', error);
+        throw new Error('Falha ao criar o ativo');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      toast.success('Ativo criado com sucesso!');
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -154,6 +201,7 @@ export const useAssetManagement = () => {
             solucao: (solutionData?.solution as any) || undefined,
             marca: (manufacturerData?.name as string) || '',
             modelo: asset.model || '',
+            model: asset.model || '',
             serial_number: asset.serial_number || '',
             radio: asset.radio || '',
             solution_id: asset.solution_id,
@@ -206,8 +254,108 @@ export const useAssetManagement = () => {
     updateAssetStatus: updateAssetStatusMutation.mutate,
     updateAsset: updateAssetMutation.mutate,
     deleteAsset: deleteAssetMutation.mutate,
+    createAsset: createAssetMutation.mutate,
     isUpdatingStatus: updateAssetStatusMutation.isPending,
     isUpdatingAsset: updateAssetMutation.isPending,
     isDeletingAsset: deleteAssetMutation.isPending,
+    isCreatingAsset: createAssetMutation.isPending,
   };
+};
+
+// Hook para buscar fabricantes
+export const useManufacturers = () => {
+  return useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('*')
+        .is('deleted_at', null)
+        .order('name');
+
+      if (error) {
+        console.error('Erro ao buscar fabricantes:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    retry: 2,
+    staleTime: 10 * 60 * 1000, // 10 minutos
+  });
+};
+
+// Hook para buscar soluções de assets
+export const useAssetSolutions = () => {
+  return useQuery({
+    queryKey: ['asset-solutions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_solutions')
+        .select('*')
+        .is('deleted_at', null)
+        .order('solution');
+
+      if (error) {
+        console.error('Erro ao buscar soluções:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    retry: 2,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
+// Hook para buscar status de assets
+export const useStatusRecords = () => {
+  return useQuery({
+    queryKey: ['asset-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_status')
+        .select('*')
+        .is('deleted_at', null)
+        .order('status');
+
+      if (error) {
+        console.error('Erro ao buscar status:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    retry: 2,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
+// Hook para criar asset
+export const useCreateAsset = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (createData: CreateAssetParams) => {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert(createData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao criar o asset:', error);
+        throw new Error('Falha ao criar o ativo');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      toast.success('Ativo criado com sucesso!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 };

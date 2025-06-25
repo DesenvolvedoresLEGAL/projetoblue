@@ -1,48 +1,23 @@
 
-import { Asset, AssetType, Client } from "./asset";
-
-export type OperationType = "ALUGUEL" | "ASSINATURA" | "ASSOCIATION" | "DISASSOCIATION";
-
-// Interface corrigida para alinhar com tabela asset_logs
-// ATUALIZADO: assoc_id agora é nullable devido às melhorias no trigger
 export interface AssetHistoryEntry {
-  id: number; // bigint no banco
-  assoc_id?: number | null; // bigint opcional no banco, PODE SER NULL
-  date?: string; // timestamp with time zone
-  event?: string; // text
-  details?: Record<string, unknown>; // jsonb
-  status_before_id?: number; // bigint
-  status_after_id?: number; // bigint
-  created_at: string; // timestamp with time zone
-  updated_at: string; // timestamp with time zone
-  deleted_at?: string; // timestamp with time zone opcional
-  
-  // Campos para compatibilidade com código existente
-  timestamp?: string;
-  clientId?: string;
-  clientName?: string;
-  assetIds?: string[];
-  assets?: {
-    id: string;
-    type: AssetType;
-    identifier: string;
-  }[];
-  operationType?: OperationType;
-  description?: string;
-  comments?: string;
-}
-
-// Interface para logs de perfil (profile_logs)
-export interface ProfileLogEntry {
-  id: string; // uuid
-  user_id?: string; // uuid opcional
-  email?: string;
-  operation: string;
-  table_name: string;
-  old_data?: Record<string, unknown>; // jsonb
-  new_data?: Record<string, unknown>; // jsonb
-  changed_at: string; // timestamp with time zone
+  id: number;
+  assoc_id: number | null;
+  date: string;
+  event: string;
+  details: Record<string, unknown>;
+  status_before_id?: number;
+  status_after_id?: number;
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+  
+  // Campos derivados/calculados para compatibilidade
+  timestamp: string;
+  clientId?: string;
+  clientName?: string;
+  assetIds?: string;
+  assets?: string;
+  operationType: 'ASSOCIATION' | 'STATUS_CHANGE' | 'CREATION' | 'DELETION';
+  description?: string;
+  comments?: string;
 }

@@ -1,19 +1,28 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StandardFiltersCardProps {
   title?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
+  searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  additionalFilters?: React.ReactNode;
 }
 
 export const StandardFiltersCard: React.FC<StandardFiltersCardProps> = ({
   title = "Filtros e Busca",
   children,
-  className
+  className,
+  searchPlaceholder,
+  searchValue,
+  onSearchChange,
+  additionalFilters
 }) => {
   return (
     <Card className={cn("border-[#4D2BFB]/20 shadow-sm", className)}>
@@ -23,7 +32,16 @@ export const StandardFiltersCard: React.FC<StandardFiltersCardProps> = ({
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {searchPlaceholder && (
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchValue || ''}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            className="max-w-sm"
+          />
+        )}
+        {additionalFilters}
         {children}
       </CardContent>
     </Card>
