@@ -45,7 +45,7 @@ export function useRegisterAsset() {
       console.log('[useRegisterAsset] Resetting mutation state due to asset type change');
       formHandlers.createAssetMutation.reset();
     }
-  }, [assetType]);
+  }, [assetType, formHandlers.createAssetMutation]);
 
   // Sync form data with state management
   useEffect(() => {
@@ -54,17 +54,17 @@ export function useRegisterAsset() {
     } else {
       syncWithForm(equipmentForm, "equipment");
     }
-  }, [assetType]);
+  }, [assetType, chipForm, equipmentForm, syncWithForm]);
 
   useEffect(() => {
     const sub = chipForm.watch(data => updateFormData(data, "chip"));
     return () => sub.unsubscribe();
-  }, [chipForm.watch, updateFormData]);
+  }, [chipForm, chipForm.watch, updateFormData]);
 
   useEffect(() => {
     const sub = equipmentForm.watch(data => updateFormData(data, "equipment"));
     return () => sub.unsubscribe();
-  }, [equipmentForm.watch, updateFormData]);
+  }, [equipmentForm, equipmentForm.watch, updateFormData]);
 
   // Update success state when mutation succeeds
   useEffect(() => {
@@ -79,7 +79,12 @@ export function useRegisterAsset() {
       console.log('[useRegisterAsset] Setting showSuccess to true for asset type:', assetType);
       setShowSuccess(true);
     }
-  }, [formHandlers.createAssetMutation.isSuccess, assetType]);
+  }, [
+    formHandlers.createAssetMutation.isSuccess,
+    formHandlers.createAssetMutation.isError,
+    formHandlers.createAssetMutation.isPending,
+    assetType
+  ]);
 
   // Reset success state when starting a new submission
   useEffect(() => {
