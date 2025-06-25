@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset, ChipAsset, EquipamentAsset, AssetStatus } from '@/types/asset';
 import { AssetWithRelations } from '@/types/assetWithRelations';
-import { mapSolutionToSolutionType, mapStatusIdToAssetStatus } from '@/utils/databaseMappers';
+import { mapSolutionToType, safeParseNumber, isValidFilterValue } from '@/utils/assetHelpers';
 
 // Database structure interface  
 interface DatabaseAsset {
@@ -46,8 +46,8 @@ interface DatabaseAsset {
 const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
   // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
-  const status = mapStatusIdToAssetStatus(dbAsset.status_id, dbAsset.status?.status);
-  const solucao = mapSolutionToSolutionType(dbAsset.solucao?.solution, dbAsset.solution_id);
+  const status = dbAsset.status?.status as AssetStatus || 'DISPONÍVEL';
+  const solucao = mapSolutionToType(dbAsset.solution_id, dbAsset.solucao?.solution);
 
   if (isChip) {
     const chipAsset: ChipAsset = {
@@ -57,7 +57,6 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       registrationDate: dbAsset.created_at,
       status,
       statusId: dbAsset.status_id,
-      notes: '',
       solucao,
       marca: dbAsset.manufacturer?.name || '',
       modelo: dbAsset.model || '',
@@ -75,7 +74,6 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       registrationDate: dbAsset.created_at,
       status,
       statusId: dbAsset.status_id,
-      notes: '',
       solucao,
       marca: dbAsset.manufacturer?.name || '',
       modelo: dbAsset.model || '',
@@ -108,7 +106,6 @@ const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
     updated_at: dbAsset.updated_at,
     admin_user: dbAsset.admin_user,
     admin_pass: dbAsset.admin_pass,
-    notes: '',
     ssid_atual: dbAsset.ssid_atual,
     pass_atual: dbAsset.pass_atual,
     ssid_fabrica: dbAsset.ssid_fabrica,
@@ -192,7 +189,7 @@ export const useAssetsData = (options?: {
         query = query.not('solution_id', 'in', `(${options.excludeSolutions.join(',')})`);
       }
 
-      if (options?.filterType && options.filterType !== 'all') {
+      if (options?.filterType && isValidFilterValue(options.filterType)) {
         if (options.filterType === 'CHIP') {
           query = query.eq('solution_id', 11);
         } else if (options.filterType === 'ROTEADOR') {
@@ -200,17 +197,23 @@ export const useAssetsData = (options?: {
         }
       }
 
-      if (options?.filterStatus && options.filterStatus !== 'all') {
-        query = query.eq('status_id', parseInt(options.filterStatus));
+      if (options?.filterStatus && isValidFilterValue(options.filterStatus)) {
+        const statusId = safeParseNumber(options.filterStatus);
+        if (statusId !== null) {
+          query = query.eq('status_id', statusId);
+        }
       }
 
-      if (options?.filterManufacturer && options.filterManufacturer !== 'all') {
-        query = query.eq('manufacturer_id', parseInt(options.filterManufacturer));
+      if (options?.filterManufacturer && isValidFilterValue(options.filterManufacturer)) {
+        const manufacturerId = safeParseNumber(options.filterManufacturer);
+        if (manufacturerId !== null) {
+          query = query.eq('manufacturer_id', manufacturerId);
+        }
       }
 
-      if (options?.searchTerm) {
-        const searchTerm = `%${options.searchTerm}%`;
-        query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm}`);
+      if (options?.searchTerm && options.searchTerm.trim()) {
+        const searchTerm = `%${options.searchTerm.trim()}%`;
+        query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm},line_number.eq.${safeParseNumber(options.searchTerm) || 0}`);
       }
 
       const { data, error, count } = await query

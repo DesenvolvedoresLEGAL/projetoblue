@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAssetSolutions } from '@modules/assets/hooks/useAssetSolutions';
-import { useManufacturers } from '@modules/assets/hooks/useAssetManagement';
+import { useManufacturers, useStatusRecords } from '@modules/assets/hooks/useAssetManagement';
 import { capitalize } from '@/utils/stringUtils';
 
 interface AssetsSearchFormProps {
@@ -35,6 +35,8 @@ const AssetsSearchForm = ({
   const { data: assetSolutions = [], isLoading: loadingSolutions } = useAssetSolutions();
   // Hook para buscar fabricantes dinamicamente
   const { data: manufacturers = [], isLoading: loadingManufacturers } = useManufacturers();
+  // Hook para buscar status disponíveis
+  const { data: statusRecords = [], isLoading: loadingStatus } = useStatusRecords();
   
   const handleReset = () => {
     setSearchTerm('');
@@ -121,7 +123,7 @@ const AssetsSearchForm = ({
                 </Select>
               </div>
 
-              {/* Filtro por Status */}
+              {/* Filtro por Status - Usando IDs */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-legal-dark font-neue-haas flex items-center gap-2">
                   <Filter className="h-4 w-4 text-legal-secondary" />
@@ -131,18 +133,28 @@ const AssetsSearchForm = ({
                 <Select
                   value={filterStatus}
                   onValueChange={(value) => handleFilterChange('status', value)}
+                  disabled={loadingStatus}
                 >
                   <SelectTrigger className="h-12 border-legal-secondary/30 focus:border-legal-secondary font-neue-haas">
-                    <SelectValue placeholder="Todos os status" />
+                    <SelectValue placeholder={loadingStatus ? "Carregando..." : "Todos os status"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-legal-secondary/20">
                     <SelectItem value="all" className="font-neue-haas">Todos os Status</SelectItem>
-                    <SelectItem value="DISPONÍVEL" className="font-neue-haas">✓ Disponível</SelectItem>
-                    <SelectItem value="EM LOCAÇÃO" className="font-neue-haas">📍 Em Locação</SelectItem>
-                    <SelectItem value="EM ASSINATURA" className="font-neue-haas">📋 Em Assinatura</SelectItem>
-                    <SelectItem value="SEM DADOS" className="font-neue-haas">⚠️ Sem Dados</SelectItem>
-                    <SelectItem value="BLOQUEADO" className="font-neue-haas">🚫 Bloqueado</SelectItem>
-                    <SelectItem value="EM MANUTENÇÃO" className="font-neue-haas">🔧 Em Manutenção</SelectItem>
+                    {statusRecords.map((status) => (
+                      <SelectItem 
+                        key={status.id} 
+                        value={status.id.toString()} 
+                        className="font-neue-haas"
+                      >
+                        {status.status === 'DISPONÍVEL' && '✓ '}
+                        {status.status === 'EM LOCAÇÃO' && '📍 '}
+                        {status.status === 'EM ASSINATURA' && '📋 '}
+                        {status.status === 'SEM DADOS' && '⚠️ '}
+                        {status.status === 'BLOQUEADO' && '🚫 '}
+                        {status.status === 'EM MANUTENÇÃO' && '🔧 '}
+                        {status.status}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

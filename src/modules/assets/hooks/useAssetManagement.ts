@@ -1,11 +1,10 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
-import { Asset, AssetStatus, AssetType } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, SolutionType } from "@/types/asset";
 import { referenceDataService } from "@modules/assets/services/referenceDataService";
 import { showFriendlyError } from '@/utils/errorTranslator';
-import { mapDatabaseAssetToFrontend, mapSolutionToSolutionType } from '@/utils/databaseMappers';
+import { mapSolutionToType } from '@/utils/assetHelpers';
 
 // Types for asset operations
 interface CreateAssetData {
@@ -129,7 +128,7 @@ export function useAssetManagement() {
         }
 
         // Transform database records to Asset type
-        return (data || []).map(mapDatabaseAssetToFrontend);
+        return (data || []).map(mapDbToAsset);
       },
     });
   };
@@ -160,7 +159,7 @@ export function useAssetManagement() {
           throw new Error(error.message);
         }
 
-        return mapDatabaseAssetToFrontend(data);
+        return mapDbToAsset(data);
       },
       enabled: !!id,
     });
@@ -329,6 +328,51 @@ export function useAssetManagement() {
     },
   });
 
+  /**
+   * Transform database record to frontend Asset type
+   */
+  function mapDbToAsset(dbAsset: any): Asset {
+    const solutionType = mapSolutionToType(dbAsset.solution_id, dbAsset.asset_solutions?.solution);
+    
+    const baseAsset = {
+      id: String(dbAsset.uuid || ''),
+      uuid: String(dbAsset.uuid || ''),
+      registrationDate: String(dbAsset.created_at || ''),
+      status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as AssetStatus,
+      statusId: dbAsset.status_id,
+      solucao: solutionType,
+      marca: String((dbAsset.manufacturers as any)?.name || ''),
+      modelo: String(dbAsset.model || ''),
+      serial_number: String(dbAsset.serial_number || ''),
+      radio: String(dbAsset.radio || ''),
+    };
+
+    if (solutionType === 'CHIP') {
+      // CHIP asset
+      return {
+        ...baseAsset,
+        type: "CHIP" as const,
+        iccid: String(dbAsset.iccid || ''),
+        phoneNumber: String(dbAsset.line_number || ''),
+        carrier: "Unknown",
+      };
+    } else {
+      // ROUTER asset
+      return {
+        ...baseAsset,
+        type: "ROTEADOR" as const,
+        uniqueId: String(dbAsset.uuid || ''),
+        brand: String((dbAsset.manufacturers as any)?.name || ''),
+        model: String(dbAsset.model || ''),
+        ssid: String(dbAsset.ssid_atual || ''),
+        password: String(dbAsset.pass_atual || ''),
+        serialNumber: String(dbAsset.serial_number || ''),
+        adminUser: String(dbAsset.admin_user || ''),
+        adminPassword: String(dbAsset.admin_pass || ''),
+      };
+    }
+  }
+
   return {
     // Query hooks
     useAssets,
@@ -407,50 +451,6 @@ export function usePlans() {
       return data || [];
     }
   });
-}
-
-/**
- * Transform database record to frontend Asset type
- */
-function mapDbToAsset(dbAsset: any): Asset {
-  const baseAsset = {
-    id: String(dbAsset.uuid || ''),
-    uuid: String(dbAsset.uuid || ''),
-    registrationDate: String(dbAsset.created_at || ''),
-    status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as AssetStatus,
-    statusId: dbAsset.status_id,
-    notes: String(''),
-    solucao: dbAsset.solution_id === 11 ? 'CHIP' : 'ROTEADOR',
-    marca: String((dbAsset.manufacturers as any)?.name || ''),
-    modelo: String(dbAsset.model || ''),
-    serial_number: String(dbAsset.serial_number || ''),
-    radio: String(dbAsset.radio || ''),
-  };
-
-  if (dbAsset.solution_id === 11) {
-    // CHIP asset
-    return {
-      ...baseAsset,
-      type: "CHIP" as const,
-      iccid: String(dbAsset.iccid || ''),
-      phoneNumber: String(dbAsset.line_number || ''),
-      carrier: "Unknown",
-    };
-  } else {
-    // ROUTER asset
-    return {
-      ...baseAsset,
-      type: "ROTEADOR" as const,
-      uniqueId: String(dbAsset.uuid || ''),
-      brand: String((dbAsset.manufacturers as any)?.name || ''),
-      model: String(dbAsset.model || ''),
-      ssid: String(dbAsset.ssid_atual || ''),
-      password: String(dbAsset.pass_atual || ''),
-      serialNumber: String(dbAsset.serial_number || ''),
-      adminUser: String(dbAsset.admin_user || ''),
-      adminPassword: String(dbAsset.admin_pass || ''),
-    };
-  }
 }
 
 // Export the main hook and utility hooks
