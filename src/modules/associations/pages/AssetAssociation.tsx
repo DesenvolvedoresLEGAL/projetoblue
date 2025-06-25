@@ -26,8 +26,8 @@ const mapAssociationTypeToId = (associationType: string): number => {
     'LOCAÇÃO': 1,
     'SUBSCRIPTION': 2
   };
-  
-  return typeMap[associationType.toUpperCase()] || 1; // Default para ALUGUEL
+
+  return typeMap[associationType] || 1; // Default para ALUGUEL
 };
 
 const AssetAssociation = () => {
@@ -45,7 +45,7 @@ const AssetAssociation = () => {
   
   // Estado local para configuração geral
   const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
-    associationType: 'ALUGUEL',
+    associationType: mapAssociationTypeToId('ALUGUEL'.toUpperCase()),
     startDate: new Date(),
     endDate: undefined,
     notes: ''
