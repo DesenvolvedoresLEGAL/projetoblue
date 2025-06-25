@@ -1,16 +1,34 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useIdempotentAssociation } from './useIdempotentAssociation';
 import { toast } from '@/utils/toast';
+import { useIdempotentAssociation } from './useIdempotentAssociation';
 
-interface CreateAssociationParams {
+interface CreateAssociationData {
   clientId: string;
-  assetId: string;
-  associationType: string;
-  startDate: string;
-  rentedDays?: number;
-  notes?: string;
+  associationTypeId: number;
+  startDate: string; // Deve ser ISO string completa
+  endDate?: string;
+  selectedAssets: Array<{
+    id: string;
+    type: string;
+    identifier: string;
+  }>;
+  generalConfig: {
+    notes?: string;
+    ssid?: string;
+    password?: string;
+    dataLimit?: number;
+    rentedDays: number; // Garantir que seja numérico
+  };
+}
+
+interface CreateAssociationResult {
+  success: boolean;
+  message: string;
+  details?: any;
+  error_code?: string;
+  error_detail?: string;
 }
 
 export const useCreateAssociation = () => {
@@ -18,82 +36,158 @@ export const useCreateAssociation = () => {
   const { executeWithIdempotency } = useIdempotentAssociation();
 
   return useMutation({
-    mutationFn: async (params: CreateAssociationParams) => {
-      console.log('🔧 useCreateAssociation - Creating association with params:', params);
-      
-      // Executar com idempotência e validação automática
-      const result = await executeWithIdempotency(
-        params.assetId,
-        'CREATE',
-        async () => {
-          // Mapear tipo de associação para association_id e status_id corretos
-          let associationId: number;
-          let statusId: number;
-          
-          switch (params.associationType) {
-            case 'ASSINATURA':
-              associationId = 2;
-              statusId = 3; // Status "ASSINATURA"
-              break;
-            case 'ALUGUEL':
-            default:
-              associationId = 1;
-              statusId = 2; // Status "ALUGADO"
-              break;
-          }
+    mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
+      console.log('[useCreateAssociation] Iniciando criação de associação com dados:', data);
 
-          console.log('📝 useCreateAssociation - Mapped association and status:', {
-            input: params.associationType,
-            mapped_association_id: associationId,
-            mapped_status_id: statusId
-          });
-
-          // Atualizar status do ativo
-          const { error: assetError } = await supabase
-            .from('assets')
-            .update({ status_id: statusId })
-            .eq('uuid', params.assetId);
-
-          if (assetError) throw assetError;
-
-          // Criar associação
-          const { data: assocData, error: assocError } = await supabase
-            .from('asset_client_assoc')
-            .insert({
-              asset_id: params.assetId,
-              client_id: params.clientId,
-              association_id: associationId,
-              entry_date: params.startDate,
-              notes: params.notes
-            })
-            .select()
-            .single();
-
-          if (assocError) throw assocError;
-
-          return assocData;
-        },
-        undefined, // associationId não é necessário para CREATE
-        'CREATE_ASSOCIATION'
-      );
-
-      if (result) {
-        console.log('✅ Association created successfully:', result);
-        toast.success('Associação criada com sucesso!');
+      // Validação de entrada mais rigorosa
+      if (!data.clientId || !data.associationTypeId || !data.startDate || !data.selectedAssets?.length) {
+        const errorMsg = 'Dados obrigatórios não fornecidos';
+        console.error('[useCreateAssociation] Erro de validação:', errorMsg);
+        throw new Error(errorMsg);
       }
 
-      return result;
+      // Garantir que startDate está no formato ISO completo
+      let formattedStartDate: string;
+      try {
+        const dateObj = new Date(data.startDate);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error('Data de início inválida');
+        }
+        formattedStartDate = dateObj.toISOString();
+        console.log('[useCreateAssociation] Data formatada:', formattedStartDate);
+      } catch (error) {
+        console.error('[useCreateAssociation] Erro ao formatar data:', error);
+        throw new Error('Formato de data inválido');
+      }
+
+      // Garantir que rentedDays seja numérico
+      const rentedDays = Number(data.generalConfig?.rentedDays) || 0;
+      console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
+
+      // Preparar dados para o RPC
+      const rpcData = {
+        p_client_id: data.clientId,
+        p_association_id: data.associationTypeId,
+        p_entry_date: formattedStartDate,
+        p_asset_ids: data.selectedAssets.map(asset => asset.id),
+        p_exit_date: data.endDate ? new Date(data.endDate).toISOString() : null,
+        p_notes: data.generalConfig?.notes || null,
+        p_ssid: data.generalConfig?.ssid || null,
+        p_pass: data.generalConfig?.password || null,
+        p_gb: data.generalConfig?.dataLimit || null
+      };
+
+      console.log('[useCreateAssociation] Dados preparados para RPC:', rpcData);
+
+      // Executar com idempotência
+      return executeWithIdempotency(
+        `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
+        async () => {
+          console.log('[useCreateAssociation] Chamando RPC add_assets_to_association...');
+          
+          const { data: result, error } = await supabase.rpc('add_assets_to_association', rpcData);
+
+          if (error) {
+            console.error('[useCreateAssociation] Erro do Supabase:', error);
+            
+            // Melhor tratamento de erro com detalhes específicos
+            const errorMessage = error.message || 'Erro desconhecido ao criar associação';
+            const errorDetails = {
+              code: error.code || 'UNKNOWN_ERROR',
+              hint: error.hint,
+              details: error.details,
+              supabase_error: error
+            };
+
+            console.error('[useCreateAssociation] Detalhes do erro:', errorDetails);
+            
+            throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
+          }
+
+          if (!result) {
+            console.error('[useCreateAssociation] RPC retornou resultado vazio');
+            throw new Error('Resposta vazia do servidor');
+          }
+
+          console.log('[useCreateAssociation] Resultado do RPC:', result);
+
+          // Verificar se houve sucesso
+          if (!result.success) {
+            const errorMsg = result.message || 'Erro ao criar associação';
+            const errorCode = result.error_code || 'UNKNOWN_ERROR';
+            
+            console.error('[useCreateAssociation] RPC indicou falha:', {
+              message: errorMsg,
+              error_code: errorCode,
+              details: result
+            });
+
+            // Criar erro com detalhes estruturados
+            const detailedError = new Error(errorMsg);
+            (detailedError as any).details = {
+              error_code: errorCode,
+              failed_assets: result.failed_assets || [],
+              inserted_count: result.inserted_count || 0,
+              failed_count: result.failed_count || 0,
+              total_processed: result.total_processed || 0
+            };
+            
+            throw detailedError;
+          }
+
+          return {
+            success: true,
+            message: result.message || 'Associação criada com sucesso',
+            details: {
+              inserted_count: result.inserted_count || 0,
+              failed_count: result.failed_count || 0,
+              total_processed: result.total_processed || 0,
+              inserted_ids: result.inserted_ids || [],
+              failed_assets: result.failed_assets || []
+            }
+          };
+        }
+      );
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[useCreateAssociation] Sucesso:', result);
+      
+      // Mostrar mensagem de sucesso detalhada
+      const successMessage = result.details 
+        ? `${result.message} (${result.details.inserted_count} ativos associados)`
+        : result.message;
+      
+      toast.success(successMessage);
+      
       // Invalidar queries relacionadas
-      queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['associations'] });
-      queryClient.invalidateQueries({ queryKey: ['available-assets'] });
-      queryClient.invalidateQueries({ queryKey: ['associations-list-optimized'] });
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error) => {
-      console.error('Error in useCreateAssociation:', error);
-      // O toast de erro já é mostrado pelo hook useIdempotentAssociation
+    onError: (error: any) => {
+      console.error('[useCreateAssociation] Erro capturado:', error);
+      
+      // Mostrar erro com detalhes técnicos quando disponível
+      let errorMessage = 'Erro ao criar associação';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.details) {
+        console.error('[useCreateAssociation] Detalhes técnicos do erro:', error.details);
+        
+        // Adicionar informações técnicas ao toast para debugging
+        if (error.details.error_code) {
+          errorMessage += ` (${error.details.error_code})`;
+        }
+        
+        if (error.details.failed_assets?.length > 0) {
+          errorMessage += ` - ${error.details.failed_assets.length} ativos falharam`;
+        }
+      }
+      
+      toast.error(errorMessage);
     }
   });
 };
