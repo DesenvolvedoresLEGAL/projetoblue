@@ -10,7 +10,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import * as XLSX from 'xlsx';
 import { assetService } from '@modules/assets/services/assetService';
-import useAssetsData from '@modules/assets/hooks/useAssetsData';
+import { useAssetsData } from '@modules/assets/hooks/useAssetsData';
 
 export const QuickActionsCard: React.FC = () => {
   const navigate = useNavigate();
