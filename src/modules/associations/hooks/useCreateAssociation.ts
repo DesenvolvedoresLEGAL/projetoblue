@@ -31,19 +31,6 @@ interface CreateAssociationResult {
   error_detail?: string;
 }
 
-// Interface para o resultado do RPC
-interface RPCResult {
-  success: boolean;
-  message: string;
-  inserted_count?: number;
-  failed_count?: number;
-  total_processed?: number;
-  inserted_ids?: number[];
-  failed_assets?: any[];
-  error_code?: string;
-  error_detail?: string;
-}
-
 export const useCreateAssociation = () => {
   const queryClient = useQueryClient();
   const { executeWithIdempotency } = useIdempotentAssociation();
@@ -149,28 +136,25 @@ export const useCreateAssociation = () => {
 
           console.log('[useCreateAssociation] Resultado do RPC:', result);
 
-          // Tratar result como RPCResult
-          const rpcResult = result as RPCResult;
-
           // Verificar se houve sucesso
-          if (!rpcResult.success) {
-            const errorMsg = rpcResult.message || 'Erro ao criar associação';
-            const errorCode = rpcResult.error_code || 'UNKNOWN_ERROR';
+          if (!result.success) {
+            const errorMsg = result.message || 'Erro ao criar associação';
+            const errorCode = result.error_code || 'UNKNOWN_ERROR';
             
             console.error('[useCreateAssociation] RPC indicou falha:', {
               message: errorMsg,
               error_code: errorCode,
-              details: rpcResult
+              details: result
             });
 
             // Criar erro com detalhes estruturados
             const detailedError = new Error(errorMsg);
             (detailedError as any).details = {
               error_code: errorCode,
-              failed_assets: rpcResult.failed_assets || [],
-              inserted_count: rpcResult.inserted_count || 0,
-              failed_count: rpcResult.failed_count || 0,
-              total_processed: rpcResult.total_processed || 0
+              failed_assets: result.failed_assets || [],
+              inserted_count: result.inserted_count || 0,
+              failed_count: result.failed_count || 0,
+              total_processed: result.total_processed || 0
             };
             
             throw detailedError;
@@ -178,13 +162,13 @@ export const useCreateAssociation = () => {
 
           return {
             success: true,
-            message: rpcResult.message || 'Associação criada com sucesso',
+            message: result.message || 'Associação criada com sucesso',
             details: {
-              inserted_count: rpcResult.inserted_count || 0,
-              failed_count: rpcResult.failed_count || 0,
-              total_processed: rpcResult.total_processed || 0,
-              inserted_ids: rpcResult.inserted_ids || [],
-              failed_assets: rpcResult.failed_assets || []
+              inserted_count: result.inserted_count || 0,
+              failed_count: result.failed_count || 0,
+              total_processed: result.total_processed || 0,
+              inserted_ids: result.inserted_ids || [],
+              failed_assets: result.failed_assets || []
             }
           };
         }

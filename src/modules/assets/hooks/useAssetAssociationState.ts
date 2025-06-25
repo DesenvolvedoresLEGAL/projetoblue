@@ -18,15 +18,10 @@ export const useAssetAssociationState = () => {
         const parsedState = JSON.parse(savedState);
         console.log('🔄 Restored asset association state from sessionStorage:', parsedState);
 
-        // Garantir que generalConfig tenha os tipos corretos
         if (parsedState.generalConfig) {
           parsedState.generalConfig.startDate = new Date(parsedState.generalConfig.startDate);
           if (parsedState.generalConfig.endDate) {
             parsedState.generalConfig.endDate = new Date(parsedState.generalConfig.endDate);
-          }
-          // Garantir que associationType seja number
-          if (typeof parsedState.generalConfig.associationType === 'string') {
-            parsedState.generalConfig.associationType = parsedState.generalConfig.associationType === 'ALUGUEL' ? 1 : 2;
           }
         }
 
@@ -43,7 +38,7 @@ export const useAssetAssociationState = () => {
       isLoading: false,
       selectedClient: null,
       generalConfig: {
-        associationType: 1, // Padrão: ALUGUEL (ID = 1) - sempre number
+        associationType: 1, // Padrão: ALUGUEL (ID = 1)
         startDate: new Date(),
         endDate: undefined,
         notes: '',
@@ -70,7 +65,7 @@ export const useAssetAssociationState = () => {
   };
 
   const setSelectedClient = (client: Client | null) => {
-    console.log('👤 Setting selected client:', client?.nome || 'null');
+    console.log('👤 Setting selected client:', client);
     setState(prevState => ({ ...prevState, selectedClient: client }));
   };
 
@@ -81,12 +76,6 @@ export const useAssetAssociationState = () => {
 
   const setGeneralConfig = (config: AssociationGeneralConfig | null) => {
     console.log('⚙️ Setting general config:', config);
-    
-    // Garantir que associationType seja sempre number
-    if (config && typeof config.associationType === 'string') {
-      config.associationType = config.associationType === 'ALUGUEL' ? 1 : 2;
-    }
-    
     setState(prevState => ({ ...prevState, generalConfig: config }));
   };
 
@@ -98,10 +87,7 @@ export const useAssetAssociationState = () => {
       case 'assets':
         return state.selectedAssets.length > 0;
       case 'summary':
-        return !!(state.selectedClient && 
-                  state.selectedAssets.length > 0 && 
-                  state.generalConfig &&
-                  typeof state.generalConfig.associationType === 'number');
+        return !!(state.selectedClient && state.selectedAssets.length > 0 && state.generalConfig);
       default:
         return false;
     }
@@ -115,7 +101,7 @@ export const useAssetAssociationState = () => {
       isLoading: false,
       selectedClient: null,
       generalConfig: {
-        associationType: 1, // Sempre number
+        associationType: 1,
         startDate: new Date(),
         endDate: undefined,
         notes: '',
