@@ -4,7 +4,7 @@ import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
 import type { AssetCreateParams, AssetUpdateParams } from '@/modules/assets/services/asset/types';
 import { showFriendlyError } from '@/utils/errorTranslator';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { AssetContext, AssetContextProps } from './AssetContext';
 
 const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -202,12 +202,4 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const useAssets = () => {
-  const context = useContext(AssetContext);
-  if (!context) {
-    throw new Error('useAssets must be used within an AssetProvider');
-  }
-  return context;
-};
-
-export { AssetProvider, useAssets };
+export { AssetProvider };

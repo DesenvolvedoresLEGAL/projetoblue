@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAssets } from "@/context/AssetProvider";
+import { useAssets } from "@/context/AssetContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Asset } from '@/types/asset';

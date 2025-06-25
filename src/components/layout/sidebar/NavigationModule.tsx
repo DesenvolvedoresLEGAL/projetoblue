@@ -3,7 +3,7 @@ import { useState, ReactNode } from "react";
 import { ChevronDown, ChevronRight, LucideIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/auth";
 
 interface NavigationModuleProps {

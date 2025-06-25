@@ -9,7 +9,7 @@ import { ReferralsList } from '@modules/bits/components/components/ReferralsList
 import { UserBadgesList } from '@modules/bits/components/components/UserBadgesList';
 import { usePoints, useReferrals, useBadges, useLevels } from '@modules/bits/hooks/useBits';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { ChevronRight, Award, UserPlus } from 'lucide-react';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 

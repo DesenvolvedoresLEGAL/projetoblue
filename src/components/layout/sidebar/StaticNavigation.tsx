@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, FileChartColumnIncreasing, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";

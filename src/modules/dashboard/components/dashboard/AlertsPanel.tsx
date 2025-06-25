@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAssets } from "@/context/AssetProvider";
+import { useAssets } from "@/context/AssetContext";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 

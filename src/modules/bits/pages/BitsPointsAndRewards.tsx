@@ -7,7 +7,7 @@ import { RewardsList } from '@modules/bits/components/components/RewardsList';
 import { LevelProgress } from '@modules/bits/components/components/LevelProgress';
 import { UserBadgesList } from '@modules/bits/components/components/UserBadgesList';
 import { usePoints, useRewards, useBadges, useLevels } from '@modules/bits/hooks/useBits';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';

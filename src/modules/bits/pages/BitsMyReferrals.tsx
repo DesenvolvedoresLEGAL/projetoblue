@@ -4,7 +4,7 @@ import { ReferralsList } from '@modules/bits/components/components/ReferralsList
 import { ReferralLink } from '@modules/bits/components/components/ReferralLink';
 import { useReferrals } from '@modules/bits/hooks/useBits';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
