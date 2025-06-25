@@ -71,7 +71,7 @@ const AssetsInventory = () => {
     setSearchTerm(value);
     setCurrentPage(1);
     setShouldFetch(true);
-  }, []);
+  }, [setSearchTerm]);
   
   const handleFilterChange = useCallback((type: string, value: string) => {
     console.log(`Filtro ${type} alterado para:`, value);
@@ -91,7 +91,7 @@ const AssetsInventory = () => {
     updateURLParams({
       [type]: value
     });
-  }, [updateURLParams]);
+  }, [setFilterType, setFilterStatus, setFilterManufacturer, updateURLParams]);
 
   const handleAssetUpdated = useCallback(() => {
     console.log('Asset atualizado, invalidando cache e recarregando dados...');
