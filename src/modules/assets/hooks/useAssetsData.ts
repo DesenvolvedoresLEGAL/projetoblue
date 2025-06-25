@@ -1,6 +1,6 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/types/supabase';
 
 export interface Manufacturer {
   id: number;
@@ -46,8 +46,6 @@ export interface AssetWithRelations {
   status: Status;
   solucao: Solution;
 }
-
-type DatabaseAsset = Database['public']['Tables']['assets']['Row'];
 
 interface UseAssetsDataParams {
   searchTerm?: string;
@@ -221,6 +219,10 @@ export const useAssetsData = ({
       const mappedAssets = (assets || []).map((dbAsset: any) => ({
         ...dbAsset,
         rented_days: dbAsset.rented_days || 0, // Garantir que rented_days existe
+        admin_user: dbAsset.admin_user || 'admin',
+        admin_pass: dbAsset.admin_pass || '',
+        ssid_atual: dbAsset.ssid_atual || '',
+        pass_atual: dbAsset.pass_atual || '',
         solucao: {
           id: dbAsset.solucao?.id || 0,
           name: dbAsset.solucao?.solution || 'Desconhecido'

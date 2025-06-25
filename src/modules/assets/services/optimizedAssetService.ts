@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
 
@@ -39,6 +40,10 @@ class OptimizedAssetService {
         iccid,
         radio,
         rented_days,
+        admin_user,
+        admin_pass,
+        ssid_atual,
+        pass_atual,
         created_at,
         updated_at,
         solution_id,
@@ -58,7 +63,11 @@ class OptimizedAssetService {
 
     const mappedAssets = (data || []).map(asset => ({
       ...asset,
-      rented_days: asset.rented_days || 0, // Garantir rented_days
+      rented_days: asset.rented_days || 0,
+      admin_user: asset.admin_user || 'admin',
+      admin_pass: asset.admin_pass || '',
+      ssid_atual: asset.ssid_atual || '',
+      pass_atual: asset.pass_atual || '',
       solucao: {
         id: asset.solucao?.id || 0,
         name: asset.solucao?.solution || 'Desconhecido'
@@ -135,6 +144,10 @@ class OptimizedAssetService {
         iccid,
         radio,
         rented_days,
+        admin_user,
+        admin_pass,
+        ssid_atual,
+        pass_atual,
         created_at,
         updated_at,
         solution_id,
@@ -154,7 +167,11 @@ class OptimizedAssetService {
 
     const mappedAssets = (data || []).map(asset => ({
       ...asset,
-      rented_days: asset.rented_days || 0, // Garantir rented_days
+      rented_days: asset.rented_days || 0,
+      admin_user: asset.admin_user || 'admin',
+      admin_pass: asset.admin_pass || '',
+      ssid_atual: asset.ssid_atual || '',
+      pass_atual: asset.pass_atual || '',
       solucao: {
         id: asset.solucao?.id || 0,
         name: asset.solucao?.solution || 'Desconhecido'

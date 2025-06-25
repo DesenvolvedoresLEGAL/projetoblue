@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RegisterAssetForm } from './assets/register/RegisterAssetForm';
+import RegisterAssetForm from './assets/register/RegisterAssetForm';
 
 const RegisterAsset = () => {
   return (

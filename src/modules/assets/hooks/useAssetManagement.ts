@@ -1,5 +1,6 @@
+
 import { useState, useCallback } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/utils/toast';
 import { Asset, AssetStatus, SolutionType } from '@/types/asset';
@@ -110,7 +111,7 @@ export const useAssetManagement = () => {
       status: dbAsset.status?.status || 'Desconhecido',
       statusId: dbAsset.status_id,
       notes: dbAsset.notes || '',
-      solucao: dbAsset.solucao?.solution || 'Desconhecido',
+      solucao: (dbAsset.solucao?.solution || 'ROTEADOR') as SolutionType,
       marca: dbAsset.manufacturer?.name || 'Desconhecido',
       modelo: dbAsset.model || '',
       serial_number: dbAsset.serial_number || '',
@@ -124,11 +125,11 @@ export const useAssetManagement = () => {
         phoneNumber: dbAsset.line_number?.toString() || '',
         carrier: 'Operadora',
         ...baseAsset,
-        solucao: dbAsset.solucao?.solution || 'CHIP' as any,
+        solucao: 'CHIP' as SolutionType,
       };
-    } else { // EQUIPMENT
+    } else { // ROTEADOR
       return {
-        type: 'EQUIPMENT' as const,
+        type: 'ROTEADOR' as const,
         uniqueId: dbAsset.uuid,
         brand: dbAsset.manufacturer?.name || 'Desconhecido',
         model: dbAsset.model || '',
@@ -138,7 +139,7 @@ export const useAssetManagement = () => {
         adminUser: dbAsset.admin_user || '',
         adminPassword: dbAsset.admin_pass || '',
         ...baseAsset,
-        solucao: dbAsset.solucao?.solution || 'EQUIPMENT' as any,
+        solucao: (dbAsset.solucao?.solution || 'ROTEADOR') as SolutionType,
       };
     }
   };
@@ -188,4 +189,80 @@ export const useAssetManagement = () => {
     isDeletingAsset: isDeleting,
     mapDatabaseAssetToAsset
   };
+};
+
+// Hook para manufacturers
+export const useManufacturers = () => {
+  return useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+};
+
+// Hook para asset solutions
+export const useAssetSolutions = () => {
+  return useQuery({
+    queryKey: ['asset-solutions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_solutions')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+};
+
+// Hook para status records
+export const useStatusRecords = () => {
+  return useQuery({
+    queryKey: ['asset-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('asset_status')
+        .select('*')
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+};
+
+// Hook para criar asset
+export const useCreateAsset = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (assetData: CreateAssetData) => {
+      const { data, error } = await supabase
+        .from('assets')
+        .insert([assetData])
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Asset criado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['assets'] });
+    },
+    onError: (error: any) => {
+      console.error('Erro ao criar asset:', error);
+      toast.error('Erro ao criar asset');
+    },
+  });
 };

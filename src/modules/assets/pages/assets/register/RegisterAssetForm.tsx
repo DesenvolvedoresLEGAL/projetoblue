@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "@/utils/toast";
 import {
   Form,
   FormControl,
@@ -16,10 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { useSolutionsData } from '@modules/solutions/hooks/useSolutionsData';
-import { useManufacturersData } from '@modules/manufacturers/hooks/useManufacturersData';
-import { useAssetStatusesData } from '@modules/assets/hooks/useAssetStatusesData';
-import { usePlansData } from '@modules/plans/hooks/usePlansData';
+import { useAssetSolutions, useManufacturers, useStatusRecords } from '@modules/assets/hooks/useAssetManagement';
 import { CreateAssetData } from '@modules/assets/services/asset/types';
 import { assetService } from '@modules/assets/services/assetService';
 import { AssetType } from '@/types/asset';
@@ -48,13 +45,11 @@ const formSchema = z.object({
 
 const RegisterAssetForm: React.FC = () => {
   const [solution, setSolution] = useState<number | null>(null);
-  const [assetType, setAssetType] = useState<'CHIP' | 'EQUIPMENT'>('EQUIPMENT');
+  const [assetType, setAssetType] = useState<'CHIP' | 'ROTEADOR'>('ROTEADOR');
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { solutions, isLoading: isLoadingSolutions } = useSolutionsData();
-  const { manufacturers, isLoading: isLoadingManufacturers } = useManufacturersData();
-  const { assetStatuses, isLoading: isLoadingAssetStatuses } = useAssetStatusesData();
-  const { plans, isLoading: isLoadingPlans } = usePlansData();
+  const { data: solutions, isLoading: isLoadingSolutions } = useAssetSolutions();
+  const { data: manufacturers, isLoading: isLoadingManufacturers } = useManufacturers();
+  const { data: assetStatuses, isLoading: isLoadingAssetStatuses } = useStatusRecords();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -98,28 +93,20 @@ const RegisterAssetForm: React.FC = () => {
       };
 
       await assetService.createAsset(assetData);
-      toast({
-        title: "Sucesso",
-        description: "Ativo criado com sucesso!",
-      });
+      toast.success('Ativo criado com sucesso!');
       navigate('/assets');
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error.message || "Erro ao criar ativo.",
-      });
+      toast.error(error.message || 'Erro ao criar ativo.');
     }
   };
 
   const handleSolutionChange = (solutionId: string) => {
     const newSolutionId = parseInt(solutionId);
     setSolution(newSolutionId);
-    setFormData(prev => ({ ...prev, solution_id: newSolutionId }));
     
     // Determinar o tipo baseado na solução selecionada
-    const selectedSol = solutions.find(s => s.id === newSolutionId);
-    let newType: 'CHIP' | 'EQUIPMENT' = 'EQUIPMENT';
+    const selectedSol = solutions?.find(s => s.id === newSolutionId);
+    let newType: 'CHIP' | 'ROTEADOR' = 'ROTEADOR';
     
     if (selectedSol?.solution.toLowerCase().includes('chip') || 
         selectedSol?.solution.toLowerCase() === 'vivo') {
@@ -128,24 +115,6 @@ const RegisterAssetForm: React.FC = () => {
     
     setAssetType(newType);
     console.log('Tipo de ativo determinado:', newType, 'para solução:', selectedSol?.solution);
-  };
-
-  const setFormData = (updater: (prevState: z.infer<typeof formSchema>) => z.infer<typeof formSchema>) => {
-    form.setValue("solution_id", updater(form.getValues()).solution_id);
-    form.setValue("status_id", updater(form.getValues()).status_id);
-    form.setValue("manufacturer_id", updater(form.getValues()).manufacturer_id);
-    form.setValue("plan_id", updater(form.getValues()).plan_id);
-    form.setValue("iccid", updater(form.getValues()).iccid);
-    form.setValue("line_number", updater(form.getValues()).line_number);
-    form.setValue("serial_number", updater(form.getValues()).serial_number);
-    form.setValue("model", updater(form.getValues()).model);
-    form.setValue("admin_pass", updater(form.getValues()).admin_pass);
-    form.setValue("radio", updater(form.getValues()).radio);
-    form.setValue("admin_user", updater(form.getValues()).admin_user);
-    form.setValue("rented_days", updater(form.getValues()).rented_days);
-    form.setValue("notes", updater(form.getValues()).notes);
-    form.setValue("ssid_atual", updater(form.getValues()).ssid_atual);
-    form.setValue("pass_atual", updater(form.getValues()).pass_atual);
   };
 
   return (
@@ -230,31 +199,6 @@ const RegisterAssetForm: React.FC = () => {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="plan_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Plano</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um plano" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {plans?.map((plan) => (
-                        <SelectItem key={plan.id} value={plan.id.toString()}>
-                          {plan.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
           {assetType === 'CHIP' ? (
@@ -280,7 +224,7 @@ const RegisterAssetForm: React.FC = () => {
                   <FormItem>
                     <FormLabel>Número da Linha</FormLabel>
                     <FormControl>
-                      <Input placeholder="Número da linha" type="number" {...field} />
+                      <Input placeholder="Número da linha" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
