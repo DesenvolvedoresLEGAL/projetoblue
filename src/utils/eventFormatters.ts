@@ -61,10 +61,9 @@ export const generateStandardMessage = (event: StandardizedEvent): string => {
     case 'deletion':
       return `Remoção: ${assetType} ${assetName} foi removido do sistema`;
       
-    case 'association': {
+    case 'association':
       const clientInfo = client ? ` ao cliente ${client}` : '';
       return `Associação: ${assetType} ${assetName} foi associado${clientInfo}`;
-    }
       
     case 'status_change':
       if (status?.from && status?.to) {
@@ -273,22 +272,20 @@ export const improveEventMessage = (event: any): string => {
     case 'ASSET_CRIADO':
       return `Cadastro: ${event.assetType} ${assetName} foi cadastrado no sistema`;
       
-    case 'ASSOCIATION_CREATED': {
+    case 'ASSOCIATION_CREATED':
       const clientInfo = clientName ? ` para ${clientName}` : '';
       return `Associação: ${event.assetType} ${assetName} foi associado${clientInfo}`;
-    }
       
     case 'ASSOCIATION_REMOVED':
       return `Desassociação: ${event.assetType} ${assetName} foi desassociado`;
       
-    case 'STATUS_UPDATED': {
+    case 'STATUS_UPDATED':
       const oldStatus = event.old_status?.status || '';
       const newStatus = event.new_status?.status || '';
       if (oldStatus && newStatus) {
         return `Status: ${event.assetType} ${assetName} mudou de "${oldStatus}" para "${newStatus}"`;
       }
       return `Status: ${event.assetType} ${assetName} teve status atualizado`;
-    }
       
     case 'ASSET_SOFT_DELETE':
       return `Remoção: ${event.assetType} ${assetName} foi removido do sistema`;

@@ -108,7 +108,7 @@ export const fetchTickets = async (filters?: Partial<Ticket>): Promise<Ticket[]>
   
   return mockTickets.filter(ticket => {
     return Object.entries(filters).every(([key, value]) => {
-      // @ts-expect-error dynamic property access
+      // @ts-ignore - We're doing a dynamic filter
       return ticket[key] === value;
     });
   });
