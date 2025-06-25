@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { Wifi } from "lucide-react";
+import { Wifi, Lock, User, Key } from 'lucide-react';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import { CopyableField } from './CopyableField';
 
 interface AssetNetworkConfigProps {

@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/utils/toast";
@@ -414,7 +413,7 @@ function mapDbToAsset(dbAsset: any): Asset {
     id: String(dbAsset.uuid || ''),
     uuid: String(dbAsset.uuid || ''),
     registrationDate: String(dbAsset.created_at || ''),
-    status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as const,
+    status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as AssetStatus,
     statusId: dbAsset.status_id,
     notes: String(dbAsset.notes || ''),
     solucao: String((dbAsset.asset_solutions as any)?.solution || ''),
@@ -428,7 +427,7 @@ function mapDbToAsset(dbAsset: any): Asset {
     // CHIP asset
     return {
       ...baseAsset,
-      type: "CHIP",
+      type: "CHIP" as const,
       iccid: String(dbAsset.iccid || ''),
       phoneNumber: String(dbAsset.line_number || ''),
       carrier: "Unknown",
@@ -437,7 +436,7 @@ function mapDbToAsset(dbAsset: any): Asset {
     // ROUTER asset
     return {
       ...baseAsset,
-      type: "ROTEADOR",
+      type: "ROTEADOR" as const,
       uniqueId: String(dbAsset.uuid || ''),
       brand: String((dbAsset.manufacturers as any)?.name || ''),
       model: String(dbAsset.model || ''),

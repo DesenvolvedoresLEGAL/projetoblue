@@ -1,7 +1,8 @@
-
 import React from 'react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { Calendar, Package, Hash, User } from 'lucide-react';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import AssetStatusBadge from '../AssetStatusBadge';
+import { capitalize } from '@/utils/stringUtils';
 
 interface AssetBasicInfoProps {
   asset: AssetWithRelations;

@@ -1,9 +1,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Asset, ChipAsset, EquipamentAsset } from '@/types/asset';
+import { Asset, ChipAsset, EquipamentAsset, AssetStatus } from '@/types/asset';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 
-// Estrutura de dados para mapeamento de tipos
+// Database structure interface  
 interface DatabaseAsset {
   uuid: string;
   model: string;
@@ -41,18 +42,18 @@ interface DatabaseAsset {
   };
 }
 
-// Função auxiliar para transformar dados do banco em tipos Asset
+// Transform database record to frontend Asset type
 const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
-  // Determinar o tipo baseado no solution_id
+  // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
 
   if (isChip) {
     const chipAsset: ChipAsset = {
       id: dbAsset.uuid,
       uuid: dbAsset.uuid,
-      type: 'CHIP',
+      type: 'CHIP' as const,
       registrationDate: dbAsset.created_at,
-      status: (dbAsset.status?.status || 'DISPONÍVEL') as any,
+      status: (dbAsset.status?.status || 'DISPONÍVEL') as AssetStatus,
       statusId: dbAsset.status_id,
       notes: dbAsset.notes || '',
       solucao: dbAsset.solucao?.solution || '',
@@ -61,16 +62,16 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       serial_number: dbAsset.serial_number || '',
       iccid: dbAsset.iccid || '',
       phoneNumber: dbAsset.line_number?.toString() || '',
-      carrier: 'Unknown', // Campo padrão para chips
+      carrier: 'Unknown', // Default for chips
     };
     return chipAsset;
   } else {
     const equipmentAsset: EquipamentAsset = {
       id: dbAsset.uuid,
       uuid: dbAsset.uuid,
-      type: 'ROTEADOR',  // Assumindo que não-chips são roteadores
+      type: 'ROTEADOR' as const,  
       registrationDate: dbAsset.created_at,
-      status: (dbAsset.status?.status || 'DISPONÍVEL') as any,
+      status: (dbAsset.status?.status || 'DISPONÍVEL') as AssetStatus,
       statusId: dbAsset.status_id,
       notes: dbAsset.notes || '',
       solucao: dbAsset.solucao?.solution || '',
@@ -80,7 +81,7 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
       radio: dbAsset.radio || '',
       uniqueId: dbAsset.uuid,
       brand: dbAsset.manufacturer?.name || '',
-      model: dbAsset.model || '',  // Usando 'model' que existe no EquipamentAsset
+      model: dbAsset.model || '',
       ssid: dbAsset.ssid_atual || '',
       password: dbAsset.pass_atual || '',
       serialNumber: dbAsset.serial_number || '',
@@ -91,7 +92,47 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
   }
 };
 
-// Hook principal para buscar dados de ativos
+// Transform database record to AssetWithRelations
+const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
+  return {
+    uuid: dbAsset.uuid,
+    model: dbAsset.model,
+    rented_days: dbAsset.rented_days,
+    serial_number: dbAsset.serial_number,
+    line_number: dbAsset.line_number,
+    iccid: dbAsset.iccid,
+    radio: dbAsset.radio,
+    created_at: dbAsset.created_at,
+    updated_at: dbAsset.updated_at,
+    admin_user: dbAsset.admin_user,
+    admin_pass: dbAsset.admin_pass,
+    notes: dbAsset.notes,
+    ssid_atual: dbAsset.ssid_atual,
+    pass_atual: dbAsset.pass_atual,
+    ssid_fabrica: dbAsset.ssid_fabrica,
+    pass_fabrica: dbAsset.pass_fabrica,
+    admin_user_fabrica: dbAsset.admin_user_fabrica,
+    admin_pass_fabrica: dbAsset.admin_pass_fabrica,
+    plan_id: dbAsset.plan_id,
+    manufacturer_id: dbAsset.manufacturer_id,
+    status_id: dbAsset.status_id,
+    solution_id: dbAsset.solution_id,
+    solucao: {
+      id: dbAsset.solucao?.id || dbAsset.solution_id,
+      name: dbAsset.solucao?.solution || 'Unknown'
+    },
+    manufacturer: {
+      id: dbAsset.manufacturer?.id || dbAsset.manufacturer_id,
+      name: dbAsset.manufacturer?.name || 'Unknown'
+    },
+    status: {
+      id: dbAsset.status?.id || dbAsset.status_id,
+      name: dbAsset.status?.status || 'DISPONÍVEL'
+    }
+  };
+};
+
+// Hook to fetch all assets
 export const useAssetsData = () => {
   return useQuery({
     queryKey: ['assets-data'],
@@ -135,12 +176,61 @@ export const useAssetsData = () => {
 
       return (data || []).map(transformDatabaseAsset);
     },
-    staleTime: 30 * 1000, // 30 segundos
-    gcTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-// Hook para buscar um ativo específico
+// Hook to fetch assets with relations (for components that need full data)
+export const useAssetsWithRelations = () => {
+  return useQuery({
+    queryKey: ['assets-with-relations'],
+    queryFn: async (): Promise<AssetWithRelations[]> => {
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          uuid,
+          model,
+          rented_days,
+          serial_number,
+          line_number,
+          iccid,
+          radio,
+          created_at,
+          updated_at,
+          admin_user,
+          admin_pass,
+          notes,
+          ssid_atual,
+          pass_atual,
+          ssid_fabrica,
+          pass_fabrica,
+          admin_user_fabrica,
+          admin_pass_fabrica,
+          plan_id,
+          manufacturer_id,
+          status_id,
+          solution_id,
+          solucao:asset_solutions!inner(id, solution),
+          manufacturer:manufacturers(id, name),
+          status:asset_status!inner(id, status)
+        `)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assets with relations:', error);
+        throw error;
+      }
+
+      return (data || []).map(transformToAssetWithRelations);
+    },
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook to fetch single asset
 export const useAssetData = (assetId: string) => {
   return useQuery({
     queryKey: ['asset-data', assetId],
@@ -185,7 +275,7 @@ export const useAssetData = (assetId: string) => {
         throw error;
       }
 
-      return data ? transformDatabaseAsset(data as DatabaseAsset) : null;
+      return data ? transformDatabaseAsset(data as unknown as DatabaseAsset) : null;
     },
     enabled: !!assetId,
     staleTime: 30 * 1000,
@@ -193,7 +283,7 @@ export const useAssetData = (assetId: string) => {
   });
 };
 
-// Hook para buscar ativos com filtros específicos
+// Hook to fetch filtered assets
 export const useFilteredAssetsData = (filters: {
   type?: 'CHIP' | 'ROTEADOR';
   status?: string;
@@ -233,7 +323,7 @@ export const useFilteredAssetsData = (filters: {
         `)
         .is('deleted_at', null);
 
-      // Aplicar filtros
+      // Apply filters
       if (filters.type === 'CHIP') {
         query = query.eq('solution_id', 11);
       } else if (filters.type === 'ROTEADOR') {
@@ -261,7 +351,7 @@ export const useFilteredAssetsData = (filters: {
   });
 };
 
-// Hook para buscar estatísticas de ativos
+// Hook to fetch asset stats
 export const useAssetsStats = () => {
   return useQuery({
     queryKey: ['assets-stats'],
@@ -280,13 +370,16 @@ export const useAssetsStats = () => {
         total: data?.length || 0,
         chips: data?.filter(a => a.solution_id === 11).length || 0,
         routers: data?.filter(a => a.solution_id !== 11).length || 0,
-        available: data?.filter(a => a.status_id === 1).length || 0, // Assumindo que status_id 1 = disponível
-        rented: data?.filter(a => a.status_id === 2).length || 0, // Assumindo que status_id 2 = alugado
+        available: data?.filter(a => a.status_id === 1).length || 0, // Assuming status_id 1 = available
+        rented: data?.filter(a => a.status_id === 2).length || 0, // Assuming status_id 2 = rented
       };
 
       return stats;
     },
-    staleTime: 60 * 1000, // 1 minuto
+    staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000,
   });
 };
+
+// Export the AssetWithRelations type for other components
+export type { AssetWithRelations };

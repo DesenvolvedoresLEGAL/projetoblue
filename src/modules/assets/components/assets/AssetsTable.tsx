@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Package, Calendar, Hash, Radio, Smartphone, Router } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import AssetStatusBadge from './AssetStatusBadge';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import AssetActions from './AssetActions';
 import { formatPhoneNumber } from '@/utils/formatters';
 import { capitalize } from '@/utils/stringUtils';

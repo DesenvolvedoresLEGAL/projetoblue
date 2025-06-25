@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import { AssetAssociation } from '@modules/assets/services/asset/associationQueries';
 
 interface AssetAssociationWarningDialogProps {

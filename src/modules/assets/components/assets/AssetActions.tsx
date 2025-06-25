@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import AssetDetailsDialog from './AssetDetailsDialog';
 import AssetFullDataDialog from './AssetFullDataDialog';
 import EditAssetDialog from './EditAssetDialog';

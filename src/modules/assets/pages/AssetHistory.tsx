@@ -1,188 +1,113 @@
 
-import React, { useState, useMemo } from 'react';
-import { StandardPageHeader } from "@/components/ui/standard-page-header";
-import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
-import { StandardStatusBadge } from "@/components/ui/standard-status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { History, Search, Filter, Calendar, User, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { AssetHistoryEntry } from '@/types/assetHistory';
-import { History, RefreshCw, Calendar, User, Settings, Edit } from "lucide-react";
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-interface HistoryFilters {
-  search: string;
-  eventType: string;
-  dateFrom: string;
-  dateTo: string;
-}
-
-interface LogDetails {
-  line_number?: string | number;
-  radio?: string;
-  asset_id?: string;
-  solution_name?: string;
-  solution?: string;
-  username?: string;
-  event_description?: string;
-  old_status_name?: string;
-  new_status_name?: string;
-}
+import { AssetHistoryEntry } from '@/types/assetHistory';
 
 const AssetHistory = () => {
-  const [filters, setFilters] = useState<HistoryFilters>({
-    search: '',
-    eventType: 'all',
-    dateFrom: '',
-    dateTo: ''
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
-  // Buscar logs de ativos
-  const { data: logs = [], isLoading, refetch } = useQuery<AssetHistoryEntry[]>({
-    queryKey: ['asset-logs', filters],
+  // Query to fetch asset history
+  const { data: historyData = [], isLoading, error } = useQuery({
+    queryKey: ['asset-history'],
     queryFn: async (): Promise<AssetHistoryEntry[]> => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('asset_logs')
-        .select(`
-          *
-        `)
-        .order('date', { ascending: false })
-        .limit(100);
-
-      // Aplicar filtros
-      if (filters.search.trim()) {
-        // Buscar em detalhes JSON
-        query = query.or(
-          `event.ilike.%${filters.search}%,` +
-          `details->>line_number.ilike.%${filters.search}%,` +
-          `details->>radio.ilike.%${filters.search}%`
-        );
-      }
-
-      if (filters.eventType && filters.eventType !== 'all') {
-        query = query.eq('event', filters.eventType);
-      }
-
-      if (filters.dateFrom) {
-        query = query.gte('date', filters.dateFrom);
-      }
-
-      if (filters.dateTo) {
-        query = query.lte('date', filters.dateTo + 'T23:59:59');
-      }
-
-      const { data, error } = await query;
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Erro ao buscar logs:', error);
+        console.error('Error fetching asset history:', error);
         throw error;
       }
 
-      return data || [];
-    }
+      // Transform the data to match AssetHistoryEntry interface
+      return (data || []).map((row: any): AssetHistoryEntry => ({
+        id: row.id,
+        assoc_id: row.assoc_id,
+        date: row.date,
+        event: row.event,
+        details: (row.details as Record<string, unknown>) || {},
+        status_before_id: row.status_before_id,
+        status_after_id: row.status_after_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        deleted_at: row.deleted_at,
+      }));
+    },
   });
 
-  // Buscar tipos de eventos únicos
-  const { data: eventTypes = [] } = useQuery({
-    queryKey: ['event-types'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('asset_logs')
-        .select('event')
-        .not('event', 'is', null);
-
-      if (error) throw error;
-
-      const uniqueEvents = [...new Set(data?.map(log => log.event) || [])];
-      return uniqueEvents.sort();
-    }
+  // Filter and paginate data
+  const filteredData = historyData.filter((entry) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      entry.event?.toLowerCase().includes(searchLower) ||
+      entry.details?.description?.toString().toLowerCase().includes(searchLower) ||
+      entry.id.toString().includes(searchLower)
+    );
   });
 
-  const handleFilterChange = (key: keyof HistoryFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      eventType: 'all',
-      dateFrom: '',
-      dateTo: ''
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
-  const formatEvent = (event: string) => {
-    const eventMap: Record<string, string> = {
-      'ASSET_CRIADO': 'Ativo Criado',
-      'STATUS_UPDATED': 'Status Atualizado',
-      'ASSOCIATION_CREATED': 'Associação Criada',
-      'ASSOCIATION_REMOVED': 'Associação Removida',
-      'ASSOCIATION_STATUS_UPDATED': 'Status da Associação Atualizado',
-      'INCONSISTENCY_CORRECTED': 'Inconsistência Corrigida',
-      'ASSET_SOFT_DELETE': 'Ativo Removido'
-    };
-    return eventMap[event] || event;
-  };
-
-  const getAssetIdentifier = (details: LogDetails | null): string => {
-    if (!details || typeof details !== 'object') return 'N/A';
-    
-    if (details.line_number) {
-      return `Linha: ${details.line_number}`;
-    }
-    if (details.radio) {
-      return `Rádio: ${details.radio}`;
-    }
-    if (details.asset_id) {
-      return `ID: ${details.asset_id.substring(0, 8)}...`;
-    }
-    return 'N/A';
-  };
-
-  const getUserInfo = (details: LogDetails | null): string => {
-    if (!details || typeof details !== 'object') return 'Sistema';
-    
-    if (details.username && details.username !== 'system') {
-      return details.username;
-    }
-    return 'Sistema';
-  };
-
-  const getEventIcon = (event: string) => {
-    switch (event) {
-      case 'STATUS_UPDATED':
-      case 'ASSOCIATION_STATUS_UPDATED':
-        return <Edit className="h-3 w-3" />;
-      case 'ASSET_CRIADO':
-        return <Calendar className="h-3 w-3" />;
+  const getEventBadgeVariant = (event: string | undefined) => {
+    switch (event?.toLowerCase()) {
+      case 'created':
+      case 'criado':
+        return 'default';
+      case 'updated':
+      case 'atualizado':
+        return 'secondary';
+      case 'deleted':
+      case 'excluído':
+        return 'destructive';
+      case 'associated':
+      case 'associado':
+        return 'default';
+      case 'disassociated':
+      case 'desassociado':
+        return 'outline';
       default:
-        return <Settings className="h-3 w-3" />;
+        return 'secondary';
     }
   };
-
-  const filteredLogs = useMemo(() => {
-    return logs;
-  }, [logs]);
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <StandardPageHeader
-          icon={History}
-          title="Histórico de Ativos"
-          description="Auditoria e rastreabilidade completa de todas as operações do sistema"
-        />
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center space-y-2">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-legal-primary dark:text-legal-secondary" />
-            <p className="text-muted-foreground font-neue-haas">Carregando histórico...</p>
-          </div>
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-legal-primary mx-auto mb-4"></div>
+          <p>Carregando histórico...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center text-red-600">
+          <p>Erro ao carregar histórico de ativos</p>
         </div>
       </div>
     );
@@ -190,221 +115,115 @@ const AssetHistory = () => {
 
   return (
     <div className="space-y-6">
-      <StandardPageHeader
-        icon={History}
-        title="Histórico de Ativos"
-        description="Auditoria e rastreabilidade completa de todas as operações do sistema"
-      >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          className="flex items-center gap-2 border-legal-primary/30 text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary/30 dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-legal-dark transition-all duration-200 shadow-legal"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </Button>
-      </StandardPageHeader>
-
-      <StandardFiltersCard title="Buscar e Filtrar Histórico">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Busca geral */}
-          <div className="space-y-2">
-            <Label htmlFor="search" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Buscar</Label>
-            <Input
-              id="search"
-              placeholder="Buscar por rádio, linha ou evento..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
-            />
-          </div>
-
-          {/* Tipo de evento */}
-          <div className="space-y-2">
-            <Label htmlFor="event-type" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Tipo de Evento</Label>
-            <Select
-              value={filters.eventType}
-              onValueChange={(value) => handleFilterChange('eventType', value)}
-            >
-              <SelectTrigger className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20">
-                <SelectValue placeholder="Todos os eventos" />
-              </SelectTrigger>
-              <SelectContent className="bg-background dark:bg-bg-primary-dark border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
-                <SelectItem value="all">Todos os eventos</SelectItem>
-                {eventTypes.map((eventType) => (
-                  <SelectItem key={eventType} value={eventType}>
-                    {formatEvent(eventType)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Data inicial */}
-          <div className="space-y-2">
-            <Label htmlFor="date-from" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Data Inicial</Label>
-            <Input
-              id="date-from"
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
-            />
-          </div>
-
-          {/* Data final */}
-          <div className="space-y-2">
-            <Label htmlFor="date-to" className="text-sm font-medium text-legal-dark dark:text-text-primary-dark font-neue-haas">Data Final</Label>
-            <Input
-              id="date-to"
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="h-10 border-legal-primary/30 focus:border-legal-primary focus:ring-legal-primary/20 dark:border-legal-secondary/30 dark:focus:border-legal-secondary dark:focus:ring-legal-secondary/20"
-            />
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <History className="h-6 w-6 text-legal-primary" />
+          <h1 className="text-2xl font-bold text-legal-dark">Histórico de Ativos</h1>
         </div>
+      </div>
 
-        {/* Botão para limpar filtros */}
-        <div className="flex justify-end mt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="text-legal-primary hover:bg-legal-primary/10 dark:text-legal-secondary dark:hover:bg-legal-secondary/10 font-neue-haas transition-all duration-200"
-          >
-            Limpar Filtros
-          </Button>
-        </div>
-      </StandardFiltersCard>
-
-      <Card className="border-legal-primary/20 dark:border-legal-secondary/20 shadow-legal dark:shadow-legal-dark">
-        <CardContent className="p-0">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Registro de Atividades ({filteredData.length})
+          </CardTitle>
+          <div className="flex gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por evento, ID ou descrição..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-legal-primary/20 dark:border-legal-secondary/20 bg-legal-primary/5 dark:bg-legal-secondary/5">
-                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Data/Hora</TableHead>
-                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Evento</TableHead>
-                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Ativo</TableHead>
-                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Usuário</TableHead>
-                  <TableHead className="font-neue-haas text-legal-primary dark:text-legal-secondary font-semibold">Detalhes</TableHead>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Data/Hora</TableHead>
+                  <TableHead>Evento</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Status Anterior</TableHead>
+                  <TableHead>Status Posterior</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map((log) => (
-                    <TableRow key={log.id} className="border-legal-primary/10 dark:border-legal-secondary/10 hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
-                      <TableCell className="py-4">
-                        <div className="space-y-1">
-                          <div className="font-medium font-neue-haas text-legal-primary dark:text-legal-secondary">
-                            {new Date(log.date).toLocaleDateString('pt-BR')}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(log.date).toLocaleTimeString('pt-BR')}
-                          </div>
-                          <div className="text-xs text-legal-secondary dark:text-legal-secondary font-medium">
-                            {formatDistanceToNow(new Date(log.date), { 
-                              addSuffix: true, 
-                              locale: ptBR 
-                            })}
-                          </div>
-                        </div>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-mono text-sm">
+                        #{entry.id}
                       </TableCell>
-                      <TableCell className="py-4">
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="p-1 bg-legal-secondary/20 dark:bg-legal-secondary/20 rounded">
-                            {getEventIcon(log.event)}
-                          </div>
-                          <StandardStatusBadge 
-                            status={formatEvent(log.event)} 
-                            type="event"
-                          />
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {formatDate(entry.date || entry.created_at)}
                         </div>
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="space-y-1">
-                          <div className="font-medium font-neue-haas text-legal-primary dark:text-legal-secondary">
-                            {getAssetIdentifier(log.details)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                              {log.details && typeof log.details === 'object' && (log.details as LogDetails).solution_name
-                                ? (log.details as LogDetails).solution_name
-                                : log.details && typeof log.details === 'object' && (log.details as LogDetails).solution
-                                  ? (log.details as LogDetails).solution
-                                  : 'N/A'}
-                          </div>
+                      <TableCell>
+                        <Badge variant={getEventBadgeVariant(entry.event)}>
+                          {entry.event || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate">
+                          {entry.details?.description?.toString() || 'Sem descrição'}
                         </div>
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1 bg-legal-primary/20 dark:bg-legal-primary/20 rounded">
-                            <User className="h-3 w-3 text-legal-primary dark:text-legal-secondary" />
-                          </div>
-                          <span className="font-neue-haas text-sm font-medium text-legal-dark dark:text-text-primary-dark">
-                            {getUserInfo(log.details)}
-                          </span>
-                        </div>
+                      <TableCell>
+                        {entry.status_before_id || 'N/A'}
                       </TableCell>
-                      <TableCell className="py-4">
-                        <div className="space-y-2 text-xs">
-                            {log.details && typeof log.details === 'object' && (log.details as LogDetails).event_description && (
-                              <div className="text-muted-foreground">
-                                {(log.details as LogDetails).event_description}
-                              </div>
-                            )}
-                            {log.details && typeof log.details === 'object' &&
-                             (log.details as LogDetails).old_status_name && (log.details as LogDetails).new_status_name && (
-                              <div className="flex items-center gap-2">
-                                <StandardStatusBadge
-                                  status={(log.details as LogDetails).old_status_name}
-                                  className="text-xs"
-                                />
-                                <span className="text-legal-secondary dark:text-legal-secondary font-bold">→</span>
-                                <StandardStatusBadge
-                                  status={(log.details as LogDetails).new_status_name}
-                                  className="text-xs"
-                                />
-                              </div>
-                            )}
-                        </div>
+                      <TableCell>
+                        {entry.status_after_id || 'N/A'}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12">
-                      <div className="space-y-3">
-                        <div className="p-3 bg-legal-primary/5 dark:bg-legal-secondary/5 rounded-lg w-fit mx-auto">
-                          <Settings className="h-8 w-8 text-legal-primary dark:text-legal-secondary" />
-                        </div>
-                        <div>
-                          <p className="text-legal-primary dark:text-legal-secondary font-neue-haas font-semibold">
-                            Nenhum registro encontrado
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Ajuste os filtros para encontrar registros específicos
-                          </p>
-                        </div>
-                      </div>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      Nenhum registro encontrado
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-500">
+                Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredData.length)} de {filteredData.length} registros
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="flex items-center px-3 text-sm">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {filteredLogs.length > 0 && (
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground font-neue-haas bg-legal-primary/5 dark:bg-legal-secondary/5 px-4 py-2 rounded-lg border border-legal-primary/20 dark:border-legal-secondary/20">
-            <Calendar className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
-            Mostrando {filteredLogs.length} registro(s) de histórico
-          </div>
-        </div>
-      )}
     </div>
   );
 };

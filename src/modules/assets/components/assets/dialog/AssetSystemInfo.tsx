@@ -1,41 +1,49 @@
-
 import React from 'react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { formatDate } from '@/utils/formatDate';
+import { Clock, Edit, Trash2, Calendar } from 'lucide-react';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 
 interface AssetSystemInfoProps {
   asset: AssetWithRelations;
 }
 
-export const AssetSystemInfo: React.FC<AssetSystemInfoProps> = ({ asset }) => {
+const AssetSystemInfo = ({ asset }: AssetSystemInfoProps) => {
   return (
-    <div className="space-y-4 col-span-1 md:col-span-2">
-      <h3 className="text-lg font-semibold border-b pb-1 flex items-center gap-2">
-        <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-        Informações de Sistema
-      </h3>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <span className="font-medium block text-sm">Data de Criação:</span>
-          <span className="text-sm">{formatDate(asset.created_at)}</span>
+    <div className="bg-white rounded-lg shadow-md p-4">
+      <h3 className="text-lg font-semibold mb-2">Informações do Sistema</h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">
+            Criado em:
+          </span>
+          <span className="text-sm text-gray-600">
+            {new Date(asset.created_at).toLocaleDateString()}
+          </span>
         </div>
         
-        <div>
-          <span className="font-medium block text-sm">Última Atualização:</span>
-          <span className="text-sm">{formatDate(asset.updated_at)}</span>
+        <div className="flex items-center gap-2">
+          <Edit className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">
+            Atualizado em:
+          </span>
+          <span className="text-sm text-gray-600">
+            {new Date(asset.updated_at).toLocaleDateString()}
+          </span>
         </div>
         
-        <div>
-          <span className="font-medium block text-sm">ID da Solução:</span>
-          <span className="text-sm">{asset.solucao.id}</span>
-        </div>
-        
-        <div>
-          <span className="font-medium block text-sm">ID do Status:</span>
-          <span className="text-sm">{asset.status.id || 'N/A'}</span>
+        <div className="flex items-center gap-2">
+          <Trash2 className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">
+            ID do Ativo:
+          </span>
+          <span className="text-sm text-gray-600">
+            {asset.uuid}
+          </span>
         </div>
       </div>
     </div>
   );
 };
+
+export default AssetSystemInfo;
+

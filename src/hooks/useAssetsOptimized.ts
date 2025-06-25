@@ -17,8 +17,8 @@ export interface UseAssetsOptimizedOptions {
 export const useAssetsOptimized = (options: UseAssetsOptimizedOptions = {}) => {
   const queryClient = useQueryClient();
   
-  // Use existing useAssetsData for main data fetching
-  const assetsQuery = useAssetsData(options);
+  // Use existing useAssetsData for main data fetching (no parameters)
+  const assetsQuery = useAssetsData();
   
   // Optimized status breakdown query with caching
   const statusBreakdownQuery = useQuery({
@@ -68,28 +68,28 @@ export const useAssetsOptimized = (options: UseAssetsOptimizedOptions = {}) => {
 
   // Computed stats for dashboard optimization
   const computedStats = useMemo(() => {
-    const assets = assetsQuery.data?.assets || [];
+    const assets = assetsQuery.data || [];
     
     return {
       total: assets.length,
       byStatus: assets.reduce((acc, asset) => {
-        const statusName = asset.status?.name || 'Unknown';
+        const statusName = asset.status || 'Unknown';
         acc[statusName] = (acc[statusName] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
       byType: assets.reduce((acc, asset) => {
-        const typeName = asset.solucao?.name || 'Unknown';
+        const typeName = asset.type || 'Unknown';
         acc[typeName] = (acc[typeName] || 0) + 1;
         return acc;
       }, {} as Record<string, number>),
     };
-  }, [assetsQuery.data?.assets]);
+  }, [assetsQuery.data]);
 
   return {
     // Main data
-    assets: assetsQuery.data?.assets || [],
-    totalCount: assetsQuery.data?.totalCount || 0,
-    totalPages: assetsQuery.data?.totalPages || 0,
+    assets: assetsQuery.data || [],
+    totalCount: assetsQuery.data?.length || 0,
+    totalPages: Math.ceil((assetsQuery.data?.length || 0) / (options.pageSize || 10)),
     
     // Loading states
     isLoading: assetsQuery.isLoading,

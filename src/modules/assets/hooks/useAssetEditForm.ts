@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
-import { assetService } from '@modules/assets/services/asset';
 import { toast } from '@/utils/toast';
+import { AssetWithRelations } from '@/types/assetWithRelations';
+import { assetService } from '@modules/assets/services/asset';
 import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface UseAssetEditFormProps {

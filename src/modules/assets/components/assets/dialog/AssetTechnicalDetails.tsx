@@ -1,6 +1,7 @@
-
 import React from 'react';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { Smartphone, Router, Hash, Wrench } from 'lucide-react';
+import { AssetWithRelations } from '@/types/assetWithRelations';
+import { formatPhoneNumber } from '@/utils/formatters';
 import { CopyableField } from './CopyableField';
 
 interface AssetTechnicalDetailsProps {

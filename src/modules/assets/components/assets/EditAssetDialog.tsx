@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAssetEditForm } from '@modules/assets/hooks/useAssetEditForm';

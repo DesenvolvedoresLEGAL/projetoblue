@@ -12,14 +12,18 @@ export interface ProcessedHistoryLog {
   old_status: string;
   new_status: string;
   user_email: string;
-  details: Record<string, unknown>;  // Changed from JSON to Record<string, unknown>
+  details: Record<string, unknown>;
 }
 
 export const useAssetHistory = () => {
   return useQuery({
     queryKey: ['asset-history'],
     queryFn: async (): Promise<ProcessedHistoryLog[]> => {
-      const { data, error } = await supabase.rpc('get_asset_history_with_details');
+      // Query asset_logs table directly instead of using RPC
+      const { data, error } = await supabase
+        .from('asset_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching asset history:', error);
@@ -28,15 +32,15 @@ export const useAssetHistory = () => {
 
       return (data || []).map((row: any) => ({
         id: row.id,
-        date: row.date,
-        event: row.event,
-        description: row.description,
-        client_name: row.client_name,
-        asset_name: row.asset_name,
-        old_status: row.old_status,
-        new_status: row.new_status,
-        user_email: row.user_email,
-        details: row.details as Record<string, unknown>  // Cast instead of conversion
+        date: row.date || row.created_at,
+        event: row.event || 'Unknown Event',
+        description: row.event || 'No description',
+        client_name: row.details?.client_name || 'Unknown',
+        asset_name: row.details?.asset_name || 'Unknown',
+        old_status: row.details?.old_status || 'Unknown',
+        new_status: row.details?.new_status || 'Unknown',
+        user_email: row.details?.user_email || 'Unknown',
+        details: (row.details as Record<string, unknown>) || {}
       }));
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -48,40 +52,46 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
   return useQuery({
     queryKey: ['asset-history', assetId],
     queryFn: async (): Promise<ProcessedHistoryLog[]> => {
+      // Query asset_logs table directly and filter by asset details
       const { data, error } = await supabase
-        .rpc('get_asset_history_with_details')
-        .eq('asset_id', assetId);
+        .from('asset_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error(`Error fetching asset history for ${assetId}:`, error);
         throw error;
       }
 
-      return (data || []).map((row: any) => {
-        // Safe parsing of details field
-        let parsedDetails: Record<string, unknown> = {};
-        try {
-          parsedDetails = typeof row.details === 'string' 
-            ? JSON.parse(row.details)
-            : (row.details as Record<string, unknown>) || {};
-        } catch (e) {
-          console.warn('Failed to parse details for history entry:', row.id);
-          parsedDetails = {};
-        }
+      return (data || [])
+        .filter((row: any) => {
+          // Filter by asset_id in details or other relevant fields
+          const details = row.details as Record<string, unknown> || {};
+          return details.asset_id === assetId || details.asset_uuid === assetId;
+        })
+        .map((row: any) => {
+          // Safe parsing of details field
+          let parsedDetails: Record<string, unknown> = {};
+          try {
+            parsedDetails = (row.details as Record<string, unknown>) || {};
+          } catch (e) {
+            console.warn('Failed to parse details for history entry:', row.id);
+            parsedDetails = {};
+          }
 
-        return {
-          id: row.id,
-          date: row.date,
-          event: row.event,
-          description: row.description,
-          client_name: String(parsedDetails.client_name || ''),
-          asset_name: String(parsedDetails.asset_name || ''),
-          old_status: row.old_status,
-          new_status: row.new_status,
-          user_email: row.user_email,
-          details: parsedDetails
-        };
-      });
+          return {
+            id: row.id,
+            date: row.date || row.created_at,
+            event: row.event || 'Unknown Event',
+            description: row.event || 'No description',
+            client_name: String(parsedDetails.client_name || ''),
+            asset_name: String(parsedDetails.asset_name || ''),
+            old_status: String(parsedDetails.old_status || ''),
+            new_status: String(parsedDetails.new_status || ''),
+            user_email: String(parsedDetails.user_email || ''),
+            details: parsedDetails
+          };
+        });
     },
     enabled: !!assetId,
     staleTime: 30 * 1000,

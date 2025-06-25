@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { assetService } from '@modules/assets/services/asset';
 import { toast } from '@/utils/toast';
-import { AssetWithRelations } from '@modules/assets/hooks/useAssetsData';
+import { AssetWithRelations } from '@/types/assetWithRelations';
 import { AssetAssociation } from '@modules/assets/services/asset/associationQueries';
 import AssetAssociationWarningDialog from './AssetAssociationWarningDialog';
 import { showFriendlyError } from '@/utils/errorTranslator';
