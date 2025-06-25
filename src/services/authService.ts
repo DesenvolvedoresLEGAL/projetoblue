@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
+import { AuthResponse, AuthError } from '@supabase/supabase-js';
 import { UserRole } from '@/types/auth';
 import { DEFAULT_USER_ROLE, AuthErrorCategory } from '@/constants/auth';
 import { toUserRole } from '@/utils/roleUtils';
@@ -21,8 +22,9 @@ interface ValidationResult {
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper to categorize errors
-const categorizeError = (error: any) => {
-  const message = error?.message?.toLowerCase() || '';
+const categorizeError = (error: unknown) => {
+  const err = error as { message?: string } | null;
+  const message = err?.message?.toLowerCase() || '';
   
   if (message.includes('already registered')) {
     return AuthErrorCategory.DUPLICATE_EMAIL;
@@ -92,7 +94,12 @@ export const authService = {
   },
 
   // Sign up with retry and profile verification
-  async signUp(email: string, password: string, role: UserRole = DEFAULT_USER_ROLE, username?: string) {
+  async signUp(
+    email: string,
+    password: string,
+    role: UserRole = DEFAULT_USER_ROLE,
+    username?: string
+  ): Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }> {
     console.log('Iniciando processo de cadastro:', { email, role, username });
     
     // Converter role para valor reconhecido
@@ -176,12 +183,13 @@ export const authService = {
       });
       
       return { data, error: null, profileCreated };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; name?: string; stack?: string; category?: AuthErrorCategory };
       console.error('Erro detalhado durante o cadastro:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        category: error.category || categorizeError(error)
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+        category: err.category || categorizeError(error)
       });
       throw error;
     }
@@ -225,9 +233,9 @@ export const authService = {
           
           // Success! Return the data
           return { data, error: null };
-        } catch (fetchError: any) {
+        } catch (fetchError: unknown) {
           console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
-          lastError = fetchError;
+          lastError = fetchError as Error;
           // Wait with exponential backoff
           await delay(Math.pow(2, attempts) * 1000);
           attempts++;
@@ -240,11 +248,11 @@ export const authService = {
         data: { session: null, user: null }, 
         error: lastError || new Error('Falha ao conectar com o servidor de autenticação após múltiplas tentativas') 
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro não tratado durante login:', error);
-      return { 
-        data: { session: null, user: null }, 
-        error 
+      return {
+        data: { session: null, user: null },
+        error
       };
     }
   },
@@ -260,7 +268,7 @@ export const authService = {
       }
       
       return await supabase.auth.signOut();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao fazer logout:', error);
       throw error;
     }

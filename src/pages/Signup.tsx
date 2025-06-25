@@ -55,7 +55,7 @@ const Signup = () => {
         setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro capturado no componente Signup:", error);
       
       if (error.message || error.stack) {

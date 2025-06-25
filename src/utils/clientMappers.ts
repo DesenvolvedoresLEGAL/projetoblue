@@ -2,7 +2,9 @@
 import { Client, ClientFormData } from '@/types/client';
 
 // Mapear dados do banco para o frontend
-export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
+export const mapDatabaseClientToFrontend = (
+  dbClient: Partial<Client> & Record<string, unknown>
+): Client => {
   return {
     uuid: dbClient.uuid,
     empresa: dbClient.empresa || dbClient.nome, // Fallback para dados legados

@@ -5,7 +5,7 @@ export const SOLUTION_IDS = {
   SPEEDY_5G: 1
 };
 
-export const getAssetIdentifier = (asset: any): string => {
+export const getAssetIdentifier = (asset: Partial<Asset> | null | undefined): string => {
   if (!asset) return 'N/A';
   
   if (asset.solution_id === SOLUTION_IDS.CHIP || 
@@ -17,7 +17,7 @@ export const getAssetIdentifier = (asset: any): string => {
   return asset.radio || asset.serial_number || 'N/A';
 };
 
-export const getAssetType = (asset: any): string => {
+export const getAssetType = (asset: Partial<Asset> | null | undefined): string => {
   if (!asset) return 'Desconhecido';
   
   if (asset.solution_id === SOLUTION_IDS.CHIP) return 'CHIP';
@@ -27,7 +27,7 @@ export const getAssetType = (asset: any): string => {
          (asset.solucao?.solution || asset.solution || 'Equipamento');
 };
 
-export const normalizeAsset = (asset: any) => {
+export const normalizeAsset = (asset: Partial<Asset> | null | undefined) => {
   if (!asset) return null;
   
   return {
