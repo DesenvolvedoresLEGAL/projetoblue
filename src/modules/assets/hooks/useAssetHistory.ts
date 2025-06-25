@@ -1,130 +1,94 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { historyService, AssetLogWithRelations } from '@modules/assets/services/history/historyService';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
-// Interface processada para uso na UI
-export interface ProcessedHistoryLog {
+interface ProcessedHistoryLog {
   id: number;
   date: string;
   event: string;
   description: string;
-  client_name: string | null;
-  asset_name: string | null;
-  old_status: string | null;
-  new_status: string | null;
-  user_email: string | null;
-  details: Record<string, unknown> | null;
+  client_name: string;
+  asset_name: string;
+  old_status: string;
+  new_status: string;
+  user_email: string;
+  details: Record<string, unknown>;
 }
 
 export const useAssetHistory = () => {
-  const { data: rawLogs = [], isLoading, error, refetch } = useQuery({
+  return useQuery({
     queryKey: ['asset-history'],
-    queryFn: historyService.getAssetLogsWithRelations,
-    staleTime: 30000, // 30 segundos
-    refetchInterval: 60000, // 1 minuto
-  });
+    queryFn: async (): Promise<ProcessedHistoryLog[]> => {
+      console.log('[useAssetHistory] Buscando histórico de assets...');
+      
+      const { data, error } = await supabase
+        .from('asset_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
-  // Processar os dados para formato mais amigável à UI
-  const historyLogs: ProcessedHistoryLog[] = rawLogs.map((log: AssetLogWithRelations) => {
-    // Extrair informações do asset
-    const assetInfo = log.association?.asset;
-    let assetName = 'N/A';
-    
-    if (assetInfo) {
-      // Para CHIPs, usar line_number, para outros usar radio ou serial
-      if (assetInfo.line_number) {
-        assetName = assetInfo.line_number.toString();
-      } else if (assetInfo.radio) {
-        assetName = assetInfo.radio;
-      } else if (assetInfo.serial_number) {
-        assetName = assetInfo.serial_number;
-      } else if (assetInfo.iccid) {
-        assetName = assetInfo.iccid;
+      if (error) {
+        console.error('[useAssetHistory] Erro ao buscar histórico:', error);
+        throw error;
       }
-    }
 
-    // Extrair informações do cliente
-    const clientName = log.association?.client?.nome || null;
+      console.log('[useAssetHistory] Dados brutos:', data);
 
-    // Extrair informações de status
-    const oldStatus = log.status_before?.status || null;
-    const newStatus = log.status_after?.status || null;
-
-    // Extrair email do usuário dos detalhes ou usar informação padrão
-    let userEmail = 'Sistema Automático';
-    if (log.details && typeof log.details === 'object') {
-      const details = log.details as Record<string, unknown>;
-      if (details.user_email) {
-        userEmail = details.user_email;
-      } else if (details.username && details.username !== 'system') {
-        userEmail = details.username;
-      }
-    }
-
-    // Gerar descrição mais amigável
-    let description = historyService.formatLogDetails(log.details);
-    
-    // Melhorar descrição baseada no evento
-    if (log.event.includes('ASSOCIATION_CREATED')) {
-      description = `Nova associação criada ${clientName ? `para ${clientName}` : ''}`;
-    } else if (log.event.includes('ASSOCIATION_REMOVED')) {
-      description = `Associação encerrada ${clientName ? `de ${clientName}` : ''}`;
-    } else if (log.event.includes('STATUS_UPDATED')) {
-      description = `Status alterado ${oldStatus && newStatus ? `de ${oldStatus} para ${newStatus}` : ''}`;
-    } else if (log.event.includes('ASSET_CRIADO')) {
-      description = 'Ativo cadastrado no sistema';
-    }
-
-    return {
-      id: log.id,
-      date: log.date,
-      event: log.event,
-      description,
-      client_name: clientName,
-      asset_name: assetName,
-      old_status: oldStatus,
-      new_status: newStatus,
-      user_email: userEmail,
-      details: log.details
-    };
+      return data.map(log => ({
+        id: log.id,
+        date: log.date || log.created_at,
+        event: log.event || 'Evento desconhecido',
+        description: log.event || 'Sem descrição',
+        client_name: 'Cliente não identificado',
+        asset_name: 'Asset não identificado', 
+        old_status: 'Status anterior',
+        new_status: 'Status atual',
+        user_email: 'Usuário não identificado',
+        details: (log.details as Record<string, unknown>) || {}
+      }));
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
+};
 
-  // Função para formatar data
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
-    } catch (error) {
-      return dateString;
-    }
-  };
+export const useAssetHistoryByAsset = (assetId: string) => {
+  return useQuery({
+    queryKey: ['asset-history', assetId],
+    queryFn: async (): Promise<ProcessedHistoryLog[]> => {
+      console.log('[useAssetHistoryByAsset] Buscando histórico para asset:', assetId);
+      
+      // Buscar logs que contenham o asset_id nos detalhes
+      const { data, error } = await supabase
+        .from('asset_logs')
+        .select('*')
+        .contains('details', { asset_id: assetId })
+        .order('created_at', { ascending: false });
 
-  // Função para formatar nome do evento
-  const formatEventName = (event: string): string => {
-    const eventTranslations: Record<string, string> = {
-      'INSERT': 'Ativo criado',
-      'UPDATE': 'Dados atualizados',
-      'DELETE': 'Ativo excluído',
-      'STATUS_UPDATED': 'Status alterado',
-      'ASSET_CRIADO': 'Ativo criado',
-      'SOFT_DELETE': 'Ativo removido',
-      'ASSOCIATION_CREATED': 'Nova associação',
-      'ASSOCIATION_REMOVED': 'Associação removida',
-      'DISASSOCIATION': 'Associação encerrada',
-      'ASSOCIATION_ENDED': 'Associação encerrada'
-    };
-    
-    return eventTranslations[event] || event;
-  };
+      if (error) {
+        console.error('[useAssetHistoryByAsset] Erro ao buscar histórico:', error);
+        throw error;
+      }
 
-  return {
-    historyLogs,
-    isLoading,
-    error,
-    refetch,
-    formatDate,
-    formatEventName
-  };
+      return data.map(log => {
+        const logDetails = (log.details as Record<string, unknown>) || {};
+        
+        return {
+          id: log.id,
+          date: log.date || log.created_at,
+          event: log.event || 'Evento desconhecido',
+          description: log.event || 'Sem descrição',
+          client_name: (logDetails.client_name as string) || 'Cliente não identificado',
+          asset_name: (logDetails.asset_id as string) || 'Asset não identificado',
+          old_status: (logDetails.old_status_name as string) || 'Status anterior',
+          new_status: (logDetails.new_status_name as string) || 'Status atual',
+          user_email: (logDetails.username as string) || 'Usuário não identificado',
+          details: logDetails
+        };
+      });
+    },
+    enabled: !!assetId,
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
+  });
 };
