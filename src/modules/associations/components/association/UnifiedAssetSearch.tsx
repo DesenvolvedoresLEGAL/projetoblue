@@ -70,7 +70,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       .is('deleted_at', null);
 
     if (type === 'chip') {
-      query = query.or(`iccid.eq.${term},line_number.eq.${term}`);
+      query = query.or(`iccid.ilike.%${term}%,line_number.eq.${term}`);
     } else {
       query = query.or(`radio.eq.${term},serial_number.eq.${term}`);
     }
