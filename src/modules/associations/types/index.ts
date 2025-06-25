@@ -7,7 +7,7 @@ import type { AssociationGeneralConfig } from '../components/association/Associa
 export interface SelectedAsset {
   id: string;
   uuid: string;
-  type: 'CHIP' | 'EQUIPMENT';
+  type: 'CHIP' | 'ROTEADOR'; // Corrigido de 'EQUIPMENT' para 'ROTEADOR'
   registrationDate: string;
   status: string;
   statusId?: number;
@@ -46,10 +46,10 @@ export interface SelectedAsset {
 
 export interface AssetAssociationState {
   selectedAssets: SelectedAsset[];
-  currentStep: 'client' | 'assets' | 'summary'; // Mais específico
+  currentStep: 'client' | 'assets' | 'summary';
   isLoading: boolean;
-  selectedClient: Client | null; // Mais específico
-  generalConfig: AssociationGeneralConfig | null; // Mais específico
+  selectedClient: Client | null;
+  generalConfig: AssociationGeneralConfig | null;
 }
 
 export interface AssetConfiguration {

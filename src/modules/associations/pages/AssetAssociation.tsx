@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
@@ -16,6 +17,18 @@ import { useCreateAssociation } from '@modules/associations/hooks/useCreateAssoc
 import { toast } from '@/utils/toast';
 
 type Step = 'client' | 'assets' | 'summary';
+
+// Função para mapear string de associationType para ID numérico
+const mapAssociationTypeToId = (associationType: string): number => {
+  const typeMap: Record<string, number> = {
+    'ALUGUEL': 1,
+    'ASSINATURA': 2,
+    'LOCAÇÃO': 1,
+    'SUBSCRIPTION': 2
+  };
+  
+  return typeMap[associationType.toUpperCase()] || 1; // Default para ALUGUEL
+};
 
 const AssetAssociation = () => {
   const {
@@ -101,36 +114,53 @@ const AssetAssociation = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Creating associations for', selectedAssets.length, 'assets');
+      console.log('🚀 Creating association with assets:', selectedAssets.length);
       
-      // Criar associações para cada ativo selecionado
-      const associationPromises = selectedAssets.map(async (asset, index) => {
-        const associationData = {
-          clientId: selectedClient.uuid,
-          assetId: asset.uuid,
-          associationType: generalConfig.associationType, // Usar a configuração geral
-          startDate: generalConfig.startDate.toISOString().split('T')[0],
-          rentedDays: asset.rented_days,
-          notes: generalConfig.notes || asset.notes
-        };
-
-        console.log(`📝 Creating association ${index + 1}/${selectedAssets.length}:`, associationData);
-        return createAssociationMutation.mutateAsync(associationData);
+      // Mapear associationType string para associationTypeId number
+      const associationTypeId = mapAssociationTypeToId(generalConfig.associationType);
+      
+      console.log('🔄 Mapped association type:', {
+        stringType: generalConfig.associationType,
+        numericId: associationTypeId
       });
 
-      // Aguardar todas as associações serem criadas
-      const results = await Promise.all(associationPromises);
-      console.log('✅ All associations created successfully:', results);
+      // Preparar dados da associação com associationTypeId numérico
+      const associationData = {
+        clientId: selectedClient.uuid,
+        associationTypeId: associationTypeId, // Agora é number
+        startDate: generalConfig.startDate.toISOString().split('T')[0],
+        selectedAssets: selectedAssets.map(asset => ({
+          id: asset.uuid,
+          type: asset.type,
+          identifier: asset.type === 'CHIP' 
+            ? (asset.line_number?.toString() || asset.iccid || asset.uuid)
+            : (asset.radio || asset.serial_number || asset.uuid)
+        })),
+        generalConfig: {
+          notes: generalConfig.notes || '',
+          ssid: undefined,
+          password: undefined,
+          dataLimit: undefined,
+          rentedDays: 0
+        }
+      };
 
-      toast.success(`${selectedAssets.length} associação(ões) criada(s) com sucesso!`);
+      console.log('📤 Final association data being sent:', associationData);
+
+      // Executar criação da associação
+      const result = await createAssociationMutation.mutateAsync(associationData);
+      
+      console.log('✅ Association creation result:', result);
+
+      toast.success(`Associação criada com sucesso!`);
       
       // Clear persisted state and navigate
       clearState();
       navigate('/associations');
       
     } catch (error) {
-      console.error('❌ Error creating associations:', error);
-      toast.error('Erro ao criar uma ou mais associações. Tente novamente.');
+      console.error('❌ Error creating association:', error);
+      toast.error('Erro ao criar associação. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }

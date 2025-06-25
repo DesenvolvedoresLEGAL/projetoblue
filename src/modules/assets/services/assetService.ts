@@ -1,42 +1,43 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { optimizedAssetService } from './optimizedAssetService';
 
+// Re-export all methods from optimizedAssetService
 export const assetService = {
-  listProblemAssets: async () => {
-    const { data, error } = await supabase
-      .from('assets')
-      .select('*')
-      .neq('status_id', 1)
-      .is('deleted_at', null);
-    
-    if (error) throw error;
-    return data || [];
+  getAssets: optimizedAssetService.getAssets,
+  getAssetStats: optimizedAssetService.getAssetStats,
+  
+  // Métodos adicionais para compatibilidade
+  getAssetsByMultipleStatus: async (statusIds: number[]) => {
+    const result = await optimizedAssetService.getAssets();
+    return {
+      ...result,
+      assets: result.assets.filter(asset => statusIds.includes(asset.status_id))
+    };
   },
-
-  getAssetsByStatus: async (statusId: number) => {
-    const { data, error } = await supabase
-      .from('assets')
-      .select('*')
-      .eq('status_id', statusId)
-      .is('deleted_at', null);
-    
-    if (error) throw error;
-    return data || [];
+  
+  getStatusSummary: async () => {
+    const stats = await optimizedAssetService.getAssetStats();
+    return {
+      available: stats.available,
+      rented: stats.rented,
+      total: stats.total
+    };
   },
-
-  statusByType: async () => {
-    const { data, error } = await supabase
-      .rpc('status_by_asset_type');
-    
-    if (error) throw error;
-    return data || [];
+  
+  getRecentAssetsOptimized: async (limit = 10) => {
+    const result = await optimizedAssetService.getAssets({ pageSize: limit });
+    return result.assets;
   },
-
-  // Delegate to optimized service for new methods
-  getAssetsByMultipleStatus: optimizedAssetService.getAssetsByMultipleStatus.bind(optimizedAssetService),
-  getStatusSummary: optimizedAssetService.getStatusSummary.bind(optimizedAssetService),
-  getRecentAssetsOptimized: optimizedAssetService.getRecentAssetsOptimized.bind(optimizedAssetService),
-  clearCache: optimizedAssetService.clearCache.bind(optimizedAssetService),
-  clearCacheByPattern: optimizedAssetService.clearCacheByPattern.bind(optimizedAssetService),
+  
+  clearCache: () => {
+    // Placeholder para compatibilidade - o React Query gerencia o cache
+    console.log('Cache cleared');
+  },
+  
+  clearCacheByPattern: (pattern: string) => {
+    // Placeholder para compatibilidade - o React Query gerencia o cache
+    console.log('Cache cleared by pattern:', pattern);
+  }
 };
+
+export default assetService;

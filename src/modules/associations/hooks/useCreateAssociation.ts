@@ -6,8 +6,8 @@ import { useIdempotentAssociation } from './useIdempotentAssociation';
 
 interface CreateAssociationData {
   clientId: string;
-  associationTypeId: number; // Mudado para number
-  startDate: string; // Deve ser ISO string completa
+  associationTypeId: number;
+  startDate: string;
   endDate?: string;
   selectedAssets: Array<{
     id: string;
@@ -19,17 +19,61 @@ interface CreateAssociationData {
     ssid?: string;
     password?: string;
     dataLimit?: number;
-    rentedDays: number; // Garantir que seja numérico
+    rentedDays: number;
   };
 }
 
 interface CreateAssociationResult {
   success: boolean;
   message: string;
-  details?: any;
-  error_code?: string;
-  error_detail?: string;
+  details?: {
+    inserted_count: number;
+    failed_count: number;
+    total_processed: number;
+    inserted_ids: number[];
+    failed_assets: Array<{
+      asset_id: string;
+      error_code: string;
+      message: string;
+    }>;
+  };
 }
+
+// Função para validar e extrair dados do resultado JSON
+const parseRpcResult = (result: any): CreateAssociationResult => {
+  // Se result é null ou undefined
+  if (!result) {
+    throw new Error('Resposta vazia do servidor');
+  }
+
+  // Se result é um objeto JSON
+  if (typeof result === 'object') {
+    return {
+      success: result.success === true,
+      message: result.message || 'Operação concluída',
+      details: result.success ? {
+        inserted_count: result.inserted_count || 0,
+        failed_count: result.failed_count || 0,
+        total_processed: result.total_processed || 0,
+        inserted_ids: result.inserted_ids || [],
+        failed_assets: result.failed_assets || []
+      } : undefined
+    };
+  }
+
+  // Se result é uma string, tentar parsear como JSON
+  if (typeof result === 'string') {
+    try {
+      const parsedResult = JSON.parse(result);
+      return parseRpcResult(parsedResult);
+    } catch {
+      throw new Error('Formato de resposta inválido do servidor');
+    }
+  }
+
+  // Fallback para outros tipos
+  throw new Error('Formato de resposta não reconhecido');
+};
 
 export const useCreateAssociation = () => {
   const queryClient = useQueryClient();
@@ -78,7 +122,7 @@ export const useCreateAssociation = () => {
         if (isNaN(dateObj.getTime())) {
           throw new Error('Data de início inválida');
         }
-        formattedStartDate = dateObj.toISOString();
+        formattedStartDate = dateObj.toISOString().split('T')[0]; // Formato YYYY-MM-DD
         console.log('[useCreateAssociation] Data formatada:', formattedStartDate);
       } catch (error) {
         console.error('[useCreateAssociation] Erro ao formatar data:', error);
@@ -92,10 +136,10 @@ export const useCreateAssociation = () => {
       // Preparar dados para o RPC
       const rpcData = {
         p_client_id: data.clientId,
-        p_association_id: data.associationTypeId, // Agora é number
+        p_association_id: data.associationTypeId,
         p_entry_date: formattedStartDate,
         p_asset_ids: data.selectedAssets.map(asset => asset.id),
-        p_exit_date: data.endDate ? new Date(data.endDate).toISOString() : null,
+        p_exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
         p_notes: data.generalConfig?.notes || null,
         p_ssid: data.generalConfig?.ssid || null,
         p_pass: data.generalConfig?.password || null,
@@ -129,48 +173,26 @@ export const useCreateAssociation = () => {
             throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
           }
 
-          if (!result) {
-            console.error('[useCreateAssociation] RPC retornou resultado vazio');
-            throw new Error('Resposta vazia do servidor');
-          }
+          console.log('[useCreateAssociation] Resultado bruto do RPC:', result);
 
-          console.log('[useCreateAssociation] Resultado do RPC:', result);
+          // Processar resultado usando função helper
+          const processedResult = parseRpcResult(result);
+          
+          console.log('[useCreateAssociation] Resultado processado:', processedResult);
 
           // Verificar se houve sucesso
-          if (!result.success) {
-            const errorMsg = result.message || 'Erro ao criar associação';
-            const errorCode = result.error_code || 'UNKNOWN_ERROR';
+          if (!processedResult.success) {
+            const errorMsg = processedResult.message || 'Erro ao criar associação';
             
             console.error('[useCreateAssociation] RPC indicou falha:', {
               message: errorMsg,
-              error_code: errorCode,
-              details: result
+              details: processedResult.details
             });
 
-            // Criar erro com detalhes estruturados
-            const detailedError = new Error(errorMsg);
-            (detailedError as any).details = {
-              error_code: errorCode,
-              failed_assets: result.failed_assets || [],
-              inserted_count: result.inserted_count || 0,
-              failed_count: result.failed_count || 0,
-              total_processed: result.total_processed || 0
-            };
-            
-            throw detailedError;
+            throw new Error(errorMsg);
           }
 
-          return {
-            success: true,
-            message: result.message || 'Associação criada com sucesso',
-            details: {
-              inserted_count: result.inserted_count || 0,
-              failed_count: result.failed_count || 0,
-              total_processed: result.total_processed || 0,
-              inserted_ids: result.inserted_ids || [],
-              failed_assets: result.failed_assets || []
-            }
-          };
+          return processedResult;
         }
       );
     },
@@ -197,19 +219,6 @@ export const useCreateAssociation = () => {
       
       if (error.message) {
         errorMessage = error.message;
-      }
-      
-      if (error.details) {
-        console.error('[useCreateAssociation] Detalhes técnicos do erro:', error.details);
-        
-        // Adicionar informações técnicas ao toast para debugging
-        if (error.details.error_code) {
-          errorMessage += ` (${error.details.error_code})`;
-        }
-        
-        if (error.details.failed_assets?.length > 0) {
-          errorMessage += ` - ${error.details.failed_assets.length} ativos falharam`;
-        }
       }
       
       toast.error(errorMessage);

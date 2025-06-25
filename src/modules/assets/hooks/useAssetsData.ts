@@ -43,7 +43,7 @@ interface DatabaseAsset {
 }
 
 // Transform database record to frontend Asset type
-const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
+const transformDatabaseAsset = (dbAsset: any): Asset => {
   // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
   const status = dbAsset.status?.status as AssetStatus || 'DISPONÍVEL';
@@ -244,55 +244,6 @@ export const useAssetsData = (options?: {
   });
 };
 
-// Hook to fetch assets with relations (for components that need full data)
-export const useAssetsWithRelations = () => {
-  return useQuery({
-    queryKey: ['assets-with-relations'],
-    queryFn: async (): Promise<AssetWithRelations[]> => {
-      const { data, error } = await supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status),
-          plan:plans(id, nome)
-        `)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching assets with relations:', error);
-        throw error;
-      }
-
-      return (data || []).map(transformToAssetWithRelations);
-    },
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
-
 // Hook to fetch single asset
 export const useAssetData = (assetId: string) => {
   return useQuery({
@@ -314,7 +265,6 @@ export const useAssetData = (assetId: string) => {
           updated_at,
           admin_user,
           admin_pass,
-          notes,
           ssid_atual,
           pass_atual,
           ssid_fabrica,
@@ -338,77 +288,9 @@ export const useAssetData = (assetId: string) => {
         throw error;
       }
 
-      return data ? transformDatabaseAsset(data as unknown as DatabaseAsset) : null;
+      return data ? transformDatabaseAsset(data) : null;
     },
     enabled: !!assetId,
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-};
-
-// Hook to fetch filtered assets
-export const useFilteredAssetsData = (filters: {
-  type?: 'CHIP' | 'ROTEADOR';
-  status?: string;
-  search?: string;
-}) => {
-  return useQuery({
-    queryKey: ['filtered-assets-data', filters],
-    queryFn: async (): Promise<Asset[]> => {
-      let query = supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          rented_days,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          notes,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status)
-        `)
-        .is('deleted_at', null);
-
-      // Apply filters
-      if (filters.type === 'CHIP') {
-        query = query.eq('solution_id', 11);
-      } else if (filters.type === 'ROTEADOR') {
-        query = query.neq('solution_id', 11);
-      }
-
-      if (filters.search) {
-        const searchTerm = `%${filters.search}%`;
-        query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm}`);
-      }
-
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching filtered assets data:', error);
-        throw error;
-      }
-
-      return (data || []).map(transformDatabaseAsset);
-    },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
   });
@@ -433,16 +315,15 @@ export const useAssetsStats = () => {
         total: data?.length || 0,
         chips: data?.filter(a => a.solution_id === 11).length || 0,
         routers: data?.filter(a => a.solution_id !== 11).length || 0,
-        available: data?.filter(a => a.status_id === 1).length || 0, // Assuming status_id 1 = available
-        rented: data?.filter(a => a.status_id === 2).length || 0, // Assuming status_id 2 = rented
+        available: data?.filter(a => a.status_id === 1).length || 0,
+        rented: data?.filter(a => a.status_id === 2).length || 0,
       };
 
       return stats;
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 };
 
-// Export the AssetWithRelations type for other components
 export type { AssetWithRelations };
