@@ -1,10 +1,8 @@
-
 -- Este arquivo contém uma migração para corrigir a função que lida com a criação de novos usuários
 -- O problema atual é que a função está tentando acessar um campo 'status' que não existe
 
 -- Verificar se o trigger e a função existem antes de recriá-los
 DROP FUNCTION IF EXISTS public.handle_new_user CASCADE;
-
 -- Recriar a função corretamente sem tentar acessar o campo 'status'
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
@@ -23,7 +21,6 @@ BEGIN
   RETURN new;
 END;
 $$;
-
 -- Recriar o trigger se ele não existir
 DO $$
 BEGIN

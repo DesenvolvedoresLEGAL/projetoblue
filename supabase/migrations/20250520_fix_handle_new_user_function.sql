@@ -1,10 +1,8 @@
-
 -- This migration fixes the handle_new_user function which currently fails with "ERROR: relation 'users' does not exist"
 -- The fix ensures it correctly references the auth.users table and properly handles role validation
 
 -- Drop the existing function if it exists to recreate it
 DROP FUNCTION IF EXISTS public.handle_new_user CASCADE;
-
 -- Create the improved function with better error handling and role validation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
@@ -42,10 +40,8 @@ EXCEPTION
     RETURN new; -- Continue even if there's an error to not block registration
 END;
 $$;
-
 -- Recreate the trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
