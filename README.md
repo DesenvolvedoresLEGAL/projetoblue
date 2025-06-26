@@ -48,3 +48,20 @@ When the API becomes available:
 2. Revert the changes in service files to use API calls instead of Supabase
 3. Remove the temporary mapper utilities if no longer needed
 4. Update documentation to reflect the change
+
+## Environment Configuration
+
+This project relies on environment files to configure Supabase.
+
+- `.env.development` contains placeholders for your local Supabase instance.
+- `.env.production` stores the remote Supabase credentials.
+
+Copy the file that matches your environment to `.env` before running the app:
+
+```bash
+cp .env.development .env   # for local development
+cp .env.production .env    # for production builds
+```
+
+You can also create a custom `.env` file based on these examples.
+
