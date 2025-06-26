@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development vite",
-    "build": "NODE_ENV=production vite build",
-    "build:dev": "NODE_ENV=development vite build",
+    "dev": "vite -m development",
+    "build": "vite build -m production",
+    "build:dev": "vite build -m development",
     "lint": "eslint .",
     "preview": "vite preview"
   },
