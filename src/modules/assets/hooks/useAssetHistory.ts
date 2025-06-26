@@ -15,6 +15,25 @@ export interface ProcessedHistoryLog {
   details: Record<string, unknown>;
 }
 
+interface AssetHistory {
+    assoc_id: number;
+    created_at: string;
+    date: string;
+    deleted_at: string;
+    details: {
+      client_name: string,
+      asset_name: string,
+      old_status: string,
+      new_status: string,
+      user_email: string
+    };
+    event: string | null;
+    id: number;
+    status_after_id: number | null;
+    status_before_id: number | null;
+    updated_at: string;
+}
+
 export const useAssetHistory = () => {
   return useQuery({
     queryKey: ['asset-history'],
@@ -30,7 +49,7 @@ export const useAssetHistory = () => {
         throw error;
       }
 
-      return (data || []).map((row: any) => ({
+      return (data || []).map((row: AssetHistory) => ({
         id: row.id,
         date: row.date || row.created_at,
         event: row.event || 'Unknown Event',
@@ -64,12 +83,12 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
       }
 
       return (data || [])
-        .filter((row: any) => {
+        .filter((row: AssetHistory) => {
           // Filter by asset_id in details or other relevant fields
           const details = row.details as Record<string, unknown> || {};
           return details.asset_id === assetId || details.asset_uuid === assetId;
         })
-        .map((row: any) => {
+        .map((row: AssetHistory) => {
           // Safe parsing of details field
           let parsedDetails: Record<string, unknown> = {};
           try {
