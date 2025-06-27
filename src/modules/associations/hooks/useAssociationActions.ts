@@ -14,6 +14,7 @@ export const useAssociationActions = () => {
 
       // Executar com idempotência e validação automática
       const result = await executeWithIdempotency(
+        // Chave única para evitar reentrância da mesma requisição
         `end_association_${assetId}_${associationId}`,
         async () => {
           // Buscar status "DISPONÍVEL" dinamicamente
