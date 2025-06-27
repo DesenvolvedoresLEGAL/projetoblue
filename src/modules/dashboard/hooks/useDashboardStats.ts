@@ -128,7 +128,7 @@ export function useDashboardStats() {
         const processedRecentEvents = recentEventsResult.data?.map((event, index) => {
           // Safe type casting for details object
           const details = event.details && typeof event.details === 'object' && event.details !== null 
-            ? event.details as Record<string, any> 
+            ? event.details as Record<string, unknown>
             : {};
           
           const description = details.event_description || event.event || 'Evento sem descrição';

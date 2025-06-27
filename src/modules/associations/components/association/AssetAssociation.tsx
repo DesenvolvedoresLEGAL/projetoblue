@@ -125,13 +125,13 @@ export const AssetAssociation: React.FC = () => {
       toast.success('Associação criada com sucesso!');
       navigate('/associations');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AssetAssociation] Erro ao criar associação:', error);
-      
+
       // Exibir erro detalhado
       let errorMessage = 'Erro ao criar associação';
-      
-      if (error.message) {
+
+      if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
       

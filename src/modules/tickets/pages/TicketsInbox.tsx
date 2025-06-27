@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge-variants";
+import { type VariantProps } from "class-variance-authority";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,7 +81,9 @@ const TicketsInbox = () => {
     }
   ];
 
-  const getPriorityColor = (priority: string) => {
+  type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
+
+  const getPriorityColor = (priority: string): BadgeVariant => {
     switch (priority) {
       case 'Alta': return 'destructive';
       case 'Média': return 'warning';
@@ -88,7 +92,7 @@ const TicketsInbox = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): BadgeVariant => {
     switch (status) {
       case 'Aberto': return 'destructive';
       case 'Em andamento': return 'warning';
@@ -195,10 +199,10 @@ const TicketsInbox = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-mono text-sm text-legal-primary dark:text-legal-secondary font-medium">{ticket.id}</span>
-                        <Badge variant={getPriorityColor(ticket.priority) as any}>
+                        <Badge variant={getPriorityColor(ticket.priority)}>
                           {ticket.priority}
                         </Badge>
-                        <Badge variant={getStatusColor(ticket.status) as any}>
+                        <Badge variant={getStatusColor(ticket.status)}>
                           {ticket.status}
                         </Badge>
                       </div>

@@ -1,5 +1,5 @@
 
-import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation, DatabaseAsset } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus
@@ -64,7 +64,7 @@ export const mapSolutionIdToAssetType = (solutionId: number): AssetType => {
 };
 
 // Map database asset record to frontend Asset type
-export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
+export const mapDatabaseAssetToFrontend = (dbAsset: DatabaseAsset): Asset => {
   if (!dbAsset) return null;
 
   const statusName = dbAsset?.asset_status?.status || dbAsset?.status?.status;
@@ -133,7 +133,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: any): Asset => {
 };
 
 // Map database client record to frontend Client type - corrigido conforme banco
-export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
+export const mapDatabaseClientToFrontend = (dbClient: unknown): Client => {
   if (!dbClient) return null;
   
   return {
@@ -150,7 +150,7 @@ export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
 };
 
 // Map database asset_client_assoc to frontend type - corrigido conforme banco
-export const mapDatabaseAssocToFrontend = (dbAssoc: any): AssetClientAssociation => {
+export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssetClientAssociation => {
   if (!dbAssoc) return null;
   
   return {
@@ -186,8 +186,8 @@ export const mapAssetStatusToId = (status: AssetStatus): number => {
 };
 
 // Map frontend data to database format for creation/update
-export const mapFrontendToDatabase = (frontendData: any, isUpdate: boolean = false) => {
-  const dbData: any = {};
+export const mapFrontendToDatabase = (frontendData: Record<string, unknown>, isUpdate: boolean = false) => {
+  const dbData: Record<string, unknown> = {};
   
   if (frontendData.statusId !== undefined) dbData.status_id = frontendData.statusId;
   if (frontendData.solution_id !== undefined) dbData.solution_id = frontendData.solution_id;

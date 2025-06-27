@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, Calendar, ExternalLink, Loader2 } from "lucide-react";
+import type { AssetWithRelations } from '@/types/assetWithRelations';
 import { useRentedAssets } from '@modules/dashboard/hooks/useRentedAssets';
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -17,14 +18,14 @@ export const RentedAssetsCard = () => {
     navigate('/assets/inventory?rented_days=gt.0');
   };
 
-  const getAssetIdentifier = (asset: any) => {
+  const getAssetIdentifier = (asset: AssetWithRelations) => {
     if (asset.radio) return asset.radio;
     if (asset.line_number) return asset.line_number.toString();
     if (asset.serial_number) return asset.serial_number;
     return asset.uuid.substring(0, 8);
   };
 
-  const getAssetTypeDisplay = (asset: any) => {
+  const getAssetTypeDisplay = (asset: AssetWithRelations) => {
     if (asset.solution?.solution === 'CHIP') return 'CHIP';
     if (asset.solution?.solution === 'SPEEDY 5G') return 'Speedy 5G';
     return asset.model || asset.solution?.solution || 'Equipamento';

@@ -14,11 +14,21 @@ import { SelectedAsset } from '@modules/associations/types';
 import { useQuery } from '@tanstack/react-query';
 import { referenceDataService } from '@modules/assets/services/referenceDataService';
 
+interface AssetConfig {
+  notes: string;
+  ssid_atual?: string;
+  pass_atual?: string;
+  rented_days?: number;
+  isPrincipalChip?: boolean;
+  plan_id?: number | null;
+  gb?: number;
+}
+
 interface AssetConfigurationFormProps {
   asset: SelectedAsset;
   open: boolean;
   onClose: () => void;
-  onSave: (config: any) => void;
+  onSave: (config: AssetConfig) => void;
 }
 
 export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
@@ -57,7 +67,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   );
 
   const handleSave = () => {
-    const config: any = {
+    const config: AssetConfig = {
       notes,
     };
 
