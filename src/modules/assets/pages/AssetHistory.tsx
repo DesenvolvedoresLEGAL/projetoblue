@@ -30,7 +30,7 @@ const AssetHistory = () => {
       }
 
       // Transform the data to match AssetHistoryEntry interface
-      return (data || []).map((row: any): AssetHistoryEntry => ({
+      return (data || []).map(row => ({
         id: row.id,
         assoc_id: row.assoc_id,
         date: row.date,
