@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useURLFilters } from '@/hooks/useURLFilters';
@@ -35,6 +35,7 @@ const AssetsInventory = () => {
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const queryClient = useQueryClient();
+  const hasMountedRef = useRef(false);
   
   // Hook para gerenciar filtros via URL - configurado para limpar na montagem
   const { updateURLParams, excludeSolutions, clearAllURLParams } = useURLFilters({
@@ -48,28 +49,32 @@ const AssetsInventory = () => {
     clearOnMount: true // Limpar URL na montagem
   });
 
-  // Reset completo na montagem do componente
+  // Reset completo na primeira montagem do componente
   useEffect(() => {
+    if (hasMountedRef.current) return;
+
     console.log('🔄 AssetsInventory mounted - performing complete reset');
-    
+
     // Reset filtros
     resetFilters();
-    
+
     // Limpar URL
     clearAllURLParams();
-    
+
     // Reset página
     setCurrentPage(1);
-    
+
     // Invalidar e refazer queries
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
-    
+
     // Forçar refetch
     setShouldFetch(true);
-    
+
+    hasMountedRef.current = true;
+
     console.log('✅ Complete reset performed on AssetsInventory mount');
-  }, [clearAllURLParams, queryClient, resetFilters]); // Array vazio para executar apenas na montagem
+  }, [clearAllURLParams, queryClient, resetFilters]);
   
   const { 
     data: assetsData,
