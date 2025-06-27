@@ -69,7 +69,7 @@ const AssetsInventory = () => {
     setShouldFetch(true);
     
     console.log('✅ Complete reset performed on AssetsInventory mount');
-  }, []); // Array vazio para executar apenas na montagem
+  }, [clearAllURLParams, queryClient, resetFilters]); // Array vazio para executar apenas na montagem
   
   const { 
     data: assetsData,
