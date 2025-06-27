@@ -1606,7 +1606,8 @@ ALTER FUNCTION "public"."log_client_changes"() OWNER TO "postgres";
 CREATE OR REPLACE FUNCTION "public"."log_profile_change"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$DECLARE
+    AS $$
+DECLARE
     current_user_email TEXT;
     safe_user_id UUID;
 BEGIN
@@ -1619,24 +1620,23 @@ BEGIN
     IF safe_user_id IS NOT NULL THEN
         BEGIN
             -- Tentar acessar auth.users com tratamento de exceção
-            SELECT email INTO current_user_email 
-            FROM auth.users 
+            SELECT email INTO current_user_email
+            FROM auth.users
             WHERE id = safe_user_id;
-        EXCEPTION 
+        EXCEPTION
             WHEN OTHERS THEN
                 -- Se falhar ao acessar auth.users, usar email do próprio registro (se disponível)
-                current_user_email := CASE 
+                current_user_email := CASE
                     WHEN TG_OP = 'INSERT' THEN NEW.email
                     WHEN TG_OP = 'UPDATE' THEN COALESCE(NEW.email, OLD.email)
                     WHEN TG_OP = 'DELETE' THEN OLD.email
                     ELSE 'sistema'
                 END;
-                
                 RAISE NOTICE 'log_profile_change: Não foi possível acessar auth.users, usando email do registro: %', current_user_email;
         END;
     ELSE
         -- Se não há user_id, usar email do próprio registro
-        current_user_email := CASE 
+        current_user_email := CASE
             WHEN TG_OP = 'INSERT' THEN NEW.email
             WHEN TG_OP = 'UPDATE' THEN COALESCE(NEW.email, OLD.email)
             WHEN TG_OP = 'DELETE' THEN OLD.email
@@ -1686,7 +1686,8 @@ BEGIN
     END IF;
 
     RETURN NULL;
-END;$$;
+END;
+$$;
 
 
 ALTER FUNCTION "public"."log_profile_change"() OWNER TO "postgres";
@@ -3435,6 +3436,10 @@ CREATE OR REPLACE TRIGGER "trg_log_asset_soft_delete" AFTER UPDATE ON "public"."
 
 
 
+CREATE OR REPLACE TRIGGER "trigger_log_profile_changes" AFTER INSERT OR DELETE OR UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_locations_updated_at" BEFORE UPDATE ON "public"."locations" FOR EACH ROW EXECUTE FUNCTION "public"."update_generic_updated_at_column"();
 
 
@@ -3647,6 +3652,10 @@ CREATE POLICY "Afiliados can view their own points log" ON "public"."bits_points
 
 
 
+CREATE POLICY "Allow profile_logs insertion by security definer functions" ON "public"."profile_logs" FOR INSERT WITH CHECK (true);
+
+
+
 CREATE POLICY "Auth users can insert" ON "public"."asset_client_assoc" FOR INSERT TO "authenticated" WITH CHECK (true);
 
 
@@ -3764,6 +3773,12 @@ CREATE POLICY "Enable read access for all users" ON "public"."plans" FOR SELECT 
 
 
 CREATE POLICY "Enable read your data access for all users" ON "public"."profiles" FOR SELECT USING ("public"."is_user_self"("id"));
+
+
+
+CREATE POLICY "Only admins can view profile logs" ON "public"."profile_logs" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"public"."user_role_enum")))));
 
 
 
