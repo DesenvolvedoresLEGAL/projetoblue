@@ -4,6 +4,17 @@ import { Asset, AssetLog, StatusRecord } from "@/types/asset";
 import { AssetListParams, AssetStatusByType, ProblemAsset } from "./types";
 import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
+interface Manufacturer {
+    country: string;
+    created_at: string;
+    deleted_at: string;
+    description: string;
+    id: number;
+    name: string;
+    updated_at: string;
+    website: string;
+}
+
 /**
  * Get a list of assets with optional filters and pagination.
  */
@@ -196,7 +207,7 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
     }
 
     // Map the data to ensure it matches ProblemAsset interface
-    return (data || []).map((asset: any) => ({
+    return (data || []).map(asset => ({
       uuid: asset.uuid,
       id: null,
       radio: asset.radio || null,
@@ -273,12 +284,13 @@ export const getAssetsByMultipleStatus = async (
   }
 };
 
+
 /**
  * Retrieve manufacturer information by id.
  */
 export const getManufacturerById = async (
   id: number
-): Promise<any | null> => {
+): Promise<Manufacturer | null> => {
   try {
     const { data, error } = await supabase
       .from("manufacturers")
