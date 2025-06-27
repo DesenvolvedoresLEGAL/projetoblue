@@ -89,7 +89,10 @@ export const optimizedAssetService = {
 
     // Apply filters
     if (filterType && filterType !== 'all') {
-      if (filterType === 'CHIP') {
+      const solutionId = parseInt(filterType, 10);
+      if (!isNaN(solutionId)) {
+        query = query.eq('solution_id', solutionId);
+      } else if (filterType === 'CHIP') {
         query = query.eq('solution_id', 11);
       } else if (filterType === 'ROTEADOR') {
         query = query.neq('solution_id', 11);
