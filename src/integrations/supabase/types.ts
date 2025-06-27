@@ -1406,6 +1406,7 @@ export type Database = {
         | "HUB USB"
         | "ANTENA"
         | "LOAD BALANCE"
+        | "LIVE"
       user_role_enum: "admin" | "suporte" | "cliente" | "user"
     }
     CompositeTypes: {
@@ -1550,6 +1551,7 @@ export const Constants = {
         "HUB USB",
         "ANTENA",
         "LOAD BALANCE",
+        "LIVE",
       ],
       user_role_enum: ["admin", "suporte", "cliente", "user"],
     },
