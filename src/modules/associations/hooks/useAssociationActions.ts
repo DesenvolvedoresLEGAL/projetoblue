@@ -14,8 +14,7 @@ export const useAssociationActions = () => {
 
       // Executar com idempotência e validação automática
       const result = await executeWithIdempotency(
-        assetId,
-        'END',
+        `end_association_${assetId}_${associationId}`,
         async () => {
           // Buscar status "DISPONÍVEL" dinamicamente
           const { data: statusData, error: statusError } = await supabase
@@ -60,9 +59,7 @@ export const useAssociationActions = () => {
           if (assetError) throw assetError;
 
           return assocData;
-        },
-        associationId,
-        'END_ASSOCIATION'
+        }
       );
 
       if (result) {
