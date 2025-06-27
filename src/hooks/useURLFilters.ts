@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface URLFiltersParams {
@@ -28,16 +28,17 @@ export const useURLFilters = (
 ) => {
   const { clearOnMount = true } = options;
   const [searchParams, setSearchParams] = useSearchParams();
+  const hasClearedRef = useRef(false);
 
   // Limpar parâmetros da URL na montagem se clearOnMount for true
   useEffect(() => {
-    if (clearOnMount) {
-      const hasFilterParams = searchParams.has('solution') || 
-                             searchParams.has('type') || 
-                             searchParams.has('status') || 
+    if (clearOnMount && !hasClearedRef.current) {
+      const hasFilterParams = searchParams.has('solution') ||
+                             searchParams.has('type') ||
+                             searchParams.has('status') ||
                              searchParams.has('manufacturer') ||
                              searchParams.has('exclude_solutions');
-      
+
       if (hasFilterParams) {
         console.log('🧹 Clearing URL filter parameters on mount');
         const newParams = new URLSearchParams();
@@ -49,8 +50,9 @@ export const useURLFilters = (
         }
         setSearchParams(newParams, { replace: true });
       }
+      hasClearedRef.current = true;
     }
-  }, [clearOnMount, searchParams, setSearchParams]);
+  }, [clearOnMount, setSearchParams]);
 
   // Ler parâmetros da URL no carregamento inicial (apenas se clearOnMount for false)
   useEffect(() => {
