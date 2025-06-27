@@ -190,7 +190,10 @@ export const useAssetsData = (options?: {
       }
 
       if (options?.filterType && isValidFilterValue(options.filterType)) {
-        if (options.filterType === 'CHIP') {
+        const solutionId = safeParseNumber(options.filterType);
+        if (solutionId !== null) {
+          query = query.eq('solution_id', solutionId);
+        } else if (options.filterType === 'CHIP') {
           query = query.eq('solution_id', 11);
         } else if (options.filterType === 'ROTEADOR') {
           query = query.neq('solution_id', 11);

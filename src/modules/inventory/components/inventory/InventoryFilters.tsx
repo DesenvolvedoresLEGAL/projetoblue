@@ -57,7 +57,7 @@ const InventoryFilters = ({
 
   // Check if the current filter is for CHIP solution
   const isChipFilter = assetSolutions.some(
-    solution => solution.solution === "CHIP" && typeFilter === solution.solution
+    solution => solution.solution === "CHIP" && typeFilter === solution.id.toString()
   );
 
   return (
@@ -87,7 +87,7 @@ const InventoryFilters = ({
             <SelectContent>
               <SelectItem value="all">Todos os Tipos</SelectItem>
               {assetSolutions.map((solution) => (
-                <SelectItem key={solution.id} value={solution.solution}>
+                <SelectItem key={solution.id} value={solution.id.toString()}>
                   {solution.solution}
                 </SelectItem>
               ))}
