@@ -9,6 +9,7 @@ import { History, Search, Filter, Calendar, User, FileText } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AssetHistoryEntry } from '@/types/assetHistory';
+import { AssetLog } from '@/types/asset';
 
 const AssetHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +31,7 @@ const AssetHistory = () => {
       }
 
       // Transform the data to match AssetHistoryEntry interface
-      return (data || []).map(row => ({
+      return (data || []).map((row: AssetLog): AssetHistoryEntry => ({
         id: row.id,
         assoc_id: row.assoc_id,
         date: row.date,

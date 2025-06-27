@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useAssets } from "@/context/AssetContext";
-import { StatusRecord, Asset } from "@/types/asset";
+import { StatusRecord, Asset, AssetStatus } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { showFriendlyError } from '@/utils/errorTranslator';
@@ -31,7 +31,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
   const { updateAsset } = useAssets();
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<{id: number, status: string} | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<{id: number, status: AssetStatus} | null>(null);
   
   const handleStatusSelect = (statusId: number, statusName: string) => {
     if (asset.statusId === statusId) return;
@@ -45,9 +45,9 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
     
     setIsLoading(true);
     try {
-      await updateAsset(asset.id, { 
-        status: selectedStatus.status as any, 
-        statusId: selectedStatus.id 
+      await updateAsset(asset.id, {
+        status: selectedStatus.status,
+        statusId: selectedStatus.id
       });
       toast.success(`Status alterado para ${selectedStatus.status} com sucesso`);
     } catch (error) {

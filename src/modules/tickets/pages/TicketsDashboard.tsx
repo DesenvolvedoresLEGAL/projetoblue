@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge-variants";
+import { type VariantProps } from "class-variance-authority";
 import { Button } from "@/components/ui/button";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { LayoutDashboard, Ticket, AlertCircle, Clock, CheckCircle, Users, TrendingUp, Activity } from "lucide-react";
@@ -42,7 +44,9 @@ const TicketsDashboard = () => {
     { id: 'T-2024-005', subject: 'Atualização de firmware', priority: 'Média', status: 'Em andamento', assignee: 'Carlos Oliveira', created: '1 dia' }
   ];
 
-  const getPriorityColor = (priority: string) => {
+  type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
+
+  const getPriorityColor = (priority: string): BadgeVariant => {
     switch (priority) {
       case 'Alta': return 'destructive';
       case 'Média': return 'warning';
@@ -51,7 +55,7 @@ const TicketsDashboard = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): BadgeVariant => {
     switch (status) {
       case 'Aberto': return 'destructive';
       case 'Em andamento': return 'warning';
@@ -203,12 +207,12 @@ const TicketsDashboard = () => {
                     <td className="p-2 font-mono text-sm text-legal-primary dark:text-legal-secondary">{ticket.id}</td>
                     <td className="p-2 text-legal-dark dark:text-text-primary-dark">{ticket.subject}</td>
                     <td className="p-2">
-                      <Badge variant={getPriorityColor(ticket.priority) as any}>
+                      <Badge variant={getPriorityColor(ticket.priority)}>
                         {ticket.priority}
                       </Badge>
                     </td>
                     <td className="p-2">
-                      <Badge variant={getStatusColor(ticket.status) as any}>
+                      <Badge variant={getStatusColor(ticket.status)}>
                         {ticket.status}
                       </Badge>
                     </td>

@@ -4,8 +4,10 @@ import { toast } from "@/utils/toast";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
 import { showFriendlyError } from '@/utils/errorTranslator';
 
-
-export const handleAssetError = (error: PostgrestError | Error | unknown, context: string) => {
+export const handleAssetError = (
+  error: PostgrestError | Error | unknown,
+  context: string
+) => {
   console.error(`${context}:`, error);
   const friendlyMessage = showFriendlyError(error, context.toLowerCase());
   toast.error(friendlyMessage);

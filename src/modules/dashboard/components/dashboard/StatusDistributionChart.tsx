@@ -20,7 +20,12 @@ export const StatusDistributionChart: React.FC<StatusDistributionChartProps> = (
 }) => {
   const isMobile = useIsMobile();
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: Array<{ payload: { value: number; total: number; status: string } }>
+  }
+
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const percentage = ((data.value / data.total) * 100).toFixed(1);

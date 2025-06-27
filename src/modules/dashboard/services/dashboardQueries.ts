@@ -302,7 +302,7 @@ export async function fetchEnhancedRecentEvents() {
   // Extract unique user IDs from event details
   const userIds = new Set<string>();
   eventsResult.data?.forEach(event => {
-    const details = event.details as any;
+    const details = event.details as Record<string, unknown>;
     if (details?.user_id && details.user_id !== '00000000-0000-0000-0000-000000000000') {
       userIds.add(details.user_id);
     }
@@ -327,7 +327,7 @@ export async function fetchEnhancedRecentEvents() {
   const enrichedData = eventsResult.data?.map(event => ({
     ...event,
     user_email: (() => {
-      const details = event.details as any;
+      const details = event.details as Record<string, unknown>;
       const userId = details?.user_id;
       if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
         return null;

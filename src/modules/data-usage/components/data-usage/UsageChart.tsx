@@ -22,10 +22,20 @@ interface UsageChartProps {
   data: ChipWithMetrics[];
   timeRange: TimeRange;
   groupBy: GroupByOption;
-  chartData: any[];
+  chartData: ChartDataPoint[];
   formatLabel: (value: string) => string;
   startDate?: Date;
   endDate?: Date;
+}
+
+interface ChartDataPoint {
+  name: string;
+  download: number;
+  upload: number;
+  quality?: string;
+  carrier?: string;
+  iccid?: string;
+  clientName?: string;
 }
 
 export const UsageChart: React.FC<UsageChartProps> = ({
