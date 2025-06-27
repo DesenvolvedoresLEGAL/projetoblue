@@ -1,7 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Asset, AssetLog, StatusRecord } from "@/types/asset";
-import { AssetListParams, AssetStatusByType, ProblemAsset } from "./types";
+import { Asset, AssetLog, StatusRecord, Manufacturer } from "@/types/asset";
+import {
+  AssetListParams,
+  AssetStatusByType,
+  ProblemAsset,
+} from "./types";
+import type { Database } from "@/integrations/supabase/types";
+
+type ProblemAssetFromDb =
+  Database["public"]["Views"]["v_problem_assets"]["Row"];
 import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
 interface Manufacturer {
@@ -207,7 +215,7 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
     }
 
     // Map the data to ensure it matches ProblemAsset interface
-    return (data || []).map(asset => ({
+    return (data || []).map((asset: ProblemAssetFromDb) => ({
       uuid: asset.uuid,
       id: null,
       radio: asset.radio || null,
@@ -296,7 +304,7 @@ export const getManufacturerById = async (
       .from("manufacturers")
       .select("*")
       .eq("id", id)
-      .single();
+      .single<Manufacturer>();
 
     if (error) {
       console.error(`Error fetching manufacturer with id ${id}`);

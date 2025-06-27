@@ -17,6 +17,34 @@ interface PaginatedAssets {
   totalPages: number;
 }
 
+interface AssetQueryResult {
+  uuid: string;
+  model: string | null;
+  rented_days: number | null;
+  serial_number: string | null;
+  line_number: number | null;
+  iccid: string | null;
+  radio: string | null;
+  created_at: string;
+  updated_at: string;
+  admin_user: string;
+  admin_pass: string;
+  ssid_atual: string | null;
+  pass_atual: string | null;
+  ssid_fabrica: string | null;
+  pass_fabrica: string | null;
+  admin_user_fabrica: string | null;
+  admin_pass_fabrica: string | null;
+  plan_id: number | null;
+  manufacturer_id: number | null;
+  status_id: number;
+  solution_id: number;
+  solucao?: { id: number; solution?: string } | null;
+  status?: { id: number; status?: string } | null;
+  manufacturer?: { id: number; name?: string } | null;
+  plan?: { id: number; nome?: string } | null;
+}
+
 export const optimizedAssetService = {
   async getAssets(options: FilterOptions = {}): Promise<PaginatedAssets> {
     const {
@@ -104,7 +132,7 @@ export const optimizedAssetService = {
       throw error;
     }
 
-    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: any) => ({
+    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: AssetQueryResult) => ({
       uuid: asset.uuid,
       model: asset.model,
       rented_days: asset.rented_days || 0,
@@ -171,7 +199,7 @@ export const optimizedAssetService = {
       throw error;
     }
 
-    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: any) => ({
+    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: AssetQueryResult) => ({
       uuid: asset.uuid,
       model: '',
       rented_days: asset.rented_days || 0,

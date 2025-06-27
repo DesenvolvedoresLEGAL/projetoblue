@@ -30,8 +30,9 @@ export const useReferrals = () => {
       queryClient.invalidateQueries({ queryKey: ['bits', 'referrals'] });
       toast.success("Indicação registrada com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao criar indicação");
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Erro ao criar indicação';
+      toast.error(message);
     }
   });
   
@@ -120,8 +121,9 @@ export const useRewards = () => {
       queryClient.invalidateQueries({ queryKey: ['bits', 'points'] });
       toast.success("Recompensa resgatada com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao resgatar recompensa");
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Erro ao resgatar recompensa';
+      toast.error(message);
     }
   });
   
@@ -312,8 +314,9 @@ export const useBitsProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['bits', 'profile'] });
       toast.success("Código de indicação gerado com sucesso!");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Erro ao gerar código de indicação");
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Erro ao gerar código de indicação';
+      toast.error(message);
     }
   });
   

@@ -1,8 +1,9 @@
 import { PostgrestError } from "@supabase/supabase-js";
-import { AssetLog, StatusRecord, Asset } from "@/types/asset";
+import { AssetLog, StatusRecord, Asset, DatabaseAsset } from "@/types/asset";
 import { toast } from "@/utils/toast";
 import { mapDatabaseAssetToFrontend } from "@/utils/databaseMappers";
 import { showFriendlyError } from '@/utils/errorTranslator';
+
 
 export const handleAssetError = (error: PostgrestError | Error | unknown, context: string) => {
   console.error(`${context}:`, error);
@@ -10,7 +11,9 @@ export const handleAssetError = (error: PostgrestError | Error | unknown, contex
   toast.error(friendlyMessage);
 };
 
-export const mapDatabaseLogToAssetLog = (dbLog: AssetLog): AssetLog => {
+export const mapDatabaseLogToAssetLog = (
+  dbLog: AssetLog
+): AssetLog => {
   return {
     id: dbLog.id,
     assoc_id: dbLog.assoc_id,
@@ -26,7 +29,7 @@ export const mapDatabaseLogToAssetLog = (dbLog: AssetLog): AssetLog => {
 };
 
 // Database mapper functions for queries
-export const mapAssetFromDb = (dbAsset: Asset): Asset => {
+export const mapAssetFromDb = (dbAsset: DatabaseAsset): Asset => {
   return mapDatabaseAssetToFrontend(dbAsset);
 };
 

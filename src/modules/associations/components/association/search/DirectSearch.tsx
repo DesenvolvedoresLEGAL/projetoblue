@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Search, Wifi, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+import type { SelectedAsset } from '@modules/associations/types';
+
 interface DirectSearchProps {
-  onAssetFound: (asset: any) => void;
-  searchSpecificAsset: (term: string, type: 'chip' | 'equipment') => Promise<any>;
+  onAssetFound: (asset: SelectedAsset) => void;
+  searchSpecificAsset: (term: string, type: 'chip' | 'equipment') => Promise<SelectedAsset | null>;
 }
 
 export const DirectSearch: React.FC<DirectSearchProps> = ({

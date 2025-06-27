@@ -10,9 +10,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { getAssetIdentifier } from '@/utils/assetUtils';
+import type { AssetWithRelations } from '@/types/assetWithRelations';
 
 interface FilteredAssetsTableProps {
-  assets: any[];
+  assets: AssetWithRelations[];
   isLoading: boolean;
   filters: AssetFilterValues;
 }
@@ -21,7 +22,7 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
   const hasFilters = Object.keys(filters).length > 0;
   
   // Helper function to get asset type label
-  const getAssetTypeLabel = (asset: any) => {
+  const getAssetTypeLabel = (asset: AssetWithRelations) => {
     return asset.solucao?.solution || '-';
   };
   
