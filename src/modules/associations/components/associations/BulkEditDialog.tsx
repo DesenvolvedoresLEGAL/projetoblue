@@ -32,8 +32,14 @@ export const BulkEditDialog: React.FC<BulkEditDialogProps> = ({
   const [associationType, setAssociationType] = useState<string>('');
   const { bulkUpdateGroup } = useGroupActions();
 
+  interface BulkUpdates {
+    notes?: string;
+    exit_date?: string;
+    association_id?: number;
+  }
+
   const handleSave = () => {
-    const updates: Record<string, any> = {};
+    const updates: BulkUpdates = {};
 
     if (notes.trim()) {
       updates.notes = notes.trim();

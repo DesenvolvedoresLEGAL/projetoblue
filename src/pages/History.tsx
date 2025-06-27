@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AssetLog } from "@/types/asset";
 import {
   Calendar,
   Search,
@@ -145,7 +146,7 @@ export default function HistoryPage() {
   };
 
   // Função para simular usuário responsável (futura integração)
-  const getResponsibleUser = (log: any): string => {
+  const getResponsibleUser = (log: AssetLog): string => {
     // Por enquanto, retorna um usuário genérico
     // Futura integração: extrair do log.details ou campo específico
     if (log.details && log.details.user_email) {

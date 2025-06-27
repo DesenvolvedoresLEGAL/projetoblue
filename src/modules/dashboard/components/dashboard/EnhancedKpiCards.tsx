@@ -40,7 +40,9 @@ export function EnhancedKpiCards({
         equipment: { available: 0, unavailable: 0, total: 0 }
       };
       
-      data?.forEach((item: any) => {
+      interface StatusTypeRow { type: string; status: string; count: number }
+
+      data?.forEach((item: StatusTypeRow) => {
         // Detect if this is a CHIP type
         if (item.type.toLowerCase().includes('chip') || 
             item.type.toLowerCase().includes('speedy')) {

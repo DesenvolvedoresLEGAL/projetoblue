@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface AssetTypeStatusChartProps {
@@ -23,7 +23,7 @@ export const AssetTypeStatusChart: React.FC<AssetTypeStatusChartProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const total = payload[0].payload.total;

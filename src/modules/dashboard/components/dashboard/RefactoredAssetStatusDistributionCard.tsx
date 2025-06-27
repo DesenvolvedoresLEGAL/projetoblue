@@ -1,27 +1,40 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, TooltipProps } from "recharts";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+interface StatusDetail {
+  status: string;
+  type: string;
+  total: number;
+}
+
+interface DashboardStats {
+  data?: {
+    pieChartData: { status: string; total: number; color: string }[];
+    detailedStatusData: StatusDetail[];
+  };
+}
+
 interface RefactoredAssetStatusDistributionCardProps {
-  dashboardStats: any;
+  dashboardStats: DashboardStats;
 }
 
 export const RefactoredAssetStatusDistributionCard: React.FC<RefactoredAssetStatusDistributionCardProps> = ({ 
   dashboardStats 
 }) => {
   // Tooltip personalizada para mostrar detalhamento por tipo dentro de cada status
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       const status = payload[0].payload.status;
       const total = payload[0].payload.total;
       
       // Busca todos os tipos que existem neste status
       const typeInfo = dashboardStats.data?.detailedStatusData
-        ?.filter((item: any) => item.status === status)
-        ?.map((item: any) => `${item.type}: ${item.total}`)
+        ?.filter((item: StatusDetail) => item.status === status)
+        ?.map((item: StatusDetail) => `${item.type}: ${item.total}`)
         ?.join(' | ') || 'Sem detalhes';
       
       return (

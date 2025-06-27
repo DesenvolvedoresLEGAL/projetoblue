@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { type VariantProps } from "class-variance-authority";
+import { badgeVariants } from "@/components/ui/badge-variants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -80,9 +82,10 @@ const MyTickets = () => {
   ];
 
   const assignedTickets = myTickets.filter(ticket => ticket.category === 'assigned');
-  const createdTickets = myTickets.filter(ticket => ticket.category === 'created');
+const createdTickets = myTickets.filter(ticket => ticket.category === 'created');
+  type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: string): BadgeVariant => {
     switch (priority) {
       case 'Alta': return 'destructive';
       case 'Média': return 'warning';
@@ -91,7 +94,7 @@ const MyTickets = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): BadgeVariant => {
     switch (status) {
       case 'Aberto': return 'destructive';
       case 'Em andamento': return 'warning';
@@ -129,12 +132,12 @@ const MyTickets = () => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="font-mono text-sm text-[#4D2BFB] font-medium">{ticket.id}</span>
-            <Badge variant={getPriorityColor(ticket.priority) as any}>
+            <Badge variant={getPriorityColor(ticket.priority)}>
               {ticket.priority}
             </Badge>
             <div className="flex items-center gap-1">
               {getStatusIcon(ticket.status)}
-              <Badge variant={getStatusColor(ticket.status) as any}>
+              <Badge variant={getStatusColor(ticket.status)}>
                 {ticket.status}
               </Badge>
             </div>

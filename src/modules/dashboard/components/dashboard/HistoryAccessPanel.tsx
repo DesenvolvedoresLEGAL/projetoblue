@@ -44,7 +44,7 @@ export function HistoryAccessPanel() {
   });
 
   // Helper function to format the event description
-  const formatEventDescription = (event: string, details: any) => {
+  const formatEventDescription = (event: string, details: Record<string, unknown> | null) => {
     if (details?.description) return details.description;
     
     if (event.includes('CRIADO')) {
@@ -61,7 +61,7 @@ export function HistoryAccessPanel() {
   };
 
   // Helper function to extract asset identifier
-  const getAssetIdentifier = (details: any) => {
+  const getAssetIdentifier = (details: Record<string, unknown> | null) => {
     if (!details) return 'N/A';
     
     if (details.radio) return details.radio;

@@ -6,7 +6,7 @@ interface CacheEntry<T> {
 }
 
 class IdempotencyService {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
 
   cacheResult<T>(key: string, result: T, ttl: number = this.DEFAULT_TTL): void {

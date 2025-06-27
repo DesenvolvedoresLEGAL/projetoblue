@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAssets } from "@/context/AssetContext";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Asset } from "@/types/asset";
+import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import EditAssetDialog from "@modules/inventory/components/inventory/EditAssetDialog";
 import InventoryFilters from "@modules/inventory/components/inventory/InventoryFilters";
 import AssetList from "@modules/inventory/components/inventory/AssetList";
@@ -69,7 +69,7 @@ const Inventory = () => {
     
     // Phone number search for chips
     if (phoneSearch && asset.type === "CHIP") {
-      const chip = asset as any;
+      const chip = asset as ChipAsset;
       const formattedSearchPhone = formatPhoneNumber(phoneSearch);
       const formattedAssetPhone = formatPhoneNumber(chip.phoneNumber);
       
@@ -84,14 +84,14 @@ const Inventory = () => {
       const searchLower = search.toLowerCase();
       
       if (asset.type === "CHIP") {
-        const chip = asset as any;
+        const chip = asset as ChipAsset;
         return (
           chip.iccid.toLowerCase().includes(searchLower) ||
           chip.phoneNumber.toLowerCase().includes(searchLower) ||
           chip.carrier.toLowerCase().includes(searchLower)
         );
       } else {
-        const router = asset as any;
+        const router = asset as EquipamentAsset;
         return (
           router.uniqueId.toLowerCase().includes(searchLower) ||
           router.brand.toLowerCase().includes(searchLower) ||
@@ -118,13 +118,13 @@ const Inventory = () => {
         row.push(asset.status);
         
         if (asset.type === "CHIP") {
-          const chip = asset as any;
+          const chip = asset as ChipAsset;
           row.push(chip.iccid);
           row.push(chip.phoneNumber);
           row.push(chip.carrier);
           row.push("");
         } else {
-          const router = asset as any;
+          const router = asset as EquipamentAsset;
           row.push(router.uniqueId);
           row.push(router.brand);
           row.push(router.model);

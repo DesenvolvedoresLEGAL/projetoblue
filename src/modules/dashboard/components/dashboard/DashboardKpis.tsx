@@ -1,6 +1,7 @@
 
 import React from "react";
 import { useAssets } from "@/context/AssetContext";
+import type { Asset } from '@/types/asset';
 import { Card, CardContent } from "@/components/ui/card";
 import { Wifi, AlertTriangle, Clock, PackageSearch } from "lucide-react";
 import { SOLUTION_IDS, isSameStatus } from "@/utils/assetUtils";
@@ -11,14 +12,14 @@ export function DashboardKpis() {
   // Calculate KPIs using standardized type checking
   const totalAssets = assets.length;
   
-  const availableChips = assets.filter(a => 
-    ((a as any).solution_id === SOLUTION_IDS.CHIP || a.type === 'CHIP') && 
+  const availableChips = assets.filter((a: Asset) =>
+    (a.solution_id === SOLUTION_IDS.CHIP || a.type === 'CHIP') &&
     isSameStatus(a.status, 'DISPONÍVEL')
   ).length;
   
-  const availableRouters = assets.filter(a => 
-    ((a as any).solution_id !== SOLUTION_IDS.CHIP) && 
-    a.type === 'ROTEADOR' && 
+  const availableRouters = assets.filter((a: Asset) =>
+    a.solution_id !== SOLUTION_IDS.CHIP &&
+    a.type === 'ROTEADOR' &&
     isSameStatus(a.status, 'DISPONÍVEL')
   ).length;
   
