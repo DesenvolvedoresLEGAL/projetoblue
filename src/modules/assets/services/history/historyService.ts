@@ -37,6 +37,32 @@ export interface AssetLogWithRelations {
  * Busca logs de assets com dados relacionados usando JOINs
  * ATUALIZADO: Query otimizada para lidar com assoc_id nullable
  */
+interface AssetLogWithRelationsRaw {
+  id: number;
+  date: string;
+  event: string;
+  details: JSON;
+  status_before_id?: number;
+  status_after_id?: number;
+  assoc_id?: number | null;
+  fk_asset_logs_status_before?: { status: string } | null;
+  fk_asset_logs_status_after?: { status: string } | null;
+  fk_asset_logs_assoc_id?: {
+    asset?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    client?: {
+      uuid: string;
+      nome: string;
+    };
+  } | null;
+}
+
 export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
   try {
     console.log('Buscando logs de assets com relações...');
@@ -88,7 +114,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
     }
 
     // Mapear os dados para a interface esperada, lidando com assoc_id NULL
-    const mappedData = data.map((log: any) => ({
+    const mappedData = data.map((log: AssetLogWithRelationsRaw) => ({
       id: log.id,
       date: log.date,
       event: log.event,
@@ -114,7 +140,17 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
  * Formata detalhes do log (campo JSONB) para exibição amigável
  * ATUALIZADO: Melhor tratamento para eventos sem associação
  */
-export const formatLogDetails = (details: any): string => {
+interface LogDetails {
+  event_description?: string;
+  line_number?: number;
+  radio?: string;
+  solution_name?: string;
+  solution?: string;
+  client_name?: string;
+  [key: string]: unknown;
+}
+
+export const formatLogDetails = (details: LogDetails | string | null): string => {
   if (!details) return 'Nenhum detalhe disponível';
   
   try {

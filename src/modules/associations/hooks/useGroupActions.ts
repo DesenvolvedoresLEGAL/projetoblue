@@ -66,7 +66,7 @@ export const useGroupActions = () => {
   });
 
   const bulkUpdateGroup = useMutation({
-    mutationFn: async ({ group, updates }: { group: AssociationGroup; updates: Record<string, any> }) => {
+    mutationFn: async ({ group, updates }: { group: AssociationGroup; updates: Record<string, unknown> }) => {
       console.log('📝 Bulk updating group:', group.groupKey, 'with updates:', updates);
       
       // Garantir contexto de autenticação

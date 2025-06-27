@@ -302,7 +302,7 @@ export const useDashboardCards = () => {
         // Transform logs to alerts format
         return (logs || []).map(log => {
           // Extract asset type and description from details
-          const details = log.details as Record<string, any> || {};
+          const details = log.details as Record<string, unknown> || {};
           const solutionId = details.solution_id;
           
           return {

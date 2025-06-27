@@ -40,7 +40,7 @@ interface CreateAssociationResult {
 }
 
 // Função para validar e extrair dados do resultado JSON
-const parseRpcResult = (result: any): CreateAssociationResult => {
+const parseRpcResult = (result: unknown): CreateAssociationResult => {
   // Se result é null ou undefined
   if (!result) {
     throw new Error('Resposta vazia do servidor');
@@ -211,13 +211,13 @@ export const useCreateAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('[useCreateAssociation] Erro capturado:', error);
-      
+
       // Mostrar erro com detalhes técnicos quando disponível
       let errorMessage = 'Erro ao criar associação';
-      
-      if (error.message) {
+
+      if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
       

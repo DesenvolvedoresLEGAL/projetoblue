@@ -206,10 +206,10 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       
       if (error) {
         const friendlyMessage = showFriendlyError(error, 'authentication');
-        const errorCategory = (error as any).category || AuthErrorCategory.UNKNOWN;
+        const errorCategory = error.category || AuthErrorCategory.UNKNOWN;
         
         setTechnicalError({
-          message: (error as any).message || 'Erro desconhecido durante login',
+          message: error.message || 'Erro desconhecido durante login',
           category: errorCategory,
           timestamp: new Date().toISOString()
         });

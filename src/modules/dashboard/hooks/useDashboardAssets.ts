@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { assetService } from "@modules/assets/services/asset";
 import { formatPhoneNumber, getAssetIdentifier } from "@/utils/formatters";
-import { Status } from "@/types/asset";
+import { Status, Asset } from "@/types/asset";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -26,32 +26,31 @@ export function useDashboardAssets() {
       try {
         // Fetch ALL assets for accurate statistics by setting a high limit
         const assetsResult = await assetService.getAssets({ limit: 10000 });
-        const assets = Array.isArray(assetsResult) ? assetsResult : assetsResult?.data || [];
-        
-        // Work with safe data mapping
-        const rawAssets = assets.map((asset: any) => ({
-          solution_id: asset.solution_id || asset.solutionId || 0,
-          status_id: asset.status_id || asset.statusId || 0,
+        const assets: Asset[] = assetsResult.data;
+
+        const rawAssets = assets.map(asset => ({
+          solution_id: asset.solution_id ?? 0,
+          status_id: asset.status_id ?? 0,
           type: asset.type || 'UNKNOWN'
         }));
         
         // Calculate stats safely
         const chips = {
-          total: rawAssets.filter((a: any) => a.solution_id === 11 || a.type === 'CHIP').length,
-          available: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id === 1).length,
-          unavailable: rawAssets.filter((a: any) => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id !== 1).length
+          total: rawAssets.filter(a => a.solution_id === 11 || a.type === 'CHIP').length,
+          available: rawAssets.filter(a => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id === 1).length,
+          unavailable: rawAssets.filter(a => (a.solution_id === 11 || a.type === 'CHIP') && a.status_id !== 1).length
         };
         
         const speedys = {
-          total: rawAssets.filter((a: any) => a.solution_id === 1).length,
-          available: rawAssets.filter((a: any) => a.solution_id === 1 && a.status_id === 1).length,
-          unavailable: rawAssets.filter((a: any) => a.solution_id === 1 && a.status_id !== 1).length
+          total: rawAssets.filter(a => a.solution_id === 1).length,
+          available: rawAssets.filter(a => a.solution_id === 1 && a.status_id === 1).length,
+          unavailable: rawAssets.filter(a => a.solution_id === 1 && a.status_id !== 1).length
         };
         
         const equipment = {
-          total: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1).length,
-          available: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id === 1).length,
-          unavailable: rawAssets.filter((a: any) => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id !== 1).length
+          total: rawAssets.filter(a => a.solution_id !== 11 && a.solution_id !== 1).length,
+          available: rawAssets.filter(a => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id === 1).length,
+          unavailable: rawAssets.filter(a => a.solution_id !== 11 && a.solution_id !== 1 && a.status_id !== 1).length
         };
         
         return { chips, speedys, equipment };
@@ -144,7 +143,7 @@ export function useDashboardAssets() {
         return assetLogs
           .map(log => {
             // Safely parse details as object
-            const details = log.details as any;
+            const details = log.details as Record<string, unknown>;
             
             // Use only the date field with proper fallback - don't access created_at
             const logDate = log.date || new Date().toISOString();
