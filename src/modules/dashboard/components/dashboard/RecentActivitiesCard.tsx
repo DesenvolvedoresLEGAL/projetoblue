@@ -14,7 +14,7 @@ interface RecentActivity {
   assetName?: string;
   clientName?: string;
   timestamp: string;
-  details?: any;
+  details?: Record<string, unknown>;
   performedBy?: string; // NEW: User who performed the action
 }
 
@@ -30,7 +30,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  const getAssetTypeBadge = (description: string, details?: any): string => {
+  const getAssetTypeBadge = (description: string, details?: Record<string, unknown>): string => {
     // Usar detalhes da solução se disponível
     if (details?.solution) {
       const solution = details.solution.toLowerCase();
@@ -56,7 +56,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
     return 'ATIVO';
   };
 
-  const getStatusBadge = (details?: any): string => {
+  const getStatusBadge = (details?: Record<string, unknown>): string => {
     if (details?.new_status?.status) {
       return details.new_status.status;
     }
