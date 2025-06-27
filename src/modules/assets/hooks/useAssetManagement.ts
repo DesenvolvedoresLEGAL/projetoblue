@@ -71,6 +71,37 @@ interface AssetFilters {
   manufacturerId?: number;
 }
 
+interface IDbAssetUnmapped {
+    uuid: string;
+    serial_number: string;
+    model: string;
+    iccid: string;
+    solution_id: number;
+    status_id: number;
+    line_number: number;
+    radio: string;
+    manufacturer_id: number;
+    created_at: string;
+    updated_at: string;
+    rented_days: number;
+    admin_user: string;
+    admin_pass: string;
+    pass_atual: string;
+    ssid_atual: string;
+    manufacturers: {
+        id: number;
+        name: string;
+    };
+    asset_status: {
+        id: number;
+        status: string;
+    };
+    asset_solutions: {
+        id: number;
+        solution: string;
+    };
+}
+
 /**
  * Modern asset management hook providing CRUD operations and data fetching
  * Uses React Query for efficient caching and state management
@@ -159,7 +190,7 @@ export function useAssetManagement() {
           throw new Error(error.message);
         }
 
-        return mapDbToAsset(data);
+        return mapDbToAsset((data as IDbAssetUnmapped));
       },
       enabled: !!id,
     });
@@ -331,20 +362,20 @@ export function useAssetManagement() {
   /**
    * Transform database record to frontend Asset type
    */
-  function mapDbToAsset(dbAsset: any): Asset {
+  function mapDbToAsset(dbAsset: IDbAssetUnmapped): Asset {
     const solutionType = mapSolutionToType(dbAsset.solution_id, dbAsset.asset_solutions?.solution);
     
     const baseAsset = {
       id: String(dbAsset.uuid || ''),
       uuid: String(dbAsset.uuid || ''),
       registrationDate: String(dbAsset.created_at || ''),
-      status: String((dbAsset.asset_status as any)?.status || "DISPONÍVEL") as AssetStatus,
+      status: String(dbAsset.asset_status?.status || "DISPONÍVEL") as AssetStatus,
       statusId: dbAsset.status_id,
       solucao: solutionType,
-      marca: String((dbAsset.manufacturers as any)?.name || ''),
+      marca: String(dbAsset.manufacturers?.name || ''),
       modelo: String(dbAsset.model || ''),
       serial_number: String(dbAsset.serial_number || ''),
-      radio: String(dbAsset.radio || ''),
+      radio: String(dbAsset.radio || '')
     };
 
     if (solutionType === 'CHIP') {
@@ -362,7 +393,7 @@ export function useAssetManagement() {
         ...baseAsset,
         type: "ROTEADOR" as const,
         uniqueId: String(dbAsset.uuid || ''),
-        brand: String((dbAsset.manufacturers as any)?.name || ''),
+        brand: String(dbAsset.manufacturers?.name || ''),
         model: String(dbAsset.model || ''),
         ssid: String(dbAsset.ssid_atual || ''),
         password: String(dbAsset.pass_atual || ''),
