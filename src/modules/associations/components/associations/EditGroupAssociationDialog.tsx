@@ -72,8 +72,14 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
 
     try {
       // Atualizar todas as associações do grupo
+      interface UpdateData {
+        entry_date: string;
+        exit_date?: string;
+        notes?: string;
+      }
+
       const updates = associations.map(async (association) => {
-        const updateData: any = {
+        const updateData: UpdateData = {
           entry_date: formatDateForSubmission(newEntryDate),
         };
 

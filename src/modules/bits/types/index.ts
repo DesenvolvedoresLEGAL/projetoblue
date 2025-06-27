@@ -22,7 +22,7 @@ export interface Referral {
   referral_link_used?: string;
   piperun_lead_id?: string;
   piperun_deal_status?: string;
-  conversion_data?: any;
+  conversion_data?: Record<string, unknown>;
 }
 
 // Point transaction interface based on bits_points_log table
@@ -62,7 +62,7 @@ export interface Badge {
   name: string;
   description?: string;
   icon_url?: string;
-  criteria?: any;
+  criteria?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -85,7 +85,7 @@ export interface Campaign {
   is_active: boolean;
   point_multiplier?: number;
   bonus_points?: number;
-  applicable_to?: any;
+  applicable_to?: Record<string, unknown>;
 }
 
 // User profile stats interface based on bits_user_profile_stats table
@@ -104,7 +104,7 @@ export interface Mission {
   description?: string;
   points_reward: number;
   badge_reward_id?: string;
-  criteria?: any;
+  criteria?: Record<string, unknown>;
   start_date?: string;
   end_date?: string;
   is_active: boolean;
@@ -116,7 +116,7 @@ export interface UserMission {
   user_id: string;
   mission_id: string;
   status: MissionStatus;
-  progress?: any;
+  progress?: Record<string, unknown>;
   completed_at?: string;
   bits_missions_catalog: Mission;
 }
@@ -126,7 +126,7 @@ export interface Level {
   level_number: number;
   name: string;
   points_required: number;
-  benefits?: any;
+  benefits?: Record<string, unknown>;
 }
 
 // Extended profile interface for BITS functionality

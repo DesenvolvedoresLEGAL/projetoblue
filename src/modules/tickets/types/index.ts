@@ -89,5 +89,5 @@ export interface RuleCondition {
 
 export interface RuleAction {
   type: 'assign' | 'update_status' | 'add_tag' | 'remove_tag' | 'send_notification';
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }

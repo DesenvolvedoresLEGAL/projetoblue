@@ -68,7 +68,7 @@ export const idempotencyService = {
   async acquireOperationLock(
     operationType: string,
     resourceId: string,
-    operationData?: any,
+    operationData?: Record<string, unknown>,
     timeoutMinutes: number = 5
   ): Promise<OperationLockResult> {
     try {

@@ -55,7 +55,7 @@ export function useDashboardStatusByType() {
           const statusCounts = new Map<string, number>();
           
           typeAssets.forEach(asset => {
-            const status = (asset.asset_status as any)?.status?.toUpperCase() || 'DESCONHECIDO';
+            const status = (asset.asset_status as { status?: string } | null)?.status?.toUpperCase() || 'DESCONHECIDO';
             statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
           });
           
@@ -75,7 +75,7 @@ export function useDashboardStatusByType() {
               return solutionId !== 11 && solutionId !== 1;
             })
             .reduce((acc, asset) => {
-              const status = (asset.asset_status as any)?.status?.toUpperCase() || 'DESCONHECIDO';
+              const status = (asset.asset_status as { status?: string } | null)?.status?.toUpperCase() || 'DESCONHECIDO';
               const existing = acc.find(item => item.status === status);
               if (existing) {
                 existing.value++;

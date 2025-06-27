@@ -1,5 +1,5 @@
 
-import { Asset } from "@/types/asset";
+import { Asset, AssetLog, AssetStatusByType } from "@/types/asset";
 
 // Helper function to format relative time
 export function formatRelativeTime(date: Date | string): string {
@@ -21,7 +21,7 @@ export function formatRelativeTime(date: Date | string): string {
 
 // Process recent assets data
 export function processRecentAssets(
-  assetsData: any[], 
+  assetsData: Asset[],
   solutions: { id: number; solution: string }[],
   statuses: { id: number; status: string }[]
 ) {
@@ -39,9 +39,9 @@ export function processRecentAssets(
 }
 
 // Process recent events data
-export function processRecentEvents(eventsData: any[]) {
+export function processRecentEvents(eventsData: AssetLog[]) {
   return (eventsData || []).map(event => {
-    const details = event.details as Record<string, any> | null;
+    const details = event.details as Record<string, unknown> | null;
     let description = event.event || 'Event logged';
     let asset_name = 'N/A'; 
     
@@ -73,13 +73,13 @@ export function processRecentEvents(eventsData: any[]) {
 }
 
 // Calculate status summary
-export function calculateStatusSummary(statusBreakdownData: any[]) {
+export function calculateStatusSummary(statusBreakdownData: AssetStatusByType[]) {
   let active = 0;
   let warning = 0;
   let critical = 0;
   
   if (statusBreakdownData) {
-    statusBreakdownData.forEach((item: any) => {
+    statusBreakdownData.forEach((item: AssetStatusByType) => {
       const status = item.status?.toLowerCase() || '';
       if (status.includes('active') || status.includes('disponível')) {
         active += item.count || 0;

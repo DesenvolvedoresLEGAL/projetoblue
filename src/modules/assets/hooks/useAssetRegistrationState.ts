@@ -2,10 +2,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { UseFormReturn } from 'react-hook-form';
+import type {
+  ChipFormValues,
+  EquipmentFormValues,
+} from '../pages/assets/register/types';
 
-interface RegistrationFormData {
-  [key: string]: any;
-}
+type ChipRegistrationData = Partial<ChipFormValues>;
+type EquipmentRegistrationData = Partial<EquipmentFormValues>;
 
 interface AssetRegistrationState {
   // Form type management
@@ -26,8 +29,8 @@ interface AssetRegistrationState {
   networkInfoOpen: boolean;
   
   // Form data
-  chipFormData: RegistrationFormData;
-  equipmentFormData: RegistrationFormData;
+  chipFormData: ChipRegistrationData;
+  equipmentFormData: EquipmentRegistrationData;
   
   // Actions
   setCurrentFormType: (formType: 'chip' | 'equipment') => void;
@@ -39,9 +42,19 @@ interface AssetRegistrationState {
   setTechnicalInfoOpen: (open: boolean) => void;
   setSecurityInfoOpen: (open: boolean) => void;
   setNetworkInfoOpen: (open: boolean) => void;
-  setFormValue: (form: UseFormReturn<any>, key: string, value: any) => void;
-  updateFormData: (data: RegistrationFormData, formType: 'chip' | 'equipment') => void;
-  syncWithForm: (form: UseFormReturn<any>, formType: 'chip' | 'equipment') => void;
+  setFormValue: <T extends ChipFormValues | EquipmentFormValues>(
+    form: UseFormReturn<T>,
+    key: keyof T,
+    value: T[keyof T]
+  ) => void;
+  updateFormData: (
+    data: ChipRegistrationData | EquipmentRegistrationData,
+    formType: 'chip' | 'equipment'
+  ) => void;
+  syncWithForm: (
+    form: UseFormReturn<ChipFormValues | EquipmentFormValues>,
+    formType: 'chip' | 'equipment'
+  ) => void;
   clearState: () => void;
 }
 
@@ -87,9 +100,9 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
       
       setFormValue: (form, key, value) => {
         try {
-          form.setValue(key as any, value);
+          form.setValue(key, value);
         } catch (error) {
-          console.warn(`Could not set form value for key: ${key}`, error);
+          console.warn(`Could not set form value for key: ${String(key)}`, error);
         }
       },
       

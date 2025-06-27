@@ -9,7 +9,7 @@ export interface RecentActivity {
   assetName?: string;
   clientName?: string;
   timestamp: string;
-  details?: any;
+  details?: Record<string, unknown>;
   performedBy?: string; // NEW: User who performed the action
 }
 
@@ -36,12 +36,12 @@ export function useDashboardRecentActivities() {
           let assetName = 'Asset desconhecido';
           let clientName: string | undefined;
 
-          const details = event.details as any;
+          const details = event.details as Record<string, unknown>;
           
           // Determine performed by user
           let performedBy = 'Sistema'; // Default fallback
-          if ((event as any).user_email) {
-            performedBy = (event as any).user_email;
+          if ((event as { user_email?: string }).user_email) {
+            performedBy = (event as { user_email?: string }).user_email as string;
           } else if (details?.username && details.username !== 'system') {
             performedBy = details.username;
           }
@@ -87,12 +87,13 @@ export function useDashboardRecentActivities() {
               type = 'asset_created';
               description = `${assetType} ${assetName} cadastrado no sistema`;
               break;
-              
-            case 'ASSOCIATION_CREATED':
+
+            case 'ASSOCIATION_CREATED': {
               type = 'association_created';
               const clientInfo = clientName ? ` à empresa ${clientName}` : '';
               description = `${assetType} ${assetName} associado${clientInfo}`;
               break;
+            }
               
             case 'ASSOCIATION_REMOVED':
               type = 'association_ended';
@@ -100,11 +101,11 @@ export function useDashboardRecentActivities() {
               break;
               
             case 'STATUS_UPDATED':
-            case 'ASSOCIATION_STATUS_UPDATED':
+            case 'ASSOCIATION_STATUS_UPDATED': {
               type = 'status_updated';
               const oldStatus = details?.old_status_name || details?.old_status?.status || '';
               const newStatus = details?.new_status_name || details?.new_status?.status || '';
-              
+
               if (oldStatus && newStatus) {
                 description = `${assetType} ${assetName} alterado de ${oldStatus} para ${newStatus}`;
               } else if (newStatus) {
@@ -113,6 +114,7 @@ export function useDashboardRecentActivities() {
                 description = `${assetType} ${assetName} com status atualizado`;
               }
               break;
+            }
               
             default:
               description = `${assetType} ${assetName} - ${event.event}`;

@@ -3,14 +3,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { optimizedAssetService } from '@modules/assets/services/optimizedAssetService';
 import * as dashboardQueries from '@modules/dashboard/services/dashboardQueries';
+import { Asset } from '@/types/asset';
+import { StandardizedEvent } from '@/utils/eventFormatters';
 
 export interface DashboardOptimizedStats {
   totalAssets: number;
   activeClients: number;
   assetsWithIssues: number;
   statusSummary: { status: string; count: number; statusId: number }[];
-  recentAssets: any[];
-  recentEvents: any[];
+  recentAssets: Asset[];
+  recentEvents: StandardizedEvent[];
   pieChartData: { status: string; total: number }[];
 }
 

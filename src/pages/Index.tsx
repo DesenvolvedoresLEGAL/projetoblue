@@ -347,7 +347,9 @@ const Index = () => {
 };
 
 // Componente para exibir distribuição de status
-const StatusDistributionChart = ({ assets }: { assets: any[] }) => {
+import { Asset } from '@/types/asset';
+
+const StatusDistributionChart = ({ assets }: { assets: Asset[] }) => {
   // Agrupar por status
   const statusCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};

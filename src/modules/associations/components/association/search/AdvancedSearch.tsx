@@ -33,16 +33,16 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tipo</Label>
           <div className={`grid gap-1 ${isMobile ? 'grid-cols-3' : 'grid-cols-3'}`}>
-            {[
-              { key: 'all', label: 'Todos', icon: null },
-              { key: 'equipment', label: isMobile ? 'Equip.' : 'Equipamentos', icon: Wifi },
-              { key: 'chip', label: 'CHIPs', icon: Smartphone }
-            ].map(({ key, label, icon: Icon }) => (
+            {([
+  { key: 'all', label: 'Todos', icon: null },
+  { key: 'equipment', label: isMobile ? 'Equip.' : 'Equipamentos', icon: Wifi },
+  { key: 'chip', label: 'CHIPs', icon: Smartphone }
+] as const).map(({ key, label, icon: Icon }) => (
               <Button
                 key={key}
                 variant={filters.type === key ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => onFiltersUpdate({ type: key as any })}
+                onClick={() => onFiltersUpdate({ type: key })}
                 className={`${isMobile ? 'px-2 text-xs' : 'flex-1'}`}
               >
                 {Icon && <Icon className="h-3 w-3 mr-1" />}
