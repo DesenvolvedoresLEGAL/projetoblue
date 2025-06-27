@@ -92,7 +92,7 @@ const AdminConfig = () => {
       toast.success('Usuário excluído com sucesso');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Erro na mutation de exclusão:', error);
       const errorMessage = error?.message || 'Erro ao excluir usuário';
       toast.error(errorMessage);

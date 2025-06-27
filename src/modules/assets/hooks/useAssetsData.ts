@@ -43,7 +43,7 @@ interface DatabaseAsset {
 }
 
 // Transform database record to frontend Asset type
-const transformDatabaseAsset = (dbAsset: any): Asset => {
+const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
   // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
   const status = dbAsset.status?.status as AssetStatus || 'DISPONÍVEL';
@@ -93,7 +93,7 @@ const transformDatabaseAsset = (dbAsset: any): Asset => {
 };
 
 // Transform database record to AssetWithRelations
-const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
+const transformToAssetWithRelations = (dbAsset: DatabaseAsset): AssetWithRelations => {
   return {
     uuid: dbAsset.uuid,
     model: dbAsset.model,

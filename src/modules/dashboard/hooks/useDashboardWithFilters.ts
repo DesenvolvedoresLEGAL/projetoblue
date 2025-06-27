@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDashboardStats, DashboardStats } from '@modules/dashboard/hooks/useDashboardStats';
+import { DatabaseAsset } from '@/types/asset';
 import { AssetFilterValues } from '@modules/dashboard/components/dashboard/AssetFilters';
 
 interface UseDashboardWithFiltersResult {
   dashboardStats: DashboardStats | undefined;
   isLoading: boolean;
   isError: boolean;
-  filteredAssets: any[];
+  filteredAssets: DatabaseAsset[];
   isFilteredLoading: boolean;
   filters: AssetFilterValues;
   setFilters: (filters: AssetFilterValues) => void;

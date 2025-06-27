@@ -25,8 +25,10 @@ export function EventsTimeline() {
   );
 }
 
+import type { AssetHistoryEntry } from '@/types/assetHistory';
+
 interface TimelineEventProps {
-  event: any;
+  event: AssetHistoryEntry;
   isLast: boolean;
 }
 

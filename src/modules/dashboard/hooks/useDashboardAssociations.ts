@@ -17,6 +17,12 @@ export interface DashboardAssociationsData {
   }[];
 }
 
+interface ActiveAssociationRow {
+  association_id: number
+  assets: { solution_id: number } | null
+  clients: { nome?: string; empresa?: string } | null
+}
+
 export function useDashboardAssociations() {
   return useQuery<DashboardAssociationsData, Error>({
     queryKey: ['dashboard', 'associations'],
@@ -44,7 +50,7 @@ export function useDashboardAssociations() {
         if (last30DaysResult.error) throw last30DaysResult.error;
 
         // Process active associations
-        const activeAssociations = activeAssociationsResult.data || [];
+        const activeAssociations: ActiveAssociationRow[] = activeAssociationsResult.data || [];
         const byType = {
           aluguel: activeAssociations.filter(a => a.association_id === 1).length,
           assinatura: activeAssociations.filter(a => a.association_id === 2).length,
@@ -52,15 +58,18 @@ export function useDashboardAssociations() {
         };
 
         const byAssetType = {
-          chips: activeAssociations.filter(a => (a.assets as any)?.solution_id === 11).length,
-          speedys: activeAssociations.filter(a => (a.assets as any)?.solution_id === 1).length,
-          equipment: activeAssociations.filter(a => (a.assets as any)?.solution_id !== 11 && (a.assets as any)?.solution_id !== 1).length
+          chips: activeAssociations.filter(a => a.assets?.solution_id === 11).length,
+          speedys: activeAssociations.filter(a => a.assets?.solution_id === 1).length,
+          equipment: activeAssociations.filter(a => {
+            const solution = a.assets?.solution_id;
+            return solution !== 11 && solution !== 1;
+          }).length
         };
 
         // Process top clients
         const clientCounts = new Map<string, number>();
         (topClientsResult.data || []).forEach(item => {
-          const clientName = (item.clients as any)?.nome || 'Cliente Desconhecido';
+          const clientName = (item.clients as { nome?: string } | null)?.nome || 'Cliente Desconhecido';
           clientCounts.set(clientName, (clientCounts.get(clientName) || 0) + 1);
         });
 

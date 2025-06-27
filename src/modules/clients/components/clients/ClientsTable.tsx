@@ -40,9 +40,9 @@ interface ClientLog {
   id: string;
   client_id: string;
   event_type: string;
-  details: any;
-  old_data?: any;
-  new_data?: any;
+  details: Record<string, unknown>;
+  old_data?: Record<string, unknown>;
+  new_data?: Record<string, unknown>;
   date: string;
   performed_by_email?: string;
 }

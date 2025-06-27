@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 import { SearchType } from '@/hooks/useSearchTypeDetection';
 import { Association, StatusFilterType } from '@/types/associations';
 import { sanitizeSearchTerm } from '@/utils/associationsUtils';
@@ -18,8 +19,30 @@ interface UseAssociationsDataProps {
   itemsPerPage: number;
 }
 
+interface AssociationQueryRow {
+  id: number;
+  asset_id: string;
+  client_id: string;
+  entry_date: string;
+  exit_date: string | null;
+  association_id: number;
+  created_at: string;
+  clients?: { empresa?: string } | null;
+  assets?: {
+    iccid?: string | null;
+    radio?: string | null;
+    line_number?: number | null;
+    solution_id: number;
+    asset_solutions?: { solution?: string } | null;
+  } | null;
+}
+
 // Função para aplicar filtro de busca no Supabase apenas para campos específicos (não busca geral)
-const applySupabaseSearch = (query: any, term: string, type: SearchType) => {
+const applySupabaseSearch = (
+  query: PostgrestFilterBuilder<unknown, Record<string, unknown>, unknown, unknown, unknown>,
+  term: string,
+  type: SearchType
+) => {
   if (!term || type === 'empty') return query;
 
   const sanitized = sanitizeSearchTerm(term);
@@ -142,7 +165,7 @@ export const useAssociationsData = ({
       }
 
       // Mapear dados para o formato esperado com line_number incluído
-      const mappedData: Association[] = data.map((item: any) => ({
+      const mappedData: Association[] = data.map((item: AssociationQueryRow) => ({
         id: item.id,
         asset_id: item.asset_id,
         client_id: item.client_id,

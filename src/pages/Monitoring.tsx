@@ -1,6 +1,6 @@
 
 import { useAssets } from "@/context/AssetContext";
-import { AssetStatus, EquipamentAsset } from "@/types/asset";
+import { AssetStatus, EquipamentAsset, ChipAsset } from "@/types/asset";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -152,9 +152,9 @@ export default function Monitoring() {
                               <TableCell className="font-medium">{asset.id.substring(0, 8)}</TableCell>
                               <TableCell>{asset.type}</TableCell>
                               <TableCell>
-                                {asset.type === "CHIP" ? 
-                                  `${(asset as any).carrier} - ${(asset as any).phoneNumber}` : 
-                                  `${(asset as any).brand} ${(asset as any).model}`
+                                {asset.type === "CHIP" ?
+                                  `${(asset as ChipAsset).carrier} - ${(asset as ChipAsset).phoneNumber}` :
+                                  `${(asset as EquipamentAsset).brand} ${(asset as EquipamentAsset).model}`
                                 }
                               </TableCell>
                               <TableCell>
