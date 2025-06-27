@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface InventoryFiltersState {
   searchTerm: string;
@@ -76,26 +76,26 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
     }
   }, [state, shouldPersist]);
 
-  const setSearchTerm = (term: string) => {
+  const setSearchTerm = useCallback((term: string) => {
     setState(prev => ({ ...prev, searchTerm: term }));
-  };
+  }, []);
 
-  const setFilterType = (value: string) => {
+  const setFilterType = useCallback((value: string) => {
     setState(prev => ({ ...prev, filterType: value }));
-  };
+  }, []);
 
-  const setFilterStatus = (value: string) => {
+  const setFilterStatus = useCallback((value: string) => {
     setState(prev => ({ ...prev, filterStatus: value }));
-  };
+  }, []);
 
-  const setFilterManufacturer = (value: string) => {
+  const setFilterManufacturer = useCallback((value: string) => {
     setState(prev => ({ ...prev, filterManufacturer: value }));
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     console.log('🔄 Resetting all inventory filters');
     setState(getDefaultState());
-  };
+  }, []);
 
   return {
     searchTerm: state.searchTerm,

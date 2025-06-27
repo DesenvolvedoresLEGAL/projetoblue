@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface URLFiltersParams {
@@ -80,7 +80,7 @@ export const useURLFilters = (
   }, [clearOnMount, searchParams, setFilterType, setFilterStatus, setFilterManufacturer, filterType, filterStatus, filterManufacturer]);
 
   // Função para atualizar URL quando filtros mudarem
-  const updateURLParams = (newFilters: {
+  const updateURLParams = useCallback((newFilters: {
     type?: string;
     status?: string;
     manufacturer?: string;
@@ -115,20 +115,21 @@ export const useURLFilters = (
     }
 
     setSearchParams(params);
-  };
+  }, [searchParams, setSearchParams]);
 
   // Função para limpar todos os parâmetros de filtro da URL
-  const clearAllURLParams = () => {
+  const clearAllURLParams = useCallback(() => {
     console.log('🧹 Clearing all URL filter parameters');
+    const currentParams = new URLSearchParams(window.location.search);
     const params = new URLSearchParams();
     // Manter apenas parâmetros que não são de filtro
-    for (const [key, value] of searchParams.entries()) {
+    for (const [key, value] of currentParams.entries()) {
       if (!['solution', 'type', 'status', 'manufacturer', 'exclude_solutions'].includes(key)) {
         params.set(key, value);
       }
     }
     setSearchParams(params, { replace: true });
-  };
+  }, [setSearchParams]);
 
   // Obter excludeSolutions da URL
   const getExcludeSolutions = (): string[] => {
