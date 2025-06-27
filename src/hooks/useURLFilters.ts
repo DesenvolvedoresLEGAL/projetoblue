@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 interface URLFiltersParams {
@@ -28,16 +28,17 @@ export const useURLFilters = (
 ) => {
   const { clearOnMount = true } = options;
   const [searchParams, setSearchParams] = useSearchParams();
+  const hasClearedRef = useRef(false);
 
   // Limpar parâmetros da URL na montagem se clearOnMount for true
   useEffect(() => {
-    if (clearOnMount) {
-      const hasFilterParams = searchParams.has('solution') || 
-                             searchParams.has('type') || 
-                             searchParams.has('status') || 
+    if (clearOnMount && !hasClearedRef.current) {
+      const hasFilterParams = searchParams.has('solution') ||
+                             searchParams.has('type') ||
+                             searchParams.has('status') ||
                              searchParams.has('manufacturer') ||
                              searchParams.has('exclude_solutions');
-      
+
       if (hasFilterParams) {
         console.log('🧹 Clearing URL filter parameters on mount');
         const newParams = new URLSearchParams();
@@ -49,8 +50,9 @@ export const useURLFilters = (
         }
         setSearchParams(newParams, { replace: true });
       }
+      hasClearedRef.current = true;
     }
-  }, [clearOnMount, searchParams, setSearchParams]);
+  }, [clearOnMount, setSearchParams]);
 
   // Ler parâmetros da URL no carregamento inicial (apenas se clearOnMount for false)
   useEffect(() => {
@@ -80,7 +82,7 @@ export const useURLFilters = (
   }, [clearOnMount, searchParams, setFilterType, setFilterStatus, setFilterManufacturer, filterType, filterStatus, filterManufacturer]);
 
   // Função para atualizar URL quando filtros mudarem
-  const updateURLParams = (newFilters: {
+  const updateURLParams = useCallback((newFilters: {
     type?: string;
     status?: string;
     manufacturer?: string;
@@ -115,20 +117,21 @@ export const useURLFilters = (
     }
 
     setSearchParams(params);
-  };
+  }, [searchParams, setSearchParams]);
 
   // Função para limpar todos os parâmetros de filtro da URL
-  const clearAllURLParams = () => {
+  const clearAllURLParams = useCallback(() => {
     console.log('🧹 Clearing all URL filter parameters');
+    const currentParams = new URLSearchParams(window.location.search);
     const params = new URLSearchParams();
     // Manter apenas parâmetros que não são de filtro
-    for (const [key, value] of searchParams.entries()) {
+    for (const [key, value] of currentParams.entries()) {
       if (!['solution', 'type', 'status', 'manufacturer', 'exclude_solutions'].includes(key)) {
         params.set(key, value);
       }
     }
     setSearchParams(params, { replace: true });
-  };
+  }, [setSearchParams]);
 
   // Obter excludeSolutions da URL
   const getExcludeSolutions = (): string[] => {

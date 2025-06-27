@@ -108,9 +108,9 @@ const AssetsSearchForm = ({
                   <SelectContent className="bg-white border-legal-secondary/20">
                     <SelectItem value="all" className="font-neue-haas">Todos os Tipos</SelectItem>
                     {assetSolutions.map((solution) => (
-                      <SelectItem 
-                        key={solution.id} 
-                        value={solution.solution} 
+                      <SelectItem
+                        key={solution.id}
+                        value={solution.id.toString()}
                         className="font-neue-haas"
                       >
                         {solution.solution === 'CHIP' ? '📱 '

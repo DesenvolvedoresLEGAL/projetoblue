@@ -30,7 +30,7 @@ export function useDashboardAssets() {
 
         const rawAssets = assets.map(asset => ({
           solution_id: asset.solution_id ?? 0,
-          status_id: asset.status_id ?? 0,
+          status_id: asset.statusId || 0,
           type: asset.type || 'UNKNOWN'
         }));
         
