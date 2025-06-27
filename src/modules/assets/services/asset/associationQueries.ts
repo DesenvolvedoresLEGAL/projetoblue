@@ -43,8 +43,8 @@ export const associationQueries = {
         association_id: item.association_id,
         entry_date: item.entry_date,
         exit_date: item.exit_date,
-        client_name: (item.clients as any)?.nome || 'Cliente não encontrado',
-        association_type_name: (item.association_types as any)?.type || 'Tipo não encontrado'
+        client_name: item.clients?.nome || 'Cliente não encontrado',
+        association_type_name: item.association_types?.type || 'Tipo não encontrado'
       }));
 
       console.log(`Found ${associations.length} active associations for asset ${assetId}`);

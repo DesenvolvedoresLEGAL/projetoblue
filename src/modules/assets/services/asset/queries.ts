@@ -12,6 +12,17 @@ type ProblemAssetFromDb =
   Database["public"]["Views"]["v_problem_assets"]["Row"];
 import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
+interface Manufacturer {
+    country: string;
+    created_at: string;
+    deleted_at: string;
+    description: string;
+    id: number;
+    name: string;
+    updated_at: string;
+    website: string;
+}
+
 /**
  * Get a list of assets with optional filters and pagination.
  */
@@ -280,6 +291,7 @@ export const getAssetsByMultipleStatus = async (
     return [];
   }
 };
+
 
 /**
  * Retrieve manufacturer information by id.
