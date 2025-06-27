@@ -61,15 +61,17 @@ export const generateStandardMessage = (event: StandardizedEvent): string => {
     case 'deletion':
       return `Remoção: ${assetType} ${assetName} foi removido do sistema`;
       
-    case 'association':
+    case 'association': {
       const clientInfo = client ? ` ao cliente ${client}` : '';
       return `Associação: ${assetType} ${assetName} foi associado${clientInfo}`;
+    }
       
-    case 'status_change':
+    case 'status_change': {
       if (status?.from && status?.to) {
         return `Status atualizado: ${assetType} ${assetName} mudou de "${status.from}" para "${status.to}"`;
       }
       return `Status: ${assetType} ${assetName} teve seu status atualizado`;
+    }
       
     case 'update':
       return `Atualização: ${assetType} ${assetName} foi atualizado`;
@@ -183,7 +185,7 @@ export const removeDuplicateEvents = <T extends {
 /**
  * Determina qual evento deve ser mantido em caso de duplicatas
  */
-const shouldReplaceEvent = (existing: any, incoming: any): boolean => {
+const shouldReplaceEvent = (existing: StandardizedEvent, incoming: StandardizedEvent): boolean => {
   // Priority order: ASSOCIATION_CREATED > ASSET_CRIADO > STATUS_UPDATED > others
   const eventPriority = {
     'ASSOCIATION_CREATED': 4,
@@ -203,7 +205,7 @@ const shouldReplaceEvent = (existing: any, incoming: any): boolean => {
 /**
  * Valida se um evento contém informações mínimas necessárias
  */
-export const isValidEvent = (event: any): boolean => {
+export const isValidEvent = (event: Partial<StandardizedEvent>): boolean => {
   return !!(event?.id && event?.date && (event?.assetType || event?.description));
 };
 
@@ -262,7 +264,7 @@ export const getEventTypeBadgeColor = (eventType: StandardizedEvent['type']): st
 /**
  * Melhora a mensagem de evento baseada nos detalhes disponíveis
  */
-export const improveEventMessage = (event: any): string => {
+export const improveEventMessage = (event: StandardizedEvent): string => {
   const details = event.details || {};
   const assetName = event.name || details.radio || details.line_number || 'Ativo';
   const clientName = details.client_name || '';
@@ -272,20 +274,22 @@ export const improveEventMessage = (event: any): string => {
     case 'ASSET_CRIADO':
       return `Cadastro: ${event.assetType} ${assetName} foi cadastrado no sistema`;
       
-    case 'ASSOCIATION_CREATED':
+    case 'ASSOCIATION_CREATED': {
       const clientInfo = clientName ? ` para ${clientName}` : '';
       return `Associação: ${event.assetType} ${assetName} foi associado${clientInfo}`;
+    }
       
     case 'ASSOCIATION_REMOVED':
       return `Desassociação: ${event.assetType} ${assetName} foi desassociado`;
       
-    case 'STATUS_UPDATED':
+    case 'STATUS_UPDATED': {
       const oldStatus = event.old_status?.status || '';
       const newStatus = event.new_status?.status || '';
       if (oldStatus && newStatus) {
         return `Status: ${event.assetType} ${assetName} mudou de "${oldStatus}" para "${newStatus}"`;
       }
       return `Status: ${event.assetType} ${assetName} teve status atualizado`;
+    }
       
     case 'ASSET_SOFT_DELETE':
       return `Remoção: ${event.assetType} ${assetName} foi removido do sistema`;

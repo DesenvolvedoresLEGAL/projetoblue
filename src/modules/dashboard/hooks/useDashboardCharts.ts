@@ -48,7 +48,7 @@ export function useDashboardCharts() {
         };
 
         (statusSummaryResult.data || []).forEach(asset => {
-          const status = (asset.asset_status as any)?.status?.toUpperCase() || 'DESCONHECIDO';
+          const status = (asset.asset_status as { status?: string } | null)?.status?.toUpperCase() || 'DESCONHECIDO';
           statusCounts.set(status, (statusCounts.get(status) || 0) + 1);
         });
 

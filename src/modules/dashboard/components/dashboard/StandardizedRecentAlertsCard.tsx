@@ -14,8 +14,24 @@ import {
   isValidEvent
 } from "@/utils/eventFormatters";
 
+interface RecentAlert {
+  id: string;
+  date: string;
+  assetType: string;
+  new_status?: { status: string };
+  event?: string;
+  name?: string | string[];
+}
+
+interface DashboardData {
+  recentAlerts: {
+    data?: RecentAlert[];
+    isLoading: boolean;
+  };
+}
+
 interface StandardizedRecentAlertsCardProps {
-  dashboard: any;
+  dashboard: DashboardData;
 }
 
 export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCardProps> = ({ dashboard }) => {
@@ -62,7 +78,7 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
             <div className="space-y-2 md:space-y-3 max-h-80 md:max-h-96 overflow-y-auto">
               {validEvents
                 .slice(0, 5)
-                .map((alert: any) => {
+                .map((alert: RecentAlert) => {
                   return (
                     <Tooltip key={`${alert.id}-${alert.timestamp || alert.date}`}>
                       <TooltipTrigger asChild>

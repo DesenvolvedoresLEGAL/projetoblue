@@ -7,10 +7,13 @@ import { Separator } from '@/components/ui/separator';
 import { Building, Phone, Mail, Hash, User, Wifi, Smartphone } from 'lucide-react';
 import { SelectedAsset } from '@modules/associations/types';
 
+import type { Client } from '@/types/client';
+import type { AssociationGeneralConfig } from './AssociationGeneralConfig';
+
 interface AssociationSummaryProps {
-  client: any; // Replace 'any' with the actual client type
+  client: Client;
   assets: SelectedAsset[];
-  generalConfig: any; // Replace 'any' with the actual generalConfig type
+  generalConfig: AssociationGeneralConfig;
   onComplete: () => void;
   onBack: () => void;
   isLoading?: boolean;

@@ -69,7 +69,7 @@ export const capitalize = (str: string): string => {
 };
 
 // Função melhorada para obter identificador do ativo
-export const getAssetIdentifier = (asset: any): string => {
+export const getAssetIdentifier = (asset: Record<string, unknown>): string => {
   // Verificar se é um objeto de associação (tem asset_solution_name)
   if (asset.asset_solution_name) {
     if (asset.asset_solution_name?.toUpperCase() === "CHIP" || asset.asset_solution_id === 11) {

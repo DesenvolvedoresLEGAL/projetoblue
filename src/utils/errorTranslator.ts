@@ -16,11 +16,11 @@ export enum ErrorCategory {
 export interface TranslatedError {
   message: string;
   category: ErrorCategory;
-  originalError?: any;
+  originalError?: unknown;
 }
 
 // Função principal para traduzir erros
-export function translateError(error: any, context?: string): TranslatedError {
+export function translateError(error: unknown, context?: string): TranslatedError {
   // Se já é uma string simples, usar como está
   if (typeof error === 'string') {
     return {
@@ -71,7 +71,7 @@ export function translateError(error: any, context?: string): TranslatedError {
 }
 
 // Detectar categoria do erro
-function detectErrorCategory(error: any, message: string, code?: string): ErrorCategory {
+function detectErrorCategory(error: unknown, message: string, code?: string): ErrorCategory {
   const lowerMessage = message.toLowerCase();
 
   // Erros de constraint/banco
@@ -126,7 +126,7 @@ function detectErrorCategory(error: any, message: string, code?: string): ErrorC
 }
 
 // Traduzir erros de constraint específicos
-function translateConstraintError(error: any, message: string, context?: string): string {
+function translateConstraintError(error: unknown, message: string, context?: string): string {
   const constraint = error?.constraint || '';
   const lowerMessage = message.toLowerCase();
 
@@ -306,7 +306,7 @@ function translateGenericError(message: string, context?: string): string {
 }
 
 // Função de conveniência para usar nos componentes
-export function showFriendlyError(error: any, context?: string): string {
+export function showFriendlyError(error: unknown, context?: string): string {
   const translated = translateError(error, context);
   
   // Log do erro original para debug
