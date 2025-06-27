@@ -15,7 +15,7 @@ export function Footer({
 
   return <footer className={cn("h-10 border-t border-border bg-background px-4 flex justify-between items-center text-xs text-text-secondary-dark dark:text-text-secondary-dark z-10 shadow-legal-sm dark:shadow-legal-dark", className)} {...props}>
       <div className="flex items-center gap-4">
-        <span className="text-legal-primary dark:text-legal-secondary font-medium">LEGAL Platform v1.4.206</span>
+        <span className="text-legal-primary dark:text-legal-secondary font-medium">LEGAL Platform v1.4.252</span>
         <div className="flex items-center gap-1 text-muted-foreground">
           <Clock className="w-3 h-3 text-legal-primary dark:text-legal-secondary" />
           <span>Última sincronização: {lastSyncTime}</span>
