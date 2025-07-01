@@ -12,7 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { signIn, signUp, signOut, technicalError } = useAuthActions(updateState);
   
   // Set up auth session check and subscription
-  useAuthSession(updateState, state);
+  const sessionDialog = useAuthSession(updateState, state, signOut);
   
   // Get user role from profile
   const userRole: UserRole = state.profile?.role || 'cliente';
@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasMinimumRole: hasMinimumRoleForUser
       }}
     >
+      {sessionDialog}
       {children}
     </AuthContext.Provider>
   );

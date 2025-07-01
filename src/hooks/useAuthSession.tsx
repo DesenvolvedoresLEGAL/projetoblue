@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { profileService } from '@/services/profileService';
 import { toast } from '@/utils/toast';
@@ -18,11 +18,50 @@ const debounce = <T extends (...args: unknown[]) => unknown>(
 };
 
 import type { AuthState } from '@/types/auth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export function useAuthSession(
   updateState: (state: Partial<AuthState>) => void,
-  currentState: AuthState
-) {
+  currentState: AuthState,
+  signOut: () => Promise<void>
+): JSX.Element | null {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const handleSignOut = async () => {
+    closeDialog();
+    await signOut();
+  };
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      timeoutRef.current = setTimeout(() => {
+        handleSignOut();
+      }, 60 * 1000);
+    }
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [isDialogOpen]);
   useEffect(() => {
     let isMounted = true;
     let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -195,6 +234,7 @@ export function useAuthSession(
               if (session?.user) {
                 debouncedUpdateState({ user: session.user });
                 fetchProfileWithRetry(session.user.id);
+                setIsDialogOpen(true);
               }
             } catch (err) {
               console.error('Error refreshing session:', err);
@@ -212,6 +252,10 @@ export function useAuthSession(
           subscription.unsubscribe();
           if (refreshIntervalId) {
             clearInterval(refreshIntervalId);
+          }
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
           }
         };
       } catch (error) {
@@ -231,4 +275,17 @@ export function useAuthSession(
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
   }, []);
+  return (
+    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Olá, ainda está ai?</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleSignOut}>não</AlertDialogCancel>
+          <AlertDialogAction onClick={closeDialog}>sim</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }

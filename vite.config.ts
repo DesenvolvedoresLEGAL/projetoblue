@@ -20,4 +20,7 @@ export default defineConfig(({ mode }) => ({
       "@modules": path.resolve(__dirname, "./src/modules"),
     },
   },
+  test: {
+    environment: 'jsdom'
+  }
 }));
