@@ -3,15 +3,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { chipSchema, equipmentSchema } from "./schemas";
 import { ChipFormValues, EquipmentFormValues } from "./types";
+import { useAssetRegistrationState } from "@modules/assets/hooks/useAssetRegistrationState";
 
 export function useFormSetup() {
+  const { chipFormData, equipmentFormData } = useAssetRegistrationState();
+
   const chipForm = useForm<ChipFormValues>({
     resolver: zodResolver(chipSchema),
     defaultValues: {
       line_number: undefined,
       iccid: "",
       manufacturer_id: undefined,
-      status_id: 1
+      status_id: 1,
+      ...chipFormData,
     }
   });
 
@@ -32,7 +36,8 @@ export function useFormSetup() {
       admin_user_fabrica: "admin",
       admin_pass_fabrica: "",
       ssid_atual: "",
-      pass_atual: ""
+      pass_atual: "",
+      ...equipmentFormData,
     }
   });
 
