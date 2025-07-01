@@ -12,7 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { signIn, signUp, signOut, technicalError } = useAuthActions(updateState);
   
   // Set up auth session check and subscription
-  useAuthSession(updateState);
+  useAuthSession(updateState, state);
   
   // Get user role from profile
   const userRole: UserRole = state.profile?.role || 'cliente';
