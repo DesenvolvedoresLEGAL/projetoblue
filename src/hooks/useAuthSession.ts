@@ -19,7 +19,10 @@ const debounce = <T extends (...args: unknown[]) => unknown>(
 
 import type { AuthState } from '@/types/auth';
 
-export function useAuthSession(updateState: (state: Partial<AuthState>) => void) {
+export function useAuthSession(
+  updateState: (state: Partial<AuthState>) => void,
+  currentState: AuthState
+) {
   useEffect(() => {
     let isMounted = true;
     
@@ -145,18 +148,16 @@ export function useAuthSession(updateState: (state: Partial<AuthState>) => void)
 
             // Fetch profile on sign in
             if (event === 'SIGNED_IN' && currentSession?.user) {
-              // Set loading to true while fetching profile
-              updateState({ isLoading: true });
-              
+              const sameUser = currentState.user?.id === currentSession.user.id;
+              const hasProfile = sameUser && currentState.profile;
+
+              if (!hasProfile) {
+                updateState({ isLoading: true });
+              }
+
               // Reset retry counter
               profileRetries = 0;
-              
-              // Use setTimeout to avoid potential deadlock with Supabase Auth
-              setTimeout(() => {
-                if (isMounted) {
-                  fetchProfileWithRetry(currentSession.user.id);
-                }
-              }, 500); // Aumentado de 0 para 500ms
+              fetchProfileWithRetry(currentSession.user.id);
             }
           }
         );
@@ -210,5 +211,5 @@ export function useAuthSession(updateState: (state: Partial<AuthState>) => void)
       isMounted = false;
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
-  }, [updateState]);
+  }, [updateState, currentState.user, currentState.profile]);
 }
