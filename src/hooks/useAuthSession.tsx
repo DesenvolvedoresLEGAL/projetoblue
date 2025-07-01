@@ -1,9 +1,19 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { profileService } from '@/services/profileService';
 import { toast } from '@/utils/toast';
 import { toUserRole } from '@/utils/roleUtils';
+import { useAuthActions } from './useAuthActions';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Debounce function to prevent multiple redirects
 const debounce = <T extends (...args: unknown[]) => unknown>(
@@ -23,6 +33,27 @@ export function useAuthSession(
   updateState: (state: Partial<AuthState>) => void,
   currentState: AuthState
 ) {
+  const { signOut } = useAuthActions(updateState);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleStayLogged = () => {
+    setIsDialogOpen(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const handleSignOut = () => {
+    setIsDialogOpen(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    signOut();
+  };
+
   useEffect(() => {
     let isMounted = true;
     let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -195,6 +226,7 @@ export function useAuthSession(
               if (session?.user) {
                 debouncedUpdateState({ user: session.user });
                 fetchProfileWithRetry(session.user.id);
+                setIsDialogOpen(true);
               }
             } catch (err) {
               console.error('Error refreshing session:', err);
@@ -224,11 +256,40 @@ export function useAuthSession(
 
     // Execute setup
     const cleanup = setupAuth();
-    
+
     // Return cleanup function
     return () => {
       isMounted = false;
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      timeoutRef.current = setTimeout(() => {
+        handleSignOut();
+      }, 60 * 1000);
+    } else if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [isDialogOpen]);
+
+  return (
+    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Olá, ainda está ai?</AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleSignOut}>não</AlertDialogCancel>
+          <AlertDialogAction onClick={handleStayLogged}>sim</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
