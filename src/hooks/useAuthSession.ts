@@ -25,6 +25,7 @@ export function useAuthSession(
 ) {
   useEffect(() => {
     let isMounted = true;
+    let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
     
     // Track retries for profile fetch
     let profileRetries = 0;
@@ -185,6 +186,20 @@ export function useAuthSession(
             // No existing session, mark as not loading
             updateState({ isLoading: false });
           }
+
+          // Start periodic session refresh every 30 minutes
+          refreshIntervalId = setInterval(async () => {
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!isMounted) return;
+              if (session?.user) {
+                debouncedUpdateState({ user: session.user });
+                fetchProfileWithRetry(session.user.id);
+              }
+            } catch (err) {
+              console.error('Error refreshing session:', err);
+            }
+          }, 30 * 60 * 1000);
         } catch (error) {
           clearTimeout(timeoutId);
           console.error('Error checking session:', error);
@@ -195,6 +210,9 @@ export function useAuthSession(
         return () => {
           isMounted = false;
           subscription.unsubscribe();
+          if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+          }
         };
       } catch (error) {
         console.error('Critical error in auth setup:', error);
@@ -212,5 +230,5 @@ export function useAuthSession(
       isMounted = false;
       cleanup.then(cleanupFn => cleanupFn && cleanupFn());
     };
-  }, [updateState, currentState.user, currentState.profile]);
+  }, []);
 }
