@@ -139,9 +139,10 @@ export function useAuthSession(
 
             // Clear profile on sign out
             if (event === 'SIGNED_OUT') {
-              updateState({ 
+              updateState({
+                user: null,
                 profile: null,
-                isLoading: false 
+                isLoading: false
               });
               return;
             }
