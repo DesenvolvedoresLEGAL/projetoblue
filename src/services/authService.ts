@@ -222,15 +222,6 @@ export const authService = {
           
           console.log('Login successful:', data.user?.email);
           
-          // Store auth info in localStorage for persistence
-          if (data.session) {
-            try {
-              localStorage.setItem('supabase.auth.token', data.session.access_token);
-            } catch (e) {
-              console.warn('Could not save token to localStorage:', e);
-            }
-          }
-          
           // Success! Return the data
           return { data, error: null };
         } catch (fetchError: unknown) {
@@ -260,25 +251,20 @@ export const authService = {
   // Sign out with improved handling
   async signOut() {
     try {
-      // Clear saved token from localStorage
-      try {
-        localStorage.removeItem('supabase.auth.token');
-      } catch (e) {
-        console.warn('Could not clear token from localStorage:', e);
-      }
-      
       return await supabase.auth.signOut();
     } catch (error: unknown) {
       console.error('Erro ao fazer logout:', error);
       throw error;
     }
   },
-  
-  // Check if user is authenticated based on local storage
-  isAuthenticated(): boolean {
+
+  // Check if user is authenticated using Supabase session
+  async isAuthenticated(): Promise<boolean> {
     try {
-      return !!localStorage.getItem('supabase.auth.token');
+      const { data } = await supabase.auth.getSession();
+      return !!data.session;
     } catch (e) {
+      console.error('Failed to check authentication status:', e);
       return false;
     }
   }
