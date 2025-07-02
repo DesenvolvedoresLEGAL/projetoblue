@@ -15,9 +15,9 @@ export function mapSolutionToType(solutionId: number, solutionName?: string): So
  * Safely converts string to number, returning null if invalid
  */
 export function safeParseNumber(value: string | number | null | undefined): number | null {
-  if (value === null || value === undefined || value === '') {
-    return null;
-  }
+  if (value === null || value === undefined || value === '') return null;
+
+  if (value.toString().length > 11) return null;
   
   const num = typeof value === 'number' ? value : parseFloat(value);
   return isNaN(num) ? null : num;
