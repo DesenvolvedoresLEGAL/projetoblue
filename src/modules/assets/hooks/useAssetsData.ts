@@ -40,6 +40,10 @@ interface DatabaseAsset {
     id: number;
     status: string;
   };
+  plan?: {
+    id: number;
+    nome: string;
+  };
 }
 
 // Transform database record to frontend Asset type

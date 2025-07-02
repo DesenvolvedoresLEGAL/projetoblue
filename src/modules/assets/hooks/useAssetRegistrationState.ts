@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { UseFormReturn } from 'react-hook-form';
@@ -43,8 +44,8 @@ interface AssetRegistrationState {
   setNetworkInfoOpen: (open: boolean) => void;
   setFormValue: <T extends ChipFormValues | EquipmentFormValues>(
     form: UseFormReturn<T>,
-    key: keyof T,
-    value: T[keyof T]
+    key: string,
+    value: any
   ) => void;
   updateFormData: (
     data: ChipRegistrationData | EquipmentRegistrationData,
@@ -100,7 +101,7 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
 
         setFormValue: (form, key, value) => {
           try {
-            form.setValue(key, value);
+            form.setValue(key as any, value);
           } catch (error) {
             console.warn(`Could not set form value for key: ${String(key)}`, error);
           }
