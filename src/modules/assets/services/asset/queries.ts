@@ -1,26 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Asset, AssetLog, StatusRecord, Manufacturer } from "@/types/asset";
+import { Asset, AssetLog, StatusRecord, DatabaseAsset } from "@/types/asset";
 import {
   AssetListParams,
   AssetStatusByType,
   ProblemAsset,
 } from "./types";
 import type { Database } from "@/integrations/supabase/types";
+import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
 type ProblemAssetFromDb =
   Database["public"]["Views"]["v_problem_assets"]["Row"];
-import { mapAssetFromDb, mapAssetLogFromDb, mapStatusFromDb } from "./utils";
 
-interface Manufacturer {
-    country: string;
-    created_at: string;
-    deleted_at: string;
-    description: string;
+// Local interface for manufacturer to avoid conflicts
+interface ManufacturerData {
     id: number;
     name: string;
-    updated_at: string;
-    website: string;
+    country?: string;
+    description?: string;
+    website?: string;
+    created_at: string;
+    updated_at?: string;
+    deleted_at?: string;
 }
 
 /**
@@ -35,7 +36,9 @@ export const getAssets = async (
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at, admin_user, admin_pass,
+        plan_id, ssid_fabrica, pass_fabrica, admin_user_fabrica, admin_pass_fabrica,
+        ssid_atual, pass_atual,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -82,7 +85,7 @@ export const getAssets = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
 
     return { data: assets, count: count || 0 };
   } catch (error) {
@@ -101,7 +104,9 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, rented_days, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at, admin_user, admin_pass,
+        plan_id, ssid_fabrica, pass_fabrica, admin_user_fabrica, admin_pass_fabrica,
+        ssid_atual, pass_atual,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -121,7 +126,7 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
       return null;
     }
 
-    const asset = mapAssetFromDb(data);
+    const asset = mapAssetFromDb(data as DatabaseAsset);
     return asset;
   } catch (error) {
     console.error(`Error in getAssetById for ID ${id}:`, error);
@@ -141,7 +146,9 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at, admin_user, admin_pass,
+        plan_id, ssid_fabrica, pass_fabrica, admin_user_fabrica, admin_pass_fabrica,
+        ssid_atual, pass_atual,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -155,7 +162,7 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
     console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
     return assets;
   } catch (error) {
@@ -179,7 +186,9 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, rented_days, client_id, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at, admin_user, admin_pass,
+        plan_id, ssid_fabrica, pass_fabrica, admin_user_fabrica, admin_pass_fabrica,
+        ssid_atual, pass_atual,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -193,7 +202,7 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
     console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
     return assets;
   } catch (error) {
@@ -265,7 +274,9 @@ export const getAssetsByMultipleStatus = async (
       .select(
         `
         uuid, serial_number, model, iccid, solution_id, status_id, line_number, radio,
-        manufacturer_id, created_at, updated_at, rented_days, deleted_at,
+        manufacturer_id, created_at, updated_at, rented_days, deleted_at, admin_user, admin_pass,
+        plan_id, ssid_fabrica, pass_fabrica, admin_user_fabrica, admin_pass_fabrica,
+        ssid_atual, pass_atual,
         manufacturers(id, name),
         asset_status(id, status),
         asset_solutions(id, solution)
@@ -279,7 +290,7 @@ export const getAssetsByMultipleStatus = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
     console.log(
       `Retrieved ${assets.length} assets with status IDs ${statusIds.join(
         ", "
@@ -298,13 +309,13 @@ export const getAssetsByMultipleStatus = async (
  */
 export const getManufacturerById = async (
   id: number
-): Promise<Manufacturer | null> => {
+): Promise<ManufacturerData | null> => {
   try {
     const { data, error } = await supabase
       .from("manufacturers")
       .select("*")
       .eq("id", id)
-      .single<Manufacturer>();
+      .single();
 
     if (error) {
       console.error(`Error fetching manufacturer with id ${id}`);
@@ -316,7 +327,7 @@ export const getManufacturerById = async (
       return null;
     }
 
-    return data;
+    return data as ManufacturerData;
   } catch (error) {
     console.log("queries.ts > getManufacturerById : " + error);
     return null;

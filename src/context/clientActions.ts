@@ -9,8 +9,10 @@ export const getClientById = (clients: Client[], uuid: string) => {
 export const createClient = (clientData: ClientCreateData): Client => {
   return {
     uuid: uuidv4(),
+    nome: clientData.nome,
     empresa: clientData.empresa,
     responsavel: clientData.responsavel,
+    contato: clientData.contato,
     telefones: clientData.telefones,
     email: clientData.email || '',
     cnpj: clientData.cnpj,

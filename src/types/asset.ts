@@ -10,7 +10,7 @@ export type AssetStatus =
   | "MANUTENÇÃO"
   | "EXTRAVIADO";
 
-export type AssetType = "CHIP" | "ROTEADOR";
+export type AssetType = "CHIP" | "ROTEADOR" | "EQUIPAMENTO" | "EQUIPMENT";
 
 export type SolutionType = 
   | "SPEEDY 5G"
@@ -115,7 +115,7 @@ export interface ChipAsset extends BaseAsset {
 }
 
 export interface EquipamentAsset extends BaseAsset {
-  type: "ROTEADOR";
+  type: "ROTEADOR" | "EQUIPAMENTO" | "EQUIPMENT";
   uniqueId: string;
   brand: string;
   model: string;

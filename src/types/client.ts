@@ -26,3 +26,6 @@ export interface CreateClientRequest {
 export interface UpdateClientRequest extends Partial<CreateClientRequest> {
   uuid: string;
 }
+
+// Alias for compatibility with clientActions
+export type ClientCreateData = CreateClientRequest;
