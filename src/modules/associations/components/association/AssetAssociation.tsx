@@ -135,8 +135,8 @@ export const AssetAssociation: React.FC = () => {
         errorMessage = error.message;
       }
       
-      if (error.details) {
-        console.error('[AssetAssociation] Detalhes do erro:', error.details);
+      if (error && typeof error === 'object' && 'details' in error) {
+        console.error('[AssetAssociation] Detalhes do erro:', (error as any).details);
       }
       
       toast.error(errorMessage);
@@ -202,7 +202,15 @@ export const AssetAssociation: React.FC = () => {
         <CardContent>
           {currentStep === 'client' && <ClientSelectionStep />}
           {currentStep === 'assets' && <AssetSelectionStep />}
-          {currentStep === 'summary' && <AssociationSummary />}
+          {currentStep === 'summary' && selectedClient && selectedAssets && generalConfig && (
+            <AssociationSummary 
+              client={selectedClient}
+              assets={selectedAssets}
+              generalConfig={generalConfig}
+              onComplete={handleSubmit}
+              onBack={handleBack}
+            />
+          )}
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">

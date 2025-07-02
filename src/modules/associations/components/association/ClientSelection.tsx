@@ -1,176 +1,168 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Plus, User } from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, Users, Building, Plus } from 'lucide-react';
+import { useClientsData } from '@modules/clients/hooks/useClientsData';
 import { Client } from '@/types/client';
-import { toast } from 'sonner';
-import { ClientForm } from './ClientForm';
-import { mapDatabaseClientToFrontend, formatPhoneForDisplay } from '@/utils/clientMappers';
+import { ClientFormSimplified } from './ClientFormSimplified';
+import { mapDatabaseClientToFrontend } from '@/utils/databaseMappers';
 
 interface ClientSelectionProps {
-  onClientSelected: (client: Client) => void;
+  selectedClient: Client | null;
+  onClientSelect: (client: Client) => void;
+  onClientChange: () => void;
 }
 
-export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelected }) => {
+export const ClientSelection: React.FC<ClientSelectionProps> = ({
+  selectedClient,
+  onClientSelect,
+  onClientChange,
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const { clients = [], isLoading } = useClientsData();
 
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
-    queryKey: ['clients', searchTerm],
-    queryFn: async () => {
-      let query = supabase
-        .from('clients')
-        .select('*')
-        .is('deleted_at', null)
-        .order('empresa');
+  const filteredClients = clients
+    .map(dbClient => mapDatabaseClientToFrontend(dbClient))
+    .filter(client => 
+      client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.cnpj && client.cnpj.includes(searchTerm)) ||
+      (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
-      if (searchTerm.trim()) {
-        const term = searchTerm.trim().toLowerCase();
-        query = query.or(
-          `empresa.ilike.%${term}%,` +
-          `responsavel.ilike.%${term}%,` +
-          `email.ilike.%${term}%,` +
-          `telefones::text.ilike.%${term.replace(/\D/g, '')}%`
-        );
-      }
-
-      const { data, error } = await query.limit(50);
-      
-      if (error) {
-        console.error('Erro ao buscar clientes:', error);
-        throw error;
-      }
-
-      return (data || []).map(mapDatabaseClientToFrontend);
-    },
-    enabled: true
-  });
-
-  const handleClientSelect = (client: Client) => {
-    onClientSelected(client);
-    toast.success(`Cliente ${client.empresa} selecionado com sucesso!`);
+  const handleClientCreated = (newClient: Client) => {
+    setShowCreateForm(false);
+    onClientSelect(newClient);
   };
 
-  const handleNewClientCreated = (newClient: Client) => {
-    setIsNewClientModalOpen(false);
-    onClientSelected(newClient);
-    toast.success('Cliente cadastrado e selecionado com sucesso!');
-  };
+  if (showCreateForm) {
+    return (
+      <ClientFormSimplified
+        onClientCreated={handleClientCreated}
+        onCancel={() => setShowCreateForm(false)}
+      />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4D2BFB] mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Carregando clientes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Selecionar Cliente
-        </CardTitle>
-        <CardDescription>
-          Busque por empresa, responsável, telefone ou email. Se não encontrar, cadastre um novo cliente.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="search">Buscar Cliente</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              id="search"
-              placeholder="Digite empresa, responsável, telefone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Exemplos: "João Silva", "Empresa ABC", "(11) 99999-9999"
-          </div>
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar cliente por nome, CNPJ ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 border-[#4D2BFB]/20 focus:border-[#4D2BFB]"
+          />
         </div>
+        <Button
+          onClick={() => setShowCreateForm(true)}
+          className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Cliente
+        </Button>
+      </div>
 
-        <div className="space-y-2">
-          {isLoadingClients ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando clientes...
-            </div>
-          ) : clients.length > 0 ? (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              <div className="text-sm text-muted-foreground mb-2">
-                {clients.length} cliente(s) encontrado(s):
-              </div>
-              {clients.map((client) => (
-                <div
-                  key={client.uuid}
-                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
-                  onClick={() => handleClientSelect(client)}
-                >
-                  <div className="font-medium text-primary">{client.empresa}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Responsável: {client.responsavel}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Telefones: {client.telefones.map(tel => formatPhoneForDisplay(tel)).join(', ')}
-                  </div>
-                  {client.email && (
-                    <div className="text-sm text-muted-foreground">
-                      Email: {client.email}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : searchTerm.trim() ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="text-muted-foreground">
-                Nenhum cliente encontrado para "{searchTerm}"
+      {/* Selected Client Display */}
+      {selectedClient && (
+        <Card className="border-[#03F9FF] bg-[#03F9FF]/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-[#020CBC] flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              Cliente Selecionado
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">{selectedClient.nome}</h3>
+                {selectedClient.cnpj && (
+                  <p className="text-sm text-muted-foreground">CNPJ: {selectedClient.cnpj}</p>
+                )}
+                {selectedClient.email && (
+                  <p className="text-sm text-muted-foreground">Email: {selectedClient.email}</p>
+                )}
               </div>
               <Button
-                onClick={() => setIsNewClientModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Cadastrar Novo Cliente
-              </Button>
-            </div>
-          ) : (
-            <div className="text-center py-8 space-y-4">
-              <div className="text-muted-foreground">
-                Digite para buscar clientes existentes
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Busca por empresa, responsável, telefone ou email
-              </div>
-              <Button
-                onClick={() => setIsNewClientModalOpen(true)}
                 variant="outline"
-                className="flex items-center gap-2"
+                size="sm"
+                onClick={onClientChange}
+                className="text-red-600 border-red-200 hover:bg-red-50"
               >
-                <Plus className="h-4 w-4" />
-                Cadastrar Novo Cliente
+                Alterar
               </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Clients List */}
+      {!selectedClient && (
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {filteredClients.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredClients.map((client) => (
+              <Card 
+                key={client.uuid} 
+                className="hover:shadow-md transition-shadow cursor-pointer border-[#4D2BFB]/20 hover:border-[#4D2BFB]/40"
+                onClick={() => onClientSelect(client)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-[#020CBC]">{client.nome}</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {client.cnpj ? 'PJ' : 'PF'}
+                        </Badge>
+                      </div>
+                      {client.cnpj && (
+                        <p className="text-sm text-muted-foreground">CNPJ: {client.cnpj}</p>
+                      )}
+                      {client.email && (
+                        <p className="text-sm text-muted-foreground">Email: {client.email}</p>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Contato: {client.contato}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-[#4D2BFB]">
+                      Selecionar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
-
-        <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do cliente para continuar com a associação.
-              </DialogDescription>
-            </DialogHeader>
-            <ClientForm
-              onSubmit={handleNewClientCreated}
-              onCancel={() => setIsNewClientModalOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
