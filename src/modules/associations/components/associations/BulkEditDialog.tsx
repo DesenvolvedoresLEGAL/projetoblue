@@ -1,129 +1,155 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AssociationGroup } from '@/types/associations';
-import { useGroupActions } from '../../hooks/useGroupActions';
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Association } from '@/types/associations';
+
+interface BulkUpdates extends Record<string, unknown> {
+  exit_date?: Date;
+  notes?: string;
+  ssid?: string;
+  pass?: string;
+  gb?: number;
+}
 
 interface BulkEditDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  group: AssociationGroup;
+  onClose: () => void;
+  selectedAssociations: Association[];
+  onBulkUpdate: (updates: BulkUpdates) => Promise<void>;
+  isLoading?: boolean;
 }
 
 export const BulkEditDialog: React.FC<BulkEditDialogProps> = ({
   open,
-  onOpenChange,
-  group
+  onClose,
+  selectedAssociations,
+  onBulkUpdate,
+  isLoading = false
 }) => {
-  const [notes, setNotes] = useState('');
-  const [exitDate, setExitDate] = useState<Date | undefined>();
-  const [associationType, setAssociationType] = useState<string>('');
-  const { bulkUpdateGroup } = useGroupActions();
+  const [updates, setUpdates] = useState<BulkUpdates>({});
 
-  interface BulkUpdates {
-    notes?: string;
-    exit_date?: string;
-    association_id?: number;
-  }
+  const handleDateSelect = (date: Date | undefined) => {
+    setUpdates(prev => ({
+      ...prev,
+      exit_date: date
+    }));
+  };
 
-  const handleSave = () => {
-    const updates: BulkUpdates = {};
+  const handleInputChange = (field: keyof BulkUpdates, value: unknown) => {
+    setUpdates(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-    if (notes.trim()) {
-      updates.notes = notes.trim();
-    }
-
-    if (exitDate) {
-      updates.exit_date = exitDate.toISOString().split('T')[0];
-    }
-
-    if (associationType) {
-      updates.association_id = parseInt(associationType);
-    }
-
-    if (Object.keys(updates).length > 0) {
-      bulkUpdateGroup.mutate({ group, updates });
-      onOpenChange(false);
-      // Reset form
-      setNotes('');
-      setExitDate(undefined);
-      setAssociationType('');
+  const handleSubmit = async () => {
+    try {
+      await onBulkUpdate(updates);
+      setUpdates({});
+      onClose();
+    } catch (error) {
+      console.error('Erro na atualização em lote:', error);
     }
   };
 
+  const hasUpdates = Object.keys(updates).length > 0;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Grupo em Lote</DialogTitle>
-          <DialogDescription>
-            Editando {group.totalAssets} associação{group.totalAssets > 1 ? 'ões' : ''} do cliente {group.client_name}
-          </DialogDescription>
+          <DialogTitle>
+            Editar {selectedAssociations.length} Associações
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Tipo de Associação */}
+          {/* Exit Date */}
           <div className="space-y-2">
-            <Label>Tipo de Associação</Label>
-            <Select value={associationType} onValueChange={setAssociationType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecionar novo tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Aluguel</SelectItem>
-                <SelectItem value="2">Assinatura</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Data de Saída</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {updates.exit_date ? format(updates.exit_date, "dd/MM/yyyy") : "Selecionar data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={updates.exit_date}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          {/* Data de Fim */}
-          <div className="space-y-2">
-            <Label>Data de Fim</Label>
-            <DatePicker
-              date={exitDate}
-              setDate={setExitDate}
-              placeholder="Definir data de fim para todas"
-            />
-          </div>
-
-          {/* Observações */}
+          {/* Notes */}
           <div className="space-y-2">
             <Label>Observações</Label>
             <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observações que serão aplicadas a todas as associações..."
-              rows={3}
+              placeholder="Adicionar observações..."
+              value={updates.notes || ''}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+            />
+          </div>
+
+          {/* SSID */}
+          <div className="space-y-2">
+            <Label>SSID</Label>
+            <Input
+              placeholder="Nome da rede Wi-Fi..."
+              value={updates.ssid || ''}
+              onChange={(e) => handleInputChange('ssid', e.target.value)}
+            />
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <Label>Senha</Label>
+            <Input
+              type="password"
+              placeholder="Senha da rede..."
+              value={updates.pass || ''}
+              onChange={(e) => handleInputChange('pass', e.target.value)}
+            />
+          </div>
+
+          {/* GB */}
+          <div className="space-y-2">
+            <Label>GB</Label>
+            <Input
+              type="number"
+              placeholder="Quantidade em GB..."
+              value={updates.gb || ''}
+              onChange={(e) => handleInputChange('gb', parseInt(e.target.value) || 0)}
             />
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!notes.trim() && !exitDate && !associationType}
+          <Button 
+            onClick={handleSubmit}
+            disabled={!hasUpdates || isLoading}
           >
-            Aplicar Alterações
+            {isLoading ? 'Atualizando...' : 'Aplicar Alterações'}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

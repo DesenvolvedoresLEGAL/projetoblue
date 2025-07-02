@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, Path } from 'react-hook-form';
 import type {
   ChipFormValues,
   EquipmentFormValues,
@@ -100,7 +101,8 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
 
         setFormValue: (form, key, value) => {
           try {
-            form.setValue(key, value);
+            // Type casting para resolver o problema Path<T> vs keyof T
+            form.setValue(key as Path<typeof form extends UseFormReturn<infer T> ? T : never>, value);
           } catch (error) {
             console.warn(`Could not set form value for key: ${String(key)}`, error);
           }

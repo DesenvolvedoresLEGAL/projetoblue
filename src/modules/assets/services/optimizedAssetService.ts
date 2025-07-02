@@ -17,6 +17,7 @@ interface PaginatedAssets {
   totalPages: number;
 }
 
+// Interface corrigida para coincidir com a query do banco
 interface AssetQueryResult {
   uuid: string;
   model: string | null;
@@ -43,6 +44,18 @@ interface AssetQueryResult {
   status?: { id: number; status?: string } | null;
   manufacturer?: { id: number; name?: string } | null;
   plan?: { id: number; nome?: string } | null;
+}
+
+// Interface para stats simplificada
+interface StatsQueryResult {
+  uuid: string;
+  rented_days: number;
+  solution_id: number;
+  status_id: number;
+  solucao: { id: number; solution: string; };
+  status: { id: number; status: string; };
+  manufacturer: { id: number; name: string; };
+  plan?: { id: number; nome: string; };
 }
 
 export const optimizedAssetService = {
@@ -202,7 +215,8 @@ export const optimizedAssetService = {
       throw error;
     }
 
-    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: AssetQueryResult) => ({
+    // Transform data using the correct interface
+    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: StatsQueryResult) => ({
       uuid: asset.uuid,
       model: '',
       rented_days: asset.rented_days || 0,
