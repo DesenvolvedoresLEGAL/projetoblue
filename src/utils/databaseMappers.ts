@@ -1,6 +1,7 @@
 
 import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation, DatabaseAsset } from "@/types/asset";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
+import { Json } from "@/integrations/supabase/types";
 
 // Map database status ID to frontend AssetStatus
 export const mapStatusIdToAssetStatus = (statusId: number, statusName?: string): AssetStatus => {
@@ -132,25 +133,46 @@ export const mapDatabaseAssetToFrontend = (dbAsset: DatabaseAsset): Asset => {
   }
 };
 
+// Helper function to convert Json to string array
+const jsonToStringArray = (jsonValue: Json): string[] => {
+  if (Array.isArray(jsonValue)) {
+    return jsonValue.filter(item => typeof item === 'string');
+  }
+  if (typeof jsonValue === 'string') {
+    try {
+      const parsed = JSON.parse(jsonValue);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => typeof item === 'string');
+      }
+    } catch {
+      // If parsing fails, return the string as a single-item array
+      return [jsonValue];
+    }
+  }
+  return [];
+};
+
 // Map database client record to frontend Client type - corrigido conforme banco
-export const mapDatabaseClientToFrontend = (dbClient: unknown): Client => {
+export const mapDatabaseClientToFrontend = (dbClient: any): Client => {
   if (!dbClient) return null;
   
   return {
     uuid: dbClient.uuid, // Campo principal no banco
     nome: dbClient.nome,
+    empresa: dbClient.empresa,
+    responsavel: dbClient.responsavel,
+    contato: dbClient.contato, // bigint no banco
     cnpj: dbClient.cnpj, // Nullable no banco
     email: dbClient.email,
-    contato: dbClient.contato, // bigint no banco
+    telefones: jsonToStringArray(dbClient.telefones), // Convert Json to string[]
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
     deleted_at: dbClient.deleted_at
-    // Removido campo 'id' e 'assets' que não existem no banco
   };
 };
 
 // Map database asset_client_assoc to frontend type - corrigido conforme banco
-export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssetClientAssociation => {
+export const mapDatabaseAssocToFrontend = (dbAssoc: any): AssetClientAssociation => {
   if (!dbAssoc) return null;
   
   return {
@@ -163,7 +185,7 @@ export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssetClientAssocia
     plan_id: dbAssoc.plan_id, // bigint nullable
     notes: dbAssoc.notes,
     pass: dbAssoc.pass,
-    gb: dbAssoc.gb, // bigint com default 0
+    gb: dbAssoc.gb, // bigint com default 0 no banco
     ssid: dbAssoc.ssid,
     created_at: dbAssoc.created_at,
     updated_at: dbAssoc.updated_at,

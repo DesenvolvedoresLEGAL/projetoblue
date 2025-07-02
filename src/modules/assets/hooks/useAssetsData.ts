@@ -97,7 +97,7 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
 };
 
 // Transform database record to AssetWithRelations
-const transformToAssetWithRelations = (dbAsset: DatabaseAsset): AssetWithRelations => {
+const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
   return {
     uuid: dbAsset.uuid,
     model: dbAsset.model,
@@ -295,7 +295,7 @@ export const useAssetData = (assetId: string) => {
         throw error;
       }
 
-      return data ? transformDatabaseAsset(data) : null;
+      return data ? transformDatabaseAsset(data as DatabaseAsset) : null;
     },
     enabled: !!assetId,
     staleTime: 30 * 1000,
