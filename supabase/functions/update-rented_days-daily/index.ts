@@ -4,19 +4,82 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-console.log("Hello from Functions!")
+// Edge function to refresh rented days of closed non-chip asset associations
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return new Response(
+      JSON.stringify({ error: "Missing Supabase environment variables" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    )
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
+  const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+  })
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { data: assocRows, error: assocError } = await supabase
+    .from("asset_client_assoc")
+    .select("asset_id, assets(solution_id)")
+    .lte("exit_date", today)
+    .not("exit_date", "is", null)
+    .is("deleted_at", null)
+
+  if (assocError) {
+    return new Response(
+      JSON.stringify({ error: assocError.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    )
+  }
+
+  type AssocRow = {
+    asset_id: string
+    assets: { solution_id: number | null } | null
+  }
+
+  const assetIds = Array.from(
+    new Set(
+      ((assocRows ?? []) as AssocRow[])
+        .filter((row) => row.assets?.solution_id !== 11)
+        .map((row) => row.asset_id),
+    ),
   )
+
+  const updates: Array<{ asset_id: string; error?: string }> = []
+
+  for (const id of assetIds) {
+    const { error } = await supabase.rpc("update_asset_rented_days", {
+      asset_uuid: id,
+    })
+
+    if (error) {
+      updates.push({ asset_id: id, error: error.message })
+    } else {
+      updates.push({ asset_id: id })
+    }
+  }
+
+  const { data: integrityData, error: integrityError } = await supabase.rpc(
+    "validate_rented_days_integrity",
+  )
+
+  const response = {
+    processed_assets: assetIds.length,
+    updates,
+    integrity_error: integrityError?.message ?? null,
+    integrity_result: integrityData ?? null,
+  }
+
+  return new Response(JSON.stringify(response), {
+    headers: { "Content-Type": "application/json" },
+  })
 })
 
 /* To invoke locally:
