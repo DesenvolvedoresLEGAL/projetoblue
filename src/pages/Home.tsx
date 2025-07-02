@@ -1,7 +1,7 @@
 
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, LayoutDashboard, Smartphone } from "lucide-react";
+import { Loader2, AlertTriangle, LayoutDashboard } from "lucide-react";
 import { useDashboardAssets } from "@modules/dashboard/hooks/useDashboardAssets";
 import { useDashboardStats } from "@modules/dashboard/hooks/useDashboardStats";
 import { useDashboardRecentActivities } from "@modules/dashboard/hooks/useDashboardRecentActivities";
@@ -15,8 +15,6 @@ import { RentedAssetsCard } from "@modules/dashboard/components/dashboard/Rented
 import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
-import { useOperadorasStats } from "@/hooks/useOperadorasStats";
-import { OperadoraCard } from "@/components/dashboard/OperadoraCard";
 
 /**
  * Home dashboard component
@@ -30,8 +28,6 @@ const Home: React.FC = () => {
   const dashboardStats = useDashboardStats();
   // Use recent activities hook
   const recentActivities = useDashboardRecentActivities();
-  // Use operadoras stats hook
-  const { data: operadorasStats, isLoading: isLoadingOperadoras } = useOperadorasStats();
 
   const isMobile = useIsMobile();
 
@@ -191,58 +187,6 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Operadoras Cards - Nova seção */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
-              <h2 className="text-xl font-semibold text-legal-dark dark:text-text-primary-dark">
-                SIM-cards por Operadora
-              </h2>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {isLoadingOperadoras ? (
-              // Skeleton loading
-              Array.from({ length: 3 }).map((_, index) => (
-                <OperadoraCard
-                  key={index}
-                  id={0}
-                  name=""
-                  total={0}
-                  emUso={0}
-                  disponiveis={0}
-                  isLoading={true}
-                />
-              ))
-            ) : operadorasStats && operadorasStats.length > 0 ? (
-              operadorasStats.map((operadora) => (
-                <OperadoraCard
-                  key={operadora.id}
-                  id={operadora.id}
-                  name={operadora.name}
-                  total={operadora.total}
-                  emUso={operadora.emUso}
-                  disponiveis={operadora.disponiveis}
-                />
-              ))
-            ) : (
-              <div className="col-span-full">
-                <div className="text-center py-8 px-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/25">
-                  <Smartphone className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                    Nenhuma operadora encontrada
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Não foram encontradas operadoras com SIM-cards cadastrados.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
         {/* Problem Cards - Conditional Display with Mobile Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <StatusCard

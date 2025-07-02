@@ -40,10 +40,6 @@ interface DatabaseAsset {
     id: number;
     status: string;
   };
-  plan?: {
-    id: number;
-    nome: string;
-  };
 }
 
 // Transform database record to frontend Asset type
@@ -97,7 +93,7 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
 };
 
 // Transform database record to AssetWithRelations
-const transformToAssetWithRelations = (dbAsset: any): AssetWithRelations => {
+const transformToAssetWithRelations = (dbAsset: DatabaseAsset): AssetWithRelations => {
   return {
     uuid: dbAsset.uuid,
     model: dbAsset.model,
@@ -295,7 +291,7 @@ export const useAssetData = (assetId: string) => {
         throw error;
       }
 
-      return data ? transformDatabaseAsset(data as DatabaseAsset) : null;
+      return data ? transformDatabaseAsset(data) : null;
     },
     enabled: !!assetId,
     staleTime: 30 * 1000,

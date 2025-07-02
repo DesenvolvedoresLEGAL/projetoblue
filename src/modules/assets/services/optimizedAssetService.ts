@@ -2,223 +2,172 @@
 import { supabase } from '@/integrations/supabase/client';
 import { AssetWithRelations } from '@/types/assetWithRelations';
 
-export interface AssetQueryResult {
-  uuid: string;
-  model?: string;
-  serial_number?: string;
-  line_number?: number;
-  iccid?: string;
-  radio?: string;
-  created_at?: string;
-  updated_at?: string;
-  admin_user?: string;
-  admin_pass?: string;
-  ssid_atual?: string;
-  pass_atual?: string;
-  ssid_fabrica?: string;
-  pass_fabrica?: string;
-  admin_user_fabrica?: string;
-  admin_pass_fabrica?: string;
-  plan_id?: number;
-  manufacturer_id?: number;
-  status_id?: number;
-  solution_id?: number;
-  rented_days?: number;
-  solucao?: { id: number; solution: string };
-  status: { id: number; status: string };  
-  manufacturer: { id: number; name: string };
-  plan?: { id: number; nome: string };
-}
-
-interface OptimizedAssetFilters {
+interface FilterOptions {
   searchTerm?: string;
   filterType?: string;
   filterStatus?: string;
   filterManufacturer?: string;
   currentPage?: number;
   pageSize?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  excludeSolutions?: number[];
-  includeDeleted?: boolean;
 }
 
-interface PaginatedAssetResult {
+interface PaginatedAssets {
   assets: AssetWithRelations[];
   totalCount: number;
   totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
 }
 
-const isValidFilterValue = (value: string | undefined): boolean => {
-  return value !== undefined && value !== null && value.trim() !== '' && value !== 'all';
-};
+interface AssetQueryResult {
+  uuid: string;
+  model: string | null;
+  rented_days: number | null;
+  serial_number: string | null;
+  line_number: number | null;
+  iccid: string | null;
+  radio: string | null;
+  created_at: string;
+  updated_at: string;
+  admin_user: string;
+  admin_pass: string;
+  ssid_atual: string | null;
+  pass_atual: string | null;
+  ssid_fabrica: string | null;
+  pass_fabrica: string | null;
+  admin_user_fabrica: string | null;
+  admin_pass_fabrica: string | null;
+  plan_id: number | null;
+  manufacturer_id: number | null;
+  status_id: number;
+  solution_id: number;
+  solucao?: { id: number; solution?: string } | null;
+  status?: { id: number; status?: string } | null;
+  manufacturer?: { id: number; name?: string } | null;
+  plan?: { id: number; nome?: string } | null;
+}
 
-const safeParseNumber = (value: string): number | null => {
-  const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? null : parsed;
-};
+export const optimizedAssetService = {
+  async getAssets(options: FilterOptions = {}): Promise<PaginatedAssets> {
+    const {
+      searchTerm,
+      filterType,
+      filterStatus,
+      filterManufacturer,
+      currentPage = 1,
+      pageSize = 10
+    } = options;
 
-const buildAssetQuery = (filters: OptimizedAssetFilters) => {
-  let query = supabase
-    .from('assets')
-    .select(`
-      uuid,
-      rented_days,
-      solution_id,
-      status_id,
-      solucao:asset_solutions!inner(id, solution),
-      status:asset_status!inner(id, status),
-      manufacturer:manufacturers(id, name),
-      plan:plans(id, nome)
-    `, { count: 'exact' });
+    let query = supabase
+      .from('assets')
+      .select(`
+        uuid,
+        model,
+        rented_days,
+        serial_number,
+        line_number,
+        iccid,
+        radio,
+        created_at,
+        updated_at,
+        admin_user,
+        admin_pass,
+        ssid_atual,
+        pass_atual,
+        ssid_fabrica,
+        pass_fabrica,
+        admin_user_fabrica,
+        admin_pass_fabrica,
+        plan_id,
+        manufacturer_id,
+        status_id,
+        solution_id,
+        solucao:asset_solutions!inner(id, solution),
+        manufacturer:manufacturers(id, name),
+        status:asset_status!inner(id, status),
+        plan:plans(id, nome, tamanho_gb)
+      `, { count: 'exact' })
+      .is('deleted_at', null);
 
-  // Deleted filter
-  if (!filters.includeDeleted) {
-    query = query.is('deleted_at', null);
-  }
-
-  // Exclude solutions filter
-  if (filters.excludeSolutions?.length) {
-    query = query.not('solution_id', 'in', `(${filters.excludeSolutions.join(',')})`);
-  }
-
-  // Type filter
-  if (filters.filterType && isValidFilterValue(filters.filterType)) {
-    const solutionId = safeParseNumber(filters.filterType);
-    if (solutionId !== null) {
-      query = query.eq('solution_id', solutionId);
-    } else if (filters.filterType === 'CHIP') {
-      query = query.eq('solution_id', 11);
-    } else if (filters.filterType === 'ROTEADOR') {
-      query = query.neq('solution_id', 11);
-    }
-  }
-
-  // Status filter
-  if (filters.filterStatus && isValidFilterValue(filters.filterStatus)) {
-    const statusId = safeParseNumber(filters.filterStatus);
-    if (statusId !== null) {
-      query = query.eq('status_id', statusId);
-    }
-  }
-
-  // Manufacturer filter
-  if (filters.filterManufacturer && isValidFilterValue(filters.filterManufacturer)) {
-    const manufacturerId = safeParseNumber(filters.filterManufacturer);
-    if (manufacturerId !== null) {  
-      query = query.eq('manufacturer_id', manufacturerId);
-    }
-  }
-
-  return query;
-};
-
-export const fetchOptimizedAssets = async (
-  filters: OptimizedAssetFilters = {}
-): Promise<PaginatedAssetResult> => {
-  try {
-    const pageSize = filters.pageSize || 10;
-    const currentPage = filters.currentPage || 1;
-    const offset = (currentPage - 1) * pageSize;
-
-    let query = buildAssetQuery(filters);
-
-    // Search functionality - only fetch fields needed for search when searching
-    if (filters.searchTerm?.trim()) {
-      // For search, we need to select more fields and search in them
-      query = supabase
-        .from('assets')
-        .select(`
-          uuid,
-          model,
-          serial_number,
-          line_number,
-          iccid,
-          radio,
-          created_at,
-          updated_at,
-          admin_user,
-          admin_pass,
-          ssid_atual,
-          pass_atual,
-          ssid_fabrica,
-          pass_fabrica,
-          admin_user_fabrica,
-          admin_pass_fabrica,
-          plan_id,
-          manufacturer_id,
-          status_id,
-          solution_id,
-          rented_days,
-          solucao:asset_solutions!inner(id, solution),
-          manufacturer:manufacturers(id, name),
-          status:asset_status!inner(id, status),
-          plan:plans(id, nome)
-        `, { count: 'exact' });
-
-      // Apply base filters
-      if (!filters.includeDeleted) {
-        query = query.is('deleted_at', null);
+    // Apply filters
+    if (filterType && filterType !== 'all') {
+      const solutionId = parseInt(filterType, 10);
+      if (!isNaN(solutionId)) {
+        query = query.eq('solution_id', solutionId);
+      } else if (filterType === 'CHIP') {
+        query = query.eq('solution_id', 11);
+      } else if (filterType === 'ROTEADOR') {
+        query = query.neq('solution_id', 11);
       }
-
-      if (filters.excludeSolutions?.length) {
-        query = query.not('solution_id', 'in', `(${filters.excludeSolutions.join(',')})`);
-      }
-
-      const searchTerm = `%${filters.searchTerm.trim()}%`;
-      query = query.or(`iccid.ilike.${searchTerm},serial_number.ilike.${searchTerm},model.ilike.${searchTerm},radio.ilike.${searchTerm},line_number.eq.${safeParseNumber(filters.searchTerm) || 0}`);
     }
 
-    // Sorting
-    const sortBy = filters.sortBy || 'created_at';
-    const sortOrder = filters.sortOrder || 'desc';
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    if (filterStatus && filterStatus !== 'all') {
+      const statusId = parseInt(filterStatus);
+      if (!isNaN(statusId)) {
+        query = query.eq('status_id', statusId);
+      }
+    }
 
-    // Pagination
+    if (filterManufacturer && filterManufacturer !== 'all') {
+      const manufacturerId = parseInt(filterManufacturer);
+      if (!isNaN(manufacturerId)) {
+        query = query.eq('manufacturer_id', manufacturerId);
+      }
+    }
+
+    if (searchTerm && searchTerm.trim()) {
+      const term = `%${searchTerm.trim()}%`;
+      query = query.or(`
+        iccid.ilike.${term},
+        serial_number.ilike.${term},
+        model.ilike.${term},
+        radio.ilike.${term}
+      `);
+    }
+
     const { data, error, count } = await query
-      .range(offset, offset + pageSize - 1);
+      .order('created_at', { ascending: false })
+      .range(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize - 1
+      );
 
     if (error) {
-      console.error('Error fetching optimized assets:', error);
+      console.error('Error fetching assets:', error);
       throw error;
     }
 
-    // Transform to AssetWithRelations
-    const assets: AssetWithRelations[] = (data || []).map((asset: Partial<AssetQueryResult>) => ({
-      uuid: asset.uuid || '',
-      model: asset.model || '',
+    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: AssetQueryResult) => ({
+      uuid: asset.uuid,
+      model: asset.model,
       rented_days: asset.rented_days || 0,
-      serial_number: asset.serial_number || '',
-      line_number: asset.line_number || null,
-      iccid: asset.iccid || '',
-      radio: asset.radio || '',
-      created_at: asset.created_at || '',
-      updated_at: asset.updated_at || '',
-      admin_user: asset.admin_user || '',
-      admin_pass: asset.admin_pass || '',
-      ssid_atual: asset.ssid_atual || '',
-      pass_atual: asset.pass_atual || '',
-      ssid_fabrica: asset.ssid_fabrica || '',
-      pass_fabrica: asset.pass_fabrica || '',
-      admin_user_fabrica: asset.admin_user_fabrica || '',
-      admin_pass_fabrica: asset.admin_pass_fabrica || '',
-      plan_id: asset.plan_id || null,
-      manufacturer_id: asset.manufacturer_id || null,
-      status_id: asset.status_id || null,
-      solution_id: asset.solution_id || null,
+      serial_number: asset.serial_number,
+      line_number: asset.line_number,
+      iccid: asset.iccid,
+      radio: asset.radio,
+      created_at: asset.created_at,
+      updated_at: asset.updated_at,
+      admin_user: asset.admin_user,
+      admin_pass: asset.admin_pass,
+      ssid_atual: asset.ssid_atual,
+      pass_atual: asset.pass_atual,
+      ssid_fabrica: asset.ssid_fabrica,
+      pass_fabrica: asset.pass_fabrica,
+      admin_user_fabrica: asset.admin_user_fabrica,
+      admin_pass_fabrica: asset.admin_pass_fabrica,
+      plan_id: asset.plan_id,
+      manufacturer_id: asset.manufacturer_id,
+      status_id: asset.status_id,
+      solution_id: asset.solution_id,
       solucao: {
-        id: asset.solucao?.id || asset.solution_id || 0,
+        id: asset.solucao?.id || asset.solution_id,
         name: asset.solucao?.solution || 'Unknown'
       },
-      manufacturer: {
-        id: asset.manufacturer?.id || asset.manufacturer_id || 0,
-        name: asset.manufacturer?.name || 'Unknown'
-      },
       status: {
-        id: asset.status?.id || asset.status_id || 0,
+        id: asset.status?.id || asset.status_id,
         name: asset.status?.status || 'DISPONÍVEL'
+      },
+      manufacturer: {
+        id: asset.manufacturer?.id || asset.manufacturer_id,
+        name: asset.manufacturer?.name || 'Unknown'
       },
       plan: asset.plan ? {
         id: asset.plan.id,
@@ -226,46 +175,81 @@ export const fetchOptimizedAssets = async (
       } : undefined
     }));
 
-    const totalCount = count || 0;
-    const totalPages = Math.ceil(totalCount / pageSize);
-    const hasNextPage = currentPage < totalPages;
-    const hasPrevPage = currentPage > 1;
-
     return {
-      assets,
-      totalCount,
-      totalPages,
-      hasNextPage,
-      hasPrevPage
+      assets: transformedAssets,
+      totalCount: count || 0,
+      totalPages: Math.ceil((count || 0) / pageSize)
+    };
+  },
+
+  async getAssetStats() {
+    const { data, error } = await supabase
+      .from('assets')
+      .select(`
+        uuid,
+        rented_days,
+        solution_id,
+        status_id,
+        solucao:asset_solutions!inner(id, solution),
+        status:asset_status!inner(id, status),
+        manufacturer:manufacturers(id, name),
+        plan:plans(id, nome, tamanho_gb)
+      `)
+      .is('deleted_at', null);
+
+    if (error) {
+      console.error('Error fetching asset stats:', error);
+      throw error;
+    }
+
+    const transformedAssets: AssetWithRelations[] = (data || []).map((asset: AssetQueryResult) => ({
+      uuid: asset.uuid,
+      model: '',
+      rented_days: asset.rented_days || 0,
+      serial_number: '',
+      line_number: null,
+      iccid: '',
+      radio: '',
+      created_at: '',
+      updated_at: '',
+      admin_user: '',
+      admin_pass: '',
+      ssid_atual: '',
+      pass_atual: '',
+      ssid_fabrica: '',
+      pass_fabrica: '',
+      admin_user_fabrica: '',
+      admin_pass_fabrica: '',
+      plan_id: null,
+      manufacturer_id: null,
+      status_id: asset.status_id,
+      solution_id: asset.solution_id,
+      solucao: {
+        id: asset.solucao?.id || asset.solution_id,
+        name: asset.solucao?.solution || 'Unknown'
+      },
+      status: {
+        id: asset.status?.id || asset.status_id,
+        name: asset.status?.status || 'DISPONÍVEL'
+      },
+      manufacturer: {
+        id: asset.manufacturer?.id || 0,
+        name: asset.manufacturer?.name || 'Unknown'
+      },
+      plan: asset.plan ? {
+        id: asset.plan.id,
+        nome: asset.plan.nome
+      } : undefined
+    }));
+
+    const stats = {
+      total: transformedAssets.length,
+      chips: transformedAssets.filter(a => a.solution_id === 11).length,
+      routers: transformedAssets.filter(a => a.solution_id !== 11).length,
+      available: transformedAssets.filter(a => a.status_id === 1).length,
+      rented: transformedAssets.filter(a => a.status_id === 2).length,
     };
 
-  } catch (error) {
-    console.error('Error in fetchOptimizedAssets:', error);
-    throw error;
+    return stats;
   }
 };
-
-// Optimized function for fetching basic asset stats
-export const fetchAssetStats = async () => {
-  const { data, error } = await supabase
-    .from('assets')
-    .select('solution_id, status_id')
-    .is('deleted_at', null);
-
-  if (error) {
-    console.error('Error fetching asset stats:', error);
-    throw error;
-  }
-
-  const stats = {
-    total: data?.length || 0,
-    chips: data?.filter(a => a.solution_id === 11).length || 0,
-    routers: data?.filter(a => a.solution_id !== 11).length || 0,
-    available: data?.filter(a => a.status_id === 1).length || 0,
-    rented: data?.filter(a => a.status_id === 2).length || 0,
-  };
-
-  return stats;
-};
-
-export type { OptimizedAssetFilters, PaginatedAssetResult };

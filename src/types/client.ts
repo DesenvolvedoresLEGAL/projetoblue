@@ -26,11 +26,3 @@ export interface CreateClientRequest {
 export interface UpdateClientRequest extends Partial<CreateClientRequest> {
   uuid: string;
 }
-
-export interface ClientCreateData {
-  empresa: string;
-  responsavel: string;
-  telefones: string[];
-  email?: string;
-  cnpj?: string;
-}

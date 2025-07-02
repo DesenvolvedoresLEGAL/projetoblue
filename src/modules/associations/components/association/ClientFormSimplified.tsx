@@ -1,161 +1,127 @@
-
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useClientsData } from '@modules/clients/hooks/useClientsData';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/utils/toast';
-import { mapDatabaseClientToFrontend } from '@/utils/databaseMappers';
 import { Client } from '@/types/client';
-
-const clientSchema = z.object({
-  empresa: z.string().min(1, 'Empresa é obrigatória'),
-  responsavel: z.string().min(1, 'Responsável é obrigatório'),
-  contato: z.string().min(1, 'Contato é obrigatório'),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-});
-
-type ClientFormValues = z.infer<typeof clientSchema>;
+import { toast } from 'sonner';
+import { mapDatabaseClientToFrontend, normalizePhoneForStorage } from '@/utils/clientMappers';
+import { showFriendlyError } from '@/utils/errorTranslator';
 
 interface ClientFormSimplifiedProps {
-  onClientCreated: (client: Client) => void;
+  onSubmit: (client: Client) => void;
   onCancel: () => void;
 }
 
-export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({
-  onClientCreated,
-  onCancel,
-}) => {
-  const { refetch } = useClientsData();
-
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
-    defaultValues: {
-      empresa: '',
-      responsavel: '',
-      contato: '',
-      email: '',
-    },
+export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSubmit, onCancel }) => {
+  const [formData, setFormData] = useState({
+    empresa: '',
+    responsavel: '',
+    telefone: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (values: ClientFormValues) => {
+  const isFormValid = () => {
+    return !!(formData.empresa.trim() && formData.responsavel.trim() && formData.telefone.trim());
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.empresa.trim() || !formData.responsavel.trim() || !formData.telefone.trim()) {
+      toast.error('Por favor, preencha empresa, responsável e telefone para continuar.');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      const clientData = {
-        nome: values.empresa, // Use empresa as nome
-        empresa: values.empresa,
-        responsavel: values.responsavel,
-        contato: parseInt(values.contato),
-        email: values.email || null,
-        telefones: [values.contato], // Convert contato to telefones array
+      const cleanPhone = normalizePhoneForStorage(formData.telefone);
+
+      const dbData = {
+        empresa: formData.empresa.trim(),
+        responsavel: formData.responsavel.trim(),
+        telefones: [cleanPhone],
+        // Campos legados para compatibilidade
+        nome: formData.empresa.trim(),
+        contato: parseInt(cleanPhone) || 0
       };
 
       const { data, error } = await supabase
         .from('clients')
-        .insert([clientData])
+        .insert(dbData)
         .select()
         .single();
 
       if (error) {
-        console.error('Error creating client:', error);
-        toast.error('Erro ao criar cliente');
-        return;
+        console.error('Erro ao criar cliente:', error);
+        const friendlyMessage = showFriendlyError(error, 'create');
+        throw error;
       }
 
-      // Convert the database response to the Client type
-      const client = mapDatabaseClientToFrontend({
-        ...data,
-        telefones: data.telefones || []
-      });
-
-      toast.success('Cliente criado com sucesso!');
-      refetch();
-      onClientCreated(client);
+      const newClient = mapDatabaseClientToFrontend(data);
+      onSubmit(newClient);
+      toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
-      console.error('Error creating client:', error);
-      toast.error('Erro ao criar cliente');
+      console.error('Erro ao cadastrar cliente:', error);
+      const friendlyMessage = showFriendlyError(error, 'create');
+      toast.error(friendlyMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-lg">Criar Cliente Rápido</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="empresa"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Empresa *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome da empresa" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="responsavel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Responsável *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do responsável" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="contato"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contato *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Telefone de contato" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="email@exemplo.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                Criar
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="empresa">Empresa</Label>
+        <Input
+          type="text"
+          id="empresa"
+          value={formData.empresa}
+          onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
+          placeholder="Nome da empresa"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="responsavel">Responsável</Label>
+        <Input
+          type="text"
+          id="responsavel"
+          value={formData.responsavel}
+          onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
+          placeholder="Nome do responsável"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="telefone">Telefone</Label>
+        <Input
+          type="tel"
+          id="telefone"
+          value={formData.telefone}
+          onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+          placeholder="Número de telefone"
+          required
+        />
+      </div>
+      <div className="flex justify-between">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Cadastrando...
+            </>
+          ) : (
+            'Cadastrar'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };
