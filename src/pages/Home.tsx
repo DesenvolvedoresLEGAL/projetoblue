@@ -13,7 +13,6 @@ import { SubscriptionAssetsCard } from "@modules/dashboard/components/dashboard/
 import { RecentActivitiesCard } from "@modules/dashboard/components/dashboard/RecentActivitiesCard";
 import { RentedAssetsCard } from "@modules/dashboard/components/dashboard/RentedAssetsCard";
 import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
-import { OperadorasSection } from "@modules/dashboard/components/dashboard/OperadorasSection";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 
@@ -244,9 +243,6 @@ const Home: React.FC = () => {
             isMobile={isMobile}
           />
         </div>
-
-        {/* Operadoras Section - Nova seção conforme plano detalhado */}
-        <OperadorasSection />
 
         {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

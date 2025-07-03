@@ -1,246 +1,244 @@
 
-import React, { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, Package, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { toast } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
+import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
+import { useCreateAssociation } from '@modules/associations/hooks/useCreateAssociation';
 import { ClientSelectionStep } from './ClientSelectionStep';
 import { AssetSelectionStep } from './AssetSelectionStep';
 import { AssociationSummary } from './AssociationSummary';
-import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
-import { toast } from '@/utils/toast';
-
-const STEPS = {
-  client: 'Selecionar Cliente',
-  assets: 'Selecionar Ativos',
-  summary: 'Resumo e Confirmação'
-} as const;
-
-type StepKey = keyof typeof STEPS;
-
-interface StepIndicatorProps {
-  currentStep: StepKey;
-  completedSteps: Set<StepKey>;
-}
-
-const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, completedSteps }) => {
-  const stepOrder: StepKey[] = ['client', 'assets', 'summary'];
-  
-  return (
-    <div className="flex items-center justify-center space-x-4 mb-8">
-      {stepOrder.map((step, index) => {
-        const isActive = currentStep === step;
-        const isCompleted = completedSteps.has(step);
-        const stepNumber = index + 1;
-        
-        return (
-          <div key={step} className="flex items-center">
-            <div className={`
-              flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium
-              ${isActive 
-                ? 'bg-[#4D2BFB] text-white' 
-                : isCompleted 
-                  ? 'bg-[#03F9FF] text-[#020CBC]' 
-                  : 'bg-gray-200 text-gray-500'
-              }
-            `}>
-              {stepNumber}
-            </div>
-            <span className={`ml-2 text-sm font-medium ${
-              isActive ? 'text-[#4D2BFB]' : isCompleted ? 'text-[#020CBC]' : 'text-gray-500'
-            }`}>
-              {STEPS[step]}
-            </span>
-            {index < stepOrder.length - 1 && (
-              <div className={`w-8 h-px mx-4 ${
-                completedSteps.has(stepOrder[index + 1]) || currentStep === stepOrder[index + 1] 
-                  ? 'bg-[#03F9FF]' 
-                  : 'bg-gray-300'
-              }`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 export const AssetAssociation: React.FC = () => {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const {
     currentStep,
     selectedClient,
     selectedAssets,
+    generalConfig,
     setCurrentStep,
+    validateCurrentStep,
     clearState
   } = useAssetAssociationState();
 
-  const [completedSteps, setCompletedSteps] = useState<Set<StepKey>>(new Set());
+  const createAssociationMutation = useCreateAssociation();
 
-  // Marcar steps como completos baseado no estado
-  React.useEffect(() => {
-    const newCompletedSteps = new Set<StepKey>();
-    
-    if (selectedClient) {
-      newCompletedSteps.add('client');
-    }
-    
-    if (selectedAssets.length > 0) {
-      newCompletedSteps.add('assets');
-    }
-    
-    setCompletedSteps(newCompletedSteps);
-  }, [selectedClient, selectedAssets]);
+  // Reset submission state when step changes
+  useEffect(() => {
+    setIsSubmitting(false);
+  }, [currentStep]);
 
-  const handleBack = useCallback(() => {
-    const stepOrder: StepKey[] = ['client', 'assets', 'summary'];
-    const currentIndex = stepOrder.indexOf(currentStep);
-    
-    if (currentIndex > 0) {
-      setCurrentStep(stepOrder[currentIndex - 1]);
-    }
-  }, [currentStep, setCurrentStep]);
-
-  const handleReset = useCallback(() => {
-    clearState();
-    setCompletedSteps(new Set());
-  }, [clearState]);
-
-  const handleAssociationComplete = useCallback(async (result: unknown) => {
-    try {
-      console.log('Associação concluída:', result);
-      
-      // Verificar se o resultado tem a estrutura esperada
-      if (result && typeof result === 'object') {
-        const resultObj = result as Record<string, unknown>;
-        if (resultObj.success) {
-          toast.success('Associação criada com sucesso!');
-        } else if (resultObj.details) {
-          const details = resultObj.details as Record<string, unknown>;
-          const message = details.message as string || 'Associação criada';
-          toast.success(message);
-        }
-      } else {
-        toast.success('Associação criada com sucesso!');
-      }
-      
-      // Reset do estado após sucesso
-      setTimeout(() => {
-        handleReset();
-      }, 2000);
-    } catch (error) {
-      console.error('Erro no callback de conclusão:', error);
-      toast.error('Erro ao processar resultado da associação');
-    }
-  }, [handleReset]);
-
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 'client':
-        return <ClientSelectionStep />;
-      
-      case 'assets':
-        return <AssetSelectionStep />;
-      
-      case 'summary':
-        return (
-          <AssociationSummary
-            client={selectedClient!}
-            assets={selectedAssets}
-            generalConfig={null}
-            onComplete={handleAssociationComplete}
-            onBack={handleBack}
-          />
-        );
-      
-      default:
-        return <ClientSelectionStep />;
+  const handleNext = () => {
+    if (currentStep === 'client' && selectedClient) {
+      console.log('AssetAssociation: Avançando para seleção de ativos');
+      setCurrentStep('assets');
+    } else if (currentStep === 'assets' && selectedAssets.length > 0) {
+      console.log('AssetAssociation: Avançando para resumo');
+      setCurrentStep('summary');
     }
   };
 
-  const canGoBack = currentStep !== 'client';
-  const hasSelectedItems = selectedClient || selectedAssets.length > 0;
+  const handleBack = () => {
+    if (currentStep === 'assets') {
+      setCurrentStep('client');
+    } else if (currentStep === 'summary') {
+      setCurrentStep('assets');
+    }
+  };
+
+  const handleSubmit = async () => {
+    console.log('[AssetAssociation] Iniciando submissão da associação');
+    console.log('[AssetAssociation] Cliente selecionado:', selectedClient);
+    console.log('[AssetAssociation] Assets selecionados:', selectedAssets);
+    console.log('[AssetAssociation] Configuração geral:', generalConfig);
+
+    if (!selectedClient || !selectedAssets.length || !generalConfig) {
+      const errorMsg = 'Dados incompletos para criar associação';
+      console.error('[AssetAssociation] Validação falhou:', {
+        hasClient: !!selectedClient,
+        assetsCount: selectedAssets.length,
+        hasGeneralConfig: !!generalConfig
+      });
+      toast.error(errorMsg);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Garantir que startDate seja uma string ISO completa
+      let formattedStartDate: string;
+      if (generalConfig.startDate instanceof Date) {
+        formattedStartDate = generalConfig.startDate.toISOString();
+      } else if (typeof generalConfig.startDate === 'string') {
+        // Se for string, converter para Date e depois para ISO
+        const dateObj = new Date(generalConfig.startDate);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error('Data de início inválida');
+        }
+        formattedStartDate = dateObj.toISOString();
+      } else {
+        throw new Error('Data de início não fornecida');
+      }
+
+      console.log('[AssetAssociation] Data formatada:', formattedStartDate);
+
+      // Preparar dados para envio
+      const associationData = {
+        clientId: selectedClient.uuid,
+        associationTypeId: generalConfig.associationType, // Agora é number
+        startDate: formattedStartDate,
+        endDate: generalConfig.endDate ? 
+          (generalConfig.endDate instanceof Date ? 
+            generalConfig.endDate.toISOString() : 
+            new Date(generalConfig.endDate).toISOString()
+          ) : undefined,
+        selectedAssets: selectedAssets.map(asset => ({
+          id: asset.uuid, // Usar uuid como id
+          type: asset.type,
+          identifier: asset.type === 'CHIP' 
+            ? (asset.line_number?.toString() || asset.iccid || asset.uuid)
+            : (asset.radio || asset.serial_number || asset.uuid)
+        })),
+        generalConfig: {
+          notes: generalConfig.notes || undefined,
+          ssid: undefined, // Não implementado ainda
+          password: undefined, // Não implementado ainda
+          dataLimit: undefined, // Não implementado ainda
+          rentedDays: generalConfig.rentedDays || 0
+        }
+      };
+
+      console.log('[AssetAssociation] Dados preparados para envio:', associationData);
+
+      // Executar criação da associação
+      const result = await createAssociationMutation.mutateAsync(associationData);
+      
+      console.log('[AssetAssociation] Resultado:', result);
+
+      // Limpar estado e navegar de volta
+      clearState();
+      toast.success('Associação criada com sucesso!');
+      navigate('/associations');
+
+    } catch (error: unknown) {
+      console.error('[AssetAssociation] Erro ao criar associação:', error);
+
+      // Exibir erro detalhado
+      let errorMessage = 'Erro ao criar associação';
+
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message;
+      }
+      
+      if (error.details) {
+        console.error('[AssetAssociation] Detalhes do erro:', error.details);
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const canProceed = validateCurrentStep();
+
+  const getStepTitle = () => {
+    switch (currentStep) {
+      case 'client':
+        return 'Selecionar Cliente';
+      case 'assets':
+        return 'Selecionar Ativos';
+      case 'summary':
+        return 'Resumo e Confirmação';
+      default:
+        return 'Criar Associação';
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      {/* Header */}
-      <Card className="mb-6 border-[#4D2BFB]/20">
-        <CardHeader className="bg-gradient-to-r from-[#4D2BFB]/5 to-[#03F9FF]/5">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold text-[#020CBC] flex items-center gap-2">
-              <Package className="h-6 w-6" />
-              Nova Associação Asset-Cliente
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              {hasSelectedItems && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReset}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  Limpar Tudo
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Step Indicator */}
-      <StepIndicator currentStep={currentStep} completedSteps={completedSteps} />
-
-      {/* Progress Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Card className="border-[#03F9FF]/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#03F9FF]" />
-              <span className="font-medium">Cliente Selecionado:</span>
-              {selectedClient ? (
-                <Badge variant="secondary" className="bg-[#03F9FF]/10 text-[#020CBC]">
-                  {selectedClient.nome}
-                </Badge>
-              ) : (
-                <span className="text-muted-foreground">Nenhum</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-[#4D2BFB]/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-[#4D2BFB]" />
-              <span className="font-medium">Ativos Selecionados:</span>
-              <Badge variant="secondary" className="bg-[#4D2BFB]/10 text-[#4D2BFB]">
-                {selectedAssets.length}
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Criar Nova Associação</h1>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/associations')}
+          disabled={isSubmitting}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar
+        </Button>
       </div>
 
-      {/* Main Content */}
-      <Card className="border-[#4D2BFB]/20">
-        <CardContent className="p-6">
-          {/* Back Button */}
-          {canGoBack && (
-            <div className="mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBack}
-                className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </Button>
+      {/* Progress Steps */}
+      <div className="flex items-center justify-center space-x-4 mb-8">
+        {['client', 'assets', 'summary'].map((step, index) => (
+          <div key={step} className="flex items-center">
+            <div className={`
+              w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold
+              ${currentStep === step ? 'bg-blue-600 text-white' :
+                ['client', 'assets', 'summary'].indexOf(currentStep) > index ? 'bg-green-600 text-white' :
+                'bg-gray-300 text-gray-600'}
+            `}>
+              {index + 1}
             </div>
-          )}
+            {index < 2 && (
+              <div className={`w-16 h-1 mx-2 ${
+                ['client', 'assets', 'summary'].indexOf(currentStep) > index ? 'bg-green-600' : 'bg-gray-300'
+              }`} />
+            )}
+          </div>
+        ))}
+      </div>
 
-          {/* Step Content */}
-          {renderCurrentStep()}
+      <Card>
+        <CardHeader>
+          <CardTitle>{getStepTitle()}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {currentStep === 'client' && <ClientSelectionStep />}
+          {currentStep === 'assets' && <AssetSelectionStep />}
+          {currentStep === 'summary' && <AssociationSummary />}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 'client' || isSubmitting}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+
+            {currentStep !== 'summary' ? (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed || isSubmitting}
+              >
+                Próximo
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={!canProceed || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  'Criar Associação'
+                )}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

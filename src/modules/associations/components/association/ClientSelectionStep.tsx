@@ -16,7 +16,6 @@ export const ClientSelectionStep: React.FC = () => {
 
   const filteredClients = clients.filter(client => 
     client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.cnpj && client.cnpj.includes(searchTerm)) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -123,9 +122,9 @@ export const ClientSelectionStep: React.FC = () => {
                       {client.email && (
                         <p className="text-sm text-muted-foreground">Email: {client.email}</p>
                       )}
-                       <p className="text-sm text-muted-foreground">
-                         Responsável: {client.responsavel}
-                       </p>
+                      <p className="text-sm text-muted-foreground">
+                        Contato: {client.contato}
+                      </p>
                     </div>
                     <Button variant="ghost" size="sm" className="text-[#4D2BFB]">
                       Selecionar

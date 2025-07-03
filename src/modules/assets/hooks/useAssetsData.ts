@@ -40,11 +40,6 @@ interface DatabaseAsset {
     id: number;
     status: string;
   };
-  // Relacionamento opcional com plans
-  plan?: {
-    id: number;
-    nome: string;
-  };
 }
 
 // Transform database record to frontend Asset type
@@ -133,7 +128,6 @@ const transformToAssetWithRelations = (dbAsset: DatabaseAsset): AssetWithRelatio
       id: dbAsset.status?.id || dbAsset.status_id,
       name: dbAsset.status?.status || 'DISPONÍVEL'
     },
-    // Verificar se plan existe antes de usar
     plan: dbAsset.plan ? {
       id: dbAsset.plan.id,
       nome: dbAsset.plan.nome

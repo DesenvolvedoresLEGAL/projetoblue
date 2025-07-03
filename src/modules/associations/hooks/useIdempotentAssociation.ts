@@ -1,11 +1,9 @@
 
 import { useState } from 'react';
-import { idempotencyService, ValidationResult } from '@/services/idempotencyService';
+import { idempotencyService } from '@/services/idempotencyService';
 
 export const useIdempotentAssociation = () => {
   const [executingOperations, setExecutingOperations] = useState<Set<string>>(new Set());
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
 
   const executeWithIdempotency = async <T>(
     operationKey: string,
@@ -62,34 +60,6 @@ export const useIdempotentAssociation = () => {
     }
   };
 
-  const validateOnly = async (assetId: string, operation: 'CREATE' | 'END', associationId?: number): Promise<ValidationResult> => {
-    setIsValidating(true);
-    try {
-      // Simular validação - substituir pela lógica real de validação
-      const result: ValidationResult = {
-        valid: true,
-        message: 'Operação válida',
-        active_associations: 0,
-        current_status: 'DISPONÍVEL'
-      };
-      
-      setValidationResult(result);
-      return result;
-    } catch (error) {
-      const errorResult: ValidationResult = {
-        valid: false,
-        message: error instanceof Error ? error.message : 'Erro na validação',
-        active_associations: 0,
-        current_status: 'UNKNOWN'
-      };
-      
-      setValidationResult(errorResult);
-      return errorResult;
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
   const clearOperationCache = (operationKey: string) => {
     console.log('[useIdempotentAssociation] Limpando cache da operação:', operationKey);
     idempotencyService.clearCache(operationKey);
@@ -102,9 +72,6 @@ export const useIdempotentAssociation = () => {
   return {
     executeWithIdempotency,
     clearOperationCache,
-    isOperationExecuting,
-    validateOnly,
-    validationResult,
-    isValidating
+    isOperationExecuting
   };
 };

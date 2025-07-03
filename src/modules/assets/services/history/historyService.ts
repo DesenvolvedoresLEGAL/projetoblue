@@ -1,86 +1,74 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Json } from '@/integrations/supabase/types';
 
-export interface AssetLogWithRelationsRaw {
-  id: number;
-  date: string;
-  event: string;
-  details: Json; // Usar Json do Supabase em vez de JSON
-  status_before_id: number;
-  status_after_id: number;
-  assoc_id: number;
-  fk_asset_logs_status_before: {
-    status: string;
-  };
-  fk_asset_logs_status_after: {
-    status: string;
-  };
-  fk_asset_logs_assoc_id: {
-    asset_id: string;
-    client_id: string;
-    entry_date: string;
-    exit_date: string;
-    clients: {
-      empresa: string;
-    };
-  };
-}
-
+/**
+ * Interface para logs de asset com dados relacionados
+ * Mapeamento baseado na tabela asset_logs com JOINs para dados legíveis
+ * ATUALIZADO: assoc_id agora pode ser NULL devido às melhorias no trigger
+ */
 export interface AssetLogWithRelations {
   id: number;
   date: string;
   event: string;
-  details: Json; // Mudança aqui também
-  status_before_id: number;
-  status_after_id: number;
-  assoc_id: number;
-  status_before: {
-    status: string;
-  };
-  status_after: {
-    status: string;
-  };
-  association: {
-    asset_id: string;
-    client_id: string;
-    entry_date: string;
-    exit_date: string;
-    clients: {
-      empresa: string;
+  details: JSON; // jsonb field
+  status_before_id?: number;
+  status_after_id?: number;
+  assoc_id?: number | null; // CORRIGIDO: Pode ser NULL agora
+  // Dados relacionados via JOINs
+  status_before?: { status: string };
+  status_after?: { status: string };
+  association?: {
+    asset?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
     };
-  };
+    client?: {
+      uuid: string;
+      nome: string;
+    };
+  } | null; // Pode ser NULL se assoc_id for NULL
 }
 
-export interface AssetHistoryParams {
-  assetId?: string;
-  clientId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  eventType?: string;
-  page?: number;
-  limit?: number;
+/**
+ * Busca logs de assets com dados relacionados usando JOINs
+ * ATUALIZADO: Query otimizada para lidar com assoc_id nullable
+ */
+interface AssetLogWithRelationsRaw {
+  id: number;
+  date: string;
+  event: string;
+  details: JSON;
+  status_before_id?: number;
+  status_after_id?: number;
+  assoc_id?: number | null;
+  fk_asset_logs_status_before?: { status: string } | null;
+  fk_asset_logs_status_after?: { status: string } | null;
+  fk_asset_logs_assoc_id?: {
+    asset?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    client?: {
+      uuid: string;
+      nome: string;
+    };
+  } | null;
 }
 
-export interface AssetHistoryResponse {
-  logs: AssetLogWithRelations[];
-  totalCount: number;
-  totalPages: number;
-}
-
-export const assetHistoryService = {
-  async getAssetHistory(params: AssetHistoryParams = {}): Promise<AssetHistoryResponse> {
-    const {
-      assetId,
-      clientId,
-      dateFrom,
-      dateTo,
-      eventType,
-      page = 1,
-      limit = 50
-    } = params;
-
-    let query = supabase
+export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
+  try {
+    console.log('Buscando logs de assets com relações...');
+    
+    // Query atualizada com LEFT JOINs para lidar com assoc_id NULL
+    const { data, error } = await supabase
       .from('asset_logs')
       .select(`
         id,
@@ -90,126 +78,135 @@ export const assetHistoryService = {
         status_before_id,
         status_after_id,
         assoc_id,
-        fk_asset_logs_status_before:asset_status!status_before_id(status),
-        fk_asset_logs_status_after:asset_status!status_after_id(status),
-        fk_asset_logs_assoc_id:asset_client_assoc!assoc_id(
-          asset_id,
-          client_id,
-          entry_date,
-          exit_date,
-          clients!client_id(empresa)
+        fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
+        fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
+        fk_asset_logs_assoc_id:asset_client_assoc!left(
+          asset:assets!asset_id(
+            uuid,
+            serial_number,
+            model,
+            iccid,
+            radio,
+            line_number
+          ),
+          client:clients!client_id(
+            uuid,
+            nome
+          )
         )
-      `, { count: 'exact' })
-      .is('deleted_at', null)
-      .order('date', { ascending: false });
-
-    // Apply filters
-    if (assetId) {
-      query = query.eq('fk_asset_logs_assoc_id.asset_id', assetId);
-    }
-
-    if (clientId) {
-      query = query.eq('fk_asset_logs_assoc_id.client_id', clientId);
-    }
-
-    if (eventType) {
-      query = query.eq('event', eventType);
-    }
-
-    if (dateFrom) {
-      query = query.gte('date', dateFrom);
-    }
-
-    if (dateTo) {
-      query = query.lte('date', dateTo);
-    }
-
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit - 1;
-    query = query.range(startIndex, endIndex);
-
-    const { data, error, count } = await query;
+      `)
+      .order('date', { ascending: false })
+      .limit(100); // Limita a 100 registros mais recentes para performance
 
     if (error) {
-      console.error('Error fetching asset history:', error);
-      throw new Error(`Erro ao buscar histórico de ativos: ${error.message}`);
+      console.error('Erro detalhado ao buscar logs de assets:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw new Error(`Falha ao carregar histórico: ${error.message}`);
     }
 
-    // Transform data with corrected typing
-    const logs: AssetLogWithRelations[] = (data || []).map((log: AssetLogWithRelationsRaw) => ({
-      id: log.id,
-      date: log.date,
-      event: log.event,
-      details: log.details, // Agora compatível com Json
-      status_before_id: log.status_before_id,
-      status_after_id: log.status_after_id,
-      assoc_id: log.assoc_id,
-      status_before: {
-        status: log.fk_asset_logs_status_before?.status || 'Unknown'
-      },
-      status_after: {
-        status: log.fk_asset_logs_status_after?.status || 'Unknown'
-      },
-      association: {
-        asset_id: log.fk_asset_logs_assoc_id?.asset_id || '',
-        client_id: log.fk_asset_logs_assoc_id?.client_id || '',
-        entry_date: log.fk_asset_logs_assoc_id?.entry_date || '',
-        exit_date: log.fk_asset_logs_assoc_id?.exit_date || '',
-        clients: {
-          empresa: log.fk_asset_logs_assoc_id?.clients?.empresa || 'Unknown'
-        }
-      }
-    }));
-
-    return {
-      logs,
-      totalCount: count || 0,
-      totalPages: Math.ceil((count || 0) / limit)
-    };
-  },
-
-  async getAssetEventTypes(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('asset_logs')
-      .select('event')
-      .not('event', 'is', null)
-      .is('deleted_at', null);
-
-    if (error) {
-      console.error('Error fetching event types:', error);
+    if (!data || data.length === 0) {
+      console.warn('Nenhum log encontrado na base de dados');
       return [];
     }
 
-    // Get unique event types
-    const eventTypes = [...new Set(data.map(item => item.event).filter(Boolean))];
-    return eventTypes.sort();
-  },
+    // Mapear os dados para a interface esperada, lidando com assoc_id NULL
+    const mappedData = data.map((log: AssetLogWithRelationsRaw) => ({
+      id: log.id,
+      date: log.date,
+      event: log.event,
+      details: log.details,
+      status_before_id: log.status_before_id,
+      status_after_id: log.status_after_id,
+      assoc_id: log.assoc_id, // Pode ser NULL agora
+      status_before: log.fk_asset_logs_status_before,
+      status_after: log.fk_asset_logs_status_after,
+      association: log.fk_asset_logs_assoc_id // Pode ser NULL se assoc_id for NULL
+    }));
 
-  async getAssetStats(assetId: string) {
-    const { data, error } = await supabase
-      .from('asset_logs')
-      .select('event, created_at')
-      .eq('details->>asset_id', assetId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching asset stats:', error);
-      return null;
-    }
-
-    const totalEvents = data.length;
-    const lastActivity = data[0]?.created_at;
-    const eventsByType = data.reduce((acc, log) => {
-      acc[log.event] = (acc[log.event] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return {
-      totalEvents,
-      lastActivity,
-      eventsByType
-    };
+    console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
+    return mappedData;
+  } catch (error) {
+    console.error('Erro no serviço de logs:', error);
+    // Retorna array vazio em caso de erro para evitar quebra da UI
+    return [];
   }
+};
+
+/**
+ * Formata detalhes do log (campo JSONB) para exibição amigável
+ * ATUALIZADO: Melhor tratamento para eventos sem associação
+ */
+interface LogDetails {
+  event_description?: string;
+  line_number?: number;
+  radio?: string;
+  solution_name?: string;
+  solution?: string;
+  client_name?: string;
+  [key: string]: unknown;
+}
+
+export const formatLogDetails = (details: LogDetails | string | null): string => {
+  if (!details) return 'Nenhum detalhe disponível';
+  
+  try {
+    // Se for string, tenta fazer parse
+    const parsedDetails = typeof details === 'string' ? JSON.parse(details) : details;
+    
+    // Extrai informações relevantes para o usuário
+    const formattedParts: string[] = [];
+    
+    if (parsedDetails.event_description) {
+      formattedParts.push(parsedDetails.event_description);
+    }
+    
+    if (parsedDetails.line_number) {
+      formattedParts.push(`Linha: ${parsedDetails.line_number}`);
+    }
+    
+    if (parsedDetails.radio) {
+      formattedParts.push(`Rádio: ${parsedDetails.radio}`);
+    }
+    
+    if (parsedDetails.solution_name || parsedDetails.solution) {
+      formattedParts.push(`Solução: ${parsedDetails.solution_name || parsedDetails.solution}`);
+    }
+    
+    // Adicionar informação sobre cliente se disponível
+    if (parsedDetails.client_name) {
+      formattedParts.push(`Cliente: ${parsedDetails.client_name}`);
+    }
+    
+    return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Evento do sistema';
+  } catch (error) {
+    console.warn('Erro ao formatar detalhes do log:', error);
+    return 'Detalhes não formatáveis';
+  }
+};
+
+export const formatEventName = (event: string): string => {
+  const eventTranslations: Record<string, string> = {
+    'INSERT': 'Criação',
+    'UPDATE': 'Atualização',
+    'DELETE': 'Remoção',
+    'STATUS_UPDATED': 'Status Atualizado',
+    'ASSET_CRIADO': 'Ativo Criado',
+    'SOFT_DELETE': 'Ativo Removido',
+    'ASSOCIATION_CREATED': 'Associação Criada',
+    'ASSOCIATION_REMOVED': 'Associação Removida',
+    'ASSOCIATION_STATUS_UPDATED': 'Status da Associação Atualizado',
+    'ASSOCIATION_MODIFIED': 'Associação Modificada'
+  };
+  
+  return eventTranslations[event] || event;
+};
+
+export const historyService = {
+  getAssetLogsWithRelations,
+  formatLogDetails,
+  formatEventName
 };

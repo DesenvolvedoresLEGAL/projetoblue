@@ -10,7 +10,7 @@ export type AssetStatus =
   | "MANUTENÇÃO"
   | "EXTRAVIADO";
 
-export type AssetType = "CHIP" | "ROTEADOR" | "EQUIPAMENTO" | "EQUIPMENT";
+export type AssetType = "CHIP" | "ROTEADOR";
 
 export type SolutionType = 
   | "SPEEDY 5G"
@@ -62,11 +62,6 @@ export interface DatabaseAsset {
   // Campos de configurações de rede - Atuais (editáveis)
   ssid_atual?: string;
   pass_atual?: string;
-  // Relacionamentos opcionais vindos de JOINs
-  manufacturer?: { id: number; name: string };
-  asset_status?: { id: number; status: string };
-  asset_solutions?: { id: number; solution: string };
-  plans?: { id: number; nome: string };
 }
 
 // Interface base para uso no frontend, mantendo compatibilidade
@@ -120,7 +115,7 @@ export interface ChipAsset extends BaseAsset {
 }
 
 export interface EquipamentAsset extends BaseAsset {
-  type: "ROTEADOR" | "EQUIPAMENTO" | "EQUIPMENT";
+  type: "ROTEADOR";
   uniqueId: string;
   brand: string;
   model: string;
@@ -144,6 +139,44 @@ export interface EquipamentAsset extends BaseAsset {
 }
 
 export type Asset = ChipAsset | EquipamentAsset;
+
+// Interface Client corrigida para alinhar com tabela 'clients' do banco
+export interface Client {
+  uuid: string; // Campo principal no banco (NOT NULL)
+  nome: string; // NOT NULL no banco
+  cnpj?: string; // Nullable no banco, corrigido para opcional
+  email?: string; // Nullable no banco
+  contato: number; // bigint NOT NULL no banco
+  created_at?: string; // timestamp with time zone
+  updated_at?: string; // timestamp with time zone NOT NULL
+  deleted_at?: string; // timestamp nullable
+  // Removido campo 'id' que não existe no banco
+  // Removido campo 'assets' que não existe no banco
+}
+
+// Interface corrigida para alinhar com tabela 'asset_status' do banco
+export interface AssetStatusRecord {
+  id: number; // bigint NOT NULL
+  status: string; // text NOT NULL
+  association?: number; // bigint nullable, corrigido nome do campo
+  created_at: string; // timestamp NOT NULL
+  updated_at: string; // timestamp NOT NULL  
+  deleted_at?: string; // timestamp nullable
+}
+
+// Interface corrigida para alinhar com tabela 'asset_logs' do banco
+export interface AssetLog {
+  id: number; // bigint NOT NULL (sequence)
+  assoc_id?: number; // bigint nullable, corrigido tipo para number
+  date?: string; // timestamp nullable
+  event?: string; // text nullable
+  details?: Json; // jsonb nullable
+  status_before_id?: number; // bigint nullable
+  status_after_id?: number; // bigint nullable
+  deleted_at?: string; // timestamp nullable
+  updated_at: string; // timestamp NOT NULL
+  created_at: string; // timestamp NOT NULL
+}
 
 // Interface corrigida para alinhar com tabela 'asset_client_assoc' do banco
 export interface AssetClientAssociation {
@@ -236,18 +269,4 @@ export interface AssociationType {
   created_at: string; // timestamp NOT NULL
   updated_at: string; // timestamp NOT NULL
   deleted_at?: string; // timestamp nullable
-}
-
-// Interface corrigida para asset_logs - alinhada com o banco
-export interface AssetLog {
-  id: number; // bigint NOT NULL (sequence)
-  assoc_id?: number; // bigint nullable, corrigido tipo para number
-  date?: string; // timestamp nullable
-  event?: string; // text nullable
-  details?: Json; // jsonb nullable - usando Json do Supabase
-  status_before_id?: number; // bigint nullable
-  status_after_id?: number; // bigint nullable
-  deleted_at?: string; // timestamp nullable
-  updated_at: string; // timestamp NOT NULL
-  created_at: string; // timestamp NOT NULL
 }

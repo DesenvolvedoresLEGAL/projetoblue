@@ -1,13 +1,13 @@
 
 // Tipos para o módulo de associações
-import type { Client } from '@/types/asset';
+import type { Client } from '@/types/client';
 import type { AssociationGeneralConfig } from '../components/association/AssociationGeneralConfig';
 
 // Type for SelectedAsset from AssetAssociation page
 export interface SelectedAsset {
   id: string;
   uuid: string;
-  type: 'CHIP' | 'ROTEADOR' | 'EQUIPAMENTO' | 'EQUIPMENT';
+  type: 'CHIP' | 'ROTEADOR';
   registrationDate: string;
   status: string;
   statusId?: number;

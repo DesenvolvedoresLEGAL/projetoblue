@@ -1,33 +1,34 @@
 
-import { Client } from '@/types/client';
+import { Client, ClientFormData } from '@/types/client';
 
 // Mapear dados do banco para o frontend
 export const mapDatabaseClientToFrontend = (
-  dbClient: any
+  dbClient: Partial<Client> & Record<string, unknown>
 ): Client => {
   return {
     uuid: dbClient.uuid,
-    nome: dbClient.nome || dbClient.empresa,
-    empresa: dbClient.empresa || dbClient.nome, 
+    empresa: dbClient.empresa || dbClient.nome, // Fallback para dados legados
     responsavel: dbClient.responsavel || 'Responsável não informado',
-    contato: dbClient.contato || 0,
     telefones: Array.isArray(dbClient.telefones) ? dbClient.telefones : 
-               typeof dbClient.telefones === 'string' ? JSON.parse(dbClient.telefones) : 
+               dbClient.telefones ? JSON.parse(dbClient.telefones) : 
                dbClient.contato ? [dbClient.contato.toString()] : [],
     email: dbClient.email || '',
     cnpj: dbClient.cnpj,
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
-    deleted_at: dbClient.deleted_at
+    deleted_at: dbClient.deleted_at,
+    // Campos legados para compatibilidade
+    nome: dbClient.nome,
+    contato: dbClient.contato
   };
 };
 
 // Mapear dados do form para inserção no banco
-export const mapFormDataToDatabase = (formData: any) => {
+export const mapFormDataToDatabase = (formData: ClientFormData) => {
   return {
     empresa: formData.empresa.trim(),
     responsavel: formData.responsavel.trim(),
-    telefones: JSON.stringify(formData.telefones.filter((tel: string) => tel.trim())),
+    telefones: JSON.stringify(formData.telefones.filter(tel => tel.trim())),
     email: formData.email?.trim() || null,
     cnpj: formData.cnpj?.trim() || null
   };
