@@ -15,6 +15,7 @@ export const ClientSelectionStep: React.FC = () => {
   const { selectedClient, setSelectedClient, setCurrentStep } = useAssetAssociationState();
 
   const filteredClients = clients.filter(client => 
+    client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.cnpj && client.cnpj.includes(searchTerm)) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -65,7 +66,7 @@ export const ClientSelectionStep: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium">{selectedClient.empresa}</h3>
+                <h3 className="font-medium">{selectedClient.nome}</h3>
                 {selectedClient.cnpj && (
                   <p className="text-sm text-muted-foreground">CNPJ: {selectedClient.cnpj}</p>
                 )}
@@ -111,7 +112,7 @@ export const ClientSelectionStep: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-[#020CBC]">{client.empresa}</h3>
+                        <h3 className="font-medium text-[#020CBC]">{client.nome}</h3>
                         <Badge variant="outline" className="text-xs">
                           {client.cnpj ? 'PJ' : 'PF'}
                         </Badge>
