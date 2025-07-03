@@ -69,3 +69,5 @@ You can also create a custom `.env` file based on these examples.
 
 Para entender como funciona o fluxo de login, controle de sessão e validação de permissões, consulte o documento [Fluxo de Autenticação e Autorização](src/docs/AUTH_FLOW.md).
 
+
+Para consultar as funcionalidades disponíveis para cada papel, veja [Permissões por Role](src/docs/ROLE_PERMISSIONS.md).
