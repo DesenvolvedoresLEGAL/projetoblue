@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { OperadoraCard } from './OperadoraCard';
-import { useOperadorasStats } from '@modules/dashboard/hooks/useOperadorasStats';
+import { OperadoraStats, useOperadorasStats } from '@modules/dashboard/hooks/useOperadorasStats';
 import { AlertTriangle } from 'lucide-react';
 
 export const OperadorasSection: React.FC = () => {
@@ -30,7 +30,7 @@ export const OperadorasSection: React.FC = () => {
         {[...Array(3)].map((_, index) => (
           <OperadoraCard 
             key={index} 
-            operadora={{} as any} 
+            operadora={{} as OperadoraStats} 
             isLoading={true} 
           />
         ))}

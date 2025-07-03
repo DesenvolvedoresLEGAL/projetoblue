@@ -52,7 +52,7 @@ export const useURLFilters = (
       }
       hasClearedRef.current = true;
     }
-  }, [clearOnMount, setSearchParams]);
+  }, [clearOnMount, searchParams, setSearchParams]);
 
   // Ler parâmetros da URL no carregamento inicial (apenas se clearOnMount for false)
   useEffect(() => {

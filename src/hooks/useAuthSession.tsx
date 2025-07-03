@@ -45,6 +45,7 @@ export function useAuthSession(
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSignOut = () => {
     setIsDialogOpen(false);
     if (timeoutRef.current) {
@@ -266,6 +267,7 @@ export function useAuthSession(
         timeoutRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -277,7 +279,7 @@ export function useAuthSession(
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  }, [isDialogOpen]);
+  }, [handleSignOut, isDialogOpen]);
 
   return (
     <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
