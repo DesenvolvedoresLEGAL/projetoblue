@@ -65,3 +65,7 @@ cp .env.production .env    # for production builds
 
 You can also create a custom `.env` file based on these examples.
 
+## Documentação de Autenticação
+
+Para entender como funciona o fluxo de login, controle de sessão e validação de permissões, consulte o documento [Fluxo de Autenticação e Autorização](src/docs/AUTH_FLOW.md).
+
