@@ -84,6 +84,19 @@ cp .env.production .env    # for production builds
 
 You can also create a custom `.env` file based on these examples.
 
+
+## Auth Protection Components
+
+Reusable guard components live in `src/components/auth`. They help enforce authentication and role-based permissions across the application.
+
+```tsx
+<AuthRoute requiredRole="admin">
+  <AdminPage />
+</AuthRoute>
+```
+
+See [src/components/auth/README.md](src/components/auth/README.md) for a full list of components and additional examples.
+
 ## Getting Started
 
 To run the project locally:
