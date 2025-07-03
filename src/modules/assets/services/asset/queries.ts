@@ -85,7 +85,9 @@ export const getAssets = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
+    const assets: Asset[] = (data || []).map(item =>
+      mapAssetFromDb(item as DatabaseAsset)
+    );
 
     return { data: assets, count: count || 0 };
   } catch (error) {
@@ -162,7 +164,9 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
+    const assets: Asset[] = (data || []).map(item =>
+      mapAssetFromDb(item as DatabaseAsset)
+    );
     console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
     return assets;
   } catch (error) {
@@ -202,7 +206,9 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
+    const assets: Asset[] = (data || []).map(item =>
+      mapAssetFromDb(item as DatabaseAsset)
+    );
     console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
     return assets;
   } catch (error) {
@@ -290,7 +296,9 @@ export const getAssetsByMultipleStatus = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item as DatabaseAsset));
+    const assets: Asset[] = (data || []).map(item =>
+      mapAssetFromDb(item as DatabaseAsset)
+    );
     console.log(
       `Retrieved ${assets.length} assets with status IDs ${statusIds.join(
         ", "

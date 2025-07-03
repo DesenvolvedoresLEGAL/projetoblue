@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wifi, Cpu, Package, Smartphone } from "lucide-react";
 import { useAssetRegistrationState } from '../../../hooks/useAssetRegistrationState';
-import { ChipForm } from '../../../components/assets/ChipForm';
-import { EquipmentForm } from '../../../components/assets/EquipmentForm';
+import ChipForm from '../../../components/assets/ChipForm';
+import EquipmentForm from '../../../components/assets/EquipmentForm';
 import { AssetType } from '@/types/asset';
 
 interface RegisterAssetFormProps {

@@ -1,6 +1,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
+import type { Database } from '@/integrations/supabase/types';
 import { SearchType } from '@/hooks/useSearchTypeDetection';
 import { Association, StatusFilterType } from '@/types/associations';
 import { sanitizeSearchTerm } from '@/utils/associationsUtils';
@@ -38,7 +40,10 @@ interface AssociationQueryRow {
 
 // Função para aplicar filtro de busca no Supabase apenas para campos específicos (não busca geral)
 const applySupabaseSearch = (
-  query: any, // usando any para evitar conflitos de tipo genérico
+  query: PostgrestFilterBuilder<
+    Database['public'],
+    AssociationQueryRow
+  >,
   term: string,
   type: SearchType
 ) => {

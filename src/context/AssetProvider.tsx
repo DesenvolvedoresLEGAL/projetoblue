@@ -1,5 +1,6 @@
 import React, { useContext, useState, useMemo, ReactNode } from 'react';
-import { Asset, Client, StatusRecord } from '@/types/asset';
+import { Asset, StatusRecord } from '@/types/asset';
+import type { Client } from '@/types/client';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { createAsset, updateAsset, deleteAsset } from '@/modules/assets/services/asset/mutations';
 import type { AssetCreateParams, AssetUpdateParams } from '@/modules/assets/services/asset/types';

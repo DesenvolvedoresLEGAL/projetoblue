@@ -1,9 +1,10 @@
 
 import { Client } from '@/types/client';
+import type { Database } from '@/integrations/supabase/types';
 
 // Mapear dados do banco para o frontend
 export const mapDatabaseClientToFrontend = (
-  dbClient: any
+  dbClient: Database['public']['Tables']['clients']['Row']
 ): Client => {
   return {
     uuid: dbClient.uuid,
@@ -23,7 +24,9 @@ export const mapDatabaseClientToFrontend = (
 };
 
 // Mapear dados do form para inserção no banco
-export const mapFormDataToDatabase = (formData: any) => {
+export const mapFormDataToDatabase = (
+  formData: Database['public']['Tables']['clients']['Insert']
+) => {
   return {
     empresa: formData.empresa.trim(),
     responsavel: formData.responsavel.trim(),

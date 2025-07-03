@@ -1,6 +1,7 @@
 
 import { useAssets } from "@/context/AssetContext";
-import { Client, Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
+import type { Client } from "@/types/client";
+import { Asset, ChipAsset, EquipamentAsset } from "@/types/asset";
 import { formatDate } from "@/utils/formatDate";
 import { 
   Dialog,

@@ -8,7 +8,7 @@ export interface ValidationResult {
 }
 
 class IdempotencyService {
-  private cache: Map<string, any> = new Map();
+  private cache: Map<string, { result: unknown; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
   getCachedResult<T>(key: string): T | null {

@@ -1,6 +1,6 @@
 
 // Tipos para o módulo de associações
-import type { Client } from '@/types/asset';
+import type { Client } from '@/types/client';
 import type { AssociationGeneralConfig } from '../components/association/AssociationGeneralConfig';
 
 // Type for SelectedAsset from AssetAssociation page

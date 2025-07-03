@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Client {
   uuid: string;
+  nome: string;
   empresa: string;
   responsavel: string;
   telefones: string[];
@@ -36,7 +37,7 @@ export const useClientsData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at, deleted_at')
+        .select('uuid, nome, empresa, responsavel, telefones, cnpj, email, created_at, updated_at, deleted_at')
         .is('deleted_at', null) // Excluir clientes deletados por padrão
         .order('created_at', { ascending: false });
       
@@ -63,7 +64,8 @@ export const useClientsData = () => {
 
   // Filter clients based on search term and status
   const filteredClients = clients.filter(client => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
+      client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.responsavel.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||

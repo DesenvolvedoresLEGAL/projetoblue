@@ -1,5 +1,6 @@
 
-import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation, DatabaseAsset } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, AssetClientAssociation, DatabaseAsset } from "@/types/asset";
+import type { Client } from '@/types/client';
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus

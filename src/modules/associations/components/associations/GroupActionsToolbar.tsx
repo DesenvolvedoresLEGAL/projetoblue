@@ -34,7 +34,7 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [showSoftDeleteConfirm, setShowSoftDeleteConfirm] = useState(false);
   const [showAddAssets, setShowAddAssets] = useState(false);
-  const { softDeleteGroup, changeGroupAssociationType } = useGroupActions();
+  const { softDeleteGroup, changeGroupAssociationType, bulkUpdateGroup } = useGroupActions();
 
   const handleSoftDelete = () => {
     softDeleteGroup.mutate(group);
@@ -43,6 +43,11 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
 
   const handleChangeAssociationType = (newType: number) => {
     changeGroupAssociationType.mutate({ group, newType });
+  };
+
+  const handleBulkUpdate = async (updates: Record<string, unknown>) => {
+    await bulkUpdateGroup.mutateAsync({ group, updates });
+    setShowBulkEdit(false);
   };
 
   const activeAssociationsCount = group.associations.filter(a => 
@@ -149,8 +154,10 @@ export const GroupActionsToolbar: React.FC<GroupActionsToolbarProps> = ({
       {/* Dialog de Edição em Lote */}
       <BulkEditDialog
         open={showBulkEdit}
-        onOpenChange={setShowBulkEdit}
-        group={group}
+        onClose={() => setShowBulkEdit(false)}
+        selectedAssociations={group.associations}
+        onBulkUpdate={handleBulkUpdate}
+        isLoading={bulkUpdateGroup.isPending}
       />
 
       {/* Confirmação de Soft Delete */}

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface OperadoraStats {
   id: number;
@@ -46,20 +47,22 @@ export const useOperadorasStats = () => {
       // Processar dados e calcular estatísticas
       const operadorasStats: OperadoraStats[] = data.map((operadora) => {
         // Filtrar apenas SIM-cards (chips) desta operadora
-        const chips = operadora.assets?.filter((asset: any) => 
-          asset.asset_solutions?.solution === "CHIP"
-        ) || [];
+        const chips =
+          operadora.assets?.filter(
+            (asset: Database["public"]["Tables"]["assets"]["Row"]) =>
+              asset.asset_solutions?.solution === "CHIP"
+          ) || [];
 
         const total = chips.length;
         
         // Calcular chips em uso (em locação + em assinatura)
-        const emUso = chips.filter((chip: any) => {
+        const emUso = chips.filter((chip: Database["public"]["Tables"]["assets"]["Row"]) => {
           const status = chip.asset_status?.status?.toLowerCase();
           return status === "em locação" || status === "em assinatura";
         }).length;
 
         // Calcular chips disponíveis
-        const disponivel = chips.filter((chip: any) => {
+        const disponivel = chips.filter((chip: Database["public"]["Tables"]["assets"]["Row"]) => {
           const status = chip.asset_status?.status?.toLowerCase();
           return status === "disponível";
         }).length;
