@@ -45,6 +45,73 @@ O controle de acesso é realizado de duas formas principais:
 
 O cálculo de permissões utiliza a função `hasMinimumRole` definida em `src/utils/roleUtils.ts`, baseada na hierarquia presente em `src/constants/auth.ts`.
 
+## Exemplos de Uso dos Componentes de Proteção
+
+### AuthRoute
+
+Protege rotas do `react-router` e redireciona usuários sem permissão.
+
+```tsx
+<Route
+  path="/clients"
+  element={
+    <AuthRoute requiredRole="suporte">
+      <ClientsPage />
+    </AuthRoute>
+  }
+/>
+```
+
+### ProtectedRoute
+
+Exibe um fallback ou uma mensagem de erro quando o usuário não atende aos requisitos.
+
+```tsx
+<ProtectedRoute requiredRole="admin" fallback={<p>Acesso restrito</p>}>
+  <AdminSettings />
+</ProtectedRoute>
+```
+
+### PrivateRoute
+
+Um atalho para rotas que exigem `admin` como papel padrão.
+
+```tsx
+<Route
+  path="/admin/config"
+  element={
+    <PrivateRoute>
+      <AdminConfig />
+    </PrivateRoute>
+  }
+/>
+```
+
+### RoleGuard
+
+Renderiza trechos de interface apenas quando a função do usuário atende à regra.
+
+```tsx
+<RoleGuard requiredRole="suporte">
+  <Button onClick={handleCreate}>Novo Cliente</Button>
+</RoleGuard>
+```
+
+### PermissionButton
+
+Combina `RoleGuard` e `Button`, desabilitando a ação e mostrando um aviso quando
+não há permissão.
+
+```tsx
+<PermissionButton
+  requiredRole="suporte"
+  tooltip="Você precisa ser suporte ou superior"
+  onClick={handleCreate}
+>
+  Novo Cliente
+</PermissionButton>
+```
+
 ## Resumo
 
 - A autenticação é feita pelo Supabase e integrada à aplicação por meio do `AuthProvider`.
