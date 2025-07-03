@@ -38,7 +38,7 @@ const Login = () => {
       await signIn(email, password);
       // Redirecionamento é tratado pelo AuthContext
     } catch (err) {
-      console.error("Erro ao fazer login:", err);
+      if (import.meta.env.DEV) console.error("Erro ao fazer login:", err);
       // Erro é tratado pelo AuthContext
     }
   };

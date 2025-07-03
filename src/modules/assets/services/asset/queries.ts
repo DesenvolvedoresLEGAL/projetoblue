@@ -78,7 +78,7 @@ export const getAssets = async (
     const { data, error, count } = await query;
 
     if (error) {
-      console.error("Error fetching assets:", error);
+      if (import.meta.env.DEV) console.error("Error fetching assets:", error);
       throw error;
     }
 
@@ -86,7 +86,7 @@ export const getAssets = async (
 
     return { data: assets, count: count || 0 };
   } catch (error) {
-    console.error("Error in getAssets:", error);
+    if (import.meta.env.DEV) console.error("Error in getAssets:", error);
     return { data: [], count: 0 };
   }
 };
@@ -112,19 +112,19 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
       .single();
 
     if (error) {
-      console.error(`Error fetching asset with ID ${id}:`, error);
+      if (import.meta.env.DEV) console.error(`Error fetching asset with ID ${id}:`, error);
       throw error;
     }
 
     if (!data) {
-      console.log(`Asset with ID ${id} not found.`);
+      if (import.meta.env.DEV) console.log(`Asset with ID ${id} not found.`);
       return null;
     }
 
     const asset = mapAssetFromDb(data);
     return asset;
   } catch (error) {
-    console.error(`Error in getAssetById for ID ${id}:`, error);
+    if (import.meta.env.DEV) console.error(`Error in getAssetById for ID ${id}:`, error);
     return null;
   }
 };
@@ -134,7 +134,7 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
  */
 export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
   try {
-    console.log(`Fetching assets with status ID: ${statusId}`);
+    if (import.meta.env.DEV) console.log(`Fetching assets with status ID: ${statusId}`);
 
     const { data, error } = await supabase
       .from("assets")
@@ -151,15 +151,15 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       .is("deleted_at", null);
 
     if (error) {
-      console.error(`Error fetching assets with status ID ${statusId}:`, error);
+      if (import.meta.env.DEV) console.error(`Error fetching assets with status ID ${statusId}:`, error);
       throw error;
     }
 
     const assets: Asset[] = (data || []).map(mapAssetFromDb);
-    console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
+    if (import.meta.env.DEV) console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
     return assets;
   } catch (error) {
-    console.error(
+    if (import.meta.env.DEV) console.error(
       `Error in getAssetsByStatus for status ID ${statusId}:`,
       error
     );
@@ -172,7 +172,7 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
  */
 export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
   try {
-    console.log(`Fetching assets with type ID: ${typeId}`);
+    if (import.meta.env.DEV) console.log(`Fetching assets with type ID: ${typeId}`);
 
     const { data, error } = await supabase
       .from("assets")
@@ -189,15 +189,15 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       .is("deleted_at", null);
 
     if (error) {
-      console.error(`Error fetching assets with type ID ${typeId}:`, error);
+      if (import.meta.env.DEV) console.error(`Error fetching assets with type ID ${typeId}:`, error);
       throw error;
     }
 
     const assets: Asset[] = (data || []).map(mapAssetFromDb);
-    console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
+    if (import.meta.env.DEV) console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
     return assets;
   } catch (error) {
-    console.error(`Error in getAssetsByType for type ID ${typeId}:`, error);
+    if (import.meta.env.DEV) console.error(`Error in getAssetsByType for type ID ${typeId}:`, error);
     return [];
   }
 };
@@ -210,7 +210,7 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
     const { data, error } = await supabase.from("v_problem_assets").select("*");
 
     if (error) {
-      console.error("Error listing problem assets:", error);
+      if (import.meta.env.DEV) console.error("Error listing problem assets:", error);
       throw error;
     }
 
@@ -227,7 +227,7 @@ export const listProblemAssets = async (): Promise<ProblemAsset[]> => {
       identifier: "",
     }));
   } catch (error) {
-    console.error("Error in listProblemAssets:", error);
+    if (import.meta.env.DEV) console.error("Error in listProblemAssets:", error);
     return [];
   }
 };
@@ -240,13 +240,13 @@ export const statusByType = async (): Promise<AssetStatusByType[]> => {
     const { data, error } = await supabase.rpc("status_by_asset_type");
 
     if (error) {
-      console.error("Error fetching status by type:", error);
+      if (import.meta.env.DEV) console.error("Error fetching status by type:", error);
       throw error;
     }
 
     return data || [];
   } catch (error) {
-    console.error("Error in statusByType:", error);
+    if (import.meta.env.DEV) console.error("Error in statusByType:", error);
     return [];
   }
 };
@@ -258,7 +258,7 @@ export const getAssetsByMultipleStatus = async (
   statusIds: number[]
 ): Promise<Asset[]> => {
   try {
-    console.log(`Fetching assets with status IDs: ${statusIds.join(", ")}`);
+    if (import.meta.env.DEV) console.log(`Fetching assets with status IDs: ${statusIds.join(", ")}`);
 
     const { data, error } = await supabase
       .from("assets")
@@ -275,19 +275,19 @@ export const getAssetsByMultipleStatus = async (
       .is("deleted_at", null);
 
     if (error) {
-      console.error("Error fetching assets by multiple status:", error);
+      if (import.meta.env.DEV) console.error("Error fetching assets by multiple status:", error);
       throw error;
     }
 
     const assets: Asset[] = (data || []).map(mapAssetFromDb);
-    console.log(
+    if (import.meta.env.DEV) console.log(
       `Retrieved ${assets.length} assets with status IDs ${statusIds.join(
         ", "
       )}`
     );
     return assets;
   } catch (error) {
-    console.error("Error in getAssetsByMultipleStatus:", error);
+    if (import.meta.env.DEV) console.error("Error in getAssetsByMultipleStatus:", error);
     return [];
   }
 };
@@ -307,18 +307,18 @@ export const getManufacturerById = async (
       .single<Manufacturer>();
 
     if (error) {
-      console.error(`Error fetching manufacturer with id ${id}`);
+      if (import.meta.env.DEV) console.error(`Error fetching manufacturer with id ${id}`);
       throw error;
     }
 
     if (!data) {
-      console.error(`Manufacturer with ID ${id} not found`);
+      if (import.meta.env.DEV) console.error(`Manufacturer with ID ${id} not found`);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.log("queries.ts > getManufacturerById : " + error);
+    if (import.meta.env.DEV) console.log("queries.ts > getManufacturerById : " + error);
     return null;
   }
 };
@@ -331,17 +331,17 @@ export const getStatus = async (): Promise<StatusRecord[]> => {
     const { data, error } = await supabase.from("asset_status").select("*");
 
     if (error) {
-      console.error("Erro fetching asset status:", error);
+      if (import.meta.env.DEV) console.error("Erro fetching asset status:", error);
       return [];
     }
 
-    console.log(data);
+    if (import.meta.env.DEV) console.log(data);
 
     const statusArray: StatusRecord[] = (data || []).map(mapStatusFromDb);
 
     return statusArray;
   } catch (error) {
-    console.error("Erro fetching asset status (catch):", error);
+    if (import.meta.env.DEV) console.error("Erro fetching asset status (catch):", error);
     return [];
   }
 };
@@ -366,12 +366,12 @@ export const getAssetLogs = async (
     const { data, error } = await query;
 
     if (error) {
-      console.error("Error fetching asset logs:", error);
+      if (import.meta.env.DEV) console.error("Error fetching asset logs:", error);
       return [];
     }
 
     if (!data) {
-      console.log("Asset logs not found");
+      if (import.meta.env.DEV) console.log("Asset logs not found");
       return [];
     }
 
@@ -379,7 +379,7 @@ export const getAssetLogs = async (
 
     return assetLogs;
   } catch (error) {
-    console.error("Error in getAssetLogs:", error);
+    if (import.meta.env.DEV) console.error("Error in getAssetLogs:", error);
     return [];
   }
 };

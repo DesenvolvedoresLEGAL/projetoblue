@@ -89,7 +89,7 @@ export default function AssociationsListContent() {
     const groupAssociations = allAssociations.filter(a => a.client_id === groupKey);
     
     if (groupAssociations.length === 0) {
-      console.error('Group not found:', groupKey);
+      if (import.meta.env.DEV) console.error('Group not found:', groupKey);
       return;
     }
 
@@ -143,7 +143,7 @@ export default function AssociationsListContent() {
 
   // Mock function for export (can be implemented later)
   const handleExport = () => {
-    console.log('Export functionality to be implemented');
+    if (import.meta.env.DEV) console.log('Export functionality to be implemented');
   };
 
   if (error) {

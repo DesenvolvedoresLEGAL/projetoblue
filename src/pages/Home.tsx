@@ -91,10 +91,10 @@ const Home: React.FC = () => {
   }, [dashboard.onSubscriptionAssets.data, dashboard.onSubscriptionAssets.isLoading]);
 
   // Debug logging para verificar os dados
-  console.log('Dashboard Stats:', dashboard.assetsStats.data);
-  console.log('Chips Total:', dashboard.assetsStats.data.chips.total);
-  console.log('Speedys Total:', dashboard.assetsStats.data.speedys.total);
-  console.log('Equipment Total:', dashboard.assetsStats.data.equipment.total);
+  if (import.meta.env.DEV) console.log('Dashboard Stats:', dashboard.assetsStats.data);
+  if (import.meta.env.DEV) console.log('Chips Total:', dashboard.assetsStats.data.chips.total);
+  if (import.meta.env.DEV) console.log('Speedys Total:', dashboard.assetsStats.data.speedys.total);
+  if (import.meta.env.DEV) console.log('Equipment Total:', dashboard.assetsStats.data.equipment.total);
 
   // Loading state for the entire dashboard
   if (isLoading) {

@@ -23,7 +23,7 @@ export const useRentedAssets = () => {
     queryKey: ['rented-assets'],
     queryFn: async () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Fetching rented assets...');
+        if (import.meta.env.DEV) console.log('Fetching rented assets...');
       }
       
       const { data, error } = await supabase
@@ -43,12 +43,12 @@ export const useRentedAssets = () => {
         .order('rented_days', { ascending: false });
 
       if (error) {
-        console.error('Error fetching rented assets:', error);
+        if (import.meta.env.DEV) console.error('Error fetching rented assets:', error);
         throw error;
       }
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('Rented assets fetched:', data?.length);
+        if (import.meta.env.DEV) console.log('Rented assets fetched:', data?.length);
       }
       return data as RentedAsset[] || [];
     },

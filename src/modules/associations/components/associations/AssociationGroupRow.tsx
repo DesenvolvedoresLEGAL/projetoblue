@@ -96,7 +96,7 @@ export const AssociationGroupRow: React.FC<AssociationGroupRowProps> = ({
   };
 
   const handleEndGroup = () => {
-    console.log('[AssociationGroupRow] Confirmando encerramento do grupo:', group.groupKey);
+    if (import.meta.env.DEV) console.log('[AssociationGroupRow] Confirmando encerramento do grupo:', group.groupKey);
     onEndGroup(group.groupKey);
     setShowEndGroupConfirmation(false);
   };

@@ -105,7 +105,7 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao atualizar associações:', error);
+      if (import.meta.env.DEV) console.error('Erro ao atualizar associações:', error);
       toast.error('Erro ao atualizar associações. Tente novamente.');
     } finally {
       setIsLoading(false);

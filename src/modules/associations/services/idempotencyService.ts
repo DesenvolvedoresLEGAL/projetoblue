@@ -41,7 +41,7 @@ export const idempotencyService = {
       });
 
       if (error) {
-        console.error('Error validating association state:', error);
+        if (import.meta.env.DEV) console.error('Error validating association state:', error);
         return {
           valid: false,
           error_code: 'VALIDATION_ERROR',
@@ -52,7 +52,7 @@ export const idempotencyService = {
 
       return data as unknown as ValidationResult;
     } catch (error) {
-      console.error('Exception validating association state:', error);
+      if (import.meta.env.DEV) console.error('Exception validating association state:', error);
       return {
         valid: false,
         error_code: 'VALIDATION_EXCEPTION',
@@ -80,7 +80,7 @@ export const idempotencyService = {
       });
 
       if (error) {
-        console.error('Error acquiring operation lock:', error);
+        if (import.meta.env.DEV) console.error('Error acquiring operation lock:', error);
         return {
           acquired: false,
           error_code: 'LOCK_ERROR',
@@ -90,7 +90,7 @@ export const idempotencyService = {
 
       return data as unknown as OperationLockResult;
     } catch (error) {
-      console.error('Exception acquiring operation lock:', error);
+      if (import.meta.env.DEV) console.error('Exception acquiring operation lock:', error);
       return {
         acquired: false,
         error_code: 'LOCK_EXCEPTION',
@@ -109,13 +109,13 @@ export const idempotencyService = {
       });
 
       if (error) {
-        console.error('Error releasing operation lock:', error);
+        if (import.meta.env.DEV) console.error('Error releasing operation lock:', error);
         return false;
       }
 
       return data as boolean;
     } catch (error) {
-      console.error('Exception releasing operation lock:', error);
+      if (import.meta.env.DEV) console.error('Exception releasing operation lock:', error);
       return false;
     }
   },
@@ -128,13 +128,13 @@ export const idempotencyService = {
       const { data, error } = await supabase.rpc('cleanup_expired_locks');
 
       if (error) {
-        console.error('Error cleaning up expired locks:', error);
+        if (import.meta.env.DEV) console.error('Error cleaning up expired locks:', error);
         return 0;
       }
 
       return data as number;
     } catch (error) {
-      console.error('Exception cleaning up expired locks:', error);
+      if (import.meta.env.DEV) console.error('Exception cleaning up expired locks:', error);
       return 0;
     }
   }

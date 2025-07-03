@@ -53,7 +53,7 @@ const AssetsInventory = () => {
   useEffect(() => {
     if (hasMountedRef.current) return;
 
-    console.log('🔄 AssetsInventory mounted - performing complete reset');
+    if (import.meta.env.DEV) console.log('🔄 AssetsInventory mounted - performing complete reset');
 
     // Reset filtros
     resetFilters();
@@ -73,7 +73,7 @@ const AssetsInventory = () => {
 
     hasMountedRef.current = true;
 
-    console.log('✅ Complete reset performed on AssetsInventory mount');
+    if (import.meta.env.DEV) console.log('✅ Complete reset performed on AssetsInventory mount');
   }, [clearAllURLParams, queryClient, resetFilters]);
   
   const { 
@@ -96,21 +96,21 @@ const AssetsInventory = () => {
   
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Executando busca com termo:', debouncedSearchTerm);
+    if (import.meta.env.DEV) console.log('Executando busca com termo:', debouncedSearchTerm);
     setCurrentPage(1);
     setShouldFetch(true);
     refetch();
   }, [debouncedSearchTerm, refetch]);
   
   const handleSearchTermChange = useCallback((value: string) => {
-    console.log('Termo de busca alterado para:', value);
+    if (import.meta.env.DEV) console.log('Termo de busca alterado para:', value);
     setSearchTerm(value);
     setCurrentPage(1);
     setShouldFetch(true);
   }, [setSearchTerm]);
   
   const handleFilterChange = useCallback((type: string, value: string) => {
-    console.log(`Filtro ${type} alterado para:`, value);
+    if (import.meta.env.DEV) console.log(`Filtro ${type} alterado para:`, value);
     setCurrentPage(1);
     setShouldFetch(true);
     
@@ -130,7 +130,7 @@ const AssetsInventory = () => {
   }, [setFilterType, setFilterStatus, setFilterManufacturer, updateURLParams]);
 
   const handleAssetUpdated = useCallback(() => {
-    console.log('Asset atualizado, invalidando cache e recarregando dados...');
+    if (import.meta.env.DEV) console.log('Asset atualizado, invalidando cache e recarregando dados...');
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
     setShouldFetch(true);
@@ -138,7 +138,7 @@ const AssetsInventory = () => {
   }, [queryClient, refetch]);
 
   const handleAssetDeleted = useCallback(() => {
-    console.log('Asset deletado, invalidando cache e recarregando dados...');
+    if (import.meta.env.DEV) console.log('Asset deletado, invalidando cache e recarregando dados...');
     queryClient.invalidateQueries({ queryKey: ['assets'] });
     queryClient.invalidateQueries({ queryKey: ['assets-data'] });
     setShouldFetch(true);
@@ -150,12 +150,12 @@ const AssetsInventory = () => {
   }
   
   if (error || isError) {
-    console.error('Erro na página AssetsInventory:', error);
+    if (import.meta.env.DEV) console.error('Erro na página AssetsInventory:', error);
     return (
       <AssetsError 
         error={error instanceof Error ? error : new Error('Erro desconhecido')} 
         refetch={() => {
-          console.log('Tentando recarregar após erro...');
+          if (import.meta.env.DEV) console.log('Tentando recarregar após erro...');
           setShouldFetch(true);
           refetch();
         }} 

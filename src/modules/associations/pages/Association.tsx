@@ -69,7 +69,7 @@ export default function Association() {
       
       toast.success("Ativo associado ao cliente com sucesso.");
     } catch (error) {
-      console.error("Erro ao associar ativo ao cliente:", error);
+      if (import.meta.env.DEV) console.error("Erro ao associar ativo ao cliente:", error);
       toast.error(`Erro ao associar ativo ao cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setIsLoading(false);
@@ -113,7 +113,7 @@ export default function Association() {
       
       toast.success("Ativo removido do cliente com sucesso.");
     } catch (error) {
-      console.error("Erro ao remover associação do ativo:", error);
+      if (import.meta.env.DEV) console.error("Erro ao remover associação do ativo:", error);
       toast.error(`Erro ao remover associação do ativo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setIsLoading(false);

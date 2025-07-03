@@ -18,12 +18,12 @@ export const AssetSelectionStep: React.FC = () => {
   } = useAssetAssociationState();
 
   const handleAssetSelected = (asset: SelectedAsset) => {
-    console.log('AssetSelectionStep: Ativo selecionado', asset.uuid);
+    if (import.meta.env.DEV) console.log('AssetSelectionStep: Ativo selecionado', asset.uuid);
     
     // Verificar se o ativo já foi selecionado
     const alreadySelected = selectedAssets.some(a => a.uuid === asset.uuid);
     if (alreadySelected) {
-      console.log('AssetSelectionStep: Ativo já selecionado, ignorando');
+      if (import.meta.env.DEV) console.log('AssetSelectionStep: Ativo já selecionado, ignorando');
       toast.info(`Ativo já selecionado.`);
       return;
     }
@@ -31,11 +31,11 @@ export const AssetSelectionStep: React.FC = () => {
     // Adicionar ativo à lista de selecionados
     const updatedAssets = [...selectedAssets, asset];
     setSelectedAssets(updatedAssets);
-    console.log('AssetSelectionStep: Ativos selecionados atualizados', updatedAssets.length);
+    if (import.meta.env.DEV) console.log('AssetSelectionStep: Ativos selecionados atualizados', updatedAssets.length);
   };
 
   const handleAssetRemoved = (assetId: string) => {
-    console.log('AssetSelectionStep: Removendo ativo', assetId);
+    if (import.meta.env.DEV) console.log('AssetSelectionStep: Removendo ativo', assetId);
     const updatedAssets = selectedAssets.filter(a => a.uuid !== assetId);
     setSelectedAssets(updatedAssets);
   };

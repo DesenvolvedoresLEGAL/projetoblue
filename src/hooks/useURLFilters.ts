@@ -40,7 +40,7 @@ export const useURLFilters = (
                              searchParams.has('exclude_solutions');
 
       if (hasFilterParams) {
-        console.log('🧹 Clearing URL filter parameters on mount');
+        if (import.meta.env.DEV) console.log('🧹 Clearing URL filter parameters on mount');
         const newParams = new URLSearchParams();
         // Manter apenas parâmetros que não são de filtro (se houver)
         for (const [key, value] of searchParams.entries()) {
@@ -121,7 +121,7 @@ export const useURLFilters = (
 
   // Função para limpar todos os parâmetros de filtro da URL
   const clearAllURLParams = useCallback(() => {
-    console.log('🧹 Clearing all URL filter parameters');
+    if (import.meta.env.DEV) console.log('🧹 Clearing all URL filter parameters');
     const currentParams = new URLSearchParams(window.location.search);
     const params = new URLSearchParams();
     // Manter apenas parâmetros que não são de filtro

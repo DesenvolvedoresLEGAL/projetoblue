@@ -56,7 +56,7 @@ export const LegalThemeProvider: React.FC<LegalThemeProviderProps> = ({ children
     root.style.setProperty('--legal-animations-enabled', config.enableAnimations ? '1' : '0');
     root.style.setProperty('--legal-ripple-enabled', config.enableRippleEffect ? '1' : '0');
     
-    console.log('🎨 LEGAL Theme Config aplicada:', config);
+    if (import.meta.env.DEV) console.log('🎨 LEGAL Theme Config aplicada:', config);
   }, [config]);
 
   // Listener para mudanças de preferências do sistema

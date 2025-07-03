@@ -79,7 +79,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
         });
 
       if (error) {
-        console.error('Erro ao criar CHIP:', error);
+        if (import.meta.env.DEV) console.error('Erro ao criar CHIP:', error);
         const friendlyMessage = showFriendlyError(error, 'create');
         toast.error(friendlyMessage);
         return;
@@ -88,7 +88,7 @@ const ChipForm: React.FC<ChipFormProps> = ({ onSuccess, onCancel }) => {
       toast.success('CHIP cadastrado com sucesso!');
       onSuccess();
     } catch (error) {
-      console.error('Erro:', error);
+      if (import.meta.env.DEV) console.error('Erro:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
       toast.error(friendlyMessage);
     } finally {

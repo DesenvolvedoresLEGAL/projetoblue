@@ -26,7 +26,7 @@ const AssetHistory = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching asset history:', error);
+        if (import.meta.env.DEV) console.error('Error fetching asset history:', error);
         throw error;
       }
 

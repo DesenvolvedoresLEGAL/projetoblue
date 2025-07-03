@@ -38,9 +38,9 @@ export const AssociationsAdvancedGroupedTable: React.FC<AssociationsAdvancedGrou
 }) => {
   const { totalAssociations, totalClientStartDateGroups, totalCompanyGroups } = getClientStartDateGroupStats(clientStartDateGroups);
 
-  console.log(`Total de associações -> ${totalAssociations}`);
-  console.log(`Total de grupos por cliente e data de entrada -> ${totalClientStartDateGroups}`);
-  console.log(`Total de grupos por empresa -> ${totalCompanyGroups}`);
+  if (import.meta.env.DEV) console.log(`Total de associações -> ${totalAssociations}`);
+  if (import.meta.env.DEV) console.log(`Total de grupos por cliente e data de entrada -> ${totalClientStartDateGroups}`);
+  if (import.meta.env.DEV) console.log(`Total de grupos por empresa -> ${totalCompanyGroups}`);
 
   return (
     <div className="space-y-6">

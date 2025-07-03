@@ -28,7 +28,7 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup form submitted");
+    if (import.meta.env.DEV) console.log("Signup form submitted");
     setIsSubmitting(true);
     setTechnicalErrorInfo(null);
     setSignupError(null);
@@ -46,7 +46,7 @@ const Signup = () => {
         return;
       }
       
-      console.log('Validações do formulário passaram, enviando dados para cadastro:', { email, username });
+      if (import.meta.env.DEV) console.log('Validações do formulário passaram, enviando dados para cadastro:', { email, username });
       
       // Corrigido: usando apenas 3 argumentos conforme a assinatura esperada
       const result = await signUp(email, password, 'cliente');
@@ -56,7 +56,7 @@ const Signup = () => {
       }
       
     } catch (error: unknown) {
-      console.error("Erro capturado no componente Signup:", error);
+      if (import.meta.env.DEV) console.error("Erro capturado no componente Signup:", error);
       
       if (error.message || error.stack) {
         setTechnicalErrorInfo(`Erro técnico: ${error.message || 'Erro desconhecido'}

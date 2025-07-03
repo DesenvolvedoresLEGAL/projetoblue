@@ -81,7 +81,7 @@ export const useCreateAssociation = () => {
 
   return useMutation({
     mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
-      console.log('[useCreateAssociation] Iniciando criação de associação com dados:', data);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Iniciando criação de associação com dados:', data);
 
       // Validação de entrada mais rigorosa com logs detalhados
       const validationErrors: string[] = [];
@@ -104,8 +104,8 @@ export const useCreateAssociation = () => {
 
       if (validationErrors.length > 0) {
         const errorMsg = `Dados obrigatórios não fornecidos: ${validationErrors.join(', ')}`;
-        console.error('[useCreateAssociation] Erro de validação:', errorMsg);
-        console.error('[useCreateAssociation] Dados recebidos:', {
+        if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro de validação:', errorMsg);
+        if (import.meta.env.DEV) console.error('[useCreateAssociation] Dados recebidos:', {
           clientId: data.clientId,
           associationTypeId: data.associationTypeId,
           startDate: data.startDate,
@@ -123,15 +123,15 @@ export const useCreateAssociation = () => {
           throw new Error('Data de início inválida');
         }
         formattedStartDate = dateObj.toISOString().split('T')[0]; // Formato YYYY-MM-DD
-        console.log('[useCreateAssociation] Data formatada:', formattedStartDate);
+        if (import.meta.env.DEV) console.log('[useCreateAssociation] Data formatada:', formattedStartDate);
       } catch (error) {
-        console.error('[useCreateAssociation] Erro ao formatar data:', error);
+        if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro ao formatar data:', error);
         throw new Error('Formato de data inválido');
       }
 
       // Garantir que rentedDays seja numérico
       const rentedDays = Number(data.generalConfig?.rentedDays) || 0;
-      console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
 
       // Preparar dados para o RPC
       const rpcData = {
@@ -146,18 +146,18 @@ export const useCreateAssociation = () => {
         p_gb: data.generalConfig?.dataLimit || null
       };
 
-      console.log('[useCreateAssociation] Dados preparados para RPC:', rpcData);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Dados preparados para RPC:', rpcData);
 
       // Executar com idempotência
       return executeWithIdempotency(
         `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
         async () => {
-          console.log('[useCreateAssociation] Chamando RPC add_assets_to_association...');
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Chamando RPC add_assets_to_association...');
           
           const { data: result, error } = await supabase.rpc('add_assets_to_association', rpcData);
 
           if (error) {
-            console.error('[useCreateAssociation] Erro do Supabase:', error);
+            if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro do Supabase:', error);
             
             // Melhor tratamento de erro com detalhes específicos
             const errorMessage = error.message || 'Erro desconhecido ao criar associação';
@@ -168,23 +168,23 @@ export const useCreateAssociation = () => {
               supabase_error: error
             };
 
-            console.error('[useCreateAssociation] Detalhes do erro:', errorDetails);
+            if (import.meta.env.DEV) console.error('[useCreateAssociation] Detalhes do erro:', errorDetails);
             
             throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
           }
 
-          console.log('[useCreateAssociation] Resultado bruto do RPC:', result);
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado bruto do RPC:', result);
 
           // Processar resultado usando função helper
           const processedResult = parseRpcResult(result);
           
-          console.log('[useCreateAssociation] Resultado processado:', processedResult);
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado processado:', processedResult);
 
           // Verificar se houve sucesso
           if (!processedResult.success) {
             const errorMsg = processedResult.message || 'Erro ao criar associação';
             
-            console.error('[useCreateAssociation] RPC indicou falha:', {
+            if (import.meta.env.DEV) console.error('[useCreateAssociation] RPC indicou falha:', {
               message: errorMsg,
               details: processedResult.details
             });
@@ -197,7 +197,7 @@ export const useCreateAssociation = () => {
       );
     },
     onSuccess: (result) => {
-      console.log('[useCreateAssociation] Sucesso:', result);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Sucesso:', result);
       
       // Mostrar mensagem de sucesso detalhada
       const successMessage = result.details 
@@ -212,7 +212,7 @@ export const useCreateAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
     onError: (error: unknown) => {
-      console.error('[useCreateAssociation] Erro capturado:', error);
+      if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro capturado:', error);
 
       // Mostrar erro com detalhes técnicos quando disponível
       let errorMessage = 'Erro ao criar associação';

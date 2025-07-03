@@ -43,7 +43,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelect
       const { data, error } = await query.limit(50);
       
       if (error) {
-        console.error('Erro ao buscar clientes:', error);
+        if (import.meta.env.DEV) console.error('Erro ao buscar clientes:', error);
         throw error;
       }
 

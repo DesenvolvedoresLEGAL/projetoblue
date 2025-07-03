@@ -29,7 +29,7 @@ export function useDashboardAssociations() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Fetching dashboard associations data...');
+          if (import.meta.env.DEV) console.log('Fetching dashboard associations data...');
         }
         
         const [
@@ -96,7 +96,7 @@ export function useDashboardAssociations() {
           last30DaysHistory
         };
       } catch (error) {
-        console.error('Error fetching dashboard associations:', error);
+        if (import.meta.env.DEV) console.error('Error fetching dashboard associations:', error);
         throw error;
       }
     },

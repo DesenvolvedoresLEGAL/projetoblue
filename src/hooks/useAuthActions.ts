@@ -29,20 +29,20 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
   const signUp = useCallback(async (email: string, password: string, role?: UserRole): Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }> => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
       return { data: { user: null, session: null }, error: { message: 'Operation in progress' } as AuthError, profileCreated: false };
     }
     
     try {
       setIsAuthProcessing(true);
-      console.log('AuthContext: Iniciando processo de cadastro');
+      if (import.meta.env.DEV) console.log('AuthContext: Iniciando processo de cadastro');
       updateState({ isLoading: true, error: null });
       
       setTechnicalError(null);
       
       const validation = authService.validateSignUpData({ email, password, role });
       if (!validation.isValid) {
-        console.error('Erro de validação:', validation.error);
+        if (import.meta.env.DEV) console.error('Erro de validação:', validation.error);
         
         const friendlyMessage = showFriendlyError(validation.error, 'validation');
         
@@ -60,7 +60,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         return { data: { user: null, session: null }, error: { message: friendlyMessage } as AuthError, profileCreated: false };
       }
 
-      console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
+      if (import.meta.env.DEV) console.log('AuthContext: Dados validados, enviando para o serviço de autenticação', { 
         email, 
         role
       });
@@ -73,18 +73,18 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
         if (data?.user) {
           if (!profileCreated) {
-            console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
+            if (import.meta.env.DEV) console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
             
             const profileResult = await createProfileManually(data.user.id, email, role || DEFAULT_USER_ROLE);
             if (profileResult.success) {
-              console.log('Perfil criado manualmente com sucesso após falha do trigger');
+              if (import.meta.env.DEV) console.log('Perfil criado manualmente com sucesso após falha do trigger');
               toast.success("Conta criada com sucesso! Você já pode fazer login.");
             } else {
-              console.warn('Falha ao criar perfil manualmente:', profileResult.error);
+              if (import.meta.env.DEV) console.warn('Falha ao criar perfil manualmente:', profileResult.error);
               toast.warning("Conta criada, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
             }
           } else {
-            console.log('Usuário e perfil criados com sucesso:', data.user.id);
+            if (import.meta.env.DEV) console.log('Usuário e perfil criados com sucesso:', data.user.id);
             toast.success("Conta criada com sucesso! Você já pode fazer login.");
           }
           
@@ -94,7 +94,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           return { data, error: null, profileCreated: true };
         } else {
-          console.error('Usuário não foi criado, dados incompletos:', data);
+          if (import.meta.env.DEV) console.error('Usuário não foi criado, dados incompletos:', data);
           const friendlyMessage = showFriendlyError('Falha ao criar usuário: dados incompletos retornados', 'create');
           const techError = {
             message: 'Falha ao criar usuário: dados incompletos retornados',
@@ -106,7 +106,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           throw new Error(friendlyMessage);
         }
       } catch (error: unknown) {
-        console.error('Erro não tratado no processo de cadastro:', error);
+        if (import.meta.env.DEV) console.error('Erro não tratado no processo de cadastro:', error);
       
       const errorObj = error as { message?: string; category?: AuthErrorCategory; stack?: string };
       const friendlyMessage = showFriendlyError(error, 'create');
@@ -132,7 +132,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
   const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
-    console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
+    if (import.meta.env.DEV) console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
     
     const maxRetries = 3;
     let attempt = 0;
@@ -141,7 +141,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       try {
         if (attempt > 0) {
           const delayMs = Math.pow(2, attempt) * 1000;
-          console.log(`Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
+          if (import.meta.env.DEV) console.log(`Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
         
@@ -160,21 +160,21 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           .single();
         
         if (error) {
-          console.error(`Tentativa ${attempt+1} falhou:`, error);
+          if (import.meta.env.DEV) console.error(`Tentativa ${attempt+1} falhou:`, error);
           attempt++;
           continue;
         }
         
         if (data) {
-          console.log('Perfil criado manualmente:', data);
+          if (import.meta.env.DEV) console.log('Perfil criado manualmente:', data);
           return { success: true };
         } else {
-          console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
+          if (import.meta.env.DEV) console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
           attempt++;
           continue;
         }
       } catch (err) {
-        console.error(`Erro na tentativa ${attempt+1} de criar perfil:`, err);
+        if (import.meta.env.DEV) console.error(`Erro na tentativa ${attempt+1} de criar perfil:`, err);
         attempt++;
       }
     }
@@ -187,7 +187,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
       return;
     }
     
@@ -201,7 +201,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         throw { message: friendlyMessage, category: AuthErrorCategory.INVALID_EMAIL };
       }
       
-      console.log('AuthContext: Iniciando login para:', email);
+      if (import.meta.env.DEV) console.log('AuthContext: Iniciando login para:', email);
       const { data, error } = await authService.signIn(email, password);
       
       if (error) {
@@ -218,14 +218,14 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       }
 
       if (data.user) {
-        console.log('Login bem-sucedido para:', email);
+        if (import.meta.env.DEV) console.log('Login bem-sucedido para:', email);
         try {
           // Incluir perfis soft-deletados para validação
           let userProfile = await profileService.fetchUserProfile(data.user.id, true);
-          console.log('Perfil obtido após login:', userProfile);
+          if (import.meta.env.DEV) console.log('Perfil obtido após login:', userProfile);
           
           if (!userProfile) {
-            console.warn('Perfil não encontrado, tentando criar perfil básico');
+            if (import.meta.env.DEV) console.warn('Perfil não encontrado, tentando criar perfil básico');
             
             // Criar perfil básico diretamente
             const { data: profileData, error: profileError } = await supabase
@@ -242,7 +242,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
               .single();
             
             if (profileError) {
-              console.error('Falha ao criar perfil básico:', profileError);
+              if (import.meta.env.DEV) console.error('Falha ao criar perfil básico:', profileError);
               userProfile = {
                 id: data.user.id,
                 email: data.user.email || email,
@@ -253,7 +253,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
                 is_active: true,
                 is_approved: true
               };
-              console.log('Usando perfil mínimo para continuar o login');
+              if (import.meta.env.DEV) console.log('Usando perfil mínimo para continuar o login');
             } else {
               userProfile = {
                 id: profileData.id,
@@ -273,7 +273,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           // NOVA VALIDAÇÃO: Verificar se usuário foi excluído (soft delete)
           if (userProfile.deleted_at) {
-            console.log('Tentativa de login com perfil excluído:', userProfile);
+            if (import.meta.env.DEV) console.log('Tentativa de login com perfil excluído:', userProfile);
             await authService.signOut(); // Forçar logout
             throw { 
               message: 'Esta conta foi desativada. Entre em contato com o administrador para mais informações.',
@@ -282,7 +282,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           }
           
           if (userProfile.is_active === false) {
-            console.log('Perfil inativo, fazendo logout:', userProfile);
+            if (import.meta.env.DEV) console.log('Perfil inativo, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
               message: 'Sua conta está desativada. Entre em contato com o administrador para reativá-la.',
@@ -292,7 +292,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           // NOVA VALIDAÇÃO: Verificar se usuário foi aprovado
           if (userProfile.is_approved === false) {
-            console.log('Perfil não aprovado, fazendo logout:', userProfile);
+            if (import.meta.env.DEV) console.log('Perfil não aprovado, fazendo logout:', userProfile);
             await authService.signOut();
             throw { 
               message: 'Sua conta ainda não foi aprovada. Entre em contato com o administrador.',
@@ -307,7 +307,11 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
             isLoading: false
           });
           
-          profileService.updateLastLogin(data.user.id).catch(console.error);
+          profileService
+            .updateLastLogin(data.user.id)
+            .catch(err => {
+              if (import.meta.env.DEV) console.error(err);
+            });
           
           toast.success(`Bem-vindo(a), ${userProfile.username}!`);
           
@@ -315,7 +319,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           navigate(from, { replace: true });
           
         } catch (profileError: unknown) {
-          console.error('Erro ao verificar perfil após login:', profileError);
+          if (import.meta.env.DEV) console.error('Erro ao verificar perfil após login:', profileError);
           
           const errorObj = profileError as { message?: string; category?: AuthErrorCategory };
           
@@ -329,7 +333,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           }
           
           if (errorObj.message?.includes('403') || errorObj.message?.includes('profile')) {
-            console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
+            if (import.meta.env.DEV) console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
             
             const basicProfile = {
               id: data.user.id,
@@ -365,7 +369,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
             context: { userId: data.user.id, email: data.user.email }
           });
           
-          console.warn('Erro no perfil, mas mantendo usuário logado');
+          if (import.meta.env.DEV) console.warn('Erro no perfil, mas mantendo usuário logado');
           updateState({ 
             user: data.user,
             profile: null,
@@ -374,7 +378,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           });
         }
       } else {
-        console.error('Login falhou, dados incompletos:', data);
+        if (import.meta.env.DEV) console.error('Login falhou, dados incompletos:', data);
         const friendlyMessage = showFriendlyError('Falha no login: dados incompletos retornados', 'authentication');
         throw {
           message: friendlyMessage,
@@ -383,7 +387,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       }
       
       } catch (error: unknown) {
-      console.error('Erro durante o login:', error);
+      if (import.meta.env.DEV) console.error('Erro durante o login:', error);
       
       const errorObj = error as { message?: string; category?: AuthErrorCategory };
       const friendlyMessage = showFriendlyError(error, 'authentication');
@@ -397,7 +401,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   const signOut = useCallback(async () => {
     if (isAuthProcessing) {
-      console.log('Auth operation already in progress. Ignoring duplicate request.');
+      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
       return;
     }
     
@@ -416,7 +420,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       toast.success('Você saiu do sistema com sucesso');
       navigate('/login');
       } catch (error: unknown) {
-      console.error('Erro ao fazer logout:', error);
+      if (import.meta.env.DEV) console.error('Erro ao fazer logout:', error);
       const friendlyMessage = showFriendlyError(error, 'authentication');
       toast.error(friendlyMessage);
       updateState({ isLoading: false });

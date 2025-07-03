@@ -16,7 +16,7 @@ export const RankingMetrics: React.FC<RankingMetricsProps> = ({ assets }) => {
   const moreRentedAsset: RankedAsset = assets.sort(a =>  a.rented_days)[0] || null;
   const topRentedDays = assets.length > 0 ? assets[0]?.rented_days || 0 : 0;
 
-  console.log(`[DEBUG] ASSET MENOS ALUGADO -->>${lessRentedAsset}`);
+  if (import.meta.env.DEV) console.log(`[DEBUG] ASSET MENOS ALUGADO -->>${lessRentedAsset}`);
 
   const metrics = [
     {

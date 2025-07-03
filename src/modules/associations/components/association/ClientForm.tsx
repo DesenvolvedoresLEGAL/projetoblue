@@ -59,7 +59,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
         contato: cleanPhones.length > 0 ? parseInt(cleanPhones[0]) || 0 : 0
       };
 
-      console.log('Dados sendo enviados:', dbData);
+      if (import.meta.env.DEV) console.log('Dados sendo enviados:', dbData);
 
       const { data, error } = await supabase
         .from('clients')
@@ -68,7 +68,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
         .single();
 
       if (error) {
-        console.error('Erro ao criar cliente:', error);
+        if (import.meta.env.DEV) console.error('Erro ao criar cliente:', error);
         const friendlyMessage = showFriendlyError(error, 'create');
         throw new Error(friendlyMessage);
       }
@@ -82,7 +82,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel, clea
       onSubmit(newClient);
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
-      console.error('Erro ao cadastrar cliente:', error);
+      if (import.meta.env.DEV) console.error('Erro ao cadastrar cliente:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
       toast.error(friendlyMessage);
     } finally {

@@ -34,10 +34,10 @@ export const AssetAssociation: React.FC = () => {
 
   const handleNext = () => {
     if (currentStep === 'client' && selectedClient) {
-      console.log('AssetAssociation: Avançando para seleção de ativos');
+      if (import.meta.env.DEV) console.log('AssetAssociation: Avançando para seleção de ativos');
       setCurrentStep('assets');
     } else if (currentStep === 'assets' && selectedAssets.length > 0) {
-      console.log('AssetAssociation: Avançando para resumo');
+      if (import.meta.env.DEV) console.log('AssetAssociation: Avançando para resumo');
       setCurrentStep('summary');
     }
   };
@@ -51,14 +51,14 @@ export const AssetAssociation: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    console.log('[AssetAssociation] Iniciando submissão da associação');
-    console.log('[AssetAssociation] Cliente selecionado:', selectedClient);
-    console.log('[AssetAssociation] Assets selecionados:', selectedAssets);
-    console.log('[AssetAssociation] Configuração geral:', generalConfig);
+    if (import.meta.env.DEV) console.log('[AssetAssociation] Iniciando submissão da associação');
+    if (import.meta.env.DEV) console.log('[AssetAssociation] Cliente selecionado:', selectedClient);
+    if (import.meta.env.DEV) console.log('[AssetAssociation] Assets selecionados:', selectedAssets);
+    if (import.meta.env.DEV) console.log('[AssetAssociation] Configuração geral:', generalConfig);
 
     if (!selectedClient || !selectedAssets.length || !generalConfig) {
       const errorMsg = 'Dados incompletos para criar associação';
-      console.error('[AssetAssociation] Validação falhou:', {
+      if (import.meta.env.DEV) console.error('[AssetAssociation] Validação falhou:', {
         hasClient: !!selectedClient,
         assetsCount: selectedAssets.length,
         hasGeneralConfig: !!generalConfig
@@ -85,7 +85,7 @@ export const AssetAssociation: React.FC = () => {
         throw new Error('Data de início não fornecida');
       }
 
-      console.log('[AssetAssociation] Data formatada:', formattedStartDate);
+      if (import.meta.env.DEV) console.log('[AssetAssociation] Data formatada:', formattedStartDate);
 
       // Preparar dados para envio
       const associationData = {
@@ -113,12 +113,12 @@ export const AssetAssociation: React.FC = () => {
         }
       };
 
-      console.log('[AssetAssociation] Dados preparados para envio:', associationData);
+      if (import.meta.env.DEV) console.log('[AssetAssociation] Dados preparados para envio:', associationData);
 
       // Executar criação da associação
       const result = await createAssociationMutation.mutateAsync(associationData);
       
-      console.log('[AssetAssociation] Resultado:', result);
+      if (import.meta.env.DEV) console.log('[AssetAssociation] Resultado:', result);
 
       // Limpar estado e navegar de volta
       clearState();
@@ -126,7 +126,7 @@ export const AssetAssociation: React.FC = () => {
       navigate('/associations');
 
     } catch (error: unknown) {
-      console.error('[AssetAssociation] Erro ao criar associação:', error);
+      if (import.meta.env.DEV) console.error('[AssetAssociation] Erro ao criar associação:', error);
 
       // Exibir erro detalhado
       let errorMessage = 'Erro ao criar associação';
@@ -136,7 +136,7 @@ export const AssetAssociation: React.FC = () => {
       }
       
       if (error.details) {
-        console.error('[AssetAssociation] Detalhes do erro:', error.details);
+        if (import.meta.env.DEV) console.error('[AssetAssociation] Detalhes do erro:', error.details);
       }
       
       toast.error(errorMessage);

@@ -58,14 +58,14 @@ const AssetAssociation = () => {
   // Sincronizar com o estado persistido
   useEffect(() => {
     if (persistedGeneralConfig) {
-      console.log('📥 AssetAssociation - Loading persisted config:', persistedGeneralConfig);
+      if (import.meta.env.DEV) console.log('📥 AssetAssociation - Loading persisted config:', persistedGeneralConfig);
       setGeneralConfig(persistedGeneralConfig);
     }
   }, [persistedGeneralConfig]);
 
   // Debug log on component mount and state changes
   useEffect(() => {
-    console.log('🏗️ AssetAssociation component mounted/updated:', {
+    if (import.meta.env.DEV) console.log('🏗️ AssetAssociation component mounted/updated:', {
       currentStep,
       hasSelectedClient: !!selectedClient,
       selectedAssetsCount: selectedAssets.length,
@@ -75,20 +75,20 @@ const AssetAssociation = () => {
   }, [currentStep, selectedClient, selectedAssets, generalConfig, persistedGeneralConfig]);
 
   const handleClientSelect = (client: Client) => {
-    console.log('👤 Client selected in AssetAssociation:', client);
+    if (import.meta.env.DEV) console.log('👤 Client selected in AssetAssociation:', client);
     setSelectedClient(client);
     setCurrentStep('assets');
   };
 
   const handleGeneralConfigUpdate = (updates: Partial<AssociationGeneralConfig>) => {
     const newConfig = { ...generalConfig, ...updates };
-    console.log('🔧 AssetAssociation - General config updated:', newConfig);
+    if (import.meta.env.DEV) console.log('🔧 AssetAssociation - General config updated:', newConfig);
     setGeneralConfig(newConfig);
     setPersistedGeneralConfig(newConfig);
   };
 
   const handleBack = () => {
-    console.log('⬅️ Back button pressed from step:', currentStep);
+    if (import.meta.env.DEV) console.log('⬅️ Back button pressed from step:', currentStep);
     if (currentStep === 'assets') {
       setCurrentStep('client');
     } else if (currentStep === 'summary') {
@@ -97,8 +97,8 @@ const AssetAssociation = () => {
   };
 
   const handleComplete = async () => {
-    console.log('✅ Starting association creation process');
-    console.log('📊 Association data:', {
+    if (import.meta.env.DEV) console.log('✅ Starting association creation process');
+    if (import.meta.env.DEV) console.log('📊 Association data:', {
       client: selectedClient,
       assetsCount: selectedAssets.length,
       generalConfig
@@ -106,7 +106,7 @@ const AssetAssociation = () => {
 
     if (!selectedClient || selectedAssets.length === 0) {
       const errorMsg = 'Dados incompletos para criar as associações';
-      console.error('❌ Validation failed:', errorMsg);
+      if (import.meta.env.DEV) console.error('❌ Validation failed:', errorMsg);
       toast.error(errorMsg);
       return;
     }
@@ -114,12 +114,12 @@ const AssetAssociation = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Creating association with assets:', selectedAssets.length);
+      if (import.meta.env.DEV) console.log('🚀 Creating association with assets:', selectedAssets.length);
       
       // Mapear associationType string para associationTypeId number
       const associationTypeId = mapAssociationTypeToId(generalConfig.associationType);
       
-      console.log('🔄 Mapped association type:', {
+      if (import.meta.env.DEV) console.log('🔄 Mapped association type:', {
         stringType: generalConfig.associationType,
         numericId: associationTypeId
       });
@@ -145,12 +145,12 @@ const AssetAssociation = () => {
         }
       };
 
-      console.log('📤 Final association data being sent:', associationData);
+      if (import.meta.env.DEV) console.log('📤 Final association data being sent:', associationData);
 
       // Executar criação da associação
       const result = await createAssociationMutation.mutateAsync(associationData);
       
-      console.log('✅ Association creation result:', result);
+      if (import.meta.env.DEV) console.log('✅ Association creation result:', result);
 
       toast.success(`Associação criada com sucesso!`);
       
@@ -159,7 +159,7 @@ const AssetAssociation = () => {
       navigate('/associations');
       
     } catch (error) {
-      console.error('❌ Error creating association:', error);
+      if (import.meta.env.DEV) console.error('❌ Error creating association:', error);
       toast.error('Erro ao criar associação. Tente novamente.');
     } finally {
       setIsSubmitting(false);
@@ -167,7 +167,7 @@ const AssetAssociation = () => {
   };
 
   const handleCancel = () => {
-    console.log('❌ Canceling association creation');
+    if (import.meta.env.DEV) console.log('❌ Canceling association creation');
     // Clear persisted state when canceling
     clearState();
     navigate(-1);

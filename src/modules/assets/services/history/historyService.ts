@@ -65,7 +65,7 @@ interface AssetLogWithRelationsRaw {
 
 export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations[]> => {
   try {
-    console.log('Buscando logs de assets com relações...');
+    if (import.meta.env.DEV) console.log('Buscando logs de assets com relações...');
     
     // Query atualizada com LEFT JOINs para lidar com assoc_id NULL
     const { data, error } = await supabase
@@ -99,7 +99,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       .limit(100); // Limita a 100 registros mais recentes para performance
 
     if (error) {
-      console.error('Erro detalhado ao buscar logs de assets:', {
+      if (import.meta.env.DEV) console.error('Erro detalhado ao buscar logs de assets:', {
         message: error.message,
         details: error.details,
         hint: error.hint,
@@ -109,7 +109,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
     }
 
     if (!data || data.length === 0) {
-      console.warn('Nenhum log encontrado na base de dados');
+      if (import.meta.env.DEV) console.warn('Nenhum log encontrado na base de dados');
       return [];
     }
 
@@ -127,10 +127,10 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
       association: log.fk_asset_logs_assoc_id // Pode ser NULL se assoc_id for NULL
     }));
 
-    console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
+    if (import.meta.env.DEV) console.log(`Carregados ${mappedData.length} logs de assets com sucesso`);
     return mappedData;
   } catch (error) {
-    console.error('Erro no serviço de logs:', error);
+    if (import.meta.env.DEV) console.error('Erro no serviço de logs:', error);
     // Retorna array vazio em caso de erro para evitar quebra da UI
     return [];
   }
@@ -183,7 +183,7 @@ export const formatLogDetails = (details: LogDetails | string | null): string =>
     
     return formattedParts.length > 0 ? formattedParts.join(' | ') : 'Evento do sistema';
   } catch (error) {
-    console.warn('Erro ao formatar detalhes do log:', error);
+    if (import.meta.env.DEV) console.warn('Erro ao formatar detalhes do log:', error);
     return 'Detalhes não formatáveis';
   }
 };
