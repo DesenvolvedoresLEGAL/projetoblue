@@ -49,6 +49,25 @@ When the API becomes available:
 3. Remove the temporary mapper utilities if no longer needed
 4. Update documentation to reflect the change
 
+## Project Overview
+
+The platform is organized into modular features such as **assets**, **clients**,
+**tickets**, **associations**, **dashboard** and **bits**. Each module contains
+its own pages, hooks and services under `src/modules`.
+
+### Authentication and User Flow
+
+Users can sign up, log in and manage their sessions through Supabase. Access is
+restricted by role and enforced in protected routes. See the detailed
+[Fluxo de Autenticação e Autorização](src/docs/AUTH_FLOW.md) and the
+[Permissões por Role](src/docs/ROLE_PERMISSIONS.md) reference.
+
+### Theme & Visual Identity
+
+The interface uses the LEGAL design system described in
+[`LEGAL_THEME_GUIDE.md`](src/docs/LEGAL_THEME_GUIDE.md). The `NamedLogo`
+component applies the brand logo across headers, sidebars and login screens.
+
 ## Environment Configuration
 
 This project relies on environment files to configure Supabase.
@@ -78,3 +97,26 @@ Reusable guard components live in `src/components/auth`. They help enforce authe
 
 See [src/components/auth/README.md](src/components/auth/README.md) for a full list of components and additional examples.
 
+## Getting Started
+
+To run the project locally:
+
+```bash
+npm install
+cp .env.development .env   # or .env.production
+npx supabase start          # requires Supabase CLI
+npm run dev
+```
+
+Local ports for the API, database and Studio are defined in `supabase/config.toml`.
+
+## Documentação de Autenticação
+
+Para entender como funciona o fluxo de login, controle de sessão e validação de permissões, consulte o documento [Fluxo de Autenticação e Autorização](src/docs/AUTH_FLOW.md).
+
+
+Para consultar as funcionalidades disponíveis para cada papel, veja [Permissões por Role](src/docs/ROLE_PERMISSIONS.md).
+
+## Changelog
+
+Veja o diretório [src/docs/changelog](src/docs/changelog/) para a lista completa de commits e alterações.
