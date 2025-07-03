@@ -52,7 +52,7 @@ export function useAuthSession(
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    signOut();
+    signOut(currentState.profile?.role);
   };
 
   useEffect(() => {
