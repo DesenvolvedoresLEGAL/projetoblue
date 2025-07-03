@@ -11,7 +11,7 @@ export const referenceDataService = {
       .order('id');
     
     if (error) {
-      console.error('Error fetching status records:', error);
+      if (import.meta.env.DEV) console.error('Error fetching status records:', error);
       return [];
     }
     
@@ -33,7 +33,7 @@ export const referenceDataService = {
       .order('name');
     
     if (error) {
-      console.error('Error fetching manufacturers:', error);
+      if (import.meta.env.DEV) console.error('Error fetching manufacturers:', error);
       return [];
     }
     
@@ -48,7 +48,7 @@ export const referenceDataService = {
       .order('solution');
     
     if (error) {
-      console.error('Error fetching asset solutions:', error);
+      if (import.meta.env.DEV) console.error('Error fetching asset solutions:', error);
       return [];
     }
     
@@ -63,7 +63,7 @@ export const referenceDataService = {
       .order('nome');
     
     if (error) {
-      console.error('Error fetching plans:', error);
+      if (import.meta.env.DEV) console.error('Error fetching plans:', error);
       return [];
     }
     

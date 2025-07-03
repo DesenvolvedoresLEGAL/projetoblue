@@ -14,7 +14,7 @@ export function useDashboardSystemStatus() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Fetching system status...');
+          if (import.meta.env.DEV) console.log('Fetching system status...');
         }
         
         // Buscar último evento para determinar última atividade
@@ -52,7 +52,7 @@ export function useDashboardSystemStatus() {
           isSyncing
         };
       } catch (error) {
-        console.error('Error fetching system status:', error);
+        if (import.meta.env.DEV) console.error('Error fetching system status:', error);
         // Em caso de erro, assume que está offline
         return {
           isOnline: false,

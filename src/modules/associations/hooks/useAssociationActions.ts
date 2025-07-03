@@ -10,7 +10,7 @@ export const useAssociationActions = () => {
 
   const endAssociation = useMutation({
     mutationFn: async ({ associationId, assetId }: { associationId: number; assetId: string }) => {
-      console.log('🔧 useAssociationActions - Ending association:', { associationId, assetId });
+      if (import.meta.env.DEV) console.log('🔧 useAssociationActions - Ending association:', { associationId, assetId });
 
       // Executar com idempotência e validação automática
       const result = await executeWithIdempotency(
@@ -63,7 +63,7 @@ export const useAssociationActions = () => {
       );
 
       if (result) {
-        console.log('✅ Association ended successfully:', result);
+        if (import.meta.env.DEV) console.log('✅ Association ended successfully:', result);
         toast.success('Associação encerrada com sucesso!');
       }
 
@@ -76,14 +76,14 @@ export const useAssociationActions = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
     },
     onError: (error) => {
-      console.error('Error in endAssociation:', error);
+      if (import.meta.env.DEV) console.error('Error in endAssociation:', error);
       // O toast de erro já é mostrado pelo hook useIdempotentAssociation
     }
   });
 
   const bulkEndAssociations = useMutation({
     mutationFn: async (associations: Array<{ id: number; asset_id: string }>) => {
-      console.log('🔧 useAssociationActions - Bulk ending associations:', associations);
+      if (import.meta.env.DEV) console.log('🔧 useAssociationActions - Bulk ending associations:', associations);
 
       const results = [];
       const errors = [];
@@ -97,13 +97,13 @@ export const useAssociationActions = () => {
           });
           results.push(result);
         } catch (error) {
-          console.error(`Error ending association ${assoc.id}:`, error);
+          if (import.meta.env.DEV) console.error(`Error ending association ${assoc.id}:`, error);
           errors.push({ associationId: assoc.id, error });
         }
       }
 
       if (errors.length > 0) {
-        console.warn(`${errors.length} associations failed to end:`, errors);
+        if (import.meta.env.DEV) console.warn(`${errors.length} associations failed to end:`, errors);
         toast.warning(`${results.length} associações encerradas, ${errors.length} falharam`);
       } else {
         toast.success(`Todas as ${results.length} associações foram encerradas com sucesso!`);

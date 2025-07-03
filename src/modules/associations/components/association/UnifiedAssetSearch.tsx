@@ -36,7 +36,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
   });
 
   const handleAssetSelect = (asset: SelectedAsset) => {
-    console.log('UnifiedAssetSearch: Asset selecionado', asset.uuid);
+    if (import.meta.env.DEV) console.log('UnifiedAssetSearch: Asset selecionado', asset.uuid);
     if (asset.iccid) {
       toast.info(`CHIP selecionado.`);
     } else {
@@ -48,7 +48,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
   };
 
   const searchSpecificAsset = async (term: string, type: 'chip' | 'equipment'): Promise<SelectedAsset | null> => {
-    console.log('searchSpecificAsset:', { term, type });
+    if (import.meta.env.DEV) console.log('searchSpecificAsset:', { term, type });
     
     let query = supabase
       .from('assets')
@@ -81,7 +81,7 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
       const { data, error } = await query.limit(1);
 
     if (error) {
-      console.error('Erro na busca direta:', error);
+      if (import.meta.env.DEV) console.error('Erro na busca direta:', error);
       return null;
     }
 

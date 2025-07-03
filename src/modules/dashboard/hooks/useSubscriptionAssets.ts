@@ -15,7 +15,7 @@ export const useSubscriptionAssets = () => {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Fetching subscription assets data...');
+          if (import.meta.env.DEV) console.log('🔍 Fetching subscription assets data...');
         }
         
         // Query para buscar ativos atualmente em assinatura (association_id = 2)
@@ -36,12 +36,12 @@ export const useSubscriptionAssets = () => {
           .is('deleted_at', null);
 
         if (error) {
-          console.error('❌ Error fetching subscription assets:', error);
+          if (import.meta.env.DEV) console.error('❌ Error fetching subscription assets:', error);
           throw new Error(`Failed to fetch subscription assets: ${error.message}`);
         }
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('📊 Raw subscription associations data:', subscriptionAssociations);
+          if (import.meta.env.DEV) console.log('📊 Raw subscription associations data:', subscriptionAssociations);
         }
 
         // Contar por tipo de solução
@@ -66,12 +66,12 @@ export const useSubscriptionAssets = () => {
         });
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('📈 Subscription assets summary:', counts);
+          if (import.meta.env.DEV) console.log('📈 Subscription assets summary:', counts);
         }
         return counts;
         
       } catch (error) {
-        console.error('💥 Error in useSubscriptionAssets:', error);
+        if (import.meta.env.DEV) console.error('💥 Error in useSubscriptionAssets:', error);
         throw error;
       }
     },

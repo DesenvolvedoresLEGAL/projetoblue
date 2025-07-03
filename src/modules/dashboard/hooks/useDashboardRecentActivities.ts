@@ -19,7 +19,7 @@ export function useDashboardRecentActivities() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Fetching recent activities...');
+          if (import.meta.env.DEV) console.log('Fetching recent activities...');
         }
         
         const recentEventsResult = await dashboardQueries.fetchEnhancedRecentEvents();
@@ -141,7 +141,7 @@ export function useDashboardRecentActivities() {
 
         return assetActivities.slice(0, 10);
       } catch (error) {
-        console.error('Error fetching recent activities:', error);
+        if (import.meta.env.DEV) console.error('Error fetching recent activities:', error);
         return [];
       }
     },

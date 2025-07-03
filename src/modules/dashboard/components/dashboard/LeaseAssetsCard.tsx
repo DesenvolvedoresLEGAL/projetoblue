@@ -13,7 +13,7 @@ export const LeaseAssetsCard: React.FC = () => {
 
   // Log para debugging
   if (error) {
-    console.error('🚨 LeaseAssetsCard error:', error);
+    if (import.meta.env.DEV) console.error('🚨 LeaseAssetsCard error:', error);
   }
 
   return (

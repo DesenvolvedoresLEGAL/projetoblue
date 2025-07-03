@@ -82,7 +82,7 @@ const AdminConfig = () => {
       });
       
       if (error) {
-        console.error('Erro ao excluir usuário:', error);
+        if (import.meta.env.DEV) console.error('Erro ao excluir usuário:', error);
         throw error;
       }
       
@@ -93,7 +93,7 @@ const AdminConfig = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
     onError: (error: unknown) => {
-      console.error('Erro na mutation de exclusão:', error);
+      if (import.meta.env.DEV) console.error('Erro na mutation de exclusão:', error);
       const errorMessage = error?.message || 'Erro ao excluir usuário';
       toast.error(errorMessage);
     }
@@ -126,7 +126,7 @@ const AdminConfig = () => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
     
-    console.log(`Excluindo usuário: ${user.email} (ID: ${userId})`);
+    if (import.meta.env.DEV) console.log(`Excluindo usuário: ${user.email} (ID: ${userId})`);
     deleteMutation.mutate(userId);
   };
 

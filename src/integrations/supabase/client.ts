@@ -34,7 +34,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     fetch: (input, init) => {
       // Add custom fetch logic for better request error handling
       return fetch(input, init).catch(err => {
-        console.error('Network error during Supabase request:', err);
+        if (import.meta.env.DEV) console.error('Network error during Supabase request:', err);
         throw err;
       });
     },
@@ -47,7 +47,7 @@ export const hasValidSession = async (): Promise<boolean> => {
     const { data, error } = await supabase.auth.getSession();
     return !error && !!data.session;
   } catch (err) {
-    console.error('Error checking session:', err);
+    if (import.meta.env.DEV) console.error('Error checking session:', err);
     return false;
   }
 };

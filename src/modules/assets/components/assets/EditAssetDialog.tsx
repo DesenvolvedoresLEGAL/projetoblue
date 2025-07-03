@@ -52,7 +52,7 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
         if (error) throw error;
         return data || [];
       } catch (error) {
-        console.error('Error fetching plans:', error);
+        if (import.meta.env.DEV) console.error('Error fetching plans:', error);
         return [];
       }
     },

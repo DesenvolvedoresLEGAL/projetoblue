@@ -13,7 +13,7 @@ export const SubscriptionAssetsCard: React.FC = () => {
 
   // Log para debugging
   if (error) {
-    console.error('🚨 SubscriptionAssetsCard error:', error);
+    if (import.meta.env.DEV) console.error('🚨 SubscriptionAssetsCard error:', error);
   }
 
   return (

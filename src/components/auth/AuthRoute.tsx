@@ -46,13 +46,13 @@ export const AuthRoute = ({ children, requiredRole }: AuthRouteProps) => {
 
   // If not authenticated, redirect to login with the current location
   if (!isAuthenticated) {
-    console.log('AuthRoute: Not authenticated, redirecting to login');
+    if (import.meta.env.DEV) console.log('AuthRoute: Not authenticated, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check role permissions if required
   if (requiredRole && !hasMinimumRole(requiredRole)) {
-    console.log('AuthRoute: Insufficient permissions for role:', requiredRole);
+    if (import.meta.env.DEV) console.log('AuthRoute: Insufficient permissions for role:', requiredRole);
     return <Navigate to="/unauthorized" replace />;
   }
 

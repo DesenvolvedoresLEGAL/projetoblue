@@ -310,7 +310,7 @@ export function showFriendlyError(error: unknown, context?: string): string {
   const translated = translateError(error, context);
   
   // Log do erro original para debug
-  console.error('[Error Translator]', {
+  if (import.meta.env.DEV) console.error('[Error Translator]', {
     originalError: error,
     translatedMessage: translated.message,
     category: translated.category,

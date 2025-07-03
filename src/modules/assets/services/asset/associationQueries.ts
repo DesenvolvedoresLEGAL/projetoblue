@@ -15,7 +15,7 @@ export const associationQueries = {
   // Check if asset has active associations (rental or subscription)
   async checkActiveAssociations(assetId: string): Promise<AssetAssociation[]> {
     try {
-      console.log(`Checking active associations for asset: ${assetId}`);
+      if (import.meta.env.DEV) console.log(`Checking active associations for asset: ${assetId}`);
       
       const { data, error } = await supabase
         .from('asset_client_assoc')
@@ -33,7 +33,7 @@ export const associationQueries = {
         .is('deleted_at', null);
 
       if (error) {
-        console.error('Error checking asset associations:', error);
+        if (import.meta.env.DEV) console.error('Error checking asset associations:', error);
         throw error;
       }
 
@@ -47,10 +47,10 @@ export const associationQueries = {
         association_type_name: (item.association_types as { type?: string } | null)?.type || 'Tipo não encontrado'
       }));
 
-      console.log(`Found ${associations.length} active associations for asset ${assetId}`);
+      if (import.meta.env.DEV) console.log(`Found ${associations.length} active associations for asset ${assetId}`);
       return associations;
     } catch (error) {
-      console.error('Error in checkActiveAssociations:', error);
+      if (import.meta.env.DEV) console.error('Error in checkActiveAssociations:', error);
       throw error;
     }
   }

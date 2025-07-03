@@ -100,7 +100,7 @@ export const authService = {
     role: UserRole = DEFAULT_USER_ROLE,
     username?: string
   ): Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }> {
-    console.log('Iniciando processo de cadastro:', { email, role, username });
+    if (import.meta.env.DEV) console.log('Iniciando processo de cadastro:', { email, role, username });
     
     // Converter role para valor reconhecido
     role = toUserRole(role);
@@ -121,7 +121,7 @@ export const authService = {
       });
       
       if (error) {
-        console.error('Erro detalhado do Supabase Auth:', {
+        if (import.meta.env.DEV) console.error('Erro detalhado do Supabase Auth:', {
           message: error.message,
           name: error.name,
           status: error.status,
@@ -134,7 +134,7 @@ export const authService = {
       
       // Check if the user was created successfully
       if (!data.user || !data.user.id) {
-        console.error('Usuário não foi criado corretamente:', data);
+        if (import.meta.env.DEV) console.error('Usuário não foi criado corretamente:', data);
         throw {
           message: 'Falha ao criar usuário: dados incompletos retornados',
           category: AuthErrorCategory.UNKNOWN
@@ -147,7 +147,7 @@ export const authService = {
       
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         if (attempt > 0) {
-          console.log(`Verificando criação de perfil: tentativa ${attempt + 1} de ${maxRetries}`);
+          if (import.meta.env.DEV) console.log(`Verificando criação de perfil: tentativa ${attempt + 1} de ${maxRetries}`);
           await delay(800); // Delay mais curto para não bloquear o usuário
         }
         
@@ -159,7 +159,7 @@ export const authService = {
           .maybeSingle();
         
         if (!profileError && profileData) {
-          console.log('Perfil confirmado para usuário:', { 
+          if (import.meta.env.DEV) console.log('Perfil confirmado para usuário:', { 
             id: data.user.id,
             email: data.user.email,
             username: profileData.username,
@@ -173,7 +173,7 @@ export const authService = {
       // Não tentamos criar manualmente aqui, isso será feito no useAuthActions
       // para dar mais chances ao trigger funcionar assincronamente
       
-      console.log('Usuário criado com sucesso:', {
+      if (import.meta.env.DEV) console.log('Usuário criado com sucesso:', {
         id: data.user.id,
         email: data.user.email,
         username: username,
@@ -185,7 +185,7 @@ export const authService = {
       return { data, error: null, profileCreated };
     } catch (error: unknown) {
       const err = error as { message?: string; name?: string; stack?: string; category?: AuthErrorCategory };
-      console.error('Erro detalhado durante o cadastro:', {
+      if (import.meta.env.DEV) console.error('Erro detalhado durante o cadastro:', {
         message: err.message,
         name: err.name,
         stack: err.stack,
@@ -197,7 +197,7 @@ export const authService = {
 
   // Sign in with improved retry logic
   async signIn(email: string, password: string) {
-    console.log('Tentando login para:', email);
+    if (import.meta.env.DEV) console.log('Tentando login para:', email);
     try {
       // Add a retry mechanism for auth sign-in
       let attempts = 0;
@@ -212,7 +212,7 @@ export const authService = {
           });
           
           if (error) {
-            console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
+            if (import.meta.env.DEV) console.error(`Tentativa ${attempts + 1} falhou:`, error.message);
             lastError = error;
             // Wait a bit longer between each retry with exponential backoff
             await delay(Math.pow(2, attempts) * 1000);
@@ -220,12 +220,12 @@ export const authService = {
             continue;
           }
           
-          console.log('Login successful:', data.user?.email);
+          if (import.meta.env.DEV) console.log('Login successful:', data.user?.email);
           
           // Success! Return the data
           return { data, error: null };
         } catch (fetchError: unknown) {
-          console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
+          if (import.meta.env.DEV) console.error(`Erro de rede na tentativa ${attempts + 1}:`, fetchError);
           lastError = fetchError as Error;
           // Wait with exponential backoff
           await delay(Math.pow(2, attempts) * 1000);
@@ -234,13 +234,13 @@ export const authService = {
       }
 
       // If we got here, all attempts failed
-      console.error('Todas as tentativas de login falharam:', lastError);
+      if (import.meta.env.DEV) console.error('Todas as tentativas de login falharam:', lastError);
       return { 
         data: { session: null, user: null }, 
         error: lastError || new Error('Falha ao conectar com o servidor de autenticação após múltiplas tentativas') 
       };
     } catch (error: unknown) {
-      console.error('Erro não tratado durante login:', error);
+      if (import.meta.env.DEV) console.error('Erro não tratado durante login:', error);
       return {
         data: { session: null, user: null },
         error
@@ -253,7 +253,7 @@ export const authService = {
     try {
       return await supabase.auth.signOut();
     } catch (error: unknown) {
-      console.error('Erro ao fazer logout:', error);
+      if (import.meta.env.DEV) console.error('Erro ao fazer logout:', error);
       throw error;
     }
   },
@@ -264,7 +264,7 @@ export const authService = {
       const { data } = await supabase.auth.getSession();
       return !!data.session;
     } catch (e) {
-      console.error('Failed to check authentication status:', e);
+      if (import.meta.env.DEV) console.error('Failed to check authentication status:', e);
       return false;
     }
   }

@@ -6,7 +6,7 @@ import { toUserRole } from '@/utils/roleUtils';
 export const profileService = {
   async fetchUserProfile(userId: string, includeDeleted = false): Promise<UserProfile | null> {
     try {
-      console.log(`Fetching profile for user: ${userId}`);
+      if (import.meta.env.DEV) console.log(`Fetching profile for user: ${userId}`);
       
       // First attempt with 'profiles' table query
       let query = supabase
@@ -22,12 +22,12 @@ export const profileService = {
       const { data, error } = await query.maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        if (import.meta.env.DEV) console.error('Error fetching profile:', error);
         throw error;
       }
 
       if (data) {
-        console.log('Profile found:', data.email);
+        if (import.meta.env.DEV) console.log('Profile found:', data.email);
         
         // Normalizar role para garantir valor reconhecido
         data.role = toUserRole(data.role as string);
@@ -48,11 +48,11 @@ export const profileService = {
         };
       }
       
-      console.warn(`No profile found for user ${userId}, attempting to create profile`);
+      if (import.meta.env.DEV) console.warn(`No profile found for user ${userId}, attempting to create profile`);
       
       // MELHORADO: Tentar criar perfil sem depender de auth.getUser()
       try {
-        console.log(`Tentando criar perfil diretamente na tabela profiles para usuário ${userId}`);
+        if (import.meta.env.DEV) console.log(`Tentando criar perfil diretamente na tabela profiles para usuário ${userId}`);
         
         // FALLBACK: Não tentar obter userData se temos problemas de auth
         // Em vez disso, usar o email da sessão atual se disponível
@@ -60,7 +60,7 @@ export const profileService = {
         const userEmail = session.data.session?.user?.email;
         
         if (!userEmail) {
-          console.error('Não foi possível obter email do usuário da sessão');
+          if (import.meta.env.DEV) console.error('Não foi possível obter email do usuário da sessão');
           return null;
         }
         
@@ -79,9 +79,9 @@ export const profileService = {
           .single();
           
         if (insertError) {
-          console.error('Falha ao criar perfil diretamente:', insertError);
+          if (import.meta.env.DEV) console.error('Falha ao criar perfil diretamente:', insertError);
         } else {
-          console.log('Perfil criado diretamente na tabela');
+          if (import.meta.env.DEV) console.log('Perfil criado diretamente na tabela');
           return {
             id: newProfileData.id,
             email: newProfileData.email,
@@ -113,11 +113,11 @@ export const profileService = {
         
         return null;
       } catch (createError) {
-        console.error('Error creating missing profile:', createError);
+        if (import.meta.env.DEV) console.error('Error creating missing profile:', createError);
         return null;
       }
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      if (import.meta.env.DEV) console.error('Error in fetchUserProfile:', error);
       return null;
     }
   },
@@ -133,9 +133,9 @@ export const profileService = {
         })
         .eq('id', userId);
       
-      console.log(`Updated last_login for user ${userId}`);
+      if (import.meta.env.DEV) console.log(`Updated last_login for user ${userId}`);
     } catch (error) {
-      console.error('Failed to update last_login:', error);
+      if (import.meta.env.DEV) console.error('Failed to update last_login:', error);
       // Non-critical error, don't throw
     }
   }

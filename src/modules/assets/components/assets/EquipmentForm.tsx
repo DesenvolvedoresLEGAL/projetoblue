@@ -80,7 +80,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
         });
 
       if (error) {
-        console.error('Erro ao criar equipamento:', error);
+        if (import.meta.env.DEV) console.error('Erro ao criar equipamento:', error);
         const friendlyMessage = showFriendlyError(error, 'create');
         toast.error(friendlyMessage);
         return;
@@ -89,7 +89,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ onSuccess, onCancel }) =>
       toast.success('Equipamento cadastrado com sucesso!');
       onSuccess();
     } catch (error) {
-      console.error('Erro:', error);
+      if (import.meta.env.DEV) console.error('Erro:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
       toast.error(friendlyMessage);
     } finally {

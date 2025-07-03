@@ -15,7 +15,7 @@ export const useLeaseAssets = () => {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Fetching lease assets data...');
+          if (import.meta.env.DEV) console.log('🔍 Fetching lease assets data...');
         }
         
         // Query para buscar ativos atualmente em locação (association_id = 1)
@@ -36,12 +36,12 @@ export const useLeaseAssets = () => {
           .is('deleted_at', null);
 
         if (error) {
-          console.error('❌ Error fetching lease assets:', error);
+          if (import.meta.env.DEV) console.error('❌ Error fetching lease assets:', error);
           throw new Error(`Failed to fetch lease assets: ${error.message}`);
         }
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('📊 Raw lease associations data:', leaseAssociations);
+          if (import.meta.env.DEV) console.log('📊 Raw lease associations data:', leaseAssociations);
         }
 
         // Contar por tipo de solução
@@ -66,12 +66,12 @@ export const useLeaseAssets = () => {
         });
 
         if (process.env.NODE_ENV === 'development') {
-          console.log('📈 Lease assets summary:', counts);
+          if (import.meta.env.DEV) console.log('📈 Lease assets summary:', counts);
         }
         return counts;
         
       } catch (error) {
-        console.error('💥 Error in useLeaseAssets:', error);
+        if (import.meta.env.DEV) console.error('💥 Error in useLeaseAssets:', error);
         throw error;
       }
     },

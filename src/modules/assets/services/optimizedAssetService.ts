@@ -131,7 +131,7 @@ export const optimizedAssetService = {
       );
 
     if (error) {
-      console.error('Error fetching assets:', error);
+      if (import.meta.env.DEV) console.error('Error fetching assets:', error);
       throw error;
     }
 
@@ -198,7 +198,7 @@ export const optimizedAssetService = {
       .is('deleted_at', null);
 
     if (error) {
-      console.error('Error fetching asset stats:', error);
+      if (import.meta.env.DEV) console.error('Error fetching asset stats:', error);
       throw error;
     }
 

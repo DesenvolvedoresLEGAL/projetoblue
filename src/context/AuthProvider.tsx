@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Log auth state changes to help with debugging
   useEffect(() => {
-    console.log('Auth state updated:', { 
+    if (import.meta.env.DEV) console.log('Auth state updated:', { 
       isAuthenticated: !!state.user && !!state.profile,
       hasUser: !!state.user,
       hasProfile: !!state.profile,
