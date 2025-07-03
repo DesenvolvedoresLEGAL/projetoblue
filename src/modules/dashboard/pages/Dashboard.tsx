@@ -15,6 +15,7 @@ import { QuickActionsCard } from '@modules/dashboard/components/dashboard/QuickA
 import { RecentActivitiesCard } from '@modules/dashboard/components/dashboard/RecentActivitiesCard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { StandardPageHeader } from '@/components/ui/standard-page-header';
+import { OperadorasSection } from '../components/dashboard/OperadorasSection';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -75,6 +76,10 @@ const Dashboard = () => {
               isLoading={dashboardAssets.assetsStats.isLoading}
             />
           </div>
+        {/* Seção de Operadoras - Nova seção com cards das operadoras */}
+        <div className="space-y-3 md:space-y-4">
+          <OperadorasSection />
+        </div>
           {/* Associations and Quick Actions */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <RentalAssociationsCard
@@ -93,6 +98,8 @@ const Dashboard = () => {
           
             <QuickActionsCard />
           </div>
+
+
           {/* Asset Type Status Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             <AssetTypeStatusChart

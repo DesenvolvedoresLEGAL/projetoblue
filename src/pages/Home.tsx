@@ -245,21 +245,6 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Seção de Operadoras - Nova seção com cards das operadoras */}
-        <div className="space-y-3 md:space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-legal-dark dark:text-text-primary-dark">
-                Chips por Operadora
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                Distribuição de chips por operadora de telefonia
-              </p>
-            </div>
-          </div>
-          <OperadorasSection />
-        </div>
-
         {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <LeaseAssetsCard />
