@@ -28,7 +28,7 @@ interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function Header({ children, className, ...props }: HeaderProps) {
-  const { signOut, isAuthenticated, userRole } = useAuth();
+  const { signOut, isAuthenticated, userRole, profile } = useAuth();
 
   return (
     <header 
@@ -96,7 +96,9 @@ export function Header({ children, className, ...props }: HeaderProps) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator className="bg-legal-primary/20 dark:bg-legal-secondary/20" />
             <DropdownMenuItem
-              onClick={signOut}
+              onClick={() => {
+                signOut(profile?.role);
+              }}
               className="hover:bg-destructive/10 focus:bg-destructive/10 text-destructive"
             >
               <LogOut className="mr-2 h-4 w-4" />

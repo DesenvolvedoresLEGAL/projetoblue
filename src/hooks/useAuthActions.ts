@@ -1,6 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/utils/toast';
+import { toastLoginSuccess, toastLogoutSuccess } from '@/utils/roleToastMessages';
 import { authService } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 import { useState, useCallback } from 'react';
@@ -313,7 +314,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
               if (import.meta.env.DEV) console.error(err);
             });
           
-          toast.success(`Bem-vindo(a), ${userProfile.username}!`);
+          toastLoginSuccess(userProfile);
           
           const from = window.history.state?.usr?.from?.pathname || '/';
           navigate(from, { replace: true });
@@ -399,7 +400,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
     }
   }, [isAuthProcessing, navigate, updateState]);
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (role?: UserRole) => {
     if (isAuthProcessing) {
       if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
       return;
@@ -416,8 +417,11 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         error: null,
         isLoading: false
       });
-      
-      toast.success('Você saiu do sistema com sucesso');
+      if (role) {
+        toastLogoutSuccess(role);
+      } else {
+        toast.success('Você saiu do sistema com sucesso');
+      }
       navigate('/login');
       } catch (error: unknown) {
       if (import.meta.env.DEV) console.error('Erro ao fazer logout:', error);
