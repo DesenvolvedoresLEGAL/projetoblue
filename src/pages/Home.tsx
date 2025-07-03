@@ -13,6 +13,7 @@ import { SubscriptionAssetsCard } from "@modules/dashboard/components/dashboard/
 import { RecentActivitiesCard } from "@modules/dashboard/components/dashboard/RecentActivitiesCard";
 import { RentedAssetsCard } from "@modules/dashboard/components/dashboard/RentedAssetsCard";
 import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncStatusAlert";
+import { OperadorasSection } from "@modules/dashboard/components/dashboard/OperadorasSection";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
 
@@ -242,6 +243,21 @@ const Home: React.FC = () => {
             emptyMessage="Toda infraestrutura está funcionando corretamente."
             isMobile={isMobile}
           />
+        </div>
+
+        {/* Seção de Operadoras - Nova seção com cards das operadoras */}
+        <div className="space-y-3 md:space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-legal-dark dark:text-text-primary-dark">
+                Chips por Operadora
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Distribuição de chips por operadora de telefonia
+              </p>
+            </div>
+          </div>
+          <OperadorasSection />
         </div>
 
         {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
