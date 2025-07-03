@@ -8,6 +8,7 @@ import { AssociationStatusBadge } from "./AssociationStatusBadge";
 import { ConfirmationModal } from "../association/ConfirmationModal";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface Association {
   id: number;
@@ -68,10 +69,12 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
   const getImprovedAssetIdentifier = (assoc: Association) => {
     // Para CHIP, usar line_number primeiro, depois iccid
     if (assoc.asset_solution_name?.toUpperCase() === "CHIP" || assoc.asset_solution_id === 11) {
-      return assoc.asset_line_number?.toString() || assoc.asset_iccid || "N/A";
+      const iccid_ength = assoc.asset_iccid?.toString().split('').length;
+      const formated_number = formatPhoneForDisplay(assoc.asset_line_number.toString());
+      return [`${formated_number}`, `...${assoc.asset_iccid.slice(iccid_ength-5, iccid_ength)}`];
     }
     // Para outros ativos, usar radio
-    return assoc.asset_radio || "N/A";
+    return [assoc.asset_radio];
   };
 
   const handleEndAssociation = () => {
@@ -90,7 +93,9 @@ export const AssociationTableRow: React.FC<AssociationTableRowProps> = ({
         <TableCell>
           <div>
             <div className="font-medium">
-              {getImprovedAssetIdentifier(association)}
+              {getImprovedAssetIdentifier(association)[0]}
+              <br />
+              {getImprovedAssetIdentifier(association)[1] ? "ICCID: " + getImprovedAssetIdentifier(association)[1] : ''}
             </div>
             <div className="text-sm text-muted-foreground">
               {association.asset_solution_name}
