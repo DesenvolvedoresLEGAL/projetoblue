@@ -17,7 +17,7 @@ export interface AuthContextType extends AuthState {
     password: string,
     role?: UserRole
   ) => Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }>;
-  signOut: () => Promise<void>;
+  signOut: (role?: UserRole) => Promise<void>;
   isAuthenticated: boolean;
   technicalError?: TechnicalErrorInfo | null;
   // Informações adicionais de role
