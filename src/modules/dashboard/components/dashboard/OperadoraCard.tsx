@@ -49,12 +49,11 @@ export const OperadoraCard: React.FC<OperadoraCardProps> = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-legal-dark dark:text-text-primary-dark">
-            <Smartphone className="h-5 w-5 text-legal-primary" />
-            <span className="text-lg font-semibold">{operadora.nome}</span>
+            <div className="p-2 bg-[#4D2BFB]/10 rounded-lg">
+              <Smartphone className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            </div>
+            <span className="text-lg font-semibold">CHIPs da {operadora.nome.capitalize()}</span>
           </CardTitle>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Chips da operadora
         </div>
       </CardHeader>
       
