@@ -36,7 +36,7 @@ export const useAssetSearch = ({
   const { data: assets = [], isLoading, error } = useQuery({
     queryKey: ['assets-search', searchTerm, selectedSolution, selectedStatus, type, status, excludeAssociatedToClient],
     queryFn: async () => {
-      console.log('useAssetSearch: Buscando assets', { 
+      if (import.meta.env.DEV) console.log('useAssetSearch: Buscando assets', { 
         searchTerm, 
         selectedSolution, 
         selectedStatus,
@@ -66,38 +66,38 @@ export const useAssetSearch = ({
 
       // Filtro por status "disponível" por padrão
       if (status === 'available') {
-        console.log('useAssetSearch: Aplicando filtro por status disponível');
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por status disponível');
         query = query.eq('status_id', 1); // Status "Disponível"
       }
 
       // Filtro por tipo de ativo baseado na solution
       if (type === 'chip') {
-        console.log('useAssetSearch: Aplicando filtro por tipo CHIP');
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por tipo CHIP');
         query = query.eq('solution_id', 11); // CHIP solution_id = 11
       } else if (type === 'equipment') {
-        console.log('useAssetSearch: Aplicando filtro por tipo equipamento');
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por tipo equipamento');
         query = query.neq('solution_id', 11); // Todos exceto CHIP
       }
 
       // Filtros de busca
       if (searchTerm.trim()) {
-        console.log('useAssetSearch: Aplicando filtro de busca por termo:', searchTerm);
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro de busca por termo:', searchTerm);
         query = query.or(`radio.ilike.%${searchTerm}%,line_number.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%`);
       }
 
       if (selectedSolution) {
-        console.log('useAssetSearch: Aplicando filtro por solução:', selectedSolution);
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por solução:', selectedSolution);
         query = query.eq('solution_id', parseInt(selectedSolution, 10));
       }
 
       if (selectedStatus) {
-        console.log('useAssetSearch: Aplicando filtro por status:', selectedStatus);
+        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por status:', selectedStatus);
         query = query.eq('status_id', parseInt(selectedStatus, 10));
       }
 
       // Excluir assets já associados ao cliente (se fornecido)
       if (excludeAssociatedToClient) {
-        console.log('useAssetSearch: Excluindo assets já associados ao cliente:', excludeAssociatedToClient);
+        if (import.meta.env.DEV) console.log('useAssetSearch: Excluindo assets já associados ao cliente:', excludeAssociatedToClient);
         const { data: associatedAssets } = await supabase
           .from('asset_client_assoc')
           .select('asset_id')
@@ -116,7 +116,7 @@ export const useAssetSearch = ({
         .limit(50);
 
       if (error) {
-        console.error('Erro ao buscar assets:', error);
+        if (import.meta.env.DEV) console.error('Erro ao buscar assets:', error);
         throw error;
       }
 
@@ -138,7 +138,7 @@ export const useAssetSearch = ({
         registrationDate: asset.created_at || new Date().toISOString()
       })) || [];
 
-      console.log('useAssetSearch: Assets encontrados:', mappedAssets.length);
+      if (import.meta.env.DEV) console.log('useAssetSearch: Assets encontrados:', mappedAssets.length);
       return mappedAssets;
     },
     enabled: true
@@ -147,7 +147,7 @@ export const useAssetSearch = ({
   // Filtrar assets já selecionados apenas na exibição
   const availableAssets = useMemo(() => {
     const filtered = assets.filter(asset => !selectedAssetIds.has(asset.uuid));
-    console.log('useAssetSearch: Assets disponíveis após filtro', {
+    if (import.meta.env.DEV) console.log('useAssetSearch: Assets disponíveis após filtro', {
       total: assets.length,
       selectedCount: selectedAssets.length,
       availableCount: filtered.length
@@ -172,7 +172,7 @@ export const useAssetSearch = ({
   };
 
   const onFiltersUpdate = useCallback((updates: Partial<AssetSearchFilters>) => {
-    console.log('useAssetSearch: Atualizando filtros:', updates);
+    if (import.meta.env.DEV) console.log('useAssetSearch: Atualizando filtros:', updates);
     
     if (updates.searchTerm !== undefined) setSearchTerm(updates.searchTerm);
     if (updates.selectedSolution !== undefined) setSelectedSolution(updates.selectedSolution);

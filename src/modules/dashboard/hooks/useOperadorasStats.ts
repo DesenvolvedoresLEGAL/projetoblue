@@ -17,7 +17,7 @@ export const useOperadorasStats = () => {
   return useQuery({
     queryKey: ['operadoras-stats'],
     queryFn: async (): Promise<OperadoraStats[]> => {
-      console.log('[useOperadorasStats] Buscando dados das operadoras...');
+      if (import.meta.env.DEV) console.log('[useOperadorasStats] Buscando dados das operadoras...');
 
       // Buscar operadoras (manufacturers com description = 'Operadora')
       const { data: operadoras, error: operadorasError } = await supabase
@@ -27,11 +27,11 @@ export const useOperadorasStats = () => {
         .is('deleted_at', null);
 
       if (operadorasError) {
-        console.error('[useOperadorasStats] Erro ao buscar operadoras:', operadorasError);
+        if (import.meta.env.DEV) console.error('[useOperadorasStats] Erro ao buscar operadoras:', operadorasError);
         throw operadorasError;
       }
 
-      console.log('[useOperadorasStats] Operadoras encontradas:', operadoras);
+      if (import.meta.env.DEV) console.log('[useOperadorasStats] Operadoras encontradas:', operadoras);
 
       // Para cada operadora, buscar estatísticas dos chips
       const stats: OperadoraStats[] = [];
@@ -51,7 +51,7 @@ export const useOperadorasStats = () => {
           .is('deleted_at', null);
 
         if (assetsError) {
-          console.error(`[useOperadorasStats] Erro ao buscar assets da operadora ${operadora.name}:`, assetsError);
+          if (import.meta.env.DEV) console.error(`[useOperadorasStats] Erro ao buscar assets da operadora ${operadora.name}:`, assetsError);
           continue;
         }
 
@@ -75,7 +75,7 @@ export const useOperadorasStats = () => {
           percentual_disponivel
         });
 
-        console.log(`[useOperadorasStats] Stats ${operadora.name}:`, {
+        if (import.meta.env.DEV) console.log(`[useOperadorasStats] Stats ${operadora.name}:`, {
           total,
           disponivel,
           em_locacao,

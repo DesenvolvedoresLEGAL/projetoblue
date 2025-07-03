@@ -16,7 +16,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({
 }) => {
   const handleEditAsset = (asset: SelectedAsset) => {
     // Esta funcionalidade pode ser implementada posteriormente se necessário
-    console.log('Edit asset:', asset);
+    if (import.meta.env.DEV) console.log('Edit asset:', asset);
   };
 
   return (

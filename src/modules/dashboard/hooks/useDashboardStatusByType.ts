@@ -26,7 +26,7 @@ export function useDashboardStatusByType() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Fetching status by type data...');
+          if (import.meta.env.DEV) console.log('Fetching status by type data...');
         }
         
         // Use the detailed breakdown query that includes both asset_solutions and asset_status
@@ -90,7 +90,7 @@ export function useDashboardStatusByType() {
             }, [] as { status: string; value: number; color: string }[])
         };
       } catch (error) {
-        console.error('Error fetching status by type:', error);
+        if (import.meta.env.DEV) console.error('Error fetching status by type:', error);
         throw error;
       }
     },

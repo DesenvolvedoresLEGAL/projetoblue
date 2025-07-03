@@ -33,11 +33,11 @@ export function useClientRegistrationState() {
       const savedData = sessionStorage.getItem(STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log('[ClientRegistrationState] Loaded data from sessionStorage:', parsedData);
+        if (import.meta.env.DEV) console.log('[ClientRegistrationState] Loaded data from sessionStorage:', parsedData);
         setFormData(parsedData);
       }
     } catch (error) {
-      console.error('[ClientRegistrationState] Error loading from sessionStorage:', error);
+      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error loading from sessionStorage:', error);
     } finally {
       setIsFormDataLoaded(true);
     }
@@ -49,9 +49,9 @@ export function useClientRegistrationState() {
     
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(debouncedFormData));
-      console.log('[ClientRegistrationState] Saved data to sessionStorage:', debouncedFormData);
+      if (import.meta.env.DEV) console.log('[ClientRegistrationState] Saved data to sessionStorage:', debouncedFormData);
     } catch (error) {
-      console.error('[ClientRegistrationState] Error saving to sessionStorage:', error);
+      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error saving to sessionStorage:', error);
     }
   }, [debouncedFormData, isFormDataLoaded]);
 
@@ -64,12 +64,12 @@ export function useClientRegistrationState() {
   }, []);
 
   const clearState = useCallback(() => {
-    console.log('[ClientRegistrationState] Clearing state and sessionStorage');
+    if (import.meta.env.DEV) console.log('[ClientRegistrationState] Clearing state and sessionStorage');
     try {
       sessionStorage.removeItem(STORAGE_KEY);
       setFormData(defaultFormData);
     } catch (error) {
-      console.error('[ClientRegistrationState] Error clearing sessionStorage:', error);
+      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error clearing sessionStorage:', error);
     }
   }, []);
 

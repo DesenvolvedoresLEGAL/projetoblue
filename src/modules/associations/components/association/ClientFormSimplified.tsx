@@ -55,7 +55,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
         .single();
 
       if (error) {
-        console.error('Erro ao criar cliente:', error);
+        if (import.meta.env.DEV) console.error('Erro ao criar cliente:', error);
         const friendlyMessage = showFriendlyError(error, 'create');
         throw error;
       }
@@ -64,7 +64,7 @@ export const ClientFormSimplified: React.FC<ClientFormSimplifiedProps> = ({ onSu
       onSubmit(newClient);
       toast.success('Cliente cadastrado com sucesso!');
     } catch (error) {
-      console.error('Erro ao cadastrar cliente:', error);
+      if (import.meta.env.DEV) console.error('Erro ao cadastrar cliente:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
       toast.error(friendlyMessage);
     } finally {

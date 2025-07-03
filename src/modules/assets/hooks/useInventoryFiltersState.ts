@@ -28,7 +28,7 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
   const [state, setState] = useState<InventoryFiltersState>(() => {
     // Se resetOnMount é true, sempre começar com estado limpo
     if (resetOnMount) {
-      console.log('🔄 Resetting inventory filters on mount');
+      if (import.meta.env.DEV) console.log('🔄 Resetting inventory filters on mount');
       return getDefaultState();
     }
 
@@ -38,14 +38,14 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          console.log('📁 Loaded inventory filters from localStorage:', parsed);
+          if (import.meta.env.DEV) console.log('📁 Loaded inventory filters from localStorage:', parsed);
           return {
             ...getDefaultState(),
             ...parsed
           } as InventoryFiltersState;
         }
       } catch (error) {
-        console.warn('Failed to load inventory filters from localStorage:', error);
+        if (import.meta.env.DEV) console.warn('Failed to load inventory filters from localStorage:', error);
       }
     }
     
@@ -57,9 +57,9 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
     if (resetOnMount && typeof window !== 'undefined') {
       try {
         localStorage.removeItem(STORAGE_KEY);
-        console.log('🗑️ Cleared existing inventory filters from localStorage');
+        if (import.meta.env.DEV) console.log('🗑️ Cleared existing inventory filters from localStorage');
       } catch (error) {
-        console.warn('Failed to clear inventory filters from localStorage:', error);
+        if (import.meta.env.DEV) console.warn('Failed to clear inventory filters from localStorage:', error);
       }
     }
   }, [resetOnMount]);
@@ -69,9 +69,9 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
     if (shouldPersist && typeof window !== 'undefined') {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        console.log('💾 Saved inventory filters to localStorage:', state);
+        if (import.meta.env.DEV) console.log('💾 Saved inventory filters to localStorage:', state);
       } catch (error) {
-        console.warn('Failed to save inventory filters to localStorage:', error);
+        if (import.meta.env.DEV) console.warn('Failed to save inventory filters to localStorage:', error);
       }
     }
   }, [state, shouldPersist]);
@@ -93,7 +93,7 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
   }, []);
 
   const resetFilters = useCallback(() => {
-    console.log('🔄 Resetting all inventory filters');
+    if (import.meta.env.DEV) console.log('🔄 Resetting all inventory filters');
     setState(getDefaultState());
   }, []);
 

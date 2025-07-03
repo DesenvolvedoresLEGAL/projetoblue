@@ -65,7 +65,7 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
         .eq('id', association.id);
 
       if (error) {
-        console.error('Erro ao atualizar associação:', error);
+        if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', error);
         const friendlyMessage = showFriendlyError(error, 'update');
         throw new Error(friendlyMessage);
       }
@@ -73,7 +73,7 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
       toast.success('Associação atualizada com sucesso!');
       onOpenChange(false);
     } catch (error) {
-      console.error('Erro ao atualizar associação:', error);
+      if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
       toast.error(friendlyMessage);
     } finally {

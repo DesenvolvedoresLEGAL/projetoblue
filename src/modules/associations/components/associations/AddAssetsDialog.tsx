@@ -37,7 +37,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
   const handleAssetSelected = (asset: SelectedAsset) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('AddAssetsDialog: Tentando adicionar asset', asset.uuid);
+      if (import.meta.env.DEV) console.log('AddAssetsDialog: Tentando adicionar asset', asset.uuid);
     }
     
     // Verificar se o asset já foi selecionado (evitar duplicatas)
@@ -45,19 +45,19 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
     
     if (isAlreadySelected) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('AddAssetsDialog: Asset já selecionado', asset.uuid);
+        if (import.meta.env.DEV) console.log('AddAssetsDialog: Asset já selecionado', asset.uuid);
       }
       toast.warning('Este ativo já foi selecionado');
       return;
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('AddAssetsDialog: Adicionando novo asset', asset.uuid);
+      if (import.meta.env.DEV) console.log('AddAssetsDialog: Adicionando novo asset', asset.uuid);
     }
     setSelectedAssets(prev => {
       const newList = [...prev, asset];
       if (process.env.NODE_ENV === 'development') {
-        console.log(
+        if (import.meta.env.DEV) console.log(
           'AddAssetsDialog: Nova lista de assets selecionados',
           newList.map(a => a.uuid)
         );
@@ -69,12 +69,12 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
 
   const handleAssetRemoved = (assetId: string) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('AddAssetsDialog: Removendo asset', assetId);
+      if (import.meta.env.DEV) console.log('AddAssetsDialog: Removendo asset', assetId);
     }
     setSelectedAssets(prev => {
       const newList = prev.filter(asset => asset.uuid !== assetId);
       if (process.env.NODE_ENV === 'development') {
-        console.log(
+        if (import.meta.env.DEV) console.log(
           'AddAssetsDialog: Nova lista após remoção',
           newList.map(a => a.uuid)
         );
@@ -94,7 +94,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
   const handleConfirm = async () => {
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log(
+        if (import.meta.env.DEV) console.log(
           'AddAssetsDialog: Iniciando adição de assets',
           selectedAssets.map(a => a.uuid)
         );
@@ -113,7 +113,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('AddAssetsDialog: Resultado da adição:', result);
+        if (import.meta.env.DEV) console.log('AddAssetsDialog: Resultado da adição:', result);
       }
 
       // Lógica de fechamento do modal mais rigorosa
@@ -134,7 +134,7 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
         setShowConfirmation(false);
       }
     } catch (error) {
-      console.error('AddAssetsDialog: Erro ao adicionar ativos:', error);
+      if (import.meta.env.DEV) console.error('AddAssetsDialog: Erro ao adicionar ativos:', error);
       // Em caso de erro de rede/sistema, não fechar o modal
       setShowConfirmation(false);
     }

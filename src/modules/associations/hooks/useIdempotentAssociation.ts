@@ -9,18 +9,18 @@ export const useIdempotentAssociation = () => {
     operationKey: string,
     operation: () => Promise<T>
   ): Promise<T> => {
-    console.log('[useIdempotentAssociation] Executando operação com chave:', operationKey);
+    if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Executando operação com chave:', operationKey);
 
     // Verificar se a operação já está em execução
     if (executingOperations.has(operationKey)) {
-      console.log('[useIdempotentAssociation] Operação já em execução, aguardando...');
+      if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Operação já em execução, aguardando...');
       throw new Error('Operação já está em execução. Aguarde...');
     }
 
     // Verificar cache de idempotência
     const cachedResult = idempotencyService.getCachedResult<T>(operationKey);
     if (cachedResult !== null) {
-      console.log('[useIdempotentAssociation] Resultado encontrado em cache:', cachedResult);
+      if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Resultado encontrado em cache:', cachedResult);
       return cachedResult;
     }
 
@@ -28,16 +28,16 @@ export const useIdempotentAssociation = () => {
     setExecutingOperations(prev => new Set([...prev, operationKey]));
 
     try {
-      console.log('[useIdempotentAssociation] Executando operação...');
+      if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Executando operação...');
       const result = await operation();
       
       // Cachear resultado de sucesso
       idempotencyService.cacheResult(operationKey, result);
-      console.log('[useIdempotentAssociation] Operação concluída com sucesso');
+      if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Operação concluída com sucesso');
       
       return result;
     } catch (error) {
-      console.error('[useIdempotentAssociation] Erro na operação:', error);
+      if (import.meta.env.DEV) console.error('[useIdempotentAssociation] Erro na operação:', error);
       
       // Para alguns tipos de erro, também cachear para evitar retry imediato
       if (error instanceof Error && (
@@ -45,7 +45,7 @@ export const useIdempotentAssociation = () => {
         error.message.includes('ASSET_NOT_FOUND') ||
         error.message.includes('CLIENT_NOT_FOUND')
       )) {
-        console.log('[useIdempotentAssociation] Cacheando erro para evitar retry:', error.message);
+        if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Cacheando erro para evitar retry:', error.message);
         idempotencyService.cacheResult(operationKey, { error: error.message });
       }
       
@@ -61,7 +61,7 @@ export const useIdempotentAssociation = () => {
   };
 
   const clearOperationCache = (operationKey: string) => {
-    console.log('[useIdempotentAssociation] Limpando cache da operação:', operationKey);
+    if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Limpando cache da operação:', operationKey);
     idempotencyService.clearCache(operationKey);
   };
 

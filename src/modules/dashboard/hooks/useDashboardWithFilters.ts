@@ -108,7 +108,7 @@ export function useDashboardWithFilters(): UseDashboardWithFiltersResult {
       const { data, error } = await query;
       
       if (error) {
-        console.error('Error fetching filtered assets:', error);
+        if (import.meta.env.DEV) console.error('Error fetching filtered assets:', error);
         throw error;
       }
       

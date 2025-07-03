@@ -28,7 +28,7 @@ export const useGroupActions = () => {
 
   const softDeleteGroup = useMutation({
     mutationFn: async (group: AssociationGroup) => {
-      console.log('🗑️ Soft deleting group:', group.groupKey);
+      if (import.meta.env.DEV) console.log('🗑️ Soft deleting group:', group.groupKey);
       
       // Garantir contexto de autenticação
       await ensureAuthenticatedContext();
@@ -47,7 +47,7 @@ export const useGroupActions = () => {
           .eq('id', id);
         
         if (error) {
-          console.error('Erro ao deletar associação:', id, error);
+          if (import.meta.env.DEV) console.error('Erro ao deletar associação:', id, error);
           throw error;
         }
         results.push(id);
@@ -60,14 +60,14 @@ export const useGroupActions = () => {
       await invalidateAssociationsCache();
     },
     onError: (error) => {
-      console.error('❌ Error soft deleting group:', error);
+      if (import.meta.env.DEV) console.error('❌ Error soft deleting group:', error);
       toast.error("Houve um erro ao remover o grupo de associações.");
     }
   });
 
   const bulkUpdateGroup = useMutation({
     mutationFn: async ({ group, updates }: { group: AssociationGroup; updates: Record<string, unknown> }) => {
-      console.log('📝 Bulk updating group:', group.groupKey, 'with updates:', updates);
+      if (import.meta.env.DEV) console.log('📝 Bulk updating group:', group.groupKey, 'with updates:', updates);
       
       // Garantir contexto de autenticação
       await ensureAuthenticatedContext();
@@ -86,7 +86,7 @@ export const useGroupActions = () => {
           .eq('id', id);
         
         if (error) {
-          console.error('Erro ao atualizar associação:', id, error);
+          if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', id, error);
           throw error;
         }
         results.push(id);
@@ -99,14 +99,14 @@ export const useGroupActions = () => {
       await invalidateAssociationsCache();
     },
     onError: (error) => {
-      console.error('❌ Error bulk updating group:', error);
+      if (import.meta.env.DEV) console.error('❌ Error bulk updating group:', error);
       toast.error("Houve um erro ao atualizar o grupo de associações.");
     }
   });
 
   const changeGroupAssociationType = useMutation({
     mutationFn: async ({ group, newType }: { group: AssociationGroup; newType: number }) => {
-      console.log('🔄 Changing association type for group:', group.groupKey, 'to:', newType);
+      if (import.meta.env.DEV) console.log('🔄 Changing association type for group:', group.groupKey, 'to:', newType);
       
       // Garantir contexto de autenticação
       await ensureAuthenticatedContext();
@@ -125,7 +125,7 @@ export const useGroupActions = () => {
           .eq('id', id);
         
         if (error) {
-          console.error('Erro ao alterar tipo de associação:', id, error);
+          if (import.meta.env.DEV) console.error('Erro ao alterar tipo de associação:', id, error);
           throw error;
         }
         results.push(id);
@@ -138,14 +138,14 @@ export const useGroupActions = () => {
       await invalidateAssociationsCache();
     },
     onError: (error) => {
-      console.error('❌ Error changing association type:', error);
+      if (import.meta.env.DEV) console.error('❌ Error changing association type:', error);
       toast.error("Houve um erro ao alterar o tipo de associação do grupo.");
     }
   });
 
   const endGroup = useMutation({
     mutationFn: async (group: AssociationGroup) => {
-      console.log('⏹️ Ending group:', group.groupKey);
+      if (import.meta.env.DEV) console.log('⏹️ Ending group:', group.groupKey);
       
       // Garantir contexto de autenticação
       await ensureAuthenticatedContext();
@@ -173,7 +173,7 @@ export const useGroupActions = () => {
           .eq('id', id);
         
         if (error) {
-          console.error('Erro ao encerrar associação:', id, error);
+          if (import.meta.env.DEV) console.error('Erro ao encerrar associação:', id, error);
           throw error;
         }
         results.push(id);
@@ -189,7 +189,7 @@ export const useGroupActions = () => {
       await invalidateAssociationsCache();
     },
     onError: (error) => {
-      console.error('❌ Error ending group:', error);
+      if (import.meta.env.DEV) console.error('❌ Error ending group:', error);
       toast.error(error.message || "Houve um erro ao encerrar o grupo de associações.");
     },
     onSettled: () => {

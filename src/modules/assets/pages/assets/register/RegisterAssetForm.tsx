@@ -102,7 +102,7 @@ export function RegisterAssetForm() {
               value={assetType}
               onValueChange={(value) => {
                 const newAssetType = value as 'CHIP' | 'EQUIPAMENTO';
-                console.log('Trocando tipo de ativo para:', newAssetType);
+                if (import.meta.env.DEV) console.log('Trocando tipo de ativo para:', newAssetType);
                 setAssetType(newAssetType);
                 
                 if (newAssetType === 'CHIP') {

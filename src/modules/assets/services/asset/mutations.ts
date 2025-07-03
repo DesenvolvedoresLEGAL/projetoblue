@@ -14,14 +14,14 @@ export async function createAsset(assetData: AssetCreateParams): Promise<Asset |
       .single();
 
     if (error) {
-      console.error('Erro ao criar asset:', error);
+      if (import.meta.env.DEV) console.error('Erro ao criar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'create');
       throw new Error(friendlyMessage);
     }
 
     return mapDatabaseAssetToFrontend(data);
   } catch (error) {
-    console.error('Erro na mutation createAsset:', error);
+    if (import.meta.env.DEV) console.error('Erro na mutation createAsset:', error);
     const friendlyMessage = showFriendlyError(error, 'create');
     throw new Error(friendlyMessage);
   }
@@ -40,14 +40,14 @@ export async function updateAsset(
       .single();
 
     if (error) {
-      console.error('Erro ao atualizar asset:', error);
+      if (import.meta.env.DEV) console.error('Erro ao atualizar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
       throw new Error(friendlyMessage);
     }
 
     return mapDatabaseAssetToFrontend(data);
   } catch (error) {
-    console.error('Erro na mutation updateAsset:', error);
+    if (import.meta.env.DEV) console.error('Erro na mutation updateAsset:', error);
     const friendlyMessage = showFriendlyError(error, 'update');
     throw new Error(friendlyMessage);
   }
@@ -61,14 +61,14 @@ export async function deleteAsset(id: string): Promise<boolean> {
       .eq('uuid', id);
 
     if (error) {
-      console.error('Erro ao deletar asset:', error);
+      if (import.meta.env.DEV) console.error('Erro ao deletar asset:', error);
       const friendlyMessage = showFriendlyError(error, 'delete');
       throw new Error(friendlyMessage);
     }
 
     return true;
   } catch (error) {
-    console.error('Erro na mutation deleteAsset:', error);
+    if (import.meta.env.DEV) console.error('Erro na mutation deleteAsset:', error);
     const friendlyMessage = showFriendlyError(error, 'delete');
     throw new Error(friendlyMessage);
   }

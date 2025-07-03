@@ -34,7 +34,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
 
   useEffect(() => {
     if (asset) {
-      console.log('Asset loaded in form:', asset);
+      if (import.meta.env.DEV) console.log('Asset loaded in form:', asset);
       setFormData({
         model: asset.model || '',
         serial_number: asset.serial_number || '',
@@ -53,25 +53,25 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    console.log(`Form field changed: ${name} = ${value}`);
+    if (import.meta.env.DEV) console.log(`Form field changed: ${name} = ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleStatusChange = (value: string) => {
     const status_id = parseInt(value);
-    console.log(`Setting status_id to: ${status_id}`);
+    if (import.meta.env.DEV) console.log(`Setting status_id to: ${status_id}`);
     setFormData(prev => ({ ...prev, status_id }));
   };
 
   const handleManufacturerChange = (value: string) => {
     const manufacturer_id = parseInt(value);
-    console.log(`Setting manufacturer_id to: ${manufacturer_id}`);
+    if (import.meta.env.DEV) console.log(`Setting manufacturer_id to: ${manufacturer_id}`);
     setFormData(prev => ({ ...prev, manufacturer_id }));
   };
 
   const handlePlanChange = (value: string) => {
     const plan_id = parseInt(value);
-    console.log(`Setting plan_id to: ${plan_id}`);
+    if (import.meta.env.DEV) console.log(`Setting plan_id to: ${plan_id}`);
     setFormData(prev => ({ ...prev, plan_id }));
   };
 
@@ -81,7 +81,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     if (!asset) return;
     
     setIsLoading(true);
-    console.log('Form data to submit:', formData);
+    if (import.meta.env.DEV) console.log('Form data to submit:', formData);
     
     try {
       // Prepare data to update based on the asset type
@@ -108,7 +108,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         dataToUpdate.pass_atual = formData.pass_atual || '';
       }
       
-      console.log('Calling updateAsset with data:', dataToUpdate);
+      if (import.meta.env.DEV) console.log('Calling updateAsset with data:', dataToUpdate);
       const updatedAsset = await assetService.updateAsset(asset.uuid, dataToUpdate);
       
       if (updatedAsset) {
@@ -119,7 +119,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         toast.error("Não foi possível atualizar o ativo. Tente novamente ou entre em contato com o suporte.");
       }
     } catch (error) {
-      console.error('Erro ao atualizar ativo:', error);
+      if (import.meta.env.DEV) console.error('Erro ao atualizar ativo:', error);
       const friendlyMessage = showFriendlyError(error, 'update');
       toast.error(friendlyMessage);
     } finally {

@@ -30,7 +30,7 @@ export const AssociationGeneralConfigComponent: React.FC<AssociationGeneralConfi
   const handleAssociationTypeChange = (value: string) => {
     // Mapear string para número
     const numericValue = value === 'ALUGUEL' ? 1 : 2;
-    console.log('🔄 AssociationGeneralConfig - Type changed to:', value, '-> ID:', numericValue);
+    if (import.meta.env.DEV) console.log('🔄 AssociationGeneralConfig - Type changed to:', value, '-> ID:', numericValue);
     onUpdate({ associationType: numericValue });
   };
 

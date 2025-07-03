@@ -21,7 +21,7 @@ export const ClientSelectionStep: React.FC = () => {
   );
 
   const handleClientSelect = (client: Client) => {
-    console.log('ClientSelectionStep: Cliente selecionado', client.uuid);
+    if (import.meta.env.DEV) console.log('ClientSelectionStep: Cliente selecionado', client.uuid);
     setSelectedClient(client);
     // Automaticamente avançar para próximo step
     setTimeout(() => {

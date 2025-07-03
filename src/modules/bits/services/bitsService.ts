@@ -17,7 +17,7 @@ import { UserRole } from "@/types/auth";
 
 // Utility function to handle errors
 const handleError = (error: Error, message: string) => {
-  console.error(`BITS Error: ${message}`, error);
+  if (import.meta.env.DEV) console.error(`BITS Error: ${message}`, error);
   toast.error(message);
   throw error;
 };

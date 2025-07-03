@@ -33,7 +33,7 @@ export const addAssetsToAssociation = async (
   params: AddAssetsToAssociationParams
 ): Promise<AddAssetsToAssociationResult> => {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Chamando add_assets_to_association com parâmetros:', params);
+    if (import.meta.env.DEV) console.log('Chamando add_assets_to_association com parâmetros:', params);
   }
 
   const { data, error } = await supabase.rpc('add_assets_to_association', {
@@ -49,12 +49,12 @@ export const addAssetsToAssociation = async (
   });
 
   if (error) {
-    console.error('Erro ao adicionar ativos à associação:', error);
+    if (import.meta.env.DEV) console.error('Erro ao adicionar ativos à associação:', error);
     throw error;
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('Resultado da adição de ativos:', data);
+    if (import.meta.env.DEV) console.log('Resultado da adição de ativos:', data);
   }
   return data as unknown as AddAssetsToAssociationResult;
 };

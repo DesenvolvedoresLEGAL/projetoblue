@@ -15,7 +15,7 @@ export const useAddAssetsToAssociation = () => {
     onSuccess: (data) => {
       const { inserted_count, failed_count, message, failed_assets } = data;
       
-      console.log('Resultado da adição:', message);
+      if (import.meta.env.DEV) console.log('Resultado da adição:', message);
 
       // Lógica de toasts baseada nos resultados
       if (inserted_count > 0 && failed_count === 0) {
@@ -30,7 +30,7 @@ export const useAddAssetsToAssociation = () => {
         );
         
         // Log detalhado dos erros para debug
-        console.log('Ativos que falharam:', failed_assets);
+        if (import.meta.env.DEV) console.log('Ativos que falharam:', failed_assets);
       } else if (inserted_count === 0 && failed_count > 0) {
         // Nenhum ativo foi adicionado - todos falharam
         const errorDetails = failed_assets?.map(asset => 
@@ -48,7 +48,7 @@ export const useAddAssetsToAssociation = () => {
         );
         
         // Log completo dos erros para debug
-        console.error('Todos os ativos falharam:', failed_assets);
+        if (import.meta.env.DEV) console.error('Todos os ativos falharam:', failed_assets);
       } else if (inserted_count === 0 && failed_count === 0) {
         // Caso edge - nada processado
         toast.warning('Nenhum ativo foi processado.');
@@ -69,7 +69,7 @@ export const useAddAssetsToAssociation = () => {
       }
     },
     onError: (error) => {
-      console.error('Erro ao adicionar ativos:', error);
+      if (import.meta.env.DEV) console.error('Erro ao adicionar ativos:', error);
       
       // Toast de erro mais específico
       const errorMessage = error.message || 'Erro desconhecido';

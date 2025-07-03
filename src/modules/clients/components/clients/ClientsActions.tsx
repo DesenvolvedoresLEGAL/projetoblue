@@ -38,7 +38,7 @@ export const ClientsActions: React.FC<ClientsActionsProps> = ({
       const filename = exportClientsToCSV(clientsToExport);
       toast.success(`Arquivo ${filename} exportado com sucesso!`);
     } catch (error) {
-      console.error('Erro ao exportar CSV:', error);
+      if (import.meta.env.DEV) console.error('Erro ao exportar CSV:', error);
       toast.error('Erro ao exportar arquivo CSV. Tente novamente.');
     }
   };

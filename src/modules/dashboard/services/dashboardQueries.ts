@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Fetch total assets count
 export async function fetchTotalAssets() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchTotalAssets query');
+    if (import.meta.env.DEV) console.log('Executing fetchTotalAssets query');
   }
   const result = await supabase
     .from('assets')
@@ -11,7 +11,7 @@ export async function fetchTotalAssets() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchTotalAssets result:', result);
+    if (import.meta.env.DEV) console.log('fetchTotalAssets result:', result);
   }
   return result;
 }
@@ -19,14 +19,14 @@ export async function fetchTotalAssets() {
 // Fetch active clients count
 export async function fetchActiveClients() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchActiveClients query');
+    if (import.meta.env.DEV) console.log('Executing fetchActiveClients query');
   }
   const result = await supabase
     .from('v_active_clients')
     .select('*', { count: 'exact', head: true });
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchActiveClients result:', result);
+    if (import.meta.env.DEV) console.log('fetchActiveClients result:', result);
   }
   return result;
 }
@@ -34,14 +34,14 @@ export async function fetchActiveClients() {
 // Fetch assets with issues count
 export async function fetchAssetsWithIssues() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchAssetsWithIssues query');
+    if (import.meta.env.DEV) console.log('Executing fetchAssetsWithIssues query');
   }
   const result = await supabase
     .from('v_problem_assets')
     .select('*', { count: 'exact', head: true });
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchAssetsWithIssues result:', result);
+    if (import.meta.env.DEV) console.log('fetchAssetsWithIssues result:', result);
   }
   return result;
 }
@@ -49,7 +49,7 @@ export async function fetchAssetsWithIssues() {
 // Fetch recent assets
 export async function fetchRecentAssets() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchRecentAssets query');
+    if (import.meta.env.DEV) console.log('Executing fetchRecentAssets query');
   }
   const result = await supabase
     .from('assets')
@@ -61,7 +61,7 @@ export async function fetchRecentAssets() {
     .limit(5);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchRecentAssets result:', result);
+    if (import.meta.env.DEV) console.log('fetchRecentAssets result:', result);
   }
   return result;
 }
@@ -69,7 +69,7 @@ export async function fetchRecentAssets() {
 // Fetch recent events
 export async function fetchRecentEvents() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchRecentEvents query');
+    if (import.meta.env.DEV) console.log('Executing fetchRecentEvents query');
   }
   const result = await supabase
     .from('asset_logs')
@@ -78,7 +78,7 @@ export async function fetchRecentEvents() {
     .limit(5);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchRecentEvents result:', result);
+    if (import.meta.env.DEV) console.log('fetchRecentEvents result:', result);
   }
   return result;
 }
@@ -86,13 +86,13 @@ export async function fetchRecentEvents() {
 // Fetch status breakdown
 export async function fetchStatusBreakdown() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchStatusBreakdown query');
+    if (import.meta.env.DEV) console.log('Executing fetchStatusBreakdown query');
   }
   const result = await supabase
     .rpc('status_by_asset_type');
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchStatusBreakdown result:', result);
+    if (import.meta.env.DEV) console.log('fetchStatusBreakdown result:', result);
   }
   return result;
 }
@@ -100,14 +100,14 @@ export async function fetchStatusBreakdown() {
 // Fetch solutions data
 export async function fetchSolutions() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchSolutions query');
+    if (import.meta.env.DEV) console.log('Executing fetchSolutions query');
   }
   const result = await supabase
     .from('asset_solutions')
     .select('id, solution');
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchSolutions result:', result);
+    if (import.meta.env.DEV) console.log('fetchSolutions result:', result);
   }
   return result;
 }
@@ -115,14 +115,14 @@ export async function fetchSolutions() {
 // Fetch status data
 export async function fetchStatuses() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchStatuses query');
+    if (import.meta.env.DEV) console.log('Executing fetchStatuses query');
   }
   const result = await supabase
     .from('asset_status')
     .select('id, status');
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchStatuses result:', result);
+    if (import.meta.env.DEV) console.log('fetchStatuses result:', result);
   }
   return result;
 }
@@ -130,7 +130,7 @@ export async function fetchStatuses() {
 // NEW: Fetch aggregated data by status only (for PieChart)
 export async function fetchStatusSummary() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchStatusSummary query');
+    if (import.meta.env.DEV) console.log('Executing fetchStatusSummary query');
   }
   const result = await supabase
     .from('assets')
@@ -141,7 +141,7 @@ export async function fetchStatusSummary() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchStatusSummary result:', result);
+    if (import.meta.env.DEV) console.log('fetchStatusSummary result:', result);
   }
   return result;
 }
@@ -149,7 +149,7 @@ export async function fetchStatusSummary() {
 // NEW: Fetch detailed breakdown by type and status (for tooltip)
 export async function fetchDetailedStatusBreakdown() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchDetailedStatusBreakdown query');
+    if (import.meta.env.DEV) console.log('Executing fetchDetailedStatusBreakdown query');
   }
   const result = await supabase
     .from('assets')
@@ -162,7 +162,7 @@ export async function fetchDetailedStatusBreakdown() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchDetailedStatusBreakdown result:', result);
+    if (import.meta.env.DEV) console.log('fetchDetailedStatusBreakdown result:', result);
   }
   return result;
 }
@@ -170,7 +170,7 @@ export async function fetchDetailedStatusBreakdown() {
 // NEW: Fetch active associations - OTIMIZADO para evitar N+1 queries
 export async function fetchActiveAssociations() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchActiveAssociations query (optimized)');
+    if (import.meta.env.DEV) console.log('Executing fetchActiveAssociations query (optimized)');
   }
   const result = await supabase
     .from('asset_client_assoc')
@@ -199,7 +199,7 @@ export async function fetchActiveAssociations() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchActiveAssociations result (optimized):', result);
+    if (import.meta.env.DEV) console.log('fetchActiveAssociations result (optimized):', result);
   }
   return result;
 }
@@ -207,7 +207,7 @@ export async function fetchActiveAssociations() {
 // NEW: Fetch associations ending today
 export async function fetchAssociationsEndingToday() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchAssociationsEndingToday query');
+    if (import.meta.env.DEV) console.log('Executing fetchAssociationsEndingToday query');
   }
   const today = new Date().toISOString().split('T')[0];
   const result = await supabase
@@ -226,7 +226,7 @@ export async function fetchAssociationsEndingToday() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchAssociationsEndingToday result:', result);
+    if (import.meta.env.DEV) console.log('fetchAssociationsEndingToday result:', result);
   }
   return result;
 }
@@ -234,7 +234,7 @@ export async function fetchAssociationsEndingToday() {
 // NEW: Fetch top clients with associations
 export async function fetchTopClientsWithAssociations() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchTopClientsWithAssociations query');
+    if (import.meta.env.DEV) console.log('Executing fetchTopClientsWithAssociations query');
   }
   const result = await supabase
     .from('asset_client_assoc')
@@ -246,7 +246,7 @@ export async function fetchTopClientsWithAssociations() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchTopClientsWithAssociations result:', result);
+    if (import.meta.env.DEV) console.log('fetchTopClientsWithAssociations result:', result);
   }
   return result;
 }
@@ -254,7 +254,7 @@ export async function fetchTopClientsWithAssociations() {
 // NEW: Fetch associations from last 30 days
 export async function fetchAssociationsLast30Days() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchAssociationsLast30Days query');
+    if (import.meta.env.DEV) console.log('Executing fetchAssociationsLast30Days query');
   }
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -273,7 +273,7 @@ export async function fetchAssociationsLast30Days() {
     .is('deleted_at', null);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchAssociationsLast30Days result:', result);
+    if (import.meta.env.DEV) console.log('fetchAssociationsLast30Days result:', result);
   }
   return result;
 }
@@ -281,7 +281,7 @@ export async function fetchAssociationsLast30Days() {
 // NEW: Enhanced recent events with user information
 export async function fetchEnhancedRecentEvents() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executing fetchEnhancedRecentEvents query');
+    if (import.meta.env.DEV) console.log('Executing fetchEnhancedRecentEvents query');
   }
   
   // First get the events
@@ -294,7 +294,7 @@ export async function fetchEnhancedRecentEvents() {
   
   if (eventsResult.error) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('fetchEnhancedRecentEvents error:', eventsResult.error);
+      if (import.meta.env.DEV) console.log('fetchEnhancedRecentEvents error:', eventsResult.error);
     }
     return eventsResult;
   }
@@ -337,7 +337,7 @@ export async function fetchEnhancedRecentEvents() {
   }));
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('fetchEnhancedRecentEvents enriched result:', { ...eventsResult, data: enrichedData });
+    if (import.meta.env.DEV) console.log('fetchEnhancedRecentEvents enriched result:', { ...eventsResult, data: enrichedData });
   }
   return { ...eventsResult, data: enrichedData };
 }

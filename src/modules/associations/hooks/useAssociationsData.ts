@@ -160,7 +160,7 @@ export const useAssociationsData = ({
       const { data, error, count } = await query;
 
       if (error) {
-        console.error('Erro ao buscar associações:', error);
+        if (import.meta.env.DEV) console.error('Erro ao buscar associações:', error);
         throw error;
       }
 

@@ -90,7 +90,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
       const date = new Date(timestamp);
       
       if (isNaN(date.getTime())) {
-        console.warn('Invalid timestamp:', timestamp);
+        if (import.meta.env.DEV) console.warn('Invalid timestamp:', timestamp);
         return 'Data inválida';
       }
 
@@ -102,7 +102,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         minute: '2-digit'
       });
     } catch (error) {
-      console.error('Error formatting timestamp:', error, 'Input:', timestamp);
+      if (import.meta.env.DEV) console.error('Error formatting timestamp:', error, 'Input:', timestamp);
       return 'Erro na data';
     }
   };

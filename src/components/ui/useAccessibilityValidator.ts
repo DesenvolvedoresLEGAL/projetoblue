@@ -11,16 +11,16 @@ export const useAccessibilityValidator = () => {
       const inputs = document.querySelectorAll('input:not([aria-label]):not([aria-labelledby]):not([id])')
 
       if (buttons.length > 0) {
-        console.warn('🔍 A11y: Botões sem labels de acessibilidade encontrados:', buttons.length)
+        if (import.meta.env.DEV) console.warn('🔍 A11y: Botões sem labels de acessibilidade encontrados:', buttons.length)
       }
 
       if (inputs.length > 0) {
-        console.warn('🔍 A11y: Inputs sem labels de acessibilidade encontrados:', inputs.length)
+        if (import.meta.env.DEV) console.warn('🔍 A11y: Inputs sem labels de acessibilidade encontrados:', inputs.length)
       }
 
       // Verificar contraste de foco
       const focusableElements = document.querySelectorAll('[tabindex], button, input, select, textarea, a[href]')
-      console.log(`🔍 A11y: ${focusableElements.length} elementos focáveis encontrados`)
+      if (import.meta.env.DEV) console.log(`🔍 A11y: ${focusableElements.length} elementos focáveis encontrados`)
     }
 
     // Executar após um breve delay para permitir renderização
