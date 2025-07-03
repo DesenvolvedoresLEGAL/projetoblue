@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { Check, X, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import '@/utils/stringUtils';
 
 interface StatsData {
   total: number;

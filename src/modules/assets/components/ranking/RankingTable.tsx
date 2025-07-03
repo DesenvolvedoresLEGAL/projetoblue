@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Calendar } from "lucide-react";
 import { RankedAsset } from '@modules/assets/hooks/useRentedAssetsRanking';
 import { cn } from "@/lib/utils";
+import '@/utils/stringUtils';
 
 interface RankingTableProps {
   assets: RankedAsset[];

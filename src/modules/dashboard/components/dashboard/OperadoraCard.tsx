@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Smartphone, ExternalLink } from 'lucide-react';
 import { OperadoraStats } from '@modules/dashboard/hooks/useOperadorasStats';
+import '@/utils/stringUtils';
 
 interface OperadoraCardProps {
   operadora: OperadoraStats;
