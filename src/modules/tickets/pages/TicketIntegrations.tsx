@@ -12,6 +12,7 @@ import {
   PlusCircle, Globe, MessageSquare, BellRing, FileCode, RefreshCcw, Settings2
 } from "lucide-react";
 import { toast } from 'sonner';
+import '@/utils/stringUtils';
 
 const TicketIntegrations = () => {
   const [webhookUrl, setWebhookUrl] = useState('');
