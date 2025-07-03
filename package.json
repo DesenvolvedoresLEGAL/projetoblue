@@ -8,7 +8,8 @@
     "build": "vite build -m production",
     "build:dev": "vite build -m development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -82,6 +83,10 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^1.6.0",
+    "@testing-library/react": "^15.0.0",
+    "@testing-library/jest-dom": "^6.1.0",
+    "jsdom": "^24.0.0"
   }
 }
