@@ -133,28 +133,31 @@ export const useCreateAssociation = () => {
       const rentedDays = Number(data.generalConfig?.rentedDays) || 0;
       if (import.meta.env.DEV) console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
 
-      // Preparar dados para o RPC
-      const rpcData = {
-        p_client_id: data.clientId,
-        p_association_id: data.associationTypeId,
-        p_entry_date: formattedStartDate,
-        p_asset_ids: data.selectedAssets.map(asset => asset.id),
-        p_exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
-        p_notes: data.generalConfig?.notes || null,
-        p_ssid: data.generalConfig?.ssid || null,
-        p_pass: data.generalConfig?.password || null,
-        p_gb: data.generalConfig?.dataLimit || null
-      };
+      // Preparar dados de inserção direto em asset_client_assoc
+      const insertData = data.selectedAssets.map(asset => ({
+        asset_id: asset.id,
+        client_id: data.clientId,
+        association_id: data.associationTypeId,
+        entry_date: formattedStartDate,
+        exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
+        notes: data.generalConfig?.notes || null,
+        ssid: data.generalConfig?.ssid || null,
+        pass: data.generalConfig?.password || null,
+        gb: data.generalConfig?.dataLimit || null
+      }));
 
-      if (import.meta.env.DEV) console.log('[useCreateAssociation] Dados preparados para RPC:', rpcData);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Dados preparados para inserção:', insertData);
 
       // Executar com idempotência
       return executeWithIdempotency(
         `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
         async () => {
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Chamando RPC add_assets_to_association...');
-          
-          const { data: result, error } = await supabase.rpc('add_assets_to_association', rpcData);
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo em asset_client_assoc...');
+
+          const { data: insertResult, error } = await supabase
+            .from('asset_client_assoc')
+            .insert(insertData)
+            .select('id');
 
           if (error) {
             if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro do Supabase:', error);
@@ -173,10 +176,17 @@ export const useCreateAssociation = () => {
             throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
           }
 
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado bruto do RPC:', result);
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado da inserção:', insertResult);
 
-          // Processar resultado usando função helper
-          const processedResult = parseRpcResult(result);
+          const processedResult = parseRpcResult({
+            success: true,
+            inserted_count: insertResult?.length ?? 0,
+            failed_count: 0,
+            inserted_ids: insertResult?.map(r => r.id) ?? [],
+            failed_assets: [],
+            total_processed: insertData.length,
+            message: 'Associação criada'
+          });
           
           if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado processado:', processedResult);
 
