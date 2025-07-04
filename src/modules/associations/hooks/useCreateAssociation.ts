@@ -39,45 +39,25 @@ interface CreateAssociationResult {
   };
 }
 
-// Função para validar e extrair dados do resultado JSON
-const parseRpcResult = (result: unknown): CreateAssociationResult => {
-  // Se result é null ou undefined
-  if (!result) {
-    throw new Error('Resposta vazia do servidor');
-  }
-
-  // Se result é um objeto JSON
-  if (typeof result === 'object') {
-    return {
-      success: result.success === true,
-      message: result.message || 'Operação concluída',
-      details: result.success ? {
-        inserted_count: result.inserted_count || 0,
-        failed_count: result.failed_count || 0,
-        total_processed: result.total_processed || 0,
-        inserted_ids: result.inserted_ids || [],
-        failed_assets: result.failed_assets || []
-      } : undefined
-    };
-  }
-
-  // Se result é uma string, tentar parsear como JSON
-  if (typeof result === 'string') {
-    try {
-      const parsedResult = JSON.parse(result);
-      return parseRpcResult(parsedResult);
-    } catch {
-      throw new Error('Formato de resposta inválido do servidor');
+// Função auxiliar que apenas tipa o retorno da operação de insert
+// mantendo compatibilidade com a antiga interface do RPC
+const buildInsertResult = (ids: number[], total: number): CreateAssociationResult => {
+  return {
+    success: true,
+    message: 'Associação criada com sucesso',
+    details: {
+      inserted_count: ids.length,
+      failed_count: total - ids.length,
+      total_processed: total,
+      inserted_ids: ids,
+      failed_assets: []
     }
-  }
-
-  // Fallback para outros tipos
-  throw new Error('Formato de resposta não reconhecido');
+  };
 };
 
 export const useCreateAssociation = () => {
   const queryClient = useQueryClient();
-  const { executeWithIdempotency, clearOperationCache } = useIdempotentAssociation();
+  const { executeWithIdempotency } = useIdempotentAssociation();
 
   return useMutation({
     mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
@@ -133,8 +113,8 @@ export const useCreateAssociation = () => {
       const rentedDays = Number(data.generalConfig?.rentedDays) || 0;
       if (import.meta.env.DEV) console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
 
-      // Preparar dados de inserção direto em asset_client_assoc
-      const insertData = data.selectedAssets.map(asset => ({
+      // Preparar dados para inserção direta
+      const insertPayload = data.selectedAssets.map(asset => ({
         asset_id: asset.id,
         client_id: data.clientId,
         association_id: data.associationTypeId,
@@ -146,63 +126,31 @@ export const useCreateAssociation = () => {
         gb: data.generalConfig?.dataLimit || null
       }));
 
-      if (import.meta.env.DEV) console.log('[useCreateAssociation] Dados preparados para inserção:', insertData);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Payload de inserção:', insertPayload);
 
       // Executar com idempotência
       return executeWithIdempotency(
         `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
         async () => {
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo em asset_client_assoc...');
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo associações diretamente...');
 
-          const { data: insertResult, error } = await supabase
+          const { data: inserted, error } = await supabase
             .from('asset_client_assoc')
-            .insert(insertData)
+            .insert(insertPayload)
             .select('id');
 
           if (error) {
             if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro do Supabase:', error);
-            
-            // Melhor tratamento de erro com detalhes específicos
-            const errorMessage = error.message || 'Erro desconhecido ao criar associação';
-            const errorDetails = {
-              code: error.code || 'UNKNOWN_ERROR',
-              hint: error.hint,
-              details: error.details,
-              supabase_error: error
-            };
-
-            if (import.meta.env.DEV) console.error('[useCreateAssociation] Detalhes do erro:', errorDetails);
-            
-            throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
+            throw new Error(error.message || 'Erro desconhecido ao criar associação');
           }
 
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado da inserção:', insertResult);
+          const insertedIds = inserted ? inserted.map(rec => rec.id as number) : [];
 
-          const processedResult = parseRpcResult({
-            success: true,
-            inserted_count: insertResult?.length ?? 0,
-            failed_count: 0,
-            inserted_ids: insertResult?.map(r => r.id) ?? [],
-            failed_assets: [],
-            total_processed: insertData.length,
-            message: 'Associação criada'
-          });
-          
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado processado:', processedResult);
+          const result = buildInsertResult(insertedIds, insertPayload.length);
 
-          // Verificar se houve sucesso
-          if (!processedResult.success) {
-            const errorMsg = processedResult.message || 'Erro ao criar associação';
-            
-            if (import.meta.env.DEV) console.error('[useCreateAssociation] RPC indicou falha:', {
-              message: errorMsg,
-              details: processedResult.details
-            });
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado da inserção:', result);
 
-            throw new Error(errorMsg);
-          }
-
-          return processedResult;
+          return result;
         }
       );
     },
@@ -221,17 +169,8 @@ export const useCreateAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error: unknown, variables) => {
+    onError: (error: unknown) => {
       if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro capturado:', error);
-
-      // Limpar possível cache da operação para permitir nova tentativa
-      try {
-        const startDateKey = new Date(variables.startDate).toISOString().split('T')[0];
-        const operationKey = `create_association_${variables.clientId}_${variables.associationTypeId}_${startDateKey}`;
-        clearOperationCache(operationKey);
-      } catch (e) {
-        if (import.meta.env.DEV) console.error('[useCreateAssociation] Falha ao limpar cache da operação:', e);
-      }
 
       // Mostrar erro com detalhes técnicos quando disponível
       let errorMessage = 'Erro ao criar associação';
@@ -239,7 +178,7 @@ export const useCreateAssociation = () => {
       if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
-
+      
       toast.error(errorMessage);
     }
   });
