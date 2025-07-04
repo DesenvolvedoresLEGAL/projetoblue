@@ -18,17 +18,6 @@ import { toast } from '@/utils/toast';
 
 type Step = 'client' | 'assets' | 'summary';
 
-// Função para mapear string de associationType para ID numérico
-const mapAssociationTypeToId = (associationType: string): number => {
-  const typeMap: Record<string, number> = {
-    'ALUGUEL': 1,
-    'ASSINATURA': 2,
-    'LOCAÇÃO': 1,
-    'SUBSCRIPTION': 2
-  };
-
-  return typeMap[associationType] || 1; // Default para ALUGUEL
-};
 
 const AssetAssociation = () => {
   const {
@@ -45,7 +34,8 @@ const AssetAssociation = () => {
   
   // Estado local para configuração geral
   const [generalConfig, setGeneralConfig] = useState<AssociationGeneralConfig>({
-    associationType: mapAssociationTypeToId('ALUGUEL'.toUpperCase()),
+    // IDs definidos em supabase/seed.sql (1 = aluguel, 2 = assinatura)
+    associationType: 1,
     startDate: new Date(),
     endDate: undefined,
     notes: ''
@@ -116,13 +106,10 @@ const AssetAssociation = () => {
     try {
       if (import.meta.env.DEV) console.log('🚀 Creating association with assets:', selectedAssets.length);
       
-      // Mapear associationType string para associationTypeId number
-      const associationTypeId = mapAssociationTypeToId(generalConfig.associationType);
-      
-      if (import.meta.env.DEV) console.log('🔄 Mapped association type:', {
-        stringType: generalConfig.associationType,
-        numericId: associationTypeId
-      });
+      // Valor numérico já vem da configuração geral
+      const associationTypeId = generalConfig.associationType;
+
+      if (import.meta.env.DEV) console.log('🔄 Using association type ID:', associationTypeId);
 
       // Preparar dados da associação com associationTypeId numérico
       const associationData = {
