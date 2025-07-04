@@ -13,14 +13,9 @@ export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-export function safedParseInt(searchTerm: string) {
-  const parsedSearchTerm = parseInt(searchTerm, 10);
-  const parsedType = typeof parsedSearchTerm;
-  if (parsedType !== 'bigint') {
-    return -1;
-  } else {
-    return parsedSearchTerm;
-  }
+export function safedParseInt(searchTerm: string): number {
+  const parsed = parseInt(searchTerm, 10)
+  return Number.isNaN(parsed) ? -1 : parsed
 }
 
 /**
