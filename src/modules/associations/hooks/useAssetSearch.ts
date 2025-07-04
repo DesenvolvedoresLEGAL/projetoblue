@@ -9,7 +9,6 @@ export interface AssetSearchFilters {
   selectedSolution: string;
   selectedStatus: string;
   type: 'all' | 'equipment' | 'chip';
-  status: 'all' | 'available';
 }
 
 interface UseAssetSearchOptions {
@@ -82,7 +81,7 @@ export const useAssetSearch = ({
       // Filtros de busca
       if (searchTerm.trim()) {
         if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro de busca por termo:', searchTerm);
-        query = query.or(`radio.ilike.%${searchTerm}%,line_number.ilike.%${searchTerm}%,serial_number.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%`);
+        query = query.or(`radio.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%,line_number.like.${searchTerm}`);
       }
 
       if (selectedSolution) {
@@ -112,8 +111,7 @@ export const useAssetSearch = ({
       }
 
       const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
       if (error) {
         if (import.meta.env.DEV) console.error('Erro ao buscar assets:', error);
@@ -167,8 +165,7 @@ export const useAssetSearch = ({
     searchTerm,
     selectedSolution,
     selectedStatus,
-    type,
-    status
+    type
   };
 
   const onFiltersUpdate = useCallback((updates: Partial<AssetSearchFilters>) => {
@@ -178,7 +175,6 @@ export const useAssetSearch = ({
     if (updates.selectedSolution !== undefined) setSelectedSolution(updates.selectedSolution);
     if (updates.selectedStatus !== undefined) setSelectedStatus(updates.selectedStatus);
     if (updates.type !== undefined) setType(updates.type);
-    if (updates.status !== undefined) setStatus(updates.status);
   }, []);
 
   return {
