@@ -19,7 +19,7 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
       return 'client_name';
     }
     
-    if (/^[A-Za-z0-9\-_]+$/.test(trimmed) && trimmed.length <= 20) {
+    if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/.test(trimmed) && trimmed.length <= 20) {
       // Detecta se é rádio (padrão comum: letras + números)
       return 'radio';
     }
