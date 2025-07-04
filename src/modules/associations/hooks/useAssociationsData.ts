@@ -5,6 +5,7 @@ import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 import { SearchType } from '@/hooks/useSearchTypeDetection';
 import { Association, StatusFilterType } from '@/types/associations';
 import { sanitizeSearchTerm } from '@/utils/associationsUtils';
+import { safedParseInt } from '@/utils/stringUtils';
 
 interface UseAssociationsDataProps {
   debouncedSearchTerm: string;
@@ -48,22 +49,13 @@ const applySupabaseSearch = (
   const sanitized = sanitizeSearchTerm(term);
   if (!sanitized) return query;
 
-  query.or(``);
-
-  // Aplicar busca no backend apenas para tipos específicos que são mais eficientes
-  switch (type) {
-    case 'id':
-      return query.eq('id', parseInt(sanitized));
-    case 'iccid':
-      return query.ilike('assets.iccid', `%${sanitized}%`);
-    case 'radio':
-      return query.ilike('assets.radio', `%${sanitized}%`);
-    case 'client_name':
-    default:
-      // Para busca por cliente, não filtrar no backend para evitar problemas com JSONB
-      // Deixar a busca ser feita no frontend
-      return query;
+  if (type !== 'client_name') {
+    query.or(
+      `id.eq.${safedParseInt(sanitized)},assets.iccid.ilike.%${sanitized}%,assets.radio.ilike.%${sanitized.toUpperCase()}%`
+    );
   }
+
+  return query;
 };
 
 export const useAssociationsData = ({
