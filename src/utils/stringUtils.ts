@@ -14,7 +14,7 @@ export function capitalize(str: string): string {
 }
 
 export function safedParseInt(searchTerm: string) {
-  const parsedSearchTerm = parseInt(searchTerm);
+  const parsedSearchTerm = parseInt(searchTerm, 10);
   const parsedType = typeof parsedSearchTerm;
   if (parsedType !== 'bigint') {
     return -1;
