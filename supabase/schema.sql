@@ -1619,32 +1619,28 @@ BEGIN
     -- Tentar obter o email do usuário atual com tratamento de erro
     IF safe_user_id IS NOT NULL THEN
         BEGIN
-            -- Tentar acessar auth.users com tratamento de exceção
             SELECT email INTO current_user_email
             FROM auth.users
             WHERE id = safe_user_id;
         EXCEPTION
             WHEN OTHERS THEN
-                -- Se falhar ao acessar auth.users, usar email do próprio registro (se disponível)
                 current_user_email := CASE
-                    WHEN TG_OP = 'INSERT' THEN NEW.email
-                    WHEN TG_OP = 'UPDATE' THEN COALESCE(NEW.email, OLD.email)
-                    WHEN TG_OP = 'DELETE' THEN OLD.email
+                    WHEN TG_OP = 'INSERT' THEN to_jsonb(NEW)->>'email'
+                    WHEN TG_OP = 'UPDATE' THEN COALESCE(to_jsonb(NEW)->>'email', to_jsonb(OLD)->>'email')
+                    WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD)->>'email'
                     ELSE 'sistema'
                 END;
-                RAISE NOTICE 'log_profile_change: Não foi possível acessar auth.users, usando email do registro: %', current_user_email;
+                RAISE NOTICE 'log_profile_change: N\xC3\xA3o foi poss\xC3\xADvel acessar auth.users, usando email do registro: %', current_user_email;
         END;
     ELSE
-        -- Se não há user_id, usar email do próprio registro
         current_user_email := CASE
-            WHEN TG_OP = 'INSERT' THEN NEW.email
-            WHEN TG_OP = 'UPDATE' THEN COALESCE(NEW.email, OLD.email)
-            WHEN TG_OP = 'DELETE' THEN OLD.email
+            WHEN TG_OP = 'INSERT' THEN to_jsonb(NEW)->>'email'
+            WHEN TG_OP = 'UPDATE' THEN COALESCE(to_jsonb(NEW)->>'email', to_jsonb(OLD)->>'email')
+            WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD)->>'email'
             ELSE 'sistema'
         END;
     END IF;
 
-    -- Fallback final se ainda não temos email
     current_user_email := COALESCE(current_user_email, 'sistema');
 
     IF TG_OP = 'INSERT' THEN
@@ -1801,66 +1797,31 @@ CREATE OR REPLACE FUNCTION "public"."update_all_rented_days"() RETURNS "jsonb"
     SET "search_path" TO 'public, auth'
     AS $$
 DECLARE
-    asset_record RECORD;
-    result_summary JSONB;
-    total_processed INTEGER := 0;
-    total_updated INTEGER := 0;
-    total_errors INTEGER := 0;
-    individual_result JSONB;
-    all_results JSONB[] := ARRAY[]::JSONB[];
+    asset_record record;
+    total_processed integer := 0;
+    total_updated integer := 0;
+    total_errors integer := 0;
+    result jsonb;
 BEGIN
-    -- Processar todos os ativos não deletados
-    FOR asset_record IN
-        SELECT uuid, rented_days
-        FROM assets 
-        WHERE deleted_at IS NULL
-        ORDER BY uuid
-    LOOP
-        -- Processar cada ativo individualmente
-        SELECT update_asset_rented_days(asset_record.uuid) INTO individual_result;
-        
-        -- Contar resultados
+    FOR asset_record IN (SELECT uuid FROM public.assets WHERE deleted_at IS NULL) LOOP
+        result := public.update_asset_rented_days(asset_record.uuid);
         total_processed := total_processed + 1;
-        
-        IF individual_result->>'success' = 'true' THEN
-            IF (individual_result->>'updated')::boolean THEN
+        IF result->>'success' = 'true' THEN
+            IF (result->>'updated')::boolean THEN
                 total_updated := total_updated + 1;
             END IF;
         ELSE
             total_errors := total_errors + 1;
-            -- Adicionar erros ao array de resultados
-            all_results := all_results || individual_result;
-        END IF;
-        
-        -- Log de progresso a cada 10 ativos processados
-        IF total_processed % 10 = 0 THEN
-            RAISE NOTICE 'Processed % assets, % updated, % errors', total_processed, total_updated, total_errors;
         END IF;
     END LOOP;
 
-    -- Compilar resultado final
-    result_summary := jsonb_build_object(
+    RETURN jsonb_build_object(
         'success', true,
         'total_processed', total_processed,
         'total_updated', total_updated,
         'total_errors', total_errors,
-        'execution_timestamp', NOW(),
-        'errors', all_results
+        'execution_timestamp', NOW()
     );
-
-    RAISE NOTICE 'Completed batch update: % processed, % updated, % errors', total_processed, total_updated, total_errors;
-    
-    RETURN result_summary;
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', SQLERRM,
-            'sqlstate', SQLSTATE,
-            'total_processed', total_processed,
-            'execution_timestamp', NOW()
-        );
 END;
 $$;
 
@@ -1873,21 +1834,12 @@ CREATE OR REPLACE FUNCTION "public"."update_asset_rented_days"("asset_uuid" "tex
     SET "search_path" TO 'public, auth'
     AS $$
 DECLARE
-    current_rented_days INTEGER := 0;
-    calculated_days INTEGER := 0;
-    new_total_days INTEGER := 0;
-    association_record RECORD;
-    merged_periods DATE[][] := ARRAY[]::DATE[][];
-    period_start DATE;
-    period_end DATE;
-    total_calculated_days INTEGER := 0;
-    i INTEGER;
-    j INTEGER;
-    temp_start DATE;
-    temp_end DATE;
+    current_rented_days integer := 0;
+    calculated_days integer := 0;
+    new_total_days integer := 0;
 BEGIN
-    -- Verificar se o ativo existe
-    IF NOT EXISTS (SELECT 1 FROM assets WHERE uuid = asset_uuid AND deleted_at IS NULL) THEN
+    -- verificar se o ativo existe
+    IF NOT EXISTS (SELECT 1 FROM public.assets WHERE uuid = asset_uuid AND deleted_at IS NULL) THEN
         RETURN jsonb_build_object(
             'success', false,
             'error', 'Asset not found',
@@ -1895,108 +1847,40 @@ BEGIN
         );
     END IF;
 
-    -- Buscar valor atual de rented_days (valor histórico)
-    SELECT rented_days INTO current_rented_days 
-    FROM assets 
+    -- valor historico
+    SELECT COALESCE(rented_days,0) INTO current_rented_days
+    FROM public.assets
     WHERE uuid = asset_uuid;
-    
-    -- Se rented_days for NULL, considerar como 0
-    current_rented_days := COALESCE(current_rented_days, 0);
 
-    -- Buscar todas as associações finalizadas (com exit_date) do ativo
-    -- Criar array de períodos [start_date, end_date]
-    FOR association_record IN
-        SELECT entry_date, exit_date
-        FROM asset_client_assoc
-        WHERE asset_id = asset_uuid 
+    -- dias calculados a partir das associacoes finalizadas
+    SELECT COUNT(DISTINCT d)::integer INTO calculated_days
+    FROM (
+        SELECT generate_series(entry_date, exit_date, INTERVAL '1 day')::date AS d
+        FROM public.asset_client_assoc
+        WHERE asset_id = asset_uuid
           AND exit_date IS NOT NULL
-          AND deleted_at IS NULL
           AND entry_date IS NOT NULL
           AND exit_date >= entry_date
-        ORDER BY entry_date
-    LOOP
-        merged_periods := merged_periods || ARRAY[ARRAY[association_record.entry_date, association_record.exit_date]];
-    END LOOP;
+          AND deleted_at IS NULL
+    ) sub;
 
-    -- Se não há associações finalizadas, manter valor atual
-    IF array_length(merged_periods, 1) IS NULL THEN
-        RETURN jsonb_build_object(
-            'success', true,
-            'asset_id', asset_uuid,
-            'historical_days', current_rented_days,
-            'calculated_days', 0,
-            'total_days', current_rented_days,
-            'periods_processed', 0,
-            'message', 'No finished associations found - keeping historical value'
-        );
-    END IF;
+    new_total_days := current_rented_days + calculated_days;
 
-    -- Algoritmo de merge de intervalos para evitar sobreposição
-    -- Ordenar períodos por data de início (já ordenado na query)
-    -- Mesclar períodos sobrepostos
-    i := 1;
-    WHILE i <= array_length(merged_periods, 1) LOOP
-        period_start := merged_periods[i][1];
-        period_end := merged_periods[i][2];
-        
-        -- Verificar sobreposição com próximos períodos
-        j := i + 1;
-        WHILE j <= array_length(merged_periods, 1) LOOP
-            temp_start := merged_periods[j][1];
-            temp_end := merged_periods[j][2];
-            
-            -- Se há sobreposição ou períodos adjacentes
-            IF temp_start <= period_end + INTERVAL '1 day' THEN
-                -- Mesclar períodos
-                period_end := GREATEST(period_end, temp_end);
-                -- Remover período mesclado
-                merged_periods := merged_periods[1:j-1] || merged_periods[j+1:array_length(merged_periods,1)];
-            ELSE
-                j := j + 1;
-            END IF;
-        END LOOP;
-        
-        -- Calcular dias do período mesclado
-        total_calculated_days := total_calculated_days + (period_end - period_start + 1);
-        
-        i := i + 1;
-    END LOOP;
-
-    -- Calcular novo total (histórico + calculado)
-    new_total_days := current_rented_days + total_calculated_days;
-
-    -- Atualizar apenas se o novo valor for maior ou igual ao atual
-    -- (garantir que nunca diminua)
     IF new_total_days >= current_rented_days THEN
-        UPDATE assets 
+        UPDATE public.assets
         SET rented_days = new_total_days,
             updated_at = NOW()
         WHERE uuid = asset_uuid;
-        
-        -- Log da atualização para auditoria
-        RAISE NOTICE 'Updated rented_days for asset %: % (historical) + % (calculated) = % (total)', 
-            asset_uuid, current_rented_days, total_calculated_days, new_total_days;
     END IF;
 
-    -- Retornar resultado detalhado
     RETURN jsonb_build_object(
         'success', true,
         'asset_id', asset_uuid,
         'historical_days', current_rented_days,
-        'calculated_days', total_calculated_days,
+        'calculated_days', calculated_days,
         'total_days', new_total_days,
-        'periods_processed', array_length(merged_periods, 1),
         'updated', new_total_days >= current_rented_days
     );
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', SQLERRM,
-            'asset_id', asset_uuid,
-            'sqlstate', SQLSTATE
-        );
 END;
 $$;
 
@@ -3773,6 +3657,10 @@ CREATE POLICY "Enable read access for all users" ON "public"."plans" FOR SELECT 
 
 
 CREATE POLICY "Enable read your data access for all users" ON "public"."profiles" FOR SELECT USING ("public"."is_user_self"("id"));
+
+
+
+CREATE POLICY "Enable update for users based on email" ON "public"."profiles" USING (((( SELECT "auth"."jwt"() AS "jwt") ->> 'email'::"text") = "email")) WITH CHECK (((( SELECT "auth"."jwt"() AS "jwt") ->> 'email'::"text") = "email"));
 
 
 
