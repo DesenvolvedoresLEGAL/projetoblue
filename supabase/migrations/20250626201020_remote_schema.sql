@@ -26,7 +26,7 @@ CREATE TYPE "public"."asset_status_enum" AS ENUM (
 ALTER TYPE "public"."asset_status_enum" OWNER TO "postgres";
 CREATE TYPE "public"."asset_type_enum" AS ENUM (
     'chip',
-    'roteador'
+    'equipment'
 );
 ALTER TYPE "public"."asset_type_enum" OWNER TO "postgres";
 CREATE TYPE "public"."association_type_enum" AS ENUM (

@@ -19,7 +19,7 @@ export function DashboardKpis() {
   
   const availableRouters = assets.filter((a: Asset) =>
     a.solution_id !== SOLUTION_IDS.CHIP &&
-    a.type === 'ROTEADOR' &&
+    a.type === 'EQUIPMENT' &&
     isSameStatus(a.status, 'DISPONÍVEL')
   ).length;
   

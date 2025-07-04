@@ -46,7 +46,7 @@ const AssetDetailsDialog = ({ asset, isOpen, onClose }: AssetDetailsDialogProps)
             ) : (
               <>
                 <Router className="mr-2 h-6 w-6" />
-                Roteador - ID: {(asset as EquipamentAsset).uniqueId}
+                EQUIPMENTT - ID: {(asset as EquipamentAsset).uniqueId}
               </>
             )}
           </DialogTitle>

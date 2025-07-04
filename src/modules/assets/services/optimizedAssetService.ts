@@ -94,7 +94,7 @@ export const optimizedAssetService = {
         query = query.eq('solution_id', solutionId);
       } else if (filterType === 'CHIP') {
         query = query.eq('solution_id', 11);
-      } else if (filterType === 'ROTEADOR') {
+      } else if (filterType === 'EQUIPMENT') {
         query = query.neq('solution_id', 11);
       }
     }

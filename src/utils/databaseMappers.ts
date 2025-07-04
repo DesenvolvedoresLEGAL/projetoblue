@@ -60,7 +60,7 @@ export const mapSolutionToSolutionType = (solution?: string, solutionId?: number
 
 // Map database solution to AssetType based on solution_id
 export const mapSolutionIdToAssetType = (solutionId: number): AssetType => {
-  return solutionId === 11 ? 'CHIP' : 'ROTEADOR';
+  return solutionId === 11 ? 'CHIP' : 'EQUIPMENTTTTTTT';
 };
 
 // Map database asset record to frontend Asset type
@@ -71,7 +71,7 @@ export const mapDatabaseAssetToFrontend = (dbAsset: DatabaseAsset): Asset => {
   const solutionName = dbAsset?.asset_solutions?.solution || dbAsset?.solucao?.solution;
   
   const isChip = dbAsset.solution_id === SOLUTION_IDS.CHIP;
-  const type: AssetType = isChip ? 'CHIP' : 'ROTEADOR';
+  const type: AssetType = isChip ? 'CHIP' : 'EQUIPMENTTT';
   const status = mapStatusIdToAssetStatus(dbAsset.status_id, statusName);
   const solucao = mapSolutionToSolutionType(solutionName, dbAsset.solution_id);
   

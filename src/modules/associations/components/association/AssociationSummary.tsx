@@ -34,7 +34,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
     return asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
   };
 
-  const equipmentCount = assets.filter(asset => asset.type === 'ROTEADOR').length;
+  const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   return (

@@ -73,7 +73,7 @@ ALTER TYPE "public"."asset_status_enum" OWNER TO "postgres";
 
 CREATE TYPE "public"."asset_type_enum" AS ENUM (
     'chip',
-    'roteador'
+    'equipment'
 );
 
 
