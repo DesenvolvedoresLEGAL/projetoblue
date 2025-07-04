@@ -202,7 +202,16 @@ export const AssetAssociation: React.FC = () => {
         <CardContent>
           {currentStep === 'client' && <ClientSelectionStep />}
           {currentStep === 'assets' && <AssetSelectionStep />}
-          {currentStep === 'summary' && <AssociationSummary />}
+          {currentStep === 'summary' && selectedClient && generalConfig && (
+            <AssociationSummary
+              client={selectedClient}
+              assets={selectedAssets}
+              generalConfig={generalConfig}
+              onComplete={handleSubmit}
+              onBack={handleBack}
+              isLoading={isSubmitting}
+            />
+          )}
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
