@@ -133,66 +133,54 @@ export const useCreateAssociation = () => {
       const rentedDays = Number(data.generalConfig?.rentedDays) || 0;
       if (import.meta.env.DEV) console.log('[useCreateAssociation] RentedDays normalizado:', rentedDays);
 
-      // Preparar dados para o RPC
-      const rpcData = {
-        p_client_id: data.clientId,
-        p_association_id: data.associationTypeId,
-        p_entry_date: formattedStartDate,
-        p_asset_ids: data.selectedAssets.map(asset => asset.id),
-        p_exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
-        p_notes: data.generalConfig?.notes || null,
-        p_ssid: data.generalConfig?.ssid || null,
-        p_pass: data.generalConfig?.password || null,
-        p_gb: data.generalConfig?.dataLimit || null
-      };
+      // Preparar dados para inserção direta
+      const insertPayload = data.selectedAssets.map(asset => ({
+        asset_id: asset.id,
+        client_id: data.clientId,
+        association_id: data.associationTypeId,
+        entry_date: formattedStartDate,
+        exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
+        notes: data.generalConfig?.notes || null,
+        ssid: data.generalConfig?.ssid || null,
+        pass: data.generalConfig?.password || null,
+        gb: data.generalConfig?.dataLimit || null
+      }));
 
-      if (import.meta.env.DEV) console.log('[useCreateAssociation] Dados preparados para RPC:', rpcData);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Payload de inserção:', insertPayload);
 
       // Executar com idempotência
       return executeWithIdempotency(
         `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
         async () => {
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Chamando RPC add_assets_to_association...');
-          
-          const { data: result, error } = await supabase.rpc('add_assets_to_association', rpcData);
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo associações diretamente...');
+
+          const { data: inserted, error } = await supabase
+            .from('asset_client_assoc')
+            .insert(insertPayload)
+            .select('id');
 
           if (error) {
             if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro do Supabase:', error);
-            
-            // Melhor tratamento de erro com detalhes específicos
-            const errorMessage = error.message || 'Erro desconhecido ao criar associação';
-            const errorDetails = {
-              code: error.code || 'UNKNOWN_ERROR',
-              hint: error.hint,
-              details: error.details,
-              supabase_error: error
-            };
-
-            if (import.meta.env.DEV) console.error('[useCreateAssociation] Detalhes do erro:', errorDetails);
-            
-            throw new Error(`${errorMessage} (Código: ${errorDetails.code})`);
+            throw new Error(error.message || 'Erro desconhecido ao criar associação');
           }
 
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado bruto do RPC:', result);
+          const insertedIds = inserted ? inserted.map(rec => rec.id as number) : [];
 
-          // Processar resultado usando função helper
-          const processedResult = parseRpcResult(result);
-          
-          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado processado:', processedResult);
+          const result: CreateAssociationResult = {
+            success: true,
+            message: 'Associação criada com sucesso',
+            details: {
+              inserted_count: insertedIds.length,
+              failed_count: 0,
+              total_processed: insertPayload.length,
+              inserted_ids: insertedIds,
+              failed_assets: []
+            }
+          };
 
-          // Verificar se houve sucesso
-          if (!processedResult.success) {
-            const errorMsg = processedResult.message || 'Erro ao criar associação';
-            
-            if (import.meta.env.DEV) console.error('[useCreateAssociation] RPC indicou falha:', {
-              message: errorMsg,
-              details: processedResult.details
-            });
+          if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado da inserção:', result);
 
-            throw new Error(errorMsg);
-          }
-
-          return processedResult;
+          return result;
         }
       );
     },
