@@ -77,7 +77,7 @@ const parseRpcResult = (result: unknown): CreateAssociationResult => {
 
 export const useCreateAssociation = () => {
   const queryClient = useQueryClient();
-  const { executeWithIdempotency } = useIdempotentAssociation();
+  const { executeWithIdempotency, clearOperationCache } = useIdempotentAssociation();
 
   return useMutation({
     mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
@@ -211,8 +211,17 @@ export const useCreateAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['assets'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, variables) => {
       if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro capturado:', error);
+
+      // Limpar possível cache da operação para permitir nova tentativa
+      try {
+        const startDateKey = new Date(variables.startDate).toISOString().split('T')[0];
+        const operationKey = `create_association_${variables.clientId}_${variables.associationTypeId}_${startDateKey}`;
+        clearOperationCache(operationKey);
+      } catch (e) {
+        if (import.meta.env.DEV) console.error('[useCreateAssociation] Falha ao limpar cache da operação:', e);
+      }
 
       // Mostrar erro com detalhes técnicos quando disponível
       let errorMessage = 'Erro ao criar associação';
@@ -220,7 +229,7 @@ export const useCreateAssociation = () => {
       if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   });
