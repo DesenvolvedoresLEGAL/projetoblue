@@ -9,11 +9,6 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
     
     if (!trimmed) return 'empty';
     
-    // Detecta se é um ID numérico simples
-    if (/^\d{1,10}$/.test(trimmed)) {
-      return 'id';
-    }
-    
     // Detecta se é ICCID (padrão: 19-20 dígitos)
     if (/^\d{19,20}$/.test(trimmed)) {
       return 'iccid';
