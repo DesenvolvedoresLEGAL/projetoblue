@@ -39,40 +39,20 @@ interface CreateAssociationResult {
   };
 }
 
-// Função para validar e extrair dados do resultado JSON
-const parseRpcResult = (result: unknown): CreateAssociationResult => {
-  // Se result é null ou undefined
-  if (!result) {
-    throw new Error('Resposta vazia do servidor');
-  }
-
-  // Se result é um objeto JSON
-  if (typeof result === 'object') {
-    return {
-      success: result.success === true,
-      message: result.message || 'Operação concluída',
-      details: result.success ? {
-        inserted_count: result.inserted_count || 0,
-        failed_count: result.failed_count || 0,
-        total_processed: result.total_processed || 0,
-        inserted_ids: result.inserted_ids || [],
-        failed_assets: result.failed_assets || []
-      } : undefined
-    };
-  }
-
-  // Se result é uma string, tentar parsear como JSON
-  if (typeof result === 'string') {
-    try {
-      const parsedResult = JSON.parse(result);
-      return parseRpcResult(parsedResult);
-    } catch {
-      throw new Error('Formato de resposta inválido do servidor');
+// Função auxiliar que apenas tipa o retorno da operação de insert
+// mantendo compatibilidade com a antiga interface do RPC
+const buildInsertResult = (ids: number[], total: number): CreateAssociationResult => {
+  return {
+    success: true,
+    message: 'Associação criada com sucesso',
+    details: {
+      inserted_count: ids.length,
+      failed_count: total - ids.length,
+      total_processed: total,
+      inserted_ids: ids,
+      failed_assets: []
     }
-  }
-
-  // Fallback para outros tipos
-  throw new Error('Formato de resposta não reconhecido');
+  };
 };
 
 export const useCreateAssociation = () => {
@@ -166,17 +146,7 @@ export const useCreateAssociation = () => {
 
           const insertedIds = inserted ? inserted.map(rec => rec.id as number) : [];
 
-          const result: CreateAssociationResult = {
-            success: true,
-            message: 'Associação criada com sucesso',
-            details: {
-              inserted_count: insertedIds.length,
-              failed_count: 0,
-              total_processed: insertPayload.length,
-              inserted_ids: insertedIds,
-              failed_assets: []
-            }
-          };
+          const result = buildInsertResult(insertedIds, insertPayload.length);
 
           if (import.meta.env.DEV) console.log('[useCreateAssociation] Resultado da inserção:', result);
 
