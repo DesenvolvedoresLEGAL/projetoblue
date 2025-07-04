@@ -81,7 +81,7 @@ export const useAssetSearch = ({
       // Filtros de busca
       if (searchTerm.trim()) {
         if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro de busca por termo:', searchTerm);
-        query = query.or(`radio.ilike.%${searchTerm}%,iccid.ilike.%${searchTerm}%,line_number.like.${searchTerm}`);
+        query = query.or(`radio.ilike.%${searchTerm.toLowerCase()}%,iccid.ilike.%${searchTerm}%,line_number.eq.${safedParseInt(searchTerm)},iccid.like.%${searchTerm}%`);
       }
 
       if (selectedSolution) {
@@ -196,3 +196,13 @@ export const useAssetSearch = ({
     onFiltersUpdate
   };
 };
+function safedParseInt(searchTerm: string) {
+  const parsedSearchTerm = parseInt(searchTerm);
+  const parsedType = typeof parsedSearchTerm;
+  if (parsedType !== 'bigint') {
+    return -1;
+  } else {
+    return parsedSearchTerm;
+  }
+}
+
