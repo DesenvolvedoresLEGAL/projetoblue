@@ -1,6 +1,6 @@
-create type association_status AS enum ('ativa', 'encerrada');
+create or replace type association_status_enum AS enum ('ativa', 'encerrada');
 
-create table associations (
+create or replace table associations (
   uuid text not null default gen_random_uuid (),
   client_id text not null,
   equipment_id text null,
@@ -12,7 +12,7 @@ create table associations (
   plan_gb bigint null default '0'::bigint,
   equipment_ssid text null,
   equipment_pass text null,
-  status association_status not null default 'ativa'::association_status,
+  status association_status_enum not null default 'ativa'::association_status_enum,
   notes text null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
