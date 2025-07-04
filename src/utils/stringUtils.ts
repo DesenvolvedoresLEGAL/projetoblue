@@ -13,6 +13,16 @@ export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+export function safedParseInt(searchTerm: string) {
+  const parsedSearchTerm = parseInt(searchTerm);
+  const parsedType = typeof parsedSearchTerm;
+  if (parsedType !== 'bigint') {
+    return -1;
+  } else {
+    return parsedSearchTerm;
+  }
+}
+
 /**
  * Extends the String prototype to add a capitalize method
  * This is only for use with string literals, not for dynamically created strings or user input

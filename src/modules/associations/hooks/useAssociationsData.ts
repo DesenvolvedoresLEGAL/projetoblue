@@ -48,6 +48,8 @@ const applySupabaseSearch = (
   const sanitized = sanitizeSearchTerm(term);
   if (!sanitized) return query;
 
+  query.or(``);
+
   // Aplicar busca no backend apenas para tipos específicos que são mais eficientes
   switch (type) {
     case 'id':
