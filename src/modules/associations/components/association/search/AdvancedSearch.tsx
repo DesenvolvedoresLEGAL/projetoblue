@@ -28,7 +28,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   return (
     <div className="space-y-4">
       {/* Filtros principais */}
-      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
         {/* Filtro de tipo */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tipo</Label>
@@ -62,29 +62,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
             className="w-full"
           />
         </div>
-
-        {/* Status */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Status</Label>
-          <div className="grid grid-cols-2 gap-1">
-            <Button
-              variant={filters.status === 'available' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onFiltersUpdate({ status: 'available' })}
-              className={isMobile ? 'text-xs' : ''}
-            >
-              Disponíveis
-            </Button>
-            <Button
-              variant={filters.status === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onFiltersUpdate({ status: 'all' })}
-              className={isMobile ? 'text-xs' : ''}
-            >
-              Todos
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Estatísticas */}
@@ -100,11 +77,6 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <Badge variant="outline">
           Total: {totalCount}
         </Badge>
-        {filters.status === 'available' && (
-          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-            ✓ Apenas Disponíveis
-          </Badge>
-        )}
       </div>
     </div>
   );
