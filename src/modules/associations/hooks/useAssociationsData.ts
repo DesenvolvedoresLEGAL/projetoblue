@@ -51,7 +51,13 @@ const applySupabaseSearch = (
 
   if (type !== 'client_name') {
     query.or(
-      `id.eq.${safedParseInt(sanitized)},assets.iccid.ilike.%${sanitized}%,assets.radio.ilike.%${sanitized.toUpperCase()}%`
+      `iccid.like.%${sanitized}%,radio.like.%${sanitized.toUpperCase()}%,line_number.eq.${safedParseInt(sanitized)}`,
+      {'foreignTable': 'assets'}
+    );
+  } else {
+    query.or(
+      `nome.like.%${sanitized}%`,
+      {'foreignTable': 'clients'}
     );
   }
 
