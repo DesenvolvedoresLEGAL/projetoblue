@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@modules/associations/types';
+import { safedParseInt } from '@/utils/stringUtils';
 
 export interface AssetSearchFilters {
   searchTerm: string;
@@ -196,13 +197,4 @@ export const useAssetSearch = ({
     onFiltersUpdate
   };
 };
-function safedParseInt(searchTerm: string) {
-  const parsedSearchTerm = parseInt(searchTerm);
-  const parsedType = typeof parsedSearchTerm;
-  if (parsedType !== 'bigint') {
-    return -1;
-  } else {
-    return parsedSearchTerm;
-  }
-}
 

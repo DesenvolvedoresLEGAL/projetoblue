@@ -27,7 +27,7 @@ export const assetService = {
         available: Math.floor(stats.chips * (stats.available / stats.total)),
         rented: Math.floor(stats.chips * (stats.rented / stats.total))
       },
-      ROTEADOR: {
+      EQUIPMENT: {
         available: Math.floor(stats.routers * (stats.available / stats.total)),
         rented: Math.floor(stats.routers * (stats.rented / stats.total))
       }

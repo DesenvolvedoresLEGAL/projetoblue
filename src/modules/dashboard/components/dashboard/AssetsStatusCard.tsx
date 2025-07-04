@@ -68,7 +68,7 @@ interface AssetTypeConfig {
 
 const TYPES: AssetTypeConfig[] = [
   { key: "CHIP", label: "Status – Chips" },
-  { key: "ROTEADOR", label: "Status – Speedy 5G" },
+  { key: "EQUIPMENT", label: "Status – Speedy 5G" },
 ];
 
 const AssetsStatusCard: React.FC = () => {

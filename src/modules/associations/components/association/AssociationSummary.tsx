@@ -9,6 +9,7 @@ import { SelectedAsset } from '@modules/associations/types';
 
 import type { Client } from '@/types/client';
 import type { AssociationGeneralConfig } from './AssociationGeneralConfig';
+import { formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -34,7 +35,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
     return asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
   };
 
-  const equipmentCount = assets.filter(asset => asset.type === 'ROTEADOR').length;
+  const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   return (
@@ -77,23 +78,13 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Phone className="h-4 w-4" />
-                    <span className="text-sm font-medium">Telefone:</span>
+                    <span className="text-sm font-medium">Telefone(s):</span>
                   </div>
-                  <div className="font-medium text-gray-900 ml-6">
-                    {client.telefones[0]}
-                  </div>
-                </div>
-              )}
-              
-              {client?.contato && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm font-medium">Contato:</span>
-                  </div>
-                  <div className="font-medium text-gray-900 ml-6">
-                    {client.contato}
-                  </div>
+                  {client.telefones.map((t, idx) => (
+                    <div key={idx} className="font-medium text-gray-900 ml-6">
+                      {formatPhoneForDisplay(t)}
+                    </div>
+                  ))}
                 </div>
               )}
               

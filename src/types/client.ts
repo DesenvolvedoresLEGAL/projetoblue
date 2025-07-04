@@ -1,4 +1,3 @@
-
 export interface Client {
   uuid: string;
   nome: string;

@@ -38,17 +38,8 @@ export const useIdempotentAssociation = () => {
       return result;
     } catch (error) {
       if (import.meta.env.DEV) console.error('[useIdempotentAssociation] Erro na operação:', error);
-      
-      // Para alguns tipos de erro, também cachear para evitar retry imediato
-      if (error instanceof Error && (
-        error.message.includes('ASSET_ALREADY_ASSOCIATED') ||
-        error.message.includes('ASSET_NOT_FOUND') ||
-        error.message.includes('CLIENT_NOT_FOUND')
-      )) {
-        if (import.meta.env.DEV) console.log('[useIdempotentAssociation] Cacheando erro para evitar retry:', error.message);
-        idempotencyService.cacheResult(operationKey, { error: error.message });
-      }
-      
+
+      // Não cachear erros para permitir nova tentativa em seguida
       throw error;
     } finally {
       // Remover operação da lista de execução

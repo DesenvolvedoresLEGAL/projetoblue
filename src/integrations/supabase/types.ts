@@ -1387,7 +1387,7 @@ export type Database = {
         | "Sem Dados"
         | "Bloqueado"
         | "Manutenção"
-      asset_type_enum: "chip" | "roteador"
+      asset_type_enum: "chip" | "equipment"
       association_type_enum: "aluguel" | "assinatura"
       bits_mission_status_enum: "in_progress" | "completed" | "expired"
       bits_referral_status_enum:
@@ -1531,7 +1531,7 @@ export const Constants = {
         "Bloqueado",
         "Manutenção",
       ],
-      asset_type_enum: ["chip", "roteador"],
+      asset_type_enum: ["chip", "equipment"],
       association_type_enum: ["aluguel", "assinatura"],
       bits_mission_status_enum: ["in_progress", "completed", "expired"],
       bits_referral_status_enum: [

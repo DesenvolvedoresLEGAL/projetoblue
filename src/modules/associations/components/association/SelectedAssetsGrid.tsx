@@ -17,7 +17,7 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
   onRemoveAsset,
   onEditAsset
 }) => {
-  const equipmentCount = assets.filter(asset => asset.type === 'ROTEADOR').length;
+  const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   return (

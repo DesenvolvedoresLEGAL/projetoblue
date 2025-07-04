@@ -9,13 +9,8 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
     
     if (!trimmed) return 'empty';
     
-    // Detecta se é um ID numérico simples
-    if (/^\d{1,10}$/.test(trimmed)) {
-      return 'id';
-    }
-    
     // Detecta se é ICCID (padrão: 19-20 dígitos)
-    if (/^\d{19,20}$/.test(trimmed)) {
+    if (/^\d{19,20}$/.test(trimmed) || /^\d{5}$/.test(trimmed)) {
       return 'iccid';
     }
     
@@ -24,7 +19,7 @@ export const useSearchTypeDetection = (searchTerm: string): SearchType => {
       return 'client_name';
     }
     
-    if (/^[A-Za-z0-9\-_]+$/.test(trimmed) && trimmed.length <= 20) {
+    if (/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/.test(trimmed) && trimmed.length <= 20) {
       // Detecta se é rádio (padrão comum: letras + números)
       return 'radio';
     }

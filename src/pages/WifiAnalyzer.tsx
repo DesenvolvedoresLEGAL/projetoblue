@@ -38,7 +38,7 @@ const WifiAnalyzer = () => {
   
   // Get all router assets
   const routerAssets = assets.filter((asset): asset is EquipamentAsset => 
-    asset.type === "ROTEADOR"
+    asset.type === "EQUIPMENT"
   );
   
   // Get routers with weak passwords

@@ -8,7 +8,7 @@ export function mapSolutionToType(solutionId: number, solutionName?: string): So
   if (solutionId === 11 || solutionName === 'CHIP') {
     return 'CHIP';
   }
-  return 'ROTEADOR';
+  return 'EQUIPMENT';
 }
 
 /**

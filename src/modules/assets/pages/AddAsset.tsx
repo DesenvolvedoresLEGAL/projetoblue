@@ -117,7 +117,7 @@ const AddAsset = () => {
                   </div>
                   <CardTitle className="text-[#020CBC] font-neue-haas text-lg">EQUIPAMENTO</CardTitle>
                   <CardDescription className="font-neue-haas">
-                    Cadastrar roteador, modem ou equipamento de rede
+                    Cadastrar EQUIPMENT, modem ou equipamento de rede
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">

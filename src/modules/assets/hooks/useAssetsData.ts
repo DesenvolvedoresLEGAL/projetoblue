@@ -70,7 +70,7 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
     const equipmentAsset: EquipamentAsset = {
       id: dbAsset.uuid,
       uuid: dbAsset.uuid,
-      type: 'ROTEADOR' as const,  
+      type: 'EQUIPMENT' as const,  
       registrationDate: dbAsset.created_at,
       status,
       statusId: dbAsset.status_id,
@@ -195,7 +195,7 @@ export const useAssetsData = (options?: {
           query = query.eq('solution_id', solutionId);
         } else if (options.filterType === 'CHIP') {
           query = query.eq('solution_id', 11);
-        } else if (options.filterType === 'ROTEADOR') {
+        } else if (options.filterType === 'EQUIPMENTT') {
           query = query.neq('solution_id', 11);
         }
       }

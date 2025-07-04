@@ -94,7 +94,7 @@ export function useFormHandlers(
     }
 
     const createData = {
-      type: "ROTEADOR" as const,
+      type: "EQUIPMENT" as const,
       solution_id: formData.solution_id,
       serial_number: formData.serial_number,
       model: formData.model,

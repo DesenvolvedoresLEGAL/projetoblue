@@ -15,7 +15,7 @@ interface AssetRegistrationState {
   isInitialized: boolean;
 
   // Asset type (for compatibility)
-  assetType: 'CHIP' | 'ROTEADOR';
+  assetType: 'CHIP' | 'EQUIPMENT';
 
   // Password strength management
   passwordStrength: 'weak' | 'medium' | 'strong';
@@ -34,7 +34,7 @@ interface AssetRegistrationState {
   // Actions
   setCurrentFormType: (formType: 'chip' | 'equipment') => void;
   setIsInitialized: (initialized: boolean) => void;
-  setAssetType: (type: 'CHIP' | 'ROTEADOR') => void;
+  setAssetType: (type: 'CHIP' | 'EQUIPMENT') => void;
   setPasswordStrength: (strength: 'weak' | 'medium' | 'strong') => void;
   setAllowWeakPassword: (allow: boolean) => void;
   setBasicInfoOpen: (open: boolean) => void;
@@ -78,7 +78,7 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
         setCurrentFormType: (formType) => {
           set({
             currentFormType: formType,
-            assetType: formType === 'chip' ? 'CHIP' : 'ROTEADOR',
+            assetType: formType === 'chip' ? 'CHIP' : 'EQUIPMENT',
           });
         },
 
