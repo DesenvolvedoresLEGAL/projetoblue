@@ -46,8 +46,8 @@ export const updateAssetInList = (assets: Asset[], id: string, assetData: Partia
           return asset; // Prevent changing the asset type
         }
         return { ...asset, ...assetData } as ChipAsset;
-      } else if (asset.type === "ROTEADOR") {
-        if (assetData.type && assetData.type !== "ROTEADOR") {
+      } else if (asset.type === "EQUIPMENT") {
+        if (assetData.type && assetData.type !== "EQUIPMENT") {
           return asset; // Prevent changing the asset type
         }
         return { ...asset, ...assetData } as EquipamentAsset;

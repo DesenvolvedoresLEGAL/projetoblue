@@ -184,7 +184,7 @@ export default function ClientDetailsDialog({
                                 <Wifi className="h-4 w-4 text-gray-500" />
                               )}
                               <span className="font-medium">
-                                {isChip ? "Chip" : "Roteador"}
+                                {isChip ? "Chip" : "Equipment"}
                               </span>
                             </div>
                             <Badge className={getAssetStatusBadgeStyle(asset.status)}>

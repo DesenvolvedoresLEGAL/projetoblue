@@ -56,7 +56,7 @@ export default function Monitoring() {
   
   // Get routers that need SSID/password update
   const routersNeedingUpdate = getRoutersNeedingUpdate(
-    assets.filter(asset => asset.type === "ROTEADOR") as EquipamentAsset[]
+    assets.filter(asset => asset.type === "EQUIPMENT") as EquipamentAsset[]
   );
   
   return (

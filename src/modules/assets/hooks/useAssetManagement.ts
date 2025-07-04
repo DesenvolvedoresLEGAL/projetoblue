@@ -391,7 +391,7 @@ export function useAssetManagement() {
       // ROUTER asset
       return {
         ...baseAsset,
-        type: "ROTEADOR" as const,
+        type: "EQUIPMENT" as const,
         uniqueId: String(dbAsset.uuid || ''),
         brand: String(dbAsset.manufacturers?.name || ''),
         model: String(dbAsset.model || ''),
