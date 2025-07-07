@@ -1,16 +1,16 @@
-create or replace table associations (
+CREATE TABLE IF NOT EXISTS associations (
   uuid text not null default gen_random_uuid (),
   client_id text not null,
   equipment_id text null,
   chip_id text null,
   entry_date date not null,
   exit_date date null,
-  association_id bigint not null,
+  association_type_id bigint not null,
   plan_id bigint null,
   plan_gb bigint null default '0'::bigint,
   equipment_ssid text null,
   equipment_pass text null,
-  status boolean not null default 1, -- status como um booleano sendo 0 - encerrado - e 1 - ativo.
+  status boolean not null default TRUE, -- status como um booleano sendo false - encerrado - e true - ativo.
   notes text null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
@@ -19,6 +19,7 @@ create or replace table associations (
   constraint client_id_fkey foreign key (client_id) references clients(uuid),
   constraint equipment_id_fkey foreign key (equipment_id) references assets(uuid),
   constraint chip_id_fkey foreign key (chip_id) references assets(uuid),
+  constraint association_type_id_fkey foreign key (association_type_id) references association_types(id),
   constraint plan_id_fkey foreign key (plan_id) references plans(id)
 );
 
