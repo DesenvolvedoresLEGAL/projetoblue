@@ -1,5 +1,3 @@
-create or replace type association_status_enum AS enum ('ativa', 'encerrada');
-
 create or replace table associations (
   uuid text not null default gen_random_uuid (),
   client_id text not null,
@@ -12,16 +10,25 @@ create or replace table associations (
   plan_gb bigint null default '0'::bigint,
   equipment_ssid text null,
   equipment_pass text null,
-  status association_status_enum not null default 'ativa'::association_status_enum,
+  status boolean not null default 1, -- status como um booleano sendo 0 - encerrado - e 1 - ativo.
   notes text null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   deleted_at timestamp with time zone null,
+  constraint associations_pkey primary key (uuid),
+  constraint client_id_fkey foreign key (client_id) references clients(uuid),
   constraint equipment_id_fkey foreign key (equipment_id) references assets(uuid),
   constraint chip_id_fkey foreign key (chip_id) references assets(uuid),
-  constraint client_id_fkey foreign key (client_id) references clients(uuid),
-  constraint associations_pkey primary key (uuid)  
+  constraint plan_id_fkey foreign key (plan_id) references plans(id)
 );
+
+CREATE INDEX idx_associations_status_active ON associations (status) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_client_id ON associations (client_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_equipment_id ON associations (equipment_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_chip_id ON associations (chip_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_entry_date ON associations (entry_date) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_exit_date ON associations (exit_date) WHERE deleted_at IS NULL;
+CREATE INDEX idx_associations_plan_id ON associations (plan_id) WHERE deleted_at IS NULL;
 
 CREATE OR REPLACE FUNCTION check_association_assets()
 RETURNS TRIGGER AS $$
