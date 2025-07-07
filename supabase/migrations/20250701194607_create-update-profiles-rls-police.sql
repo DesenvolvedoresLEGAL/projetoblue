@@ -1,7 +1,7 @@
-DROP POLICY IF EXISTS "Enable update for users based on email" ON public.profiles;
+DROP POLICY "Enable update for users based on email" ON profiles;
 
 create policy "Enable update for users based on email"
-on public.profiles
+on profiles
 to public
 using (
   ((( SELECT auth.jwt() AS jwt) ->> 'email'::text) = email)
