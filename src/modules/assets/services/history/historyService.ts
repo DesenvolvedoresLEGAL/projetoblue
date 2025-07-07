@@ -18,7 +18,15 @@ export interface AssetLogWithRelations {
   status_before?: { status: string };
   status_after?: { status: string };
   association?: {
-    asset?: {
+    equipment?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    chip?: {
       uuid: string;
       serial_number?: string;
       model?: string;
@@ -48,7 +56,15 @@ interface AssetLogWithRelationsRaw {
   fk_asset_logs_status_before?: { status: string } | null;
   fk_asset_logs_status_after?: { status: string } | null;
   fk_asset_logs_assoc_id?: {
-    asset?: {
+    equipment?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    chip?: {
       uuid: string;
       serial_number?: string;
       model?: string;
@@ -80,8 +96,16 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         assoc_id,
         fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
         fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
-        fk_asset_logs_assoc_id:asset_client_assoc!left(
-          asset:assets!asset_id(
+        fk_asset_logs_assoc_id:associations!left(
+          equipment:assets!equipment_id(
+            uuid,
+            serial_number,
+            model,
+            iccid,
+            radio,
+            line_number
+          ),
+          chip:assets!chip_id(
             uuid,
             serial_number,
             model,
