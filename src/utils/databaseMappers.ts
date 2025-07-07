@@ -1,5 +1,6 @@
 
-import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, AssetClientAssociation, DatabaseAsset } from "@/types/asset";
+import { Asset, AssetStatus, AssetType, ChipAsset, EquipamentAsset, SolutionType, Client, DatabaseAsset } from "@/types/asset";
+import { AssociationRecord } from "@/types/associations";
 import { SOLUTION_IDS, getValidAssetStatus } from "./assetUtils";
 
 // Map database status ID to frontend AssetStatus
@@ -149,22 +150,24 @@ export const mapDatabaseClientToFrontend = (dbClient: unknown): Client => {
   };
 };
 
-// Map database asset_client_assoc to frontend type - corrigido conforme banco
-export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssetClientAssociation => {
+// Map database associations record to frontend type
+export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssociationRecord => {
   if (!dbAssoc) return null;
-  
+
   return {
-    id: dbAssoc.id, // bigint sequence
-    asset_id: dbAssoc.asset_id, // text NOT NULL
-    client_id: dbAssoc.client_id, // text NOT NULL
-    entry_date: dbAssoc.entry_date, // date NOT NULL
-    exit_date: dbAssoc.exit_date, // date nullable
-    association_id: dbAssoc.association_id, // bigint NOT NULL
-    plan_id: dbAssoc.plan_id, // bigint nullable
+    uuid: dbAssoc.uuid,
+    client_id: dbAssoc.client_id,
+    equipment_id: dbAssoc.equipment_id,
+    chip_id: dbAssoc.chip_id,
+    entry_date: dbAssoc.entry_date,
+    exit_date: dbAssoc.exit_date,
+    association_type_id: dbAssoc.association_type_id,
+    plan_id: dbAssoc.plan_id,
+    plan_gb: dbAssoc.plan_gb,
+    equipment_ssid: dbAssoc.equipment_ssid,
+    equipment_pass: dbAssoc.equipment_pass,
+    status: dbAssoc.status,
     notes: dbAssoc.notes,
-    pass: dbAssoc.pass,
-    gb: dbAssoc.gb, // bigint com default 0
-    ssid: dbAssoc.ssid,
     created_at: dbAssoc.created_at,
     updated_at: dbAssoc.updated_at,
     deleted_at: dbAssoc.deleted_at

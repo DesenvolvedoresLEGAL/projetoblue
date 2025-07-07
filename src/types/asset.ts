@@ -178,23 +178,6 @@ export interface AssetLog {
   created_at: string; // timestamp NOT NULL
 }
 
-// Interface corrigida para alinhar com tabela 'asset_client_assoc' do banco
-export interface AssetClientAssociation {
-  id: number; // bigint NOT NULL (sequence)
-  asset_id: string; // text NOT NULL
-  client_id: string; // text NOT NULL
-  entry_date: string; // date NOT NULL
-  exit_date?: string; // date nullable
-  association_id: number; // bigint NOT NULL
-  plan_id?: number; // bigint nullable
-  notes?: string; // text nullable
-  pass?: string; // text nullable
-  gb?: number; // bigint nullable com default 0
-  ssid?: string; // text nullable
-  created_at: string; // timestamp NOT NULL
-  updated_at: string; // timestamp NOT NULL
-  deleted_at?: string; // timestamp nullable
-}
 
 // Interface corrigida para alinhar com tabela 'plans' do banco
 export interface Plan {
