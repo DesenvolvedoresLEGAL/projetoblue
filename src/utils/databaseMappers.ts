@@ -149,7 +149,9 @@ export const mapDatabaseClientToFrontend = (dbClient: unknown): Client => {
   };
 };
 
-// Map database asset_client_assoc to frontend type - corrigido conforme banco
+// Map database "associations" table to the frontend type.
+// This table links either an equipment (equipment_id) or a
+// chip (chip_id) to a client.
 export const mapDatabaseAssocToFrontend = (dbAssoc: unknown): AssetClientAssociation => {
   if (!dbAssoc) return null;
   

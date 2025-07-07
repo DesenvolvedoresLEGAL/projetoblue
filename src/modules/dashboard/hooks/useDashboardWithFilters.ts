@@ -73,7 +73,8 @@ export function useDashboardWithFilters(): UseDashboardWithFiltersResult {
         }
       }
       
-      // Client filter requires a join with asset_client_assoc
+      // Client filter requires a join with the "associations" table
+      // to find equipment_id or chip_id linked to the client
       if (filters.client) {
         // Get asset IDs associated with the selected client
         const { data: associatedAssets } = await supabase

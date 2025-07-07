@@ -178,7 +178,9 @@ export interface AssetLog {
   created_at: string; // timestamp NOT NULL
 }
 
-// Interface corrigida para alinhar com tabela 'asset_client_assoc' do banco
+// Interface alinhada com a tabela 'associations'.
+// A associação pode referenciar um equipamento (equipment_id)
+// ou um chip (chip_id) vinculado ao cliente.
 export interface AssetClientAssociation {
   id: number; // bigint NOT NULL (sequence)
   asset_id: string; // text NOT NULL

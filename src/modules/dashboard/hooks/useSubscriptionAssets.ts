@@ -19,7 +19,8 @@ export const useSubscriptionAssets = () => {
         }
         
         // Query para buscar ativos atualmente em assinatura (association_id = 2)
-        // Usando asset_client_assoc para identificar ativos associados
+        // Usa a tabela "associations" para identificar se o equipamento
+        // (equipment_id) ou o chip (chip_id) está associado ao cliente
         const { data: subscriptionAssociations, error } = await supabase
           .from('asset_client_assoc')
           .select(`

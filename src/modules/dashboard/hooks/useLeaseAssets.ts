@@ -19,7 +19,8 @@ export const useLeaseAssets = () => {
         }
         
         // Query para buscar ativos atualmente em locação (association_id = 1)
-        // Usando asset_client_assoc para identificar ativos associados
+        // Usa a tabela "associations" para identificar o equipamento
+        // (equipment_id) ou chip (chip_id) vinculado ao cliente
         const { data: leaseAssociations, error } = await supabase
           .from('asset_client_assoc')
           .select(`
