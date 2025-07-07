@@ -12,6 +12,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
+
+
+
+
+
+
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
@@ -139,121 +146,6 @@ CREATE TYPE "public"."user_role_enum" AS ENUM (
 ALTER TYPE "public"."user_role_enum" OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb" DEFAULT NULL::"jsonb", "p_timeout_minutes" integer DEFAULT 5) RETURNS "jsonb"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
-    AS $$
-DECLARE
-    lock_id UUID;
-    existing_lock RECORD;
-    current_user_id UUID;
-BEGIN
-    -- Log dos parâmetros de entrada
-    RAISE NOTICE '[acquire_operation_lock] Tentando adquirir lock - type: %, resource: %, timeout: %min', 
-        p_operation_type, p_resource_id, p_timeout_minutes;
-
-    -- Validar parâmetros de entrada
-    IF p_operation_type IS NULL OR trim(p_operation_type) = '' THEN
-        RETURN jsonb_build_object(
-            'acquired', false,
-            'error_code', 'INVALID_PARAMETERS',
-            'message', 'operation_type é obrigatório'
-        );
-    END IF;
-
-    IF p_resource_id IS NULL OR trim(p_resource_id) = '' THEN
-        RETURN jsonb_build_object(
-            'acquired', false,
-            'error_code', 'INVALID_PARAMETERS',
-            'message', 'resource_id é obrigatório'
-        );
-    END IF;
-
-    -- Limpar locks expirados primeiro
-    PERFORM cleanup_expired_locks();
-    
-    -- Obter user_id atual
-    current_user_id := auth.uid();
-    RAISE NOTICE '[acquire_operation_lock] User ID atual: %', current_user_id;
-    
-    -- Verificar se já existe lock ativo para este recurso
-    SELECT * INTO existing_lock
-    FROM operation_locks
-    WHERE resource_id = p_resource_id 
-      AND operation_type = p_operation_type
-      AND expires_at > NOW()
-    LIMIT 1;
-    
-    IF existing_lock.id IS NOT NULL THEN
-        RAISE NOTICE '[acquire_operation_lock] Lock existente encontrado: %, owner: %', existing_lock.id, existing_lock.user_id;
-        
-        -- Se o lock é do mesmo usuário, renovar
-        IF existing_lock.user_id = current_user_id THEN
-            UPDATE operation_locks 
-            SET expires_at = NOW() + (p_timeout_minutes || ' minutes')::INTERVAL,
-                operation_data = COALESCE(p_operation_data, operation_data)
-            WHERE id = existing_lock.id;
-            
-            RAISE NOTICE '[acquire_operation_lock] Lock renovado para user %', current_user_id;
-            RETURN jsonb_build_object(
-                'acquired', true,
-                'lock_id', existing_lock.id,
-                'renewed', true,
-                'expires_at', NOW() + (p_timeout_minutes || ' minutes')::INTERVAL
-            );
-        ELSE
-            -- Lock de outro usuário ainda ativo
-            RAISE NOTICE '[acquire_operation_lock] Recurso já está bloqueado por outro usuário';
-            RETURN jsonb_build_object(
-                'acquired', false,
-                'error_code', 'RESOURCE_LOCKED',
-                'message', 'Recurso está sendo usado por outro usuário',
-                'lock_owner', existing_lock.user_id,
-                'expires_at', existing_lock.expires_at
-            );
-        END IF;
-    END IF;
-    
-    -- Criar novo lock
-    INSERT INTO operation_locks (
-        operation_type,
-        resource_id,
-        user_id,
-        expires_at,
-        operation_data
-    ) VALUES (
-        p_operation_type,
-        p_resource_id,
-        current_user_id,
-        NOW() + (p_timeout_minutes || ' minutes')::INTERVAL,
-        p_operation_data
-    ) RETURNING id INTO lock_id;
-    
-    RAISE NOTICE '[acquire_operation_lock] Novo lock criado: %', lock_id;
-    RETURN jsonb_build_object(
-        'acquired', true,
-        'lock_id', lock_id,
-        'renewed', false,
-        'expires_at', NOW() + (p_timeout_minutes || ' minutes')::INTERVAL
-    );
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE '[acquire_operation_lock] ERRO: % (SQLSTATE: %)', SQLERRM, SQLSTATE;
-        RETURN jsonb_build_object(
-            'acquired', false,
-            'error_code', 'LOCK_ERROR',
-            'message', 'Erro ao adquirir lock',
-            'error_detail', SQLERRM,
-            'sqlstate', SQLSTATE
-        );
-END;
-$$;
-
-
-ALTER FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb", "p_timeout_minutes" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."admin_delete_user"("user_id" "uuid") RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -312,178 +204,6 @@ $$;
 ALTER FUNCTION "public"."admin_delete_user"("user_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."admin_list_users"() RETURNS TABLE("id" "uuid", "email" "text", "role" "public"."user_role_enum", "is_active" boolean, "is_approved" boolean, "created_at" "text", "last_login" "text")
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  -- Check if the current user is admin
-  IF NOT (SELECT has_role('admin'::user_role_enum)) THEN
-    RAISE EXCEPTION 'Access denied: only administrators can list users';
-  END IF;
-
-  RETURN QUERY
-  SELECT 
-    p.id,
-    p.email,
-    p.role,
-    p.is_active,
-    p.is_approved,
-    p.created_at::text,
-    p.last_login::text
-  FROM profiles p
-  WHERE p.deleted_at IS NULL
-  ORDER BY p.created_at DESC;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."admin_list_users"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."admin_update_user_profile"("user_id" "uuid", "profile_updates" "jsonb") RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  old_data jsonb;
-  user_email text;
-  current_user_id uuid;
-  new_email text;
-  new_is_active boolean;
-  new_is_approved boolean;
-BEGIN
-  -- Verificar se o usuário atual é admin
-  IF NOT (SELECT has_role('admin'::user_role_enum)) THEN
-    RAISE EXCEPTION 'Acesso negado: apenas administradores podem atualizar perfis';
-  END IF;
-
-  -- Obter dados atuais do usuário
-  SELECT row_to_json(profiles.*), email 
-  INTO old_data, user_email
-  FROM profiles 
-  WHERE id = user_id AND deleted_at IS NULL;
-  
-  IF user_email IS NULL THEN
-    RAISE EXCEPTION 'Usuário não encontrado';
-  END IF;
-
-  -- Obter ID do usuário atual
-  current_user_id := auth.uid();
-
-  -- Extrair campos permitidos do JSON
-  new_email := profile_updates->>'email';
-  new_is_active := (profile_updates->>'is_active')::boolean;
-  new_is_approved := (profile_updates->>'is_approved')::boolean;
-
-  -- Atualizar apenas campos permitidos
-  UPDATE profiles 
-  SET 
-    email = COALESCE(new_email, email),
-    is_active = COALESCE(new_is_active, is_active),
-    is_approved = COALESCE(new_is_approved, is_approved),
-    updated_at = NOW()
-  WHERE id = user_id;
-
-  -- Log da ação
-  INSERT INTO profile_logs (
-    user_id, email, operation, table_name, 
-    old_data, new_data
-  ) VALUES (
-    current_user_id,
-    (SELECT email FROM profiles WHERE id = current_user_id),
-    'ADMIN_UPDATE_PROFILE',
-    'profiles',
-    jsonb_build_object(
-      'target_user_id', user_id,
-      'target_user_email', user_email,
-      'old_data', old_data
-    ),
-    jsonb_build_object(
-      'target_user_id', user_id,
-      'updates', profile_updates
-    )
-  );
-
-  RETURN TRUE;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE EXCEPTION 'Erro ao atualizar perfil: %', SQLERRM;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."admin_update_user_profile"("user_id" "uuid", "profile_updates" "jsonb") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."admin_update_user_role"("user_id" "uuid", "new_role" "public"."user_role_enum") RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  old_role user_role_enum;
-  user_email text;
-  current_user_id uuid;
-BEGIN
-  -- Verificar se o usuário atual é admin
-  IF NOT (SELECT has_role('admin'::user_role_enum)) THEN
-    RAISE EXCEPTION 'Acesso negado: apenas administradores podem alterar roles';
-  END IF;
-
-  -- Obter dados atuais do usuário
-  SELECT role, email INTO old_role, user_email 
-  FROM profiles 
-  WHERE id = user_id AND deleted_at IS NULL;
-  
-  IF user_email IS NULL THEN
-    RAISE EXCEPTION 'Usuário não encontrado';
-  END IF;
-
-  -- Verificar se há mudança real
-  IF old_role = new_role THEN
-    RETURN TRUE; -- Nada a fazer
-  END IF;
-
-  -- Obter ID do usuário atual
-  current_user_id := auth.uid();
-
-  -- Atualizar role
-  UPDATE profiles 
-  SET role = new_role, updated_at = NOW()
-  WHERE id = user_id;
-
-  -- Log da ação
-  INSERT INTO profile_logs (
-    user_id, email, operation, table_name, 
-    old_data, new_data
-  ) VALUES (
-    current_user_id,
-    (SELECT email FROM profiles WHERE id = current_user_id),
-    'ADMIN_UPDATE_ROLE',
-    'profiles',
-    jsonb_build_object(
-      'target_user_id', user_id, 
-      'target_user_email', user_email,
-      'old_role', old_role
-    ),
-    jsonb_build_object(
-      'target_user_id', user_id, 
-      'target_user_email', user_email,
-      'new_role', new_role
-    )
-  );
-
-  RETURN TRUE;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE EXCEPTION 'Erro ao atualizar role: %', SQLERRM;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."admin_update_user_role"("user_id" "uuid", "new_role" "public"."user_role_enum") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."check_asset_availability"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -510,23 +230,6 @@ END;$$;
 ALTER FUNCTION "public"."check_asset_availability"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."cleanup_expired_locks"() RETURNS integer
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-    deleted_count INTEGER;
-BEGIN
-    DELETE FROM operation_locks WHERE expires_at < NOW();
-    GET DIAGNOSTICS deleted_count = ROW_COUNT;
-    RETURN deleted_count;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."cleanup_expired_locks"() OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."detect_association_inconsistencies"() RETURNS TABLE("asset_id" "text", "current_status_id" bigint, "expected_status_id" bigint, "issue_description" "text", "corrected" boolean)
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -539,28 +242,31 @@ DECLARE
 BEGIN
   -- Buscar IDs de status
   SELECT id INTO status_disponivel_id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1;
-  SELECT id INTO status_alocado_id FROM asset_status WHERE LOWER(status) = 'alocado' LIMIT 1;
-  
+  SELECT id INTO status_alocado_id FROM asset_status WHERE id = 2 LIMIT 1;
+
   -- Verificar assets que deveriam estar disponíveis mas não estão
   FOR inconsistency_record IN
-    SELECT DISTINCT 
+    SELECT DISTINCT
       a.uuid as asset_uuid,
       a.status_id as current_status,
       status_disponivel_id as expected_status,
       'Asset should be available - no active associations' as description
     FROM assets a
-    LEFT JOIN asset_client_assoc aca ON a.uuid = aca.asset_id AND aca.exit_date IS NULL
-    WHERE aca.asset_id IS NULL 
+    LEFT JOIN associations assoc ON (a.uuid = assoc.equipment_id OR a.uuid = assoc.chip_id)
+      AND assoc.exit_date IS NULL
+      AND assoc.deleted_at IS NULL
+      AND assoc.status = TRUE
+    WHERE assoc.uuid IS NULL
       AND a.status_id != status_disponivel_id
       AND a.deleted_at IS NULL
   LOOP
     -- Corrigir o status
-    UPDATE assets 
-    SET status_id = status_disponivel_id 
+    UPDATE assets
+    SET status_id = status_disponivel_id
     WHERE uuid = inconsistency_record.asset_uuid;
-    
+
     correction_count := correction_count + 1;
-    
+
     -- Registrar a correção no log
     INSERT INTO asset_logs (
       date, event, details, status_before_id, status_after_id
@@ -576,7 +282,7 @@ BEGIN
       inconsistency_record.current_status,
       status_disponivel_id
     );
-    
+
     -- Preparar retorno
     asset_id := inconsistency_record.asset_uuid;
     current_status_id := inconsistency_record.current_status;
@@ -585,27 +291,29 @@ BEGIN
     corrected := TRUE;
     RETURN NEXT;
   END LOOP;
-  
+
   -- Verificar assets que deveriam estar alocados mas não estão
   FOR inconsistency_record IN
-    SELECT DISTINCT 
-      aca.asset_id as asset_uuid,
+    SELECT DISTINCT
+      CASE WHEN assoc.equipment_id IS NOT NULL THEN assoc.equipment_id ELSE assoc.chip_id END AS asset_uuid,
       a.status_id as current_status,
       status_alocado_id as expected_status,
       'Asset should be allocated - has active association' as description
-    FROM asset_client_assoc aca
-    JOIN assets a ON aca.asset_id = a.uuid
-    WHERE aca.exit_date IS NULL 
+    FROM associations assoc
+    JOIN assets a ON a.uuid = assoc.equipment_id OR a.uuid = assoc.chip_id
+    WHERE assoc.exit_date IS NULL
+      AND assoc.deleted_at IS NULL
+      AND assoc.status = TRUE
       AND a.status_id != status_alocado_id
       AND a.deleted_at IS NULL
   LOOP
     -- Corrigir o status
-    UPDATE assets 
-    SET status_id = status_alocado_id 
+    UPDATE assets
+    SET status_id = status_alocado_id
     WHERE uuid = inconsistency_record.asset_uuid;
-    
+
     correction_count := correction_count + 1;
-    
+
     -- Registrar a correção no log
     INSERT INTO asset_logs (
       date, event, details, status_before_id, status_after_id
@@ -621,7 +329,7 @@ BEGIN
       inconsistency_record.current_status,
       status_alocado_id
     );
-    
+
     -- Preparar retorno
     asset_id := inconsistency_record.asset_uuid;
     current_status_id := inconsistency_record.current_status;
@@ -630,7 +338,7 @@ BEGIN
     corrected := TRUE;
     RETURN NEXT;
   END LOOP;
-  
+
   RAISE NOTICE 'Inconsistency detection completed. % corrections made.', correction_count;
   RETURN;
 END;
@@ -638,30 +346,6 @@ $$;
 
 
 ALTER FUNCTION "public"."detect_association_inconsistencies"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  -- Try to insert the profile if it doesn't exist
-  INSERT INTO public.profiles (id, email, role, is_active, is_approved)
-  VALUES (user_id, user_email, user_role, true, true)
-  ON CONFLICT (id) DO UPDATE SET
-    email = EXCLUDED.email,
-    updated_at = NOW();
-  
-  RETURN TRUE;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE WARNING 'Error ensuring profile for %: %', user_email, SQLERRM;
-    RETURN FALSE;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."fix_missing_profiles"() RETURNS TABLE("user_id" "uuid", "email" "text", "fixed" boolean)
@@ -1568,21 +1252,21 @@ BEGIN
   SET LOCAL search_path TO public;
 
   -- Buscar status atual do asset
-  SELECT a.status_id, ast.status 
+  SELECT a.status_id, ast.status
   INTO current_status_id, current_status_name
   FROM assets a
   JOIN asset_status ast ON a.status_id = ast.id
   WHERE a.uuid = NEW.asset_id;
 
   -- Buscar ID do status alocado dinamicamente
-  SELECT id INTO status_alocado_id 
-  FROM asset_status 
-  WHERE LOWER(status) = 'alocado' 
+  SELECT id INTO status_alocado_id
+  FROM asset_status
+  WHERE id = 2
   LIMIT 1;
 
   -- Verificar se o asset já está alocado
   IF current_status_id = status_alocado_id THEN
-    RAISE EXCEPTION 'Não é possível associar o asset %, pois ele já está alocado (status: %).', 
+    RAISE EXCEPTION 'Não é possível associar o asset %, pois ele já está alocado (status: %).',
       NEW.asset_id, current_status_name;
   END IF;
 
@@ -1592,35 +1276,6 @@ $$;
 
 
 ALTER FUNCTION "public"."prevent_rented_association"() OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."prevent_rented_association"() IS 'Função corrigida para prevenir associações em ativos já alocados.
-- Usa consulta dinâmica de status (não strings hardcoded)
-- Versão: 1.0 - Refatoração PRD 28/05/2025';
-
-
-
-CREATE OR REPLACE FUNCTION "public"."release_operation_lock"("p_lock_id" "uuid") RETURNS boolean
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
-    AS $$
-DECLARE
-    current_user_id UUID;
-    deleted_count INTEGER;
-BEGIN
-    current_user_id := auth.uid();
-    
-    DELETE FROM operation_locks 
-    WHERE id = p_lock_id 
-      AND user_id = current_user_id;
-    
-    GET DIAGNOSTICS deleted_count = ROW_COUNT;
-    RETURN deleted_count > 0;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."release_operation_lock"("p_lock_id" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."set_updated_at"() RETURNS "trigger"
@@ -1803,31 +1458,6 @@ $$;
 
 
 ALTER FUNCTION "public"."user_has_profile"("user_id" "uuid") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."validate_active_uuid"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$DECLARE
-    asset_count INT;
-BEGIN
-    SET LOCAL search_path TO public;
-
-    -- Verificar se o asset existe
-    SELECT COUNT(*) INTO asset_count
-    FROM assets
-    WHERE uuid = NEW.asset_id;
-
-    IF asset_count = 0 THEN
-        RAISE EXCEPTION 'O asset_id % não existe na tabela assets.', NEW.asset_id
-        USING HINT = 'Certifique-se de cadastrar o asset antes de associá-lo a um cliente';
-    END IF;
-
-    RETURN NEW;
-END;$$;
-
-
-ALTER FUNCTION "public"."validate_active_uuid"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint DEFAULT NULL::bigint) RETURNS "jsonb"
@@ -2246,6 +1876,29 @@ ALTER TABLE "public"."association_types" ALTER COLUMN "id" ADD GENERATED BY DEFA
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."associations" (
+    "uuid" "text" DEFAULT "gen_random_uuid"() NOT NULL,
+    "client_id" "text" NOT NULL,
+    "equipment_id" "text",
+    "chip_id" "text",
+    "entry_date" "date" NOT NULL,
+    "exit_date" "date",
+    "association_type_id" bigint NOT NULL,
+    "plan_id" bigint,
+    "plan_gb" bigint DEFAULT '0'::bigint,
+    "equipment_ssid" "text",
+    "equipment_pass" "text",
+    "status" boolean DEFAULT true NOT NULL,
+    "notes" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."associations" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."bits_badges_catalog" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "name" "text" NOT NULL,
@@ -2600,21 +2253,6 @@ ALTER TABLE "public"."manufacturers" ALTER COLUMN "id" ADD GENERATED BY DEFAULT 
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."operation_locks" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "operation_type" "text" NOT NULL,
-    "resource_id" "text" NOT NULL,
-    "user_id" "uuid",
-    "acquired_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "expires_at" timestamp with time zone DEFAULT ("now"() + '00:05:00'::interval) NOT NULL,
-    "operation_data" "jsonb",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."operation_locks" OWNER TO "postgres";
-
-
 CREATE TABLE IF NOT EXISTS "public"."plans" (
     "id" bigint NOT NULL,
     "nome" "text" NOT NULL,
@@ -2785,6 +2423,11 @@ ALTER TABLE ONLY "public"."association_types"
 
 
 
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "associations_pkey" PRIMARY KEY ("uuid");
+
+
+
 ALTER TABLE ONLY "public"."bits_badges_catalog"
     ADD CONSTRAINT "bits_badges_catalog_pkey" PRIMARY KEY ("id");
 
@@ -2895,11 +2538,6 @@ ALTER TABLE ONLY "public"."manufacturers"
 
 
 
-ALTER TABLE ONLY "public"."operation_locks"
-    ADD CONSTRAINT "operation_locks_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."plans"
     ADD CONSTRAINT "pacotes_pkey" PRIMARY KEY ("id");
 
@@ -2975,6 +2613,34 @@ CREATE UNIQUE INDEX "idx_assets_radio_unique_not_null" ON "public"."assets" USIN
 
 
 
+CREATE INDEX "idx_associations_chip_id" ON "public"."associations" USING "btree" ("chip_id") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_client_id" ON "public"."associations" USING "btree" ("client_id") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_entry_date" ON "public"."associations" USING "btree" ("entry_date") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_equipment_id" ON "public"."associations" USING "btree" ("equipment_id") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_exit_date" ON "public"."associations" USING "btree" ("exit_date") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_plan_id" ON "public"."associations" USING "btree" ("plan_id") WHERE ("deleted_at" IS NULL);
+
+
+
+CREATE INDEX "idx_associations_status_active" ON "public"."associations" USING "btree" ("status") WHERE ("deleted_at" IS NULL);
+
+
+
 CREATE INDEX "idx_client_logs_client_id" ON "public"."client_logs" USING "btree" ("client_id");
 
 
@@ -2984,14 +2650,6 @@ CREATE INDEX "idx_client_logs_date" ON "public"."client_logs" USING "btree" ("da
 
 
 CREATE INDEX "idx_client_logs_event_type" ON "public"."client_logs" USING "btree" ("event_type");
-
-
-
-CREATE INDEX "idx_operation_locks_expires" ON "public"."operation_locks" USING "btree" ("expires_at");
-
-
-
-CREATE INDEX "idx_operation_locks_resource" ON "public"."operation_locks" USING "btree" ("resource_id", "operation_type");
 
 
 
@@ -3019,14 +2677,6 @@ CREATE INDEX "profiles_role_idx" ON "public"."profiles" USING "btree" ("role");
 
 
 
-CREATE OR REPLACE TRIGGER "asset_client_assoc_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
-
-
-
-CREATE OR REPLACE TRIGGER "asset_client_assoc_status_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."log_and_update_status"();
-
-
-
 CREATE OR REPLACE TRIGGER "asset_histories_log_trigger" AFTER INSERT OR UPDATE ON "public"."asset_logs" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
 
 
@@ -3044,10 +2694,6 @@ CREATE OR REPLACE TRIGGER "assets_after_insert" AFTER INSERT ON "public"."assets
 
 
 CREATE OR REPLACE TRIGGER "assets_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
-
-
-
-CREATE OR REPLACE TRIGGER "check_availability_before_association" BEFORE INSERT OR UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."check_asset_availability"();
 
 
 
@@ -3071,23 +2717,11 @@ CREATE OR REPLACE TRIGGER "handle_bits_rewards_catalog_updated_at" BEFORE UPDATE
 
 
 
-CREATE OR REPLACE TRIGGER "log_and_update_status_on_status_change" AFTER INSERT OR UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."log_and_update_status"();
-
-
-
 CREATE OR REPLACE TRIGGER "plans_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."plans" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
 
 
 
-CREATE OR REPLACE TRIGGER "prevent_rented_association_before" BEFORE INSERT ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_rented_association"();
-
-
-
 CREATE OR REPLACE TRIGGER "profiles_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_asset_client_assoc_updated_at" BEFORE UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
 
@@ -3199,10 +2833,6 @@ CREATE OR REPLACE TRIGGER "update_manufacturer_updated_at" BEFORE UPDATE ON "pub
 
 
 
-CREATE OR REPLACE TRIGGER "validate_active_uuid_on_change" BEFORE INSERT OR UPDATE ON "public"."asset_client_assoc" FOR EACH ROW EXECUTE FUNCTION "public"."validate_active_uuid"();
-
-
-
 ALTER TABLE ONLY "public"."asset_client_assoc"
     ADD CONSTRAINT "asset_client_assoc_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("uuid") ON UPDATE CASCADE ON DELETE CASCADE;
 
@@ -3225,6 +2855,11 @@ ALTER TABLE ONLY "public"."assets"
 
 ALTER TABLE ONLY "public"."assets"
     ADD CONSTRAINT "assets_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "association_type_id_fkey" FOREIGN KEY ("association_type_id") REFERENCES "public"."association_types"("id");
 
 
 
@@ -3293,6 +2928,21 @@ ALTER TABLE ONLY "public"."bits_user_rewards"
 
 
 
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "chip_id_fkey" FOREIGN KEY ("chip_id") REFERENCES "public"."assets"("uuid");
+
+
+
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("uuid");
+
+
+
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "equipment_id_fkey" FOREIGN KEY ("equipment_id") REFERENCES "public"."assets"("uuid");
+
+
+
 ALTER TABLE ONLY "public"."asset_logs"
     ADD CONSTRAINT "fk_asset_history_status_after" FOREIGN KEY ("status_after_id") REFERENCES "public"."asset_status"("id");
 
@@ -3343,8 +2993,8 @@ ALTER TABLE ONLY "public"."locations"
 
 
 
-ALTER TABLE ONLY "public"."operation_locks"
-    ADD CONSTRAINT "operation_locks_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id");
+ALTER TABLE ONLY "public"."associations"
+    ADD CONSTRAINT "plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id");
 
 
 
@@ -3541,27 +3191,11 @@ CREATE POLICY "Suporte can manage all referrals" ON "public"."bits_referrals" TO
 
 
 
-CREATE POLICY "Users can create locks or admins can create any" ON "public"."operation_locks" FOR INSERT TO "authenticated" WITH CHECK ((("user_id" = "auth"."uid"()) OR "public"."has_minimum_role"('admin'::"public"."user_role_enum")));
-
-
-
-CREATE POLICY "Users can delete their own locks or admins can delete any" ON "public"."operation_locks" FOR DELETE TO "authenticated" USING ((("user_id" = "auth"."uid"()) OR "public"."has_minimum_role"('admin'::"public"."user_role_enum")));
-
-
-
-CREATE POLICY "Users can update their own locks or admins can update any" ON "public"."operation_locks" FOR UPDATE TO "authenticated" USING ((("user_id" = "auth"."uid"()) OR "public"."has_minimum_role"('admin'::"public"."user_role_enum"))) WITH CHECK ((("user_id" = "auth"."uid"()) OR "public"."has_minimum_role"('admin'::"public"."user_role_enum")));
-
-
-
 CREATE POLICY "Users can update their own mission progress" ON "public"."bits_user_missions" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
 CREATE POLICY "Users can view their own earned badges" ON "public"."bits_user_badges" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can view their own locks or admins can view all" ON "public"."operation_locks" FOR SELECT TO "authenticated" USING ((("user_id" = "auth"."uid"()) OR "public"."has_minimum_role"('admin'::"public"."user_role_enum") OR ("user_id" IS NULL)));
 
 
 
@@ -3695,9 +3329,6 @@ ALTER TABLE "public"."locations" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."manufacturers" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."operation_locks" ENABLE ROW LEVEL SECURITY;
-
-
 ALTER TABLE "public"."plans" ENABLE ROW LEVEL SECURITY;
 
 
@@ -3710,6 +3341,9 @@ ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+
+
 
 
 GRANT USAGE ON SCHEMA "public" TO "postgres";
@@ -3887,9 +3521,9 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb", "p_timeout_minutes" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb", "p_timeout_minutes" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb", "p_timeout_minutes" integer) TO "service_role";
+
+
+
 
 
 
@@ -3899,45 +3533,15 @@ GRANT ALL ON FUNCTION "public"."admin_delete_user"("user_id" "uuid") TO "service
 
 
 
-GRANT ALL ON FUNCTION "public"."admin_list_users"() TO "anon";
-GRANT ALL ON FUNCTION "public"."admin_list_users"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."admin_list_users"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."admin_update_user_profile"("user_id" "uuid", "profile_updates" "jsonb") TO "anon";
-GRANT ALL ON FUNCTION "public"."admin_update_user_profile"("user_id" "uuid", "profile_updates" "jsonb") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."admin_update_user_profile"("user_id" "uuid", "profile_updates" "jsonb") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."admin_update_user_role"("user_id" "uuid", "new_role" "public"."user_role_enum") TO "anon";
-GRANT ALL ON FUNCTION "public"."admin_update_user_role"("user_id" "uuid", "new_role" "public"."user_role_enum") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."admin_update_user_role"("user_id" "uuid", "new_role" "public"."user_role_enum") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."check_asset_availability"() TO "anon";
 GRANT ALL ON FUNCTION "public"."check_asset_availability"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."check_asset_availability"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."cleanup_expired_locks"() TO "anon";
-GRANT ALL ON FUNCTION "public"."cleanup_expired_locks"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."cleanup_expired_locks"() TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "anon";
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "anon";
-GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "service_role";
 
 
 
@@ -4031,12 +3635,6 @@ GRANT ALL ON FUNCTION "public"."prevent_rented_association"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."release_operation_lock"("p_lock_id" "uuid") TO "anon";
-GRANT ALL ON FUNCTION "public"."release_operation_lock"("p_lock_id" "uuid") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."release_operation_lock"("p_lock_id" "uuid") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "service_role";
@@ -4076,12 +3674,6 @@ GRANT ALL ON FUNCTION "public"."update_profile_last_login"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."validate_active_uuid"() TO "anon";
-GRANT ALL ON FUNCTION "public"."validate_active_uuid"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."validate_active_uuid"() TO "service_role";
 
 
 
@@ -4163,6 +3755,12 @@ GRANT ALL ON TABLE "public"."association_types" TO "service_role";
 GRANT ALL ON SEQUENCE "public"."association_types_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."association_types_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."association_types_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."associations" TO "anon";
+GRANT ALL ON TABLE "public"."associations" TO "authenticated";
+GRANT ALL ON TABLE "public"."associations" TO "service_role";
 
 
 
@@ -4277,12 +3875,6 @@ GRANT ALL ON TABLE "public"."manufacturers" TO "service_role";
 GRANT ALL ON SEQUENCE "public"."manufacturers_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."manufacturers_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."manufacturers_id_seq" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."operation_locks" TO "anon";
-GRANT ALL ON TABLE "public"."operation_locks" TO "authenticated";
-GRANT ALL ON TABLE "public"."operation_locks" TO "service_role";
 
 
 
