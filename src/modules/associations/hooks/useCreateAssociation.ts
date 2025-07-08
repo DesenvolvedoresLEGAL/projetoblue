@@ -115,7 +115,8 @@ export const useCreateAssociation = () => {
 
       // Preparar dados para inserção direta
       const insertPayload = data.selectedAssets.map(asset => ({
-        asset_id: asset.id,
+        equipment_id: asset.type === 'CHIP' ? null : asset.id,
+        chip_id: asset.type === 'CHIP' ? asset.id : null,
         client_id: data.clientId,
         association_id: data.associationTypeId,
         entry_date: formattedStartDate,
@@ -135,7 +136,7 @@ export const useCreateAssociation = () => {
           if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo associações diretamente...');
 
           const { data: inserted, error } = await supabase
-            .from('asset_client_assoc')
+            .from('associations')
             .insert(insertPayload)
             .select('id');
 

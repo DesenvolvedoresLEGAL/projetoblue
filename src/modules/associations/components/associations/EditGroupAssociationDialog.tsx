@@ -92,7 +92,7 @@ export const EditGroupAssociationDialog: React.FC<EditGroupAssociationDialogProp
         }
 
         const { error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .update(updateData)
           .eq('id', association.id);
 

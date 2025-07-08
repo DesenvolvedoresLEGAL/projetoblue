@@ -22,7 +22,8 @@ interface UseAssociationsDataProps {
 
 interface AssociationQueryRow {
   id: number;
-  asset_id: string;
+  equipment_id: string | null;
+  chip_id: string | null;
   client_id: string;
   entry_date: string;
   exit_date: string | null;
@@ -97,10 +98,11 @@ export const useAssociationsData = ({
       }
 
       let query = supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .select(`
           id,
-          asset_id,
+          equipment_id,
+          chip_id,
           client_id,
           entry_date,
           exit_date,
@@ -167,7 +169,7 @@ export const useAssociationsData = ({
       // Mapear dados para o formato esperado com line_number incluído
       const mappedData: Association[] = data.map((item: AssociationQueryRow) => ({
         id: item.id,
-        asset_id: item.asset_id,
+        asset_id: item.equipment_id || item.chip_id,
         client_id: item.client_id,
         entry_date: item.entry_date,
         exit_date: item.exit_date,

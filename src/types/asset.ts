@@ -178,7 +178,7 @@ export interface AssetLog {
   created_at: string; // timestamp NOT NULL
 }
 
-// Interface corrigida para alinhar com tabela 'asset_client_assoc' do banco
+// Interface corrigida para alinhar com tabela 'associations' do banco
 export interface AssetClientAssociation {
   id: number; // bigint NOT NULL (sequence)
   asset_id: string; // text NOT NULL
