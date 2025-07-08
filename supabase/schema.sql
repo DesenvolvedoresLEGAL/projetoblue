@@ -1571,7 +1571,7 @@ ALTER SEQUENCE "public"."asset_client_assoc_id_seq" OWNED BY "public"."asset_cli
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."asset_logs" (
+CREATE TABLE IF NOT EXISTS "public"."asset_logs_legacy" (
     "id" bigint NOT NULL,
     "assoc_id" bigint,
     "date" timestamp with time zone,
@@ -1585,7 +1585,7 @@ CREATE TABLE IF NOT EXISTS "public"."asset_logs" (
 );
 
 
-ALTER TABLE "public"."asset_logs" OWNER TO "postgres";
+ALTER TABLE "public"."asset_logs_legacy" OWNER TO "postgres";
 
 
 CREATE SEQUENCE IF NOT EXISTS "public"."asset_history_id_seq"
@@ -1599,8 +1599,25 @@ CREATE SEQUENCE IF NOT EXISTS "public"."asset_history_id_seq"
 ALTER TABLE "public"."asset_history_id_seq" OWNER TO "postgres";
 
 
-ALTER SEQUENCE "public"."asset_history_id_seq" OWNED BY "public"."asset_logs"."id";
+ALTER SEQUENCE "public"."asset_history_id_seq" OWNED BY "public"."asset_logs_legacy"."id";
 
+
+
+CREATE TABLE IF NOT EXISTS "public"."asset_logs" (
+    "uuid" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "asset_id" "text" NOT NULL,
+    "event" "text" NOT NULL,
+    "details" "jsonb" NOT NULL,
+    "status_before_id" bigint,
+    "status_after_id" bigint,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."asset_logs" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."asset_solutions" (
@@ -1657,6 +1674,21 @@ CREATE TABLE IF NOT EXISTS "public"."assets" (
 
 
 ALTER TABLE "public"."assets" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."association_logs" (
+    "uuid" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "association_uuid" "text" NOT NULL,
+    "event" "text" NOT NULL,
+    "details" "jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "deleted_at" timestamp with time zone
+);
+
+
+ALTER TABLE "public"."association_logs" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."association_types" (
@@ -1959,7 +1991,7 @@ ALTER TABLE ONLY "public"."asset_client_assoc" ALTER COLUMN "id" SET DEFAULT "ne
 
 
 
-ALTER TABLE ONLY "public"."asset_logs" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."asset_history_id_seq"'::"regclass");
+ALTER TABLE ONLY "public"."asset_logs_legacy" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."asset_history_id_seq"'::"regclass");
 
 
 
@@ -1980,8 +2012,13 @@ ALTER TABLE ONLY "public"."asset_client_assoc"
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "asset_history_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."asset_logs"
+    ADD CONSTRAINT "asset_logs_pkey" PRIMARY KEY ("uuid");
 
 
 
@@ -1997,6 +2034,11 @@ ALTER TABLE ONLY "public"."assets"
 
 ALTER TABLE ONLY "public"."assets"
     ADD CONSTRAINT "assets_serial_number_key" UNIQUE ("serial_number");
+
+
+
+ALTER TABLE ONLY "public"."association_logs"
+    ADD CONSTRAINT "association_logs_pkey" PRIMARY KEY ("uuid");
 
 
 
@@ -2118,7 +2160,7 @@ CREATE INDEX "asset_client_assoc_client_id_idx" ON "public"."asset_client_assoc"
 
 
 
-CREATE INDEX "asset_history_assoc_id_index" ON "public"."asset_logs" USING "btree" ("assoc_id");
+CREATE INDEX "asset_history_assoc_id_index" ON "public"."asset_logs_legacy" USING "btree" ("assoc_id");
 
 
 
@@ -2126,7 +2168,31 @@ CREATE INDEX "idx_asset_client_assoc_exit_date" ON "public"."asset_client_assoc"
 
 
 
+CREATE INDEX "idx_asset_logs_asset_id" ON "public"."asset_logs" USING "btree" ("asset_id");
+
+
+
+CREATE INDEX "idx_asset_logs_deleted_at" ON "public"."asset_logs" USING "btree" ("deleted_at");
+
+
+
+CREATE INDEX "idx_asset_logs_user_id" ON "public"."asset_logs" USING "btree" ("user_id");
+
+
+
 CREATE UNIQUE INDEX "idx_assets_radio_unique_not_null" ON "public"."assets" USING "btree" ("radio") WHERE ("radio" IS NOT NULL);
+
+
+
+CREATE INDEX "idx_association_logs_association_uuid" ON "public"."association_logs" USING "btree" ("association_uuid");
+
+
+
+CREATE INDEX "idx_association_logs_deleted_at" ON "public"."association_logs" USING "btree" ("deleted_at");
+
+
+
+CREATE INDEX "idx_association_logs_user_id" ON "public"."association_logs" USING "btree" ("user_id");
 
 
 
@@ -2194,14 +2260,6 @@ CREATE INDEX "profiles_role_idx" ON "public"."profiles" USING "btree" ("role");
 
 
 
-CREATE OR REPLACE TRIGGER "asset_histories_log_trigger" AFTER INSERT OR UPDATE ON "public"."asset_logs" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
-
-
-
-CREATE OR REPLACE TRIGGER "asset_histories_log_trigger_before_delete" BEFORE DELETE ON "public"."asset_logs" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
-
-
-
 CREATE OR REPLACE TRIGGER "assets_after_insert" AFTER INSERT ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."log_asset_insert"();
 
 
@@ -2259,6 +2317,10 @@ CREATE OR REPLACE TRIGGER "set_asset_status_updated_at" BEFORE UPDATE ON "public
 
 
 CREATE OR REPLACE TRIGGER "set_assets_updated_at" BEFORE UPDATE ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "set_association_logs_updated_at" BEFORE UPDATE ON "public"."association_logs" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
 
@@ -2329,6 +2391,26 @@ ALTER TABLE ONLY "public"."asset_client_assoc"
 
 
 
+ALTER TABLE ONLY "public"."asset_logs"
+    ADD CONSTRAINT "asset_logs_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "public"."assets"("uuid");
+
+
+
+ALTER TABLE ONLY "public"."asset_logs"
+    ADD CONSTRAINT "asset_logs_status_after_id_fkey" FOREIGN KEY ("status_after_id") REFERENCES "public"."asset_status"("id");
+
+
+
+ALTER TABLE ONLY "public"."asset_logs"
+    ADD CONSTRAINT "asset_logs_status_before_id_fkey" FOREIGN KEY ("status_before_id") REFERENCES "public"."asset_status"("id");
+
+
+
+ALTER TABLE ONLY "public"."asset_logs"
+    ADD CONSTRAINT "asset_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id");
+
+
+
 ALTER TABLE ONLY "public"."assets"
     ADD CONSTRAINT "assets_manufacturer_id_fkey" FOREIGN KEY ("manufacturer_id") REFERENCES "public"."manufacturers"("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
@@ -2336,6 +2418,16 @@ ALTER TABLE ONLY "public"."assets"
 
 ALTER TABLE ONLY "public"."assets"
     ADD CONSTRAINT "assets_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."association_logs"
+    ADD CONSTRAINT "association_logs_association_uuid_fkey" FOREIGN KEY ("association_uuid") REFERENCES "public"."associations"("uuid");
+
+
+
+ALTER TABLE ONLY "public"."association_logs"
+    ADD CONSTRAINT "association_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id");
 
 
 
@@ -2359,27 +2451,27 @@ ALTER TABLE ONLY "public"."associations"
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "fk_asset_history_status_after" FOREIGN KEY ("status_after_id") REFERENCES "public"."asset_status"("id");
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "fk_asset_history_status_before" FOREIGN KEY ("status_before_id") REFERENCES "public"."asset_status"("id");
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "fk_asset_logs_assoc_id" FOREIGN KEY ("assoc_id") REFERENCES "public"."asset_client_assoc"("id") ON DELETE SET NULL;
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "fk_asset_logs_status_after" FOREIGN KEY ("status_after_id") REFERENCES "public"."asset_status"("id");
 
 
 
-ALTER TABLE ONLY "public"."asset_logs"
+ALTER TABLE ONLY "public"."asset_logs_legacy"
     ADD CONSTRAINT "fk_asset_logs_status_before" FOREIGN KEY ("status_before_id") REFERENCES "public"."asset_status"("id");
 
 
@@ -2449,7 +2541,15 @@ CREATE POLICY "Auth users can insert" ON "public"."asset_logs" FOR INSERT TO "au
 
 
 
+CREATE POLICY "Auth users can insert" ON "public"."asset_logs_legacy" FOR INSERT TO "authenticated" WITH CHECK (true);
+
+
+
 CREATE POLICY "Auth users can insert" ON "public"."assets" FOR INSERT TO "authenticated" WITH CHECK (true);
+
+
+
+CREATE POLICY "Auth users can insert" ON "public"."association_logs" FOR INSERT TO "authenticated" WITH CHECK (true);
 
 
 
@@ -2469,7 +2569,15 @@ CREATE POLICY "Auth users can update" ON "public"."asset_logs" FOR UPDATE TO "au
 
 
 
+CREATE POLICY "Auth users can update" ON "public"."asset_logs_legacy" FOR UPDATE TO "authenticated" USING (true);
+
+
+
 CREATE POLICY "Auth users can update" ON "public"."assets" FOR UPDATE TO "authenticated" USING (true) WITH CHECK (true);
+
+
+
+CREATE POLICY "Auth users can update" ON "public"."association_logs" FOR UPDATE TO "authenticated" USING (true);
 
 
 
@@ -2489,6 +2597,10 @@ CREATE POLICY "Enable read access for all users" ON "public"."asset_logs" FOR SE
 
 
 
+CREATE POLICY "Enable read access for all users" ON "public"."asset_logs_legacy" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Enable read access for all users" ON "public"."asset_solutions" FOR SELECT USING (true);
 
 
@@ -2498,6 +2610,10 @@ CREATE POLICY "Enable read access for all users" ON "public"."asset_status" FOR 
 
 
 CREATE POLICY "Enable read access for all users" ON "public"."assets" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Enable read access for all users" ON "public"."association_logs" FOR SELECT USING (true);
 
 
 
@@ -2551,6 +2667,10 @@ CREATE POLICY "admin_total_access" ON "public"."asset_logs" TO "authenticated" U
 
 
 
+CREATE POLICY "admin_total_access" ON "public"."asset_logs_legacy" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+
 CREATE POLICY "admin_total_access" ON "public"."asset_solutions" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
@@ -2560,6 +2680,10 @@ CREATE POLICY "admin_total_access" ON "public"."asset_status" TO "authenticated"
 
 
 CREATE POLICY "admin_total_access" ON "public"."assets" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+
+CREATE POLICY "admin_total_access" ON "public"."association_logs" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
 
 
 
@@ -2605,6 +2729,9 @@ ALTER TABLE "public"."asset_client_assoc" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."asset_logs" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."asset_logs_legacy" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."asset_solutions" ENABLE ROW LEVEL SECURITY;
 
 
@@ -2612,6 +2739,9 @@ ALTER TABLE "public"."asset_status" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."assets" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."association_logs" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."association_types" ENABLE ROW LEVEL SECURITY;
@@ -3001,15 +3131,21 @@ GRANT ALL ON SEQUENCE "public"."asset_client_assoc_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."asset_logs" TO "anon";
-GRANT ALL ON TABLE "public"."asset_logs" TO "authenticated";
-GRANT ALL ON TABLE "public"."asset_logs" TO "service_role";
+GRANT ALL ON TABLE "public"."asset_logs_legacy" TO "anon";
+GRANT ALL ON TABLE "public"."asset_logs_legacy" TO "authenticated";
+GRANT ALL ON TABLE "public"."asset_logs_legacy" TO "service_role";
 
 
 
 GRANT ALL ON SEQUENCE "public"."asset_history_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."asset_history_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."asset_history_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."asset_logs" TO "anon";
+GRANT ALL ON TABLE "public"."asset_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."asset_logs" TO "service_role";
 
 
 
@@ -3028,6 +3164,12 @@ GRANT ALL ON TABLE "public"."asset_status" TO "service_role";
 GRANT ALL ON TABLE "public"."assets" TO "anon";
 GRANT ALL ON TABLE "public"."assets" TO "authenticated";
 GRANT ALL ON TABLE "public"."assets" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."association_logs" TO "anon";
+GRANT ALL ON TABLE "public"."association_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."association_logs" TO "service_role";
 
 
 
