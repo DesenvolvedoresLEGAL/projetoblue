@@ -536,6 +536,174 @@ $$;
 ALTER FUNCTION "public"."is_user_self"("profile_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION public.fetch_asset_info(asset_uuid text)
+RETURNS TABLE(status_id bigint, solution_id bigint, radio text, line_number bigint)
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  RETURN QUERY
+    SELECT status_id, solution_id, radio, line_number
+    FROM assets WHERE uuid = asset_uuid;
+EXCEPTION WHEN OTHERS THEN
+  RETURN;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_client_name(client_uuid uuid)
+RETURNS text
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+DECLARE name text;
+BEGIN
+  IF client_uuid IS NOT NULL THEN
+    SELECT nome INTO name FROM clients WHERE uuid = client_uuid;
+  END IF;
+  RETURN name;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_solution_name(solution_id bigint)
+RETURNS text
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+DECLARE sol text;
+BEGIN
+  IF solution_id IS NOT NULL THEN
+    SELECT solution INTO sol FROM asset_solutions WHERE id = solution_id;
+  END IF;
+  RETURN sol;
+EXCEPTION WHEN OTHERS THEN
+  RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.load_status_ids()
+RETURNS TABLE(em_locacao bigint, disponivel bigint, em_assinatura bigint)
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  SELECT id FROM asset_status WHERE LOWER(status) = 'em locação' LIMIT 1 INTO em_locacao;
+  SELECT id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1 INTO disponivel;
+  SELECT id FROM asset_status WHERE LOWER(status) = 'em assinatura' LIMIT 1 INTO em_assinatura;
+  IF em_locacao IS NULL THEN SELECT id INTO em_locacao FROM asset_status WHERE id = 2 LIMIT 1; END IF;
+  IF disponivel IS NULL THEN SELECT id INTO disponivel FROM asset_status WHERE id = 1 LIMIT 1; END IF;
+  IF em_assinatura IS NULL THEN SELECT id INTO em_assinatura FROM asset_status WHERE id = 3 LIMIT 1; END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_assoc_id(new_id bigint, old_id bigint)
+RETURNS bigint
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+DECLARE result bigint;
+BEGIN
+  IF new_id IS NOT NULL AND EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = new_id) THEN
+    result := new_id;
+  ELSIF old_id IS NOT NULL AND EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = old_id) THEN
+    result := old_id;
+  END IF;
+  RETURN result;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.calc_new_status(
+    op text, new_exit date, old_exit date, association_id bigint,
+    ids record, status_antigo bigint)
+RETURNS TABLE(status_novo bigint, houve_alteracao boolean)
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  IF op = 'DELETE' THEN
+    status_novo := ids.disponivel;
+  ELSIF new_exit IS NOT NULL AND (old_exit IS NULL OR old_exit IS DISTINCT FROM new_exit) THEN
+    status_novo := ids.disponivel;
+  ELSIF new_exit IS NULL AND association_id = 1 THEN
+    status_novo := ids.em_locacao;
+  ELSIF new_exit IS NULL AND association_id = 2 THEN
+    status_novo := ids.em_assinatura;
+  ELSE
+    status_novo := status_antigo;
+  END IF;
+  houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.update_asset_status(asset_uuid text, old_status bigint, new_status bigint)
+RETURNS boolean
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+DECLARE current_status bigint;
+BEGIN
+  SELECT status_id INTO current_status FROM assets WHERE uuid = asset_uuid;
+  IF current_status = old_status THEN
+    UPDATE assets SET status_id = new_status
+    WHERE uuid = asset_uuid AND status_id = old_status;
+    RETURN FOUND;
+  END IF;
+  RETURN FALSE;
+EXCEPTION WHEN OTHERS THEN
+  RETURN FALSE;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.insert_asset_log(
+    p_assoc_id bigint, p_event text, p_details jsonb, p_status_before bigint, p_status_after bigint)
+RETURNS void
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM asset_logs
+      WHERE assoc_id = p_assoc_id
+        AND event = p_event
+        AND status_before_id = p_status_before
+        AND status_after_id = p_status_after
+        AND date > NOW() - INTERVAL '5 seconds'
+  ) THEN
+    INSERT INTO asset_logs (assoc_id, date, event, details, status_before_id, status_after_id)
+    VALUES (p_assoc_id, NOW(), p_event, p_details, p_status_before, p_status_after);
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE '[insert_asset_log] erro: %', SQLERRM;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.log_trigger_error(
+    p_assoc_id bigint, p_asset_uuid text, p_op text, p_err text, p_state text)
+RETURNS void
+LANGUAGE plpgsql
+SET search_path TO 'public'
+AS $$
+BEGIN
+  INSERT INTO asset_logs (
+    assoc_id, date, event, details, status_before_id, status_after_id
+  ) VALUES (
+    p_assoc_id, NOW(), 'TRIGGER_ERROR',
+    jsonb_build_object(
+      'error', p_err,
+      'sqlstate', p_state,
+      'asset_id', p_asset_uuid,
+      'operation', p_op,
+      'timestamp', NOW()
+    ),
+    NULL, NULL
+  );
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE '[log_trigger_error] falha: %', SQLERRM;
+END;
+$$;
+
+
 CREATE OR REPLACE FUNCTION "public"."log_and_update_status"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public, auth'
@@ -543,292 +711,106 @@ CREATE OR REPLACE FUNCTION "public"."log_and_update_status"() RETURNS "trigger"
 DECLARE
   status_antigo BIGINT;
   status_novo BIGINT;
-  asset_solution_id BIGINT;
-  status_alocado_id BIGINT;
-  status_assinatura_id BIGINT;
-  status_disponivel_id BIGINT;
-  houve_alteracao BOOLEAN := FALSE;
+  houve_alteracao BOOLEAN;
+  asset_info RECORD;
+  ids RECORD;
+  valid_assoc_id BIGINT;
+  current_asset_id TEXT;
   client_name TEXT;
+  solution_name TEXT;
   asset_radio TEXT;
   asset_line_number BIGINT;
-  solution_name TEXT;
-  valid_assoc_id BIGINT := NULL;
-  validation_result JSONB;
-  current_asset_id TEXT;
+  updated BOOLEAN;
 BEGIN
   SET LOCAL search_path TO public;
-
   current_asset_id := COALESCE(NEW.asset_id, OLD.asset_id);
 
-  -- Log de debug para rastreamento com mais detalhes
-  RAISE NOTICE '[log_and_update_status] Trigger executada - asset_id: %, operação: %, timestamp: %', 
+  RAISE NOTICE '[log_and_update_status] Trigger executada - asset_id: %, operação: %, timestamp: %',
     current_asset_id, TG_OP, NOW();
 
-  -- Validação de entrada mais robusta
   IF current_asset_id IS NULL OR trim(current_asset_id) = '' THEN
     RAISE NOTICE '[log_and_update_status] ERRO: asset_id inválido ou vazio';
-    CASE TG_OP
-      WHEN 'DELETE' THEN RETURN OLD;
-      ELSE RETURN NEW;
-    END CASE;
+    CASE TG_OP WHEN 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END CASE;
   END IF;
 
-  -- Buscar dados do asset com tratamento de erro
-  BEGIN
-    SELECT status_id, solution_id, radio, line_number 
-    INTO status_antigo, asset_solution_id, asset_radio, asset_line_number
-    FROM assets 
-    WHERE uuid = current_asset_id;
+  asset_info := fetch_asset_info(current_asset_id);
+  status_antigo := asset_info.status_id;
+  asset_radio := asset_info.radio;
+  asset_line_number := asset_info.line_number;
 
-    IF NOT FOUND THEN
-      RAISE NOTICE '[log_and_update_status] AVISO: Asset % não encontrado na tabela assets', current_asset_id;
-      -- Continuar processamento mesmo sem encontrar o asset
-    ELSE
-      RAISE NOTICE '[log_and_update_status] Asset encontrado - status_id: %, solution_id: %', status_antigo, asset_solution_id;
-    END IF;
-  EXCEPTION
-    WHEN OTHERS THEN
-      RAISE NOTICE '[log_and_update_status] ERRO ao buscar dados do asset %: %', current_asset_id, SQLERRM;
-      status_antigo := NULL;
-      asset_solution_id := NULL;
-  END;
+  client_name := get_client_name(NEW.client_id);
+  solution_name := get_solution_name(asset_info.solution_id);
 
-  -- Buscar informações adicionais para logging
-  IF NEW.client_id IS NOT NULL THEN
-    BEGIN
-      SELECT nome INTO client_name FROM clients WHERE uuid = NEW.client_id;
-      RAISE NOTICE '[log_and_update_status] Cliente encontrado: %', client_name;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RAISE NOTICE '[log_and_update_status] ERRO ao buscar cliente %: %', NEW.client_id, SQLERRM;
-        client_name := NULL;
-    END;
-  END IF;
-  
-  IF asset_solution_id IS NOT NULL THEN
-    BEGIN
-      SELECT solution INTO solution_name FROM asset_solutions WHERE id = asset_solution_id;
-      RAISE NOTICE '[log_and_update_status] Solução encontrada: %', solution_name;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RAISE NOTICE '[log_and_update_status] ERRO ao buscar solução %: %', asset_solution_id, SQLERRM;
-        solution_name := NULL;
-    END;
-  END IF;
+  ids := load_status_ids();
 
-  -- Buscar IDs de status dinamicamente com tratamento de erro
-  BEGIN
-    SELECT id INTO status_alocado_id FROM asset_status WHERE LOWER(status) = 'em locação' LIMIT 1;
-    SELECT id INTO status_disponivel_id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1;
-    SELECT id INTO status_assinatura_id FROM asset_status WHERE LOWER(status) = 'em assinatura' LIMIT 1;
+  valid_assoc_id := validate_assoc_id(NEW.id, OLD.id);
 
-    RAISE NOTICE '[log_and_update_status] Status IDs - alocado: %, disponível: %, assinatura: %', 
-      status_alocado_id, status_disponivel_id, status_assinatura_id;
+  SELECT status_novo, houve_alteracao
+  INTO status_novo, houve_alteracao
+  FROM calc_new_status(
+    TG_OP,
+    NEW.exit_date,
+    OLD.exit_date,
+    COALESCE(NEW.association_id, OLD.association_id),
+    ids,
+    status_antigo
+  );
 
-    -- Fallback caso não encontre os status
-    IF status_alocado_id IS NULL THEN
-      SELECT id INTO status_alocado_id FROM asset_status WHERE id = 2 LIMIT 1;
-    END IF;
-    
-    IF status_disponivel_id IS NULL THEN
-      SELECT id INTO status_disponivel_id FROM asset_status WHERE id = 1 LIMIT 1;
-    END IF;
-
-    IF status_assinatura_id IS NULL THEN
-      SELECT id INTO status_assinatura_id FROM asset_status WHERE id = 3 LIMIT 1;
-    END IF;
-  EXCEPTION
-    WHEN OTHERS THEN
-      RAISE NOTICE '[log_and_update_status] ERRO ao buscar IDs de status: %', SQLERRM;
-      -- Usar valores padrão
-      status_alocado_id := 2;
-      status_disponivel_id := 1;
-      status_assinatura_id := 3;
-  END;
-
-  -- Validar ASSOC_ID antes de usar
-  IF TG_OP = 'DELETE' THEN
-    IF OLD.id IS NOT NULL AND EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = OLD.id) THEN
-      valid_assoc_id := OLD.id;
-    END IF;
-  ELSIF NEW.id IS NOT NULL THEN
-    IF EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = NEW.id) THEN
-      valid_assoc_id := NEW.id;
+  IF houve_alteracao THEN
+    updated := update_asset_status(current_asset_id, status_antigo, status_novo);
+    IF NOT updated THEN
+      houve_alteracao := FALSE;
     END IF;
   END IF;
 
-  RAISE NOTICE '[log_and_update_status] Association ID validado: %', valid_assoc_id;
-
-  -- Lógica de cálculo do novo status (com verificação de mudança real)
-  IF TG_OP = 'DELETE' THEN
-    status_novo := status_disponivel_id;
-    houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
-    RAISE NOTICE '[log_and_update_status] DELETE - Status novo: %, houve alteração: %', status_novo, houve_alteracao;
-    
-  ELSIF NEW.exit_date IS NOT NULL AND (OLD.exit_date IS NULL OR OLD.exit_date IS DISTINCT FROM NEW.exit_date) THEN
-    status_novo := status_disponivel_id;
-    houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
-    RAISE NOTICE '[log_and_update_status] EXIT_DATE definida - Status novo: %, houve alteração: %', status_novo, houve_alteracao;
-    
-  ELSIF NEW.exit_date IS NULL AND (NEW.association_id = 1) THEN
-    status_novo := status_alocado_id;
-    houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
-    RAISE NOTICE '[log_and_update_status] Associação tipo 1 (aluguel) - Status novo: %, houve alteração: %', status_novo, houve_alteracao;
-  
-  ELSIF NEW.exit_date IS NULL AND (NEW.association_id = 2) THEN
-    status_novo := status_assinatura_id;
-    houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
-    RAISE NOTICE '[log_and_update_status] Associação tipo 2 (assinatura) - Status novo: %, houve alteração: %', status_novo, houve_alteracao;
-    
-  ELSE
-    status_novo := status_antigo;
-    RAISE NOTICE '[log_and_update_status] Nenhuma alteração de status necessária';
+  IF houve_alteracao OR TG_OP IN ('INSERT','DELETE') THEN
+    insert_asset_log(
+      valid_assoc_id,
+      CASE
+        WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
+        WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
+        WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
+        ELSE 'ASSOCIATION_MODIFIED'
+      END,
+      jsonb_build_object(
+        'user_id', COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'),
+        'username', COALESCE(current_setting('request.jwt.claim.sub', true), 'system'),
+        'asset_id', current_asset_id,
+        'client_id', COALESCE(NEW.client_id, OLD.client_id),
+        'client_name', client_name,
+        'association_id', COALESCE(NEW.association_id, OLD.association_id),
+        'association_type', CASE
+          WHEN COALESCE(NEW.association_id, OLD.association_id) = 1 THEN 'Aluguel'
+          WHEN COALESCE(NEW.association_id, OLD.association_id) = 2 THEN 'Assinatura'
+          ELSE 'Outros'
+        END,
+        'entry_date', COALESCE(NEW.entry_date, OLD.entry_date),
+        'exit_date', COALESCE(NEW.exit_date, OLD.exit_date),
+        'line_number', asset_line_number,
+        'radio', asset_radio,
+        'solution_name', solution_name,
+        'solution_id', asset_info.solution_id,
+        'old_status_id', status_antigo,
+        'new_status_id', status_novo,
+        'old_status_name', (SELECT status FROM asset_status WHERE id = status_antigo),
+        'new_status_name', (SELECT status FROM asset_status WHERE id = status_novo),
+        'operation', TG_OP,
+        'timestamp', NOW(),
+        'valid_assoc_id', valid_assoc_id,
+        'idempotent_operation', NOT houve_alteracao AND TG_OP != 'INSERT'
+      ),
+      status_antigo,
+      status_novo
+    );
   END IF;
 
-  -- Atualizar status do asset SE necessário E se realmente houve mudança
-  IF houve_alteracao AND status_novo IS NOT NULL AND status_novo IS DISTINCT FROM status_antigo THEN
-    BEGIN
-      -- Verificar se o status não foi alterado por outra transação concorrente
-      DECLARE
-        current_status_check BIGINT;
-      BEGIN
-        SELECT status_id INTO current_status_check FROM assets WHERE uuid = current_asset_id;
-        
-        IF current_status_check = status_antigo THEN
-          UPDATE assets 
-          SET status_id = status_novo 
-          WHERE uuid = current_asset_id AND status_id = status_antigo;
-          
-          IF FOUND THEN
-            RAISE NOTICE '[log_and_update_status] Status atualizado com sucesso de % para % no asset %', 
-              status_antigo, status_novo, current_asset_id;
-          ELSE
-            RAISE NOTICE '[log_and_update_status] Status já foi alterado por outra transação para asset %', current_asset_id;
-            houve_alteracao := FALSE;
-          END IF;
-        ELSE
-          RAISE NOTICE '[log_and_update_status] Status do asset % foi alterado concorrentemente (esperado: %, atual: %)', 
-            current_asset_id, status_antigo, current_status_check;
-          houve_alteracao := FALSE;
-        END IF;
-      END;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RAISE NOTICE '[log_and_update_status] ERRO ao atualizar status do asset %: %', current_asset_id, SQLERRM;
-        houve_alteracao := FALSE;
-    END;
-  END IF;
-
-  -- Registrar log apenas para mudanças relevantes e não duplicadas
-  IF houve_alteracao OR TG_OP = 'INSERT' OR TG_OP = 'DELETE' THEN
-    BEGIN
-      -- Verificar se não existe log idêntico recente (últimos 5 segundos)
-      IF NOT EXISTS (
-        SELECT 1 FROM asset_logs 
-        WHERE assoc_id = valid_assoc_id
-          AND event = CASE 
-            WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
-            WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
-            WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
-            ELSE 'ASSOCIATION_MODIFIED'
-          END
-          AND status_before_id = status_antigo
-          AND status_after_id = status_novo
-          AND date > NOW() - INTERVAL '5 seconds'
-      ) THEN
-        INSERT INTO asset_logs (
-          assoc_id,
-          date,
-          event,
-          details,
-          status_before_id,
-          status_after_id
-        )
-        VALUES (
-          valid_assoc_id,
-          NOW(),
-          CASE 
-            WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
-            WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
-            WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
-            ELSE 'ASSOCIATION_MODIFIED'
-          END,
-          jsonb_build_object(
-            'user_id', COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'),
-            'username', COALESCE(current_setting('request.jwt.claim.sub', true), 'system'),
-            'asset_id', current_asset_id,
-            'client_id', COALESCE(NEW.client_id, OLD.client_id),
-            'client_name', client_name,
-            'association_id', COALESCE(NEW.association_id, OLD.association_id),
-            'association_type', CASE 
-              WHEN COALESCE(NEW.association_id, OLD.association_id) = 1 THEN 'Aluguel'
-              WHEN COALESCE(NEW.association_id, OLD.association_id) = 2 THEN 'Assinatura'
-              ELSE 'Outros'
-            END,
-            'entry_date', COALESCE(NEW.entry_date, OLD.entry_date),
-            'exit_date', COALESCE(NEW.exit_date, OLD.exit_date),
-            'line_number', asset_line_number,
-            'radio', asset_radio,
-            'solution_name', solution_name,
-            'solution_id', asset_solution_id,
-            'old_status_id', status_antigo,
-            'new_status_id', status_novo,
-            'old_status_name', (SELECT status FROM asset_status WHERE id = status_antigo),
-            'new_status_name', (SELECT status FROM asset_status WHERE id = status_novo),
-            'operation', TG_OP,
-            'timestamp', NOW(),
-            'valid_assoc_id', valid_assoc_id,
-            'idempotent_operation', NOT houve_alteracao AND TG_OP != 'INSERT'
-          ),
-          status_antigo,
-          status_novo
-        );
-        
-        RAISE NOTICE '[log_and_update_status] Log registrado com sucesso para asset %', current_asset_id;
-      ELSE
-        RAISE NOTICE '[log_and_update_status] Log duplicado detectado - operação idempotente para asset %', current_asset_id;
-      END IF;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RAISE NOTICE '[log_and_update_status] ERRO ao inserir log para asset %: %', current_asset_id, SQLERRM;
-        -- Continuar processamento mesmo se falhar o log
-    END;
-  END IF;
-
-  -- Retornar conforme operação
   CASE TG_OP
     WHEN 'DELETE' THEN RETURN OLD;
     ELSE RETURN NEW;
   END CASE;
-
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE NOTICE '[log_and_update_status] EXCEÇÃO CAPTURADA: % (SQLSTATE: %)', SQLERRM, SQLSTATE;
-    
-    -- Tentar inserir log de erro
-    BEGIN
-      INSERT INTO asset_logs (
-        assoc_id, date, event, details, status_before_id, status_after_id
-      ) VALUES (
-        valid_assoc_id, NOW(), 'TRIGGER_ERROR',
-        jsonb_build_object(
-          'error', SQLERRM,
-          'sqlstate', SQLSTATE,
-          'asset_id', current_asset_id,
-          'operation', TG_OP,
-          'timestamp', NOW()
-        ),
-        status_antigo, status_antigo
-      );
-    EXCEPTION
-      WHEN OTHERS THEN
-        RAISE NOTICE '[log_and_update_status] Falha ao inserir log de erro: %', SQLERRM;
-    END;
-    
-    CASE TG_OP
-      WHEN 'DELETE' THEN RETURN OLD;
-      ELSE RETURN NEW;
-    END CASE;
+EXCEPTION WHEN OTHERS THEN
+  log_trigger_error(valid_assoc_id, current_asset_id, TG_OP, SQLERRM, SQLSTATE);
+  CASE TG_OP WHEN 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END CASE;
 END;
 $$;
 
@@ -841,7 +823,7 @@ COMMENT ON FUNCTION "public"."log_and_update_status"() IS 'Função principal re
 - Usa mapeamento dinâmico de status (não hardcoded)
 - Gera logs únicos e padronizados
 - Implementa nova lógica: association_id 1 ou 2 = alocado, exit_date preenchido = disponível
-- Versão: 1.0 - Refatoração PRD 28/05/2025';
+- Versão: 2.0 - Subrotinas 08/07/2025';
 
 
 
@@ -3591,6 +3573,33 @@ GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "service_role";
 
+GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "anon";
+GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "authenticated";
+GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "service_role";
+GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "anon";
+GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "authenticated";
+GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "service_role";
+GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "anon";
+GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "authenticated";
+GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "service_role";
+GRANT ALL ON FUNCTION public.load_status_ids() TO "anon";
+GRANT ALL ON FUNCTION public.load_status_ids() TO "authenticated";
+GRANT ALL ON FUNCTION public.load_status_ids() TO "service_role";
+GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "anon";
+GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "authenticated";
+GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "service_role";
+GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "anon";
+GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "authenticated";
+GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "service_role";
+GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "anon";
+GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "authenticated";
+GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "service_role";
+GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "anon";
+GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "authenticated";
+GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "service_role";
+GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "anon";
+GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "authenticated";
+GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "service_role";
 
 
 GRANT ALL ON FUNCTION "public"."log_and_update_status"() TO "anon";
