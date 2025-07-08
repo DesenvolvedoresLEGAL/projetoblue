@@ -52,7 +52,7 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
 
     try {
       const { error } = await supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .update({
           entry_date: formData.entry_date,
           exit_date: formData.exit_date || null,

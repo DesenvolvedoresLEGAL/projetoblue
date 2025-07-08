@@ -18,7 +18,7 @@ export const associationQueries = {
       if (import.meta.env.DEV) console.log(`Checking active associations for asset: ${assetId}`);
       
       const { data, error } = await supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .select(`
           id,
           client_id,
@@ -28,7 +28,7 @@ export const associationQueries = {
           clients!inner(nome),
           association_types!inner(type)
         `)
-        .eq('asset_id', assetId)
+        .or(`equipment_id.eq.${assetId},chip_id.eq.${assetId}`)
         .is('exit_date', null)
         .is('deleted_at', null);
 

@@ -39,7 +39,7 @@ export const useGroupActions = () => {
       const results = [];
       for (const id of associationIds) {
         const { error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .update({ 
             deleted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -78,7 +78,7 @@ export const useGroupActions = () => {
       const results = [];
       for (const id of associationIds) {
         const { error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .update({ 
             ...updates,
             updated_at: new Date().toISOString()
@@ -117,7 +117,7 @@ export const useGroupActions = () => {
       const results = [];
       for (const id of associationIds) {
         const { error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .update({ 
             association_id: newType,
             updated_at: new Date().toISOString()
@@ -165,7 +165,7 @@ export const useGroupActions = () => {
       const results = [];
       for (const id of associationIds) {
         const { error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .update({ 
             exit_date: today,
             updated_at: new Date().toISOString()
