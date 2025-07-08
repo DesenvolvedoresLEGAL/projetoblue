@@ -18,7 +18,15 @@ export interface AssetLogWithRelations {
   status_before?: { status: string };
   status_after?: { status: string };
   association?: {
-    asset?: {
+    equipment?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    chip?: {
       uuid: string;
       serial_number?: string;
       model?: string;
@@ -49,6 +57,14 @@ interface AssetLogWithRelationsRaw {
   fk_asset_logs_status_after?: { status: string } | null;
   fk_asset_logs_assoc_id?: {
     equipment?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    };
+    chip?: {
       uuid: string;
       serial_number?: string;
       model?: string;
