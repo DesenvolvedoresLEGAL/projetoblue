@@ -1,11 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+export interface AssetInfo {
+  id: string;
+  solution_id?: number;
+}
+
 export interface AddAssetsToAssociationParams {
   client_id: string;
   association_id: number;
   entry_date: string;
-  asset_ids: string[];
+  assets: AssetInfo[];
   exit_date?: string | null;
   notes?: string | null;
   ssid?: string | null;
@@ -33,28 +38,40 @@ export const addAssetsToAssociation = async (
   params: AddAssetsToAssociationParams
 ): Promise<AddAssetsToAssociationResult> => {
   if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Chamando add_assets_to_association com parâmetros:', params);
+    if (import.meta.env.DEV) console.log('Chamando addAssetsToAssociation com parâmetros:', params);
   }
 
-  const { data, error } = await supabase.rpc('add_assets_to_association', {
-    p_client_id: params.client_id,
-    p_association_id: params.association_id,
-    p_entry_date: params.entry_date,
-    p_asset_ids: params.asset_ids,
-    p_exit_date: params.exit_date,
-    p_notes: params.notes,
-    p_ssid: params.ssid,
-    p_pass: params.pass,
-    p_gb: params.gb
-  });
+  const insertPayload = params.assets.map(asset => ({
+    client_id: params.client_id,
+    association_type_id: params.association_id,
+    entry_date: params.entry_date,
+    exit_date: params.exit_date ?? null,
+    notes: params.notes ?? null,
+    equipment_ssid: params.ssid ?? null,
+    equipment_pass: params.pass ?? null,
+    plan_gb: params.gb ?? null,
+    equipment_id: asset.solution_id === 11 ? null : asset.id,
+    chip_id: asset.solution_id === 11 ? asset.id : null
+  }));
+
+  const { data, error } = await supabase
+    .from('associations')
+    .insert(insertPayload)
+    .select('uuid');
 
   if (error) {
     if (import.meta.env.DEV) console.error('Erro ao adicionar ativos à associação:', error);
     throw error;
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Resultado da adição de ativos:', data);
-  }
-  return data as unknown as AddAssetsToAssociationResult;
+  const insertedIds = data ? data.map(rec => rec.uuid as string) : [];
+  return {
+    success: true,
+    inserted_count: insertedIds.length,
+    failed_count: insertPayload.length - insertedIds.length,
+    inserted_ids: insertedIds,
+    failed_assets: [],
+    total_processed: insertPayload.length,
+    message: 'ok'
+  };
 };

@@ -102,7 +102,7 @@ export const useAssetSearch = ({
           .from('associations')
           .select('equipment_id, chip_id')
           .eq('client_id', excludeAssociatedToClient)
-          .is('exit_date', null)
+          .eq('status', true)
           .is('deleted_at', null);
 
         if (associatedAssets && associatedAssets.length > 0) {

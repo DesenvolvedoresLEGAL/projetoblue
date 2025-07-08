@@ -40,11 +40,11 @@ export const useGroupActions = () => {
       for (const id of associationIds) {
         const { error } = await supabase
           .from('associations')
-          .update({ 
+          .update({
             deleted_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
-          .eq('id', id);
+          .eq('uuid', id);
         
         if (error) {
           if (import.meta.env.DEV) console.error('Erro ao deletar associação:', id, error);
@@ -79,11 +79,11 @@ export const useGroupActions = () => {
       for (const id of associationIds) {
         const { error } = await supabase
           .from('associations')
-          .update({ 
+          .update({
             ...updates,
             updated_at: new Date().toISOString()
           })
-          .eq('id', id);
+          .eq('uuid', id);
         
         if (error) {
           if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', id, error);
@@ -118,11 +118,11 @@ export const useGroupActions = () => {
       for (const id of associationIds) {
         const { error } = await supabase
           .from('associations')
-          .update({ 
+          .update({
             association_id: newType,
             updated_at: new Date().toISOString()
           })
-          .eq('id', id);
+          .eq('uuid', id);
         
         if (error) {
           if (import.meta.env.DEV) console.error('Erro ao alterar tipo de associação:', id, error);
@@ -166,11 +166,11 @@ export const useGroupActions = () => {
       for (const id of associationIds) {
         const { error } = await supabase
           .from('associations')
-          .update({ 
+          .update({
             exit_date: today,
             updated_at: new Date().toISOString()
           })
-          .eq('id', id);
+          .eq('uuid', id);
         
         if (error) {
           if (import.meta.env.DEV) console.error('Erro ao encerrar associação:', id, error);

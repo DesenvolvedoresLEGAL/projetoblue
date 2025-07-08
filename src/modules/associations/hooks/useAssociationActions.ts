@@ -37,8 +37,7 @@ export const useAssociationActions = () => {
             .update({
               exit_date: new Date().toISOString().split('T')[0] // Data atual
             })
-            .eq('id', associationId)
-            .or(`equipment_id.eq.${assetId},chip_id.eq.${assetId}`)
+            .eq('uuid', associationId)
             .is('exit_date', null) // Só atualizar se ainda não tem exit_date
             .select()
             .single();
