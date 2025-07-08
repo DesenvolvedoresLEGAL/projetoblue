@@ -28,7 +28,7 @@ INSERT INTO public.asset_logs (uuid, user_id, asset_id, event, details, status_b
 SELECT
     gen_random_uuid(),
     (details->>'user_id')::uuid,
-    (details->>'asset_id')::uuid,
+    details->>'asset_id',
     event,
     details,
     status_before_id,
@@ -39,5 +39,7 @@ SELECT
 FROM public.asset_logs_legacy
 WHERE event NOT LIKE 'ASSOCIATION_%';
 
+DROP TABLE public.asset_logs_legacy;
+DROP SEQUENCE IF EXISTS public.asset_history_id_seq;
 
 COMMIT;

@@ -15,7 +15,7 @@ ALTER SEQUENCE IF EXISTS public.asset_history_id_seq OWNED BY public.asset_logs_
 CREATE TABLE public.association_logs (
     uuid uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES profiles(id),
-    association_uuid text NOT NULL REFERENCES associations(uuid),
+    association_uuid uuid NOT NULL REFERENCES associations(uuid),
     event text NOT NULL,
     details jsonb NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
