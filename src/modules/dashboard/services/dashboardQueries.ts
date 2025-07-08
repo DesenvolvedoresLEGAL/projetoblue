@@ -173,17 +173,29 @@ export async function fetchActiveAssociations() {
     if (import.meta.env.DEV) console.log('Executing fetchActiveAssociations query (optimized)');
   }
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
-      id,
-      asset_id,
+      uuid,
       client_id,
-      association_id,
+      association_type_id,
       entry_date,
       exit_date,
       clients!inner(empresa),
       association_types!inner(type),
-      assets!inner(
+      equipment_id,
+      chip_id,
+      assets:assets!equipment_id(
+        uuid,
+        serial_number,
+        radio,
+        line_number,
+        rented_days,
+        status_id,
+        solution_id,
+        asset_solutions!inner(solution),
+        asset_status!inner(status)
+      ),
+      chip_assets:assets!chip_id(
         uuid,
         serial_number,
         radio,
@@ -211,14 +223,15 @@ export async function fetchAssociationsEndingToday() {
   }
   const today = new Date().toISOString().split('T')[0];
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
-      id,
-      asset_id,
+      uuid,
       client_id,
-      association_id,
+      association_type_id,
       entry_date,
       exit_date,
+      equipment_id,
+      chip_id,
       clients!inner(empresa),
       association_types!inner(type)
     `)
@@ -237,7 +250,7 @@ export async function fetchTopClientsWithAssociations() {
     if (import.meta.env.DEV) console.log('Executing fetchTopClientsWithAssociations query');
   }
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
       client_id,
       clients!inner(empresa)
@@ -260,10 +273,10 @@ export async function fetchAssociationsLast30Days() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
-      id,
-      association_id,
+      uuid,
+      association_type_id,
       entry_date,
       exit_date,
       created_at,

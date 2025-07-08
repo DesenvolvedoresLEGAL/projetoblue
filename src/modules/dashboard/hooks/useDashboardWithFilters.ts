@@ -77,13 +77,13 @@ export function useDashboardWithFilters(): UseDashboardWithFiltersResult {
       if (filters.client) {
         // Get asset IDs associated with the selected client
         const { data: associatedAssets } = await supabase
-          .from('asset_client_assoc')
-          .select('asset_id')
+          .from('associations')
+          .select('equipment_id, chip_id')
           .eq('client_id', filters.client)
           .is('exit_date', null);
-        
+
         // Extract asset_ids from the result
-        const assetIds = associatedAssets?.map(item => item.asset_id) || [];
+        const assetIds = associatedAssets?.map(item => item.equipment_id || item.chip_id) || [];
         
         // Apply the filter only if we have asset IDs
         if (assetIds.length > 0) {

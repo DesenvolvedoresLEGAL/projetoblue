@@ -18,20 +18,18 @@ export const useSubscriptionAssets = () => {
           if (import.meta.env.DEV) console.log('🔍 Fetching subscription assets data...');
         }
         
-        // Query para buscar ativos atualmente em assinatura (association_id = 2)
-        // Usando asset_client_assoc para identificar ativos associados
+        // Query para buscar ativos atualmente em assinatura (association_type_id = 2)
         const { data: subscriptionAssociations, error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .select(`
-            asset_id,
-            association_id,
+            equipment_id,
+            chip_id,
+            association_type_id,
             exit_date,
-            assets!inner(
-              solution_id,
-              asset_solutions!inner(solution)
-            )
+            assets:assets!equipment_id(solution_id, asset_solutions!inner(solution)),
+            chip_assets:assets!chip_id(solution_id, asset_solutions!inner(solution))
           `)
-          .eq('association_id', 2) // Assinatura
+          .eq('association_type_id', 2)
           .or('exit_date.is.null,exit_date.gt.' + new Date().toISOString().split('T')[0])
           .is('deleted_at', null);
 
@@ -53,7 +51,8 @@ export const useSubscriptionAssets = () => {
         };
 
         subscriptionAssociations?.forEach((assoc) => {
-          const solutionName = assoc.assets?.asset_solutions?.solution?.toUpperCase();
+          const asset = assoc.assets || assoc.chip_assets;
+          const solutionName = asset?.asset_solutions?.solution?.toUpperCase();
           
           if (solutionName === 'CHIP') {
             counts.chips++;

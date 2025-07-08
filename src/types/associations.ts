@@ -11,7 +11,7 @@ export interface AssociationGroup {
 }
 
 export interface Association {
-  id: number;
+  id: string;
   asset_id: string;
   client_id: string;
   entry_date: string;

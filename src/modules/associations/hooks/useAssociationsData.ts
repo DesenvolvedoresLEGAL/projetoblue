@@ -97,24 +97,33 @@ export const useAssociationsData = ({
       }
 
       let query = supabase
-        .from('asset_client_assoc')
-        .select(`
-          id,
-          asset_id,
+        .from('associations')
+        .select(
+          `uuid,
           client_id,
           entry_date,
           exit_date,
-          association_id,
+          association_type_id,
           created_at,
+          equipment_id,
+          chip_id,
           clients!inner(empresa, responsavel, telefones, email),
-          assets!inner(
+          assets:assets!equipment_id(
             iccid,
             radio,
             line_number,
             solution_id,
             asset_solutions(solution)
-          )
-        `, { count: 'exact' })
+          ),
+          chip_assets:assets!chip_id(
+            iccid,
+            radio,
+            line_number,
+            solution_id,
+            asset_solutions(solution)
+          )`,
+          { count: 'exact' }
+        )
         .is('deleted_at', null);
 
       // Aplicar filtro por status
@@ -165,21 +174,24 @@ export const useAssociationsData = ({
       }
 
       // Mapear dados para o formato esperado com line_number incluído
-      const mappedData: Association[] = data.map((item: AssociationQueryRow) => ({
-        id: item.id,
-        asset_id: item.asset_id,
-        client_id: item.client_id,
-        entry_date: item.entry_date,
-        exit_date: item.exit_date,
-        association_id: item.association_id,
-        created_at: item.created_at,
-        client_name: item.clients?.empresa || 'Cliente não encontrado',
-        asset_iccid: item.assets?.iccid,
-        asset_radio: item.assets?.radio,
-        asset_line_number: item.assets?.line_number,
-        asset_solution_id: item.assets?.solution_id,
-        asset_solution_name: item.assets?.asset_solutions?.solution || 'Solução não encontrada'
-      }));
+      const mappedData: Association[] = data.map((item: AssociationQueryRow) => {
+        const asset = item.assets || item.chip_assets;
+        return {
+          id: item.uuid,
+          asset_id: item.chip_id || item.equipment_id,
+          client_id: item.client_id,
+          entry_date: item.entry_date,
+          exit_date: item.exit_date,
+          association_id: item.association_type_id,
+          created_at: item.created_at,
+          client_name: item.clients?.empresa || 'Cliente não encontrado',
+          asset_iccid: asset?.iccid || null,
+          asset_radio: asset?.radio || null,
+          asset_line_number: asset?.line_number || null,
+          asset_solution_id: asset?.solution_id,
+          asset_solution_name: asset?.asset_solutions?.solution || 'Solução não encontrada'
+        };
+      });
 
       return {
         data: mappedData,
