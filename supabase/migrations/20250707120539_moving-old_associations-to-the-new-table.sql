@@ -28,7 +28,7 @@ SELECT
   aca.gb,
   aca.ssid,
   aca.pass,
-  (aca.exit_date IS NULL) AS status,
+  (aca.exit_date IS NULL OR aca.exit_date < aca.entry_date) AS status,
   aca.notes,
   aca.created_at,
   aca.updated_at,
