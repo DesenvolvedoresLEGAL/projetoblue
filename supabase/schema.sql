@@ -96,27 +96,6 @@ CREATE TYPE "public"."association_type_enum" AS ENUM (
 ALTER TYPE "public"."association_type_enum" OWNER TO "postgres";
 
 
-CREATE TYPE "public"."bits_mission_status_enum" AS ENUM (
-    'in_progress',
-    'completed',
-    'expired'
-);
-
-
-ALTER TYPE "public"."bits_mission_status_enum" OWNER TO "postgres";
-
-
-CREATE TYPE "public"."bits_referral_status_enum" AS ENUM (
-    'pendente',
-    'em_negociacao',
-    'fechado',
-    'perdido'
-);
-
-
-ALTER TYPE "public"."bits_referral_status_enum" OWNER TO "postgres";
-
-
 CREATE TYPE "public"."solution_type_enum" AS ENUM (
     'SPEEDY 5G',
     '4BLACK',
@@ -150,53 +129,54 @@ CREATE OR REPLACE FUNCTION "public"."admin_delete_user"("user_id" "uuid") RETURN
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-DECLARE
-  user_email text;
-  current_user_id uuid;
-BEGIN
-  -- Verificar se o usuário atual é admin
-  IF NOT (SELECT has_role('admin'::user_role_enum)) THEN
-    RAISE EXCEPTION 'Acesso negado: apenas administradores podem deletar usuários';
-  END IF;
-
-  -- Obter ID do usuário atual
-  current_user_id := auth.uid();
-  
-  -- Prevenir auto-deleção
-  IF user_id = current_user_id THEN
-    RAISE EXCEPTION 'Não é possível deletar seu próprio usuário';
-  END IF;
-
-  -- Obter email do usuário para logs
-  SELECT email INTO user_email FROM profiles WHERE id = user_id;
-  
-  IF user_email IS NULL THEN
-    RAISE EXCEPTION 'Usuário não encontrado';
-  END IF;
-
-  -- Marcar perfil como deletado (soft delete)
-  UPDATE profiles 
-  SET deleted_at = NOW(), 
-      is_active = false
-  WHERE id = user_id;
-
-  -- Log da ação
-  INSERT INTO profile_logs (
-    user_id, email, operation, table_name, 
-    old_data, new_data
-  ) VALUES (
-    current_user_id,
-    (SELECT email FROM profiles WHERE id = current_user_id),
-    'ADMIN_DELETE_USER',
-    'profiles',
-    jsonb_build_object('deleted_user_id', user_id, 'deleted_user_email', user_email),
-    NULL
-  );
-
-  RETURN TRUE;
+DECLARE user_email text;
+current_user_id uuid;
+BEGIN -- Verificar se o usuário atual é admin
+IF NOT (
+    SELECT has_role('admin'::user_role_enum)
+) THEN RAISE EXCEPTION 'Acesso negado: apenas administradores podem deletar usuários';
+END IF;
+current_user_id := auth.uid();
+IF user_id = current_user_id THEN RAISE EXCEPTION 'Não é possível deletar seu próprio usuário';
+END IF;
+SELECT email INTO user_email
+FROM profiles
+WHERE id = user_id;
+IF user_email IS NULL THEN RAISE EXCEPTION 'Usuário não encontrado';
+END IF;
+UPDATE profiles
+SET deleted_at = NOW(),
+    is_active = false
+WHERE id = user_id;
+INSERT INTO profile_logs (
+        user_id,
+        email,
+        operation,
+        table_name,
+        old_data,
+        new_data
+    )
+VALUES (
+        current_user_id,
+        (
+            SELECT email
+            FROM profiles
+            WHERE id = current_user_id
+        ),
+        'ADMIN_DELETE_USER',
+        'profiles',
+        jsonb_build_object(
+            'deleted_user_id',
+            user_id,
+            'deleted_user_email',
+            user_email
+        ),
+        NULL
+    );
+RETURN TRUE;
 EXCEPTION
-  WHEN OTHERS THEN
-    RAISE EXCEPTION 'Erro ao deletar usuário: %', SQLERRM;
+WHEN OTHERS THEN RAISE EXCEPTION 'Erro ao deletar usuário: %',
+SQLERRM;
 END;
 $$;
 
@@ -207,24 +187,27 @@ ALTER FUNCTION "public"."admin_delete_user"("user_id" "uuid") OWNER TO "postgres
 CREATE OR REPLACE FUNCTION "public"."check_asset_availability"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$BEGIN
+    AS $$
+BEGIN
   SET search_path TO public;
-    IF EXISTS (
+  IF EXISTS (
     SELECT 1
-    FROM asset_client_assoc
-    WHERE asset_id = NEW.asset_id
-      AND id <> COALESCE(NEW.id, -1)  -- Ignora a própria linha (em updates)
-      AND (
-        NEW.entry_date < COALESCE(exit_date, 'infinity') AND
-        COALESCE(NEW.exit_date, 'infinity') > entry_date
-      )
-) THEN
-    RAISE EXCEPTION 'O ativo % já está associado a outro cliente neste período.', NEW.asset_id;
-END IF;
-
-
-    RETURN NEW;
-END;$$;
+    FROM associations a
+    WHERE (
+            (NEW.equipment_id IS NOT NULL AND a.equipment_id = NEW.equipment_id) OR
+            (NEW.chip_id IS NOT NULL AND a.chip_id = NEW.chip_id)
+          )
+      AND a.uuid <> COALESCE(NEW.uuid, '00000000-0000-0000-0000-000000000000')
+      AND NEW.entry_date < COALESCE(a.exit_date, 'infinity')
+      AND COALESCE(NEW.exit_date, 'infinity') > a.entry_date
+      AND a.status = TRUE
+      AND a.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'O ativo % já está associado a outro cliente neste período.', COALESCE(NEW.equipment_id, NEW.chip_id);
+  END IF;
+  RETURN NEW;
+END;
+$$;
 
 
 ALTER FUNCTION "public"."check_asset_availability"() OWNER TO "postgres";
@@ -348,106 +331,61 @@ $$;
 ALTER FUNCTION "public"."detect_association_inconsistencies"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."fix_missing_profiles"() RETURNS TABLE("user_id" "uuid", "email" "text", "fixed" boolean)
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO ''
-    AS $$
-DECLARE
-  u RECORD;
-  fixed_count INT := 0;
-  error_count INT := 0;
-BEGIN
-  FOR u IN 
-    SELECT au.id, au.email 
-    FROM auth.users au
-    LEFT JOIN public.profiles p ON au.id = p.id
-    WHERE p.id IS NULL
-  LOOP
-    BEGIN
-      INSERT INTO public.profiles (id, email, role, is_active, is_approved)
-      VALUES (
-        u.id,
-        u.email,
-        'cliente'::user_role_enum,
-        true,
-        true
-      );
-      fixed_count := fixed_count + 1;
-      user_id := u.id;
-      email := u.email;
-      fixed := true;
-      RAISE NOTICE 'Perfil criado com sucesso para usuário %', u.email;
-      RETURN NEXT;
-    EXCEPTION WHEN OTHERS THEN
-      error_count := error_count + 1;
-      user_id := u.id;
-      email := u.email;
-      fixed := false;
-      RAISE NOTICE 'Erro ao criar perfil para %: %', u.email, SQLERRM;
-      RETURN NEXT;
-    END;
-  END LOOP;
-  
-  RAISE NOTICE 'Resumo: % perfis criados, % erros', fixed_count, error_count;
-  RETURN;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."fix_missing_profiles"() OWNER TO "postgres";
-
-
-COMMENT ON FUNCTION "public"."fix_missing_profiles"() IS 'Função para recuperar perfis de usuários que possam ter sido criados sem o perfil correspondente devido a problemas no trigger.';
-
-
-
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
 DECLARE
-  user_role user_role_enum;
+    username text;
+    user_role user_role_enum;
 BEGIN
-  -- Log de início da função
-  RAISE NOTICE 'handle_new_user: Iniciando criação de perfil para usuário % (email: %)', new.id, new.email;
-  
-  -- Tentar converter o role dos metadados do usuário
-  BEGIN
-    user_role := (new.raw_user_meta_data->>'role')::user_role_enum;
-    RAISE NOTICE 'handle_new_user: Role extraído dos metadados: %', user_role;
-  EXCEPTION 
-    WHEN invalid_text_representation THEN
-      -- Usar 'cliente' como padrão se a conversão falhar
-      user_role := 'cliente'::user_role_enum;
-      RAISE NOTICE 'handle_new_user: Erro ao converter role, usando padrão "cliente" para usuário %', new.email;
-    WHEN OTHERS THEN
-      -- Fallback para qualquer outro erro
-      user_role := 'cliente'::user_role_enum;
-      RAISE NOTICE 'handle_new_user: Erro inesperado ao processar role, usando padrão "cliente" para usuário %', new.email;
-  END;
+    -- Armazenando username em variável
+    username := NEW.raw_user_meta_data ->> 'username';
 
-  -- Tentar inserir o perfil
-  BEGIN
-    INSERT INTO public.profiles (id, email, role, is_active, is_approved)
-    VALUES (
-      new.id,
-      new.email,
-      COALESCE(user_role, 'cliente'::user_role_enum),
-      true,
-      true
-    );
-    
-    RAISE NOTICE 'handle_new_user: Perfil criado com sucesso para usuário % com role %', new.email, COALESCE(user_role, 'cliente'::user_role_enum);
-    
-  EXCEPTION
-    WHEN unique_violation THEN
-      RAISE NOTICE 'handle_new_user: Perfil já existe para usuário %', new.email;
-    WHEN OTHERS THEN
-      RAISE WARNING 'handle_new_user: Erro ao criar perfil para %: % (SQLSTATE: %)', new.email, SQLERRM, SQLSTATE;
-      -- Não fazer RETURN NULL aqui para não bloquear o cadastro
-  END;
-  
-  RETURN new;
+    -- Log de início da função
+    RAISE NOTICE 'handle_new_user: Iniciando criação de perfil para usuário % (email: %)', NEW.id, NEW.email;
+
+    -- Tentar converter o role dos metadados do usuário
+    BEGIN
+        user_role := (NEW.raw_user_meta_data ->> 'role')::user_role_enum;
+        RAISE NOTICE 'handle_new_user: Role extraído dos metadados: %', user_role;
+    EXCEPTION
+        WHEN invalid_text_representation THEN
+            -- Usar 'cliente' como padrão se a conversão falhar
+            user_role := 'cliente'::user_role_enum;
+            RAISE NOTICE 'handle_new_user: Erro ao converter role, usando padrão "cliente" para usuário %', NEW.email;
+        WHEN OTHERS THEN
+            user_role := 'cliente'::user_role_enum;
+            RAISE NOTICE 'handle_new_user: Erro inesperado ao processar role, usando padrão "cliente" para usuário %', NEW.email;
+    END;
+
+    -- Tentar inserir o perfil
+    BEGIN
+        INSERT INTO public.profiles (
+            id,
+            email,
+            role,
+            is_active,
+            is_approved,
+            username
+        ) VALUES (
+            NEW.id,
+            NEW.email,
+            COALESCE(user_role, 'cliente'::user_role_enum),
+            true,
+            true,
+            username
+        );
+        RAISE NOTICE 'handle_new_user: Perfil criado com sucesso para usuário % com role %', NEW.email, COALESCE(user_role, 'cliente'::user_role_enum);
+    EXCEPTION
+        WHEN unique_violation THEN
+            RAISE NOTICE 'handle_new_user: Perfil já existe para usuário %', NEW.email;
+        WHEN OTHERS THEN
+            RAISE WARNING 'handle_new_user: Erro ao criar perfil para %: % (SQLSTATE: %)', NEW.email, SQLERRM, SQLSTATE;
+        -- Não fazer RETURN NULL aqui para não bloquear o cadastro
+    END;
+
+    RETURN NEW;
 END;
 $$;
 
@@ -459,18 +397,16 @@ CREATE OR REPLACE FUNCTION "public"."has_minimum_role"("required_role" "public".
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-DECLARE
-  user_role user_role_enum;
-  role_hierarchy jsonb := '{"admin": 3, "suporte": 2, "cliente": 1, "user": 0}';
+DECLARE user_role user_role_enum;
+role_hierarchy jsonb := '{"admin": 3, "suporte": 2, "cliente": 1, "user": 0}';
 BEGIN
-  SELECT role INTO user_role FROM profiles WHERE id = auth.uid();
-  
-  -- If user not found or role doesn't exist in hierarchy
-  IF user_role IS NULL OR role_hierarchy->>user_role::text IS NULL THEN
-    RETURN false;
-  END IF;
-  
-  RETURN (role_hierarchy->>user_role::text)::int >= (role_hierarchy->>required_role::text)::int;
+SELECT role INTO user_role
+FROM profiles
+WHERE id = auth.uid();
+IF user_role IS NULL
+OR role_hierarchy->>user_role::text IS NULL THEN RETURN false;
+END IF;
+RETURN (role_hierarchy->>user_role::text)::int >= (role_hierarchy->>required_role::text)::int;
 END;
 $$;
 
@@ -482,10 +418,12 @@ CREATE OR REPLACE FUNCTION "public"."has_role"("role_name" "public"."user_role_e
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM profiles
-    WHERE id = auth.uid() AND role = role_name
-  );
+SELECT EXISTS (
+        SELECT 1
+        FROM profiles
+        WHERE id = auth.uid()
+            AND role = role_name
+    );
 $$;
 
 
@@ -496,7 +434,7 @@ CREATE OR REPLACE FUNCTION "public"."is_admin"() RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT has_role('admin'::user_role_enum);
+SELECT has_role('admin'::user_role_enum);
 $$;
 
 
@@ -507,7 +445,7 @@ CREATE OR REPLACE FUNCTION "public"."is_afiliado"() RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT has_role('cliente'::user_role_enum);
+SELECT has_role('cliente'::user_role_enum);
 $$;
 
 
@@ -518,7 +456,7 @@ CREATE OR REPLACE FUNCTION "public"."is_support_or_above"() RETURNS boolean
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT has_minimum_role('suporte'::user_role_enum);
+SELECT has_minimum_role('suporte'::user_role_enum);
 $$;
 
 
@@ -529,288 +467,387 @@ CREATE OR REPLACE FUNCTION "public"."is_user_self"("profile_id" "uuid") RETURNS 
     LANGUAGE "sql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT profile_id = auth.uid()
-$$;
+SELECT profile_id = auth.uid() $$;
 
 
 ALTER FUNCTION "public"."is_user_self"("profile_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION public.fetch_asset_info(asset_uuid text)
-RETURNS TABLE(status_id bigint, solution_id bigint, radio text, line_number bigint)
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-BEGIN
-  RETURN QUERY
-    SELECT status_id, solution_id, radio, line_number
-    FROM assets WHERE uuid = asset_uuid;
-EXCEPTION WHEN OTHERS THEN
-  RETURN;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.get_client_name(client_uuid uuid)
-RETURNS text
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-DECLARE name text;
-BEGIN
-  IF client_uuid IS NOT NULL THEN
-    SELECT nome INTO name FROM clients WHERE uuid = client_uuid;
-  END IF;
-  RETURN name;
-EXCEPTION WHEN OTHERS THEN
-  RETURN NULL;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.get_solution_name(solution_id bigint)
-RETURNS text
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-DECLARE sol text;
-BEGIN
-  IF solution_id IS NOT NULL THEN
-    SELECT solution INTO sol FROM asset_solutions WHERE id = solution_id;
-  END IF;
-  RETURN sol;
-EXCEPTION WHEN OTHERS THEN
-  RETURN NULL;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.load_status_ids()
-RETURNS TABLE(em_locacao bigint, disponivel bigint, em_assinatura bigint)
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-BEGIN
-  SELECT id FROM asset_status WHERE LOWER(status) = 'em locação' LIMIT 1 INTO em_locacao;
-  SELECT id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1 INTO disponivel;
-  SELECT id FROM asset_status WHERE LOWER(status) = 'em assinatura' LIMIT 1 INTO em_assinatura;
-  IF em_locacao IS NULL THEN SELECT id INTO em_locacao FROM asset_status WHERE id = 2 LIMIT 1; END IF;
-  IF disponivel IS NULL THEN SELECT id INTO disponivel FROM asset_status WHERE id = 1 LIMIT 1; END IF;
-  IF em_assinatura IS NULL THEN SELECT id INTO em_assinatura FROM asset_status WHERE id = 3 LIMIT 1; END IF;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.validate_assoc_id(new_id bigint, old_id bigint)
-RETURNS bigint
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-DECLARE result bigint;
-BEGIN
-  IF new_id IS NOT NULL AND EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = new_id) THEN
-    result := new_id;
-  ELSIF old_id IS NOT NULL AND EXISTS (SELECT 1 FROM asset_client_assoc WHERE id = old_id) THEN
-    result := old_id;
-  END IF;
-  RETURN result;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.calc_new_status(
-    op text, new_exit date, old_exit date, association_id bigint,
-    ids record, status_antigo bigint)
-RETURNS TABLE(status_novo bigint, houve_alteracao boolean)
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-BEGIN
-  IF op = 'DELETE' THEN
-    status_novo := ids.disponivel;
-  ELSIF new_exit IS NOT NULL AND (old_exit IS NULL OR old_exit IS DISTINCT FROM new_exit) THEN
-    status_novo := ids.disponivel;
-  ELSIF new_exit IS NULL AND association_id = 1 THEN
-    status_novo := ids.em_locacao;
-  ELSIF new_exit IS NULL AND association_id = 2 THEN
-    status_novo := ids.em_assinatura;
-  ELSE
-    status_novo := status_antigo;
-  END IF;
-  houve_alteracao := (status_novo IS DISTINCT FROM status_antigo);
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.update_asset_status(asset_uuid text, old_status bigint, new_status bigint)
-RETURNS boolean
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-DECLARE current_status bigint;
-BEGIN
-  SELECT status_id INTO current_status FROM assets WHERE uuid = asset_uuid;
-  IF current_status = old_status THEN
-    UPDATE assets SET status_id = new_status
-    WHERE uuid = asset_uuid AND status_id = old_status;
-    RETURN FOUND;
-  END IF;
-  RETURN FALSE;
-EXCEPTION WHEN OTHERS THEN
-  RETURN FALSE;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.insert_asset_log(
-    p_assoc_id bigint, p_event text, p_details jsonb, p_status_before bigint, p_status_after bigint)
-RETURNS void
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM asset_logs
-      WHERE assoc_id = p_assoc_id
-        AND event = p_event
-        AND status_before_id = p_status_before
-        AND status_after_id = p_status_after
-        AND date > NOW() - INTERVAL '5 seconds'
-  ) THEN
-    INSERT INTO asset_logs (assoc_id, date, event, details, status_before_id, status_after_id)
-    VALUES (p_assoc_id, NOW(), p_event, p_details, p_status_before, p_status_after);
-  END IF;
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE '[insert_asset_log] erro: %', SQLERRM;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.log_trigger_error(
-    p_assoc_id bigint, p_asset_uuid text, p_op text, p_err text, p_state text)
-RETURNS void
-LANGUAGE plpgsql
-SET search_path TO 'public'
-AS $$
-BEGIN
-  INSERT INTO asset_logs (
-    assoc_id, date, event, details, status_before_id, status_after_id
-  ) VALUES (
-    p_assoc_id, NOW(), 'TRIGGER_ERROR',
-    jsonb_build_object(
-      'error', p_err,
-      'sqlstate', p_state,
-      'asset_id', p_asset_uuid,
-      'operation', p_op,
-      'timestamp', NOW()
-    ),
-    NULL, NULL
-  );
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE '[log_trigger_error] falha: %', SQLERRM;
-END;
-$$;
-
-
 CREATE OR REPLACE FUNCTION "public"."log_and_update_status"() RETURNS "trigger"
     LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
+    SET "search_path" TO 'public'
     AS $$
-DECLARE
-  status_antigo BIGINT;
-  status_novo BIGINT;
-  houve_alteracao BOOLEAN;
-  asset_info RECORD;
-  ids RECORD;
-  valid_assoc_id BIGINT;
-  current_asset_id TEXT;
-  client_name TEXT;
-  solution_name TEXT;
-  asset_radio TEXT;
-  asset_line_number BIGINT;
-  updated BOOLEAN;
+DECLARE status_antigo BIGINT;
+status_novo BIGINT;
+asset_solution_id BIGINT;
+status_alocado_id BIGINT;
+status_assinatura_id BIGINT;
+status_disponivel_id BIGINT;
+houve_alteracao BOOLEAN := FALSE;
+client_name TEXT;
+asset_radio TEXT;
+asset_line_number BIGINT;
+solution_name TEXT;
+valid_assoc_id BIGINT := NULL;
+validation_result JSONB;
+current_asset_id TEXT;
 BEGIN
-  SET LOCAL search_path TO public;
-  current_asset_id := COALESCE(NEW.asset_id, OLD.asset_id);
-
-  RAISE NOTICE '[log_and_update_status] Trigger executada - asset_id: %, operação: %, timestamp: %',
-    current_asset_id, TG_OP, NOW();
-
-  IF current_asset_id IS NULL OR trim(current_asset_id) = '' THEN
-    RAISE NOTICE '[log_and_update_status] ERRO: asset_id inválido ou vazio';
-    CASE TG_OP WHEN 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END CASE;
-  END IF;
-
-  asset_info := fetch_asset_info(current_asset_id);
-  status_antigo := asset_info.status_id;
-  asset_radio := asset_info.radio;
-  asset_line_number := asset_info.line_number;
-
-  client_name := get_client_name(NEW.client_id);
-  solution_name := get_solution_name(asset_info.solution_id);
-
-  SELECT * INTO ids FROM load_status_ids();
-
-  valid_assoc_id := validate_assoc_id(NEW.id, OLD.id);
-
-  SELECT status_novo, houve_alteracao
-  INTO status_novo, houve_alteracao
-  FROM calc_new_status(
-    TG_OP,
-    NEW.exit_date,
-    OLD.exit_date,
-    COALESCE(NEW.association_id, OLD.association_id),
-    ids,
-    status_antigo
-  );
-
-  IF houve_alteracao THEN
-    updated := update_asset_status(current_asset_id, status_antigo, status_novo);
-    IF NOT updated THEN
-      houve_alteracao := FALSE;
-    END IF;
-  END IF;
-
-  IF houve_alteracao OR TG_OP IN ('INSERT','DELETE') THEN
-    insert_asset_log(
-      valid_assoc_id,
-      CASE
-        WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
-        WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
-        WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
-        ELSE 'ASSOCIATION_MODIFIED'
-      END,
-      jsonb_build_object(
-        'user_id', COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'),
-        'username', COALESCE(current_setting('request.jwt.claim.sub', true), 'system'),
-        'asset_id', current_asset_id,
-        'client_id', COALESCE(NEW.client_id, OLD.client_id),
-        'client_name', client_name,
-        'association_id', COALESCE(NEW.association_id, OLD.association_id),
-        'association_type', CASE
-          WHEN COALESCE(NEW.association_id, OLD.association_id) = 1 THEN 'Aluguel'
-          WHEN COALESCE(NEW.association_id, OLD.association_id) = 2 THEN 'Assinatura'
-          ELSE 'Outros'
-        END,
-        'entry_date', COALESCE(NEW.entry_date, OLD.entry_date),
-        'exit_date', COALESCE(NEW.exit_date, OLD.exit_date),
-        'line_number', asset_line_number,
-        'radio', asset_radio,
-        'solution_name', solution_name,
-        'solution_id', asset_info.solution_id,
-        'old_status_id', status_antigo,
-        'new_status_id', status_novo,
-        'old_status_name', (SELECT status FROM asset_status WHERE id = status_antigo),
-        'new_status_name', (SELECT status FROM asset_status WHERE id = status_novo),
-        'operation', TG_OP,
-        'timestamp', NOW(),
-        'valid_assoc_id', valid_assoc_id,
-        'idempotent_operation', NOT houve_alteracao AND TG_OP != 'INSERT'
-      ),
-      status_antigo,
-      status_novo
-    );
-  END IF;
-
-  CASE TG_OP
+SET LOCAL search_path TO public;
+current_asset_id := COALESCE(NEW.asset_id, OLD.asset_id);
+RAISE NOTICE '[log_and_update_status] Trigger executada - asset_id: %, operação: %, timestamp: %',
+current_asset_id,
+TG_OP,
+NOW();
+IF current_asset_id IS NULL
+OR trim(current_asset_id) = '' THEN RAISE NOTICE '[log_and_update_status] ERRO: asset_id inválido ou vazio';
+CASE
+    TG_OP
     WHEN 'DELETE' THEN RETURN OLD;
-    ELSE RETURN NEW;
-  END CASE;
-EXCEPTION WHEN OTHERS THEN
-  log_trigger_error(valid_assoc_id, current_asset_id, TG_OP, SQLERRM, SQLSTATE);
-  CASE TG_OP WHEN 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END CASE;
+ELSE RETURN NEW;
+END CASE
+;
+END IF;
+BEGIN
+SELECT status_id,
+    solution_id,
+    radio,
+    line_number INTO status_antigo,
+    asset_solution_id,
+    asset_radio,
+    asset_line_number
+FROM assets
+WHERE uuid = current_asset_id;
+IF NOT FOUND THEN RAISE NOTICE '[log_and_update_status] AVISO: Asset % não encontrado na tabela assets',
+current_asset_id;
+ELSE RAISE NOTICE '[log_and_update_status] Asset encontrado - status_id: %, solution_id: %',
+status_antigo,
+asset_solution_id;
+END IF;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao buscar dados do asset %: %',
+current_asset_id,
+SQLERRM;
+status_antigo := NULL;
+asset_solution_id := NULL;
+END;
+IF NEW.client_id IS NOT NULL THEN BEGIN
+SELECT nome INTO client_name
+FROM clients
+WHERE uuid = NEW.client_id;
+RAISE NOTICE '[log_and_update_status] Cliente encontrado: %',
+client_name;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao buscar cliente %: %',
+NEW.client_id,
+SQLERRM;
+client_name := NULL;
+END;
+END IF;
+IF asset_solution_id IS NOT NULL THEN BEGIN
+SELECT solution INTO solution_name
+FROM asset_solutions
+WHERE id = asset_solution_id;
+RAISE NOTICE '[log_and_update_status] Solução encontrada: %',
+solution_name;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao buscar solução %: %',
+asset_solution_id,
+SQLERRM;
+solution_name := NULL;
+END;
+END IF;
+BEGIN
+SELECT id INTO status_alocado_id
+FROM asset_status
+WHERE LOWER(status) = 'em locação'
+LIMIT 1;
+SELECT id INTO status_disponivel_id
+FROM asset_status
+WHERE LOWER(status) IN ('disponível', 'disponivel')
+LIMIT 1;
+SELECT id INTO status_assinatura_id
+FROM asset_status
+WHERE LOWER(status) = 'em assinatura'
+LIMIT 1;
+RAISE NOTICE '[log_and_update_status] Status IDs - alocado: %, disponível: %, assinatura: %', status_alocado_id, status_disponivel_id, status_assinatura_id;
+IF status_alocado_id IS NULL THEN
+SELECT id INTO status_alocado_id
+FROM asset_status
+WHERE id = 2
+LIMIT 1;
+END IF;
+IF status_disponivel_id IS NULL THEN
+SELECT id INTO status_disponivel_id
+FROM asset_status
+WHERE id = 1
+LIMIT 1;
+END IF;
+IF status_assinatura_id IS NULL THEN
+SELECT id INTO status_assinatura_id
+FROM asset_status
+WHERE id = 3
+LIMIT 1;
+END IF;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao buscar IDs de status: %',
+SQLERRM;
+status_alocado_id := 2;
+status_disponivel_id := 1;
+status_assinatura_id := 3;
+END;
+IF TG_OP = 'DELETE' THEN IF OLD.id IS NOT NULL
+AND EXISTS (
+    SELECT 1
+    FROM asset_client_assoc
+    WHERE id = OLD.id
+) THEN valid_assoc_id := OLD.id;
+END IF;
+ELSIF NEW.id IS NOT NULL THEN IF EXISTS (
+    SELECT 1
+    FROM asset_client_assoc
+    WHERE id = NEW.id
+) THEN valid_assoc_id := NEW.id;
+END IF;
+END IF;
+RAISE NOTICE '[log_and_update_status] Association ID validado: %',
+valid_assoc_id;
+IF TG_OP = 'DELETE' THEN status_novo := status_disponivel_id;
+houve_alteracao := (
+    status_novo IS DISTINCT
+    FROM status_antigo
+);
+RAISE NOTICE '[log_and_update_status] DELETE - Status novo: %, houve alteração: %',
+status_novo,
+houve_alteracao;
+ELSIF NEW.exit_date IS NOT NULL
+AND (
+    OLD.exit_date IS NULL
+    OR OLD.exit_date IS DISTINCT
+    FROM NEW.exit_date
+) THEN status_novo := status_disponivel_id;
+houve_alteracao := (
+    status_novo IS DISTINCT
+    FROM status_antigo
+);
+RAISE NOTICE '[log_and_update_status] EXIT_DATE definida - Status novo: %, houve alteração: %',
+status_novo,
+houve_alteracao;
+ELSIF NEW.exit_date IS NULL
+AND (NEW.association_id = 1) THEN status_novo := status_alocado_id;
+houve_alteracao := (
+    status_novo IS DISTINCT
+    FROM status_antigo
+);
+RAISE NOTICE '[log_and_update_status] Associação tipo 1 (aluguel) - Status novo: %, houve alteração: %',
+status_novo,
+houve_alteracao;
+ELSIF NEW.exit_date IS NULL
+AND (NEW.association_id = 2) THEN status_novo := status_assinatura_id;
+houve_alteracao := (
+    status_novo IS DISTINCT
+    FROM status_antigo
+);
+RAISE NOTICE '[log_and_update_status] Associação tipo 2 (assinatura) - Status novo: %, houve alteração: %',
+status_novo,
+houve_alteracao;
+ELSE status_novo := status_antigo;
+RAISE NOTICE '[log_and_update_status] Nenhuma alteração de status necessária';
+END IF;
+IF houve_alteracao
+AND status_novo IS NOT NULL
+AND status_novo IS DISTINCT
+FROM status_antigo THEN BEGIN -- Verificar se o status não foi alterado por outra transação concorrente
+DECLARE current_status_check BIGINT;
+BEGIN
+SELECT status_id INTO current_status_check
+FROM assets
+WHERE uuid = current_asset_id;
+IF current_status_check = status_antigo THEN
+UPDATE assets
+SET status_id = status_novo
+WHERE uuid = current_asset_id
+    AND status_id = status_antigo;
+IF FOUND THEN RAISE NOTICE '[log_and_update_status] Status atualizado com sucesso de % para % no asset %',
+status_antigo,
+status_novo,
+current_asset_id;
+ELSE RAISE NOTICE '[log_and_update_status] Status já foi alterado por outra transação para asset %',
+current_asset_id;
+houve_alteracao := FALSE;
+END IF;
+ELSE RAISE NOTICE '[log_and_update_status] Status do asset % foi alterado concorrentemente (esperado: %, atual: %)',
+current_asset_id,
+status_antigo,
+current_status_check;
+houve_alteracao := FALSE;
+END IF;
+END;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao atualizar status do asset %: %',
+current_asset_id,
+SQLERRM;
+houve_alteracao := FALSE;
+END;
+END IF;
+IF houve_alteracao
+OR TG_OP = 'INSERT'
+OR TG_OP = 'DELETE' THEN BEGIN -- Verificar se não existe log idêntico recente (últimos 5 segundos)
+IF NOT EXISTS (
+    SELECT 1
+    FROM asset_logs
+    WHERE assoc_id = valid_assoc_id
+        AND event = CASE
+            WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
+            WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
+            WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
+            ELSE 'ASSOCIATION_MODIFIED'
+        END
+        AND status_before_id = status_antigo
+        AND status_after_id = status_novo
+        AND date > NOW() - INTERVAL '5 seconds'
+) THEN
+INSERT INTO asset_logs (
+        assoc_id,
+        date,
+        event,
+        details,
+        status_before_id,
+        status_after_id
+    )
+VALUES (
+        valid_assoc_id,
+        NOW(),
+        CASE
+            WHEN TG_OP = 'INSERT' THEN 'ASSOCIATION_CREATED'
+            WHEN TG_OP = 'DELETE' THEN 'ASSOCIATION_REMOVED'
+            WHEN houve_alteracao THEN 'ASSOCIATION_STATUS_UPDATED'
+            ELSE 'ASSOCIATION_MODIFIED'
+        END,
+        jsonb_build_object(
+            'user_id',
+            COALESCE(
+                auth.uid(),
+                '00000000-0000-0000-0000-000000000000'
+            ),
+            'username',
+            COALESCE(
+                current_setting('request.jwt.claim.sub', true),
+                'system'
+            ),
+            'asset_id',
+            current_asset_id,
+            'client_id',
+            COALESCE(NEW.client_id, OLD.client_id),
+            'client_name',
+            client_name,
+            'association_id',
+            COALESCE(NEW.association_id, OLD.association_id),
+            'association_type',
+            CASE
+                WHEN COALESCE(NEW.association_id, OLD.association_id) = 1 THEN 'Aluguel'
+                WHEN COALESCE(NEW.association_id, OLD.association_id) = 2 THEN 'Assinatura'
+                ELSE 'Outros'
+            END,
+            'entry_date',
+            COALESCE(NEW.entry_date, OLD.entry_date),
+            'exit_date',
+            COALESCE(NEW.exit_date, OLD.exit_date),
+            'line_number',
+            asset_line_number,
+            'radio',
+            asset_radio,
+            'solution_name',
+            solution_name,
+            'solution_id',
+            asset_solution_id,
+            'old_status_id',
+            status_antigo,
+            'new_status_id',
+            status_novo,
+            'old_status_name',
+            (
+                SELECT status
+                FROM asset_status
+                WHERE id = status_antigo
+            ),
+            'new_status_name',
+            (
+                SELECT status
+                FROM asset_status
+                WHERE id = status_novo
+            ),
+            'operation',
+            TG_OP,
+            'timestamp',
+            NOW(),
+            'valid_assoc_id',
+            valid_assoc_id,
+            'idempotent_operation',
+            NOT houve_alteracao
+            AND TG_OP != 'INSERT'
+        ),
+        status_antigo,
+        status_novo
+    );
+RAISE NOTICE '[log_and_update_status] Log registrado com sucesso para asset %',
+current_asset_id;
+ELSE RAISE NOTICE '[log_and_update_status] Log duplicado detectado - operação idempotente para asset %',
+current_asset_id;
+END IF;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] ERRO ao inserir log para asset %: %',
+current_asset_id,
+SQLERRM;
+END;
+END IF;
+CASE
+    TG_OP
+    WHEN 'DELETE' THEN RETURN OLD;
+ELSE RETURN NEW;
+END CASE
+;
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] EXCEÇÃO CAPTURADA: % (SQLSTATE: %)',
+SQLERRM,
+SQLSTATE;
+BEGIN
+INSERT INTO asset_logs (
+        assoc_id,
+        date,
+        event,
+        details,
+        status_before_id,
+        status_after_id
+    )
+VALUES (
+        valid_assoc_id,
+        NOW(),
+        'TRIGGER_ERROR',
+        jsonb_build_object(
+            'error',
+            SQLERRM,
+            'sqlstate',
+            SQLSTATE,
+            'asset_id',
+            current_asset_id,
+            'operation',
+            TG_OP,
+            'timestamp',
+            NOW()
+        ),
+        status_antigo,
+        status_antigo
+    );
+EXCEPTION
+WHEN OTHERS THEN RAISE NOTICE '[log_and_update_status] Falha ao inserir log de erro: %',
+SQLERRM;
+END;
+CASE
+    TG_OP
+    WHEN 'DELETE' THEN RETURN OLD;
+ELSE RETURN NEW;
+END CASE
+;
 END;
 $$;
 
@@ -823,7 +860,7 @@ COMMENT ON FUNCTION "public"."log_and_update_status"() IS 'Função principal re
 - Usa mapeamento dinâmico de status (não hardcoded)
 - Gera logs únicos e padronizados
 - Implementa nova lógica: association_id 1 ou 2 = alocado, exit_date preenchido = disponível
-- Versão: 2.0 - Subrotinas 08/07/2025';
+- Versão: 1.0 - Refatoração PRD 28/05/2025';
 
 
 
@@ -831,36 +868,71 @@ CREATE OR REPLACE FUNCTION "public"."log_asset_insert"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
     AS $$BEGIN
-    INSERT INTO asset_logs (
+INSERT INTO asset_logs (
         assoc_id,
         date,
         event,
         details,
         status_before_id,
         status_after_id
-    ) VALUES (
-        NULL, -- Associação não existe ainda
+    )
+VALUES (
+        NULL,
+        -- Associação não existe ainda
         NOW(),
         'ASSET_CRIADO',
         jsonb_build_object(
-        'user_id', coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'),
-        'username', coalesce(current_setting('request.jwt.claim.sub', true), 'system'),
-        'line_number', (select line_number from assets where uuid = new.uuid),
-        'radio', (select radio from assets where uuid = new.uuid),
-        'solution', (select solution from asset_solutions where id = NEW.solution_id),
-        'solution_id', NEW.solution_id,
-        'old_status', null,
-        'old_status_id', null,
-        'new_status', (select status from asset_status where id = new.status_id),
-        'new_status_id', new.status_id,
-        'event_description', 'Ativo cadastrado'
+            'user_id',
+            coalesce(
+                auth.uid(),
+                '00000000-0000-0000-0000-000000000000'
+            ),
+            'username',
+            coalesce(
+                current_setting('request.jwt.claim.sub', true),
+                'system'
+            ),
+            'line_number',
+            (
+                select line_number
+                from assets
+                where uuid = new.uuid
+            ),
+            'radio',
+            (
+                select radio
+                from assets
+                where uuid = new.uuid
+            ),
+            'solution',
+            (
+                select solution
+                from asset_solutions
+                where id = NEW.solution_id
+            ),
+            'solution_id',
+            NEW.solution_id,
+            'old_status',
+            null,
+            'old_status_id',
+            null,
+            'new_status',
+            (
+                select status
+                from asset_status
+                where id = new.status_id
+            ),
+            'new_status_id',
+            new.status_id,
+            'event_description',
+            'Ativo cadastrado'
         ),
         NULL,
         NEW.status_id
     );
-
-    RETURN NEW;
-END;$$;
+RETURN NEW;
+END;
+$$;
 
 
 ALTER FUNCTION "public"."log_asset_insert"() OWNER TO "postgres";
@@ -868,57 +940,72 @@ ALTER FUNCTION "public"."log_asset_insert"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."log_asset_soft_delete"() RETURNS "trigger"
     LANGUAGE "plpgsql"
-    SET "search_path" TO ''
+    SET "search_path" TO 'public'
     AS $$
-DECLARE
-  asset_solution_id BIGINT;
-  solution_name TEXT;
-  status_antigo BIGINT;
-  status_name TEXT;
+DECLARE asset_solution_id BIGINT;
+solution_name TEXT;
+status_antigo BIGINT;
+status_name TEXT;
 BEGIN
-  SET LOCAL search_path TO public;
-
-  -- Só loga se o asset foi marcado como deletado (soft delete)
-  IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
-    -- Buscar dados do asset
-    asset_solution_id := NEW.solution_id;
-    status_antigo := NEW.status_id;
-
-    -- Buscar nomes das tabelas relacionadas
-    SELECT solution INTO solution_name FROM asset_solutions WHERE id = asset_solution_id;
-    SELECT status INTO status_name FROM asset_status WHERE id = status_antigo;
-
-    -- Inserir log de soft delete
-    INSERT INTO asset_logs (
-      assoc_id,
-      date,
-      event,
-      details,
-      status_before_id,
-      status_after_id
-    ) VALUES (
-      NULL, -- Não há associação nesse contexto
-      NOW(),
-      'ASSET_SOFT_DELETE',
-      jsonb_build_object(
-        'user_id', COALESCE(auth.uid(), '00000000-0000-0000-0000-000000000000'),
-        'username', COALESCE(current_setting('request.jwt.claim.sub', true), 'system'),
-        'asset_id', NEW.uuid,
-        'line_number', NEW.line_number,
-        'radio', NEW.radio,
-        'solution_name', solution_name,
-        'solution_id', asset_solution_id,
-        'status_before_name', status_name,
-        'status_before_id', status_antigo,
-        'deleted_at', NEW.deleted_at,
-        'event_description', 'Ativo removido (soft delete)'
-      ),
-      status_antigo,
-      NULL -- Status depois é NULL (soft deleted)
+SET LOCAL search_path TO public;
+IF OLD.deleted_at IS NULL
+AND NEW.deleted_at IS NOT NULL THEN -- Buscar dados do asset
+asset_solution_id := NEW.solution_id;
+status_antigo := NEW.status_id;
+SELECT solution INTO solution_name
+FROM asset_solutions
+WHERE id = asset_solution_id;
+SELECT status INTO status_name
+FROM asset_status
+WHERE id = status_antigo;
+INSERT INTO asset_logs (
+        assoc_id,
+        date,
+        event,
+        details,
+        status_before_id,
+        status_after_id
+    )
+VALUES (
+        NULL,
+        -- Não há associação nesse contexto
+        NOW(),
+        'ASSET_SOFT_DELETE',
+        jsonb_build_object(
+            'user_id',
+            COALESCE(
+                auth.uid(),
+                '00000000-0000-0000-0000-000000000000'
+            ),
+            'username',
+            COALESCE(
+                current_setting('request.jwt.claim.sub', true),
+                'system'
+            ),
+            'asset_id',
+            NEW.uuid,
+            'line_number',
+            NEW.line_number,
+            'radio',
+            NEW.radio,
+            'solution_name',
+            solution_name,
+            'solution_id',
+            asset_solution_id,
+            'status_before_name',
+            status_name,
+            'status_before_id',
+            status_antigo,
+            'deleted_at',
+            NEW.deleted_at,
+            'event_description',
+            'Ativo removido (soft delete)'
+        ),
+        status_antigo,
+        NULL -- Status depois é NULL (soft deleted)
     );
-  END IF;
-
-  RETURN NEW;
+END IF;
+RETURN NEW;
 END;
 $$;
 
@@ -933,130 +1020,22 @@ COMMENT ON FUNCTION "public"."log_asset_soft_delete"() IS 'Função corrigida pa
 
 
 
-CREATE OR REPLACE FUNCTION "public"."log_asset_status_change"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$DECLARE
-  last_assoc_id BIGINT;
-  asset_solution_id BIGINT; -- <--- Adicione isso!
-  old_status_id BIGINT;     -- <--- Se usar mais abaixo
-  new_status_id BIGINT;     -- <--- Se usar mais abaixo
-BEGIN
-  SET LOCAL search_path TO public;
-
-  RAISE NOTICE '[log_asset_status_change] Trigger disparada para asset uuid=%', NEW.uuid;
-
-
-  -- Registra apenas se o status realmente mudou via UPDATE
-  IF NEW.status_id IS DISTINCT FROM OLD.status_id AND TG_OP = 'UPDATE' THEN
-
-    SELECT solution_id INTO asset_solution_id
-    FROM assets
-    WHERE uuid = NEW.uuid;
-
-    -- Busca a última associação do asset (se houver)
-    SELECT id INTO last_assoc_id
-    FROM asset_client_assoc
-    WHERE asset_id = NEW.uuid
-    ORDER BY entry_date DESC, id DESC
-    LIMIT 1;
-
-    -- Registra o log no histórico
-    INSERT INTO asset_logs (
-      assoc_id,
-      date,
-      event,
-      details,
-      status_before_id,
-      status_after_id
-    )
-    VALUES (
-      last_assoc_id,
-      NOW(),
-      'STATUS_UPDATED',
-      jsonb_build_object(
-        'user_id', coalesce(auth.uid(), '00000000-0000-0000-0000-000000000000'),
-        'username', coalesce(current_setting('request.jwt.claim.sub', true), 'system'),
-        'line_number', (select line_number from assets where uuid = new.uuid),
-        'radio', (select radio from assets where uuid = new.uuid),
-        'solution', (select solution from asset_solutions where id = asset_solution_id),
-        'solution_id', asset_solution_id,
-        'old_status', (select status from asset_status where id = OLD.status_id),
-        'old_status_id', OLD.status_id,
-        'new_status', (select status from asset_status where id = NEW.status_id),
-        'new_status_id', NEW.status_id,
-        'event_description', 'Status do ativo atualizado'
-      ),
-      OLD.status_id,
-      NEW.status_id
-    );
-  END IF;
-
-  RETURN NEW;
-END;$$;
-
-
-ALTER FUNCTION "public"."log_asset_status_change"() OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."log_client_changes"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-DECLARE
-  user_email TEXT;
-  safe_user_id UUID;
+DECLARE user_email TEXT;
+safe_user_id UUID;
 BEGIN
-  SET search_path TO public;
-
-  -- Obter user_id com fallback seguro
-  safe_user_id := COALESCE(auth.uid(), NULL);
-
-  -- Obter o email do usuário atual (se disponível)
-  IF safe_user_id IS NOT NULL THEN
-    SELECT email INTO user_email FROM auth.users WHERE id = safe_user_id;
-  END IF;
-
-  IF TG_OP = 'INSERT' THEN
-    INSERT INTO public.client_logs (
-      client_id,
-      event_type,
-      details,
-      performed_by,
-      performed_by_email,
-      date,
-      old_data,
-      new_data
-    ) VALUES (
-      NEW.uuid,
-      'CLIENTE_CRIADO',
-      jsonb_build_object(
-        'empresa', NEW.empresa,
-        'responsavel', NEW.responsavel,
-        'email', NEW.email,
-        'cnpj', NEW.cnpj,
-        'telefones', NEW.telefones,
-        'operation', 'INSERT',
-        'timestamp', NOW()
-      ),
-      safe_user_id,
-      COALESCE(user_email, 'sistema'),
-      NOW(),
-      NULL,
-      row_to_json(NEW)::jsonb
-    );
-    RETURN NEW;
-    
-  ELSIF TG_OP = 'UPDATE' THEN
-    -- Registrar apenas se houve mudanças relevantes (ignorar updated_at)
-    IF (OLD.empresa IS DISTINCT FROM NEW.empresa) OR
-       (OLD.responsavel IS DISTINCT FROM NEW.responsavel) OR
-       (OLD.email IS DISTINCT FROM NEW.email) OR
-       (OLD.cnpj IS DISTINCT FROM NEW.cnpj) OR
-       (OLD.telefones IS DISTINCT FROM NEW.telefones) OR
-       (OLD.deleted_at IS DISTINCT FROM NEW.deleted_at) THEN
-      
-      INSERT INTO public.client_logs (
+SET search_path TO public;
+safe_user_id := COALESCE(auth.uid(), NULL);
+IF safe_user_id IS NOT NULL THEN
+SELECT email INTO user_email
+FROM auth.users
+WHERE id = safe_user_id;
+END IF;
+IF TG_OP = 'INSERT' THEN
+INSERT INTO public.client_logs (
         client_id,
         event_type,
         details,
@@ -1065,70 +1044,159 @@ BEGIN
         date,
         old_data,
         new_data
-      ) VALUES (
+    )
+VALUES (
         NEW.uuid,
-        CASE 
-          WHEN OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN 'CLIENTE_EXCLUIDO'
-          ELSE 'CLIENTE_ATUALIZADO'
+        'CLIENTE_CRIADO',
+        jsonb_build_object(
+            'empresa',
+            NEW.empresa,
+            'responsavel',
+            NEW.responsavel,
+            'email',
+            NEW.email,
+            'cnpj',
+            NEW.cnpj,
+            'telefones',
+            NEW.telefones,
+            'operation',
+            'INSERT',
+            'timestamp',
+            NOW()
+        ),
+        safe_user_id,
+        COALESCE(user_email, 'sistema'),
+        NOW(),
+        NULL,
+        row_to_json(NEW)::jsonb
+    );
+RETURN NEW;
+ELSIF TG_OP = 'UPDATE' THEN -- Registrar apenas se houve mudanças relevantes (ignorar updated_at)
+IF (
+    OLD.empresa IS DISTINCT
+    FROM NEW.empresa
+)
+OR (
+    OLD.responsavel IS DISTINCT
+    FROM NEW.responsavel
+)
+OR (
+    OLD.email IS DISTINCT
+    FROM NEW.email
+)
+OR (
+    OLD.cnpj IS DISTINCT
+    FROM NEW.cnpj
+)
+OR (
+    OLD.telefones IS DISTINCT
+    FROM NEW.telefones
+)
+OR (
+    OLD.deleted_at IS DISTINCT
+    FROM NEW.deleted_at
+) THEN
+INSERT INTO public.client_logs (
+        client_id,
+        event_type,
+        details,
+        performed_by,
+        performed_by_email,
+        date,
+        old_data,
+        new_data
+    )
+VALUES (
+        NEW.uuid,
+        CASE
+            WHEN OLD.deleted_at IS NULL
+            AND NEW.deleted_at IS NOT NULL THEN 'CLIENTE_EXCLUIDO'
+            ELSE 'CLIENTE_ATUALIZADO'
         END,
         jsonb_build_object(
-          'empresa', NEW.empresa,
-          'responsavel', NEW.responsavel,
-          'email', NEW.email,
-          'cnpj', NEW.cnpj,
-          'telefones', NEW.telefones,
-          'changes', jsonb_build_object(
-            'empresa_changed', OLD.empresa IS DISTINCT FROM NEW.empresa,
-            'responsavel_changed', OLD.responsavel IS DISTINCT FROM NEW.responsavel,
-            'email_changed', OLD.email IS DISTINCT FROM NEW.email,
-            'cnpj_changed', OLD.cnpj IS DISTINCT FROM NEW.cnpj,
-            'telefones_changed', OLD.telefones IS DISTINCT FROM NEW.telefones,
-            'soft_deleted', OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL
-          ),
-          'operation', 'UPDATE',
-          'timestamp', NOW()
+            'empresa',
+            NEW.empresa,
+            'responsavel',
+            NEW.responsavel,
+            'email',
+            NEW.email,
+            'cnpj',
+            NEW.cnpj,
+            'telefones',
+            NEW.telefones,
+            'changes',
+            jsonb_build_object(
+                'empresa_changed',
+                OLD.empresa IS DISTINCT
+                FROM NEW.empresa,
+                    'responsavel_changed',
+                    OLD.responsavel IS DISTINCT
+                FROM NEW.responsavel,
+                    'email_changed',
+                    OLD.email IS DISTINCT
+                FROM NEW.email,
+                    'cnpj_changed',
+                    OLD.cnpj IS DISTINCT
+                FROM NEW.cnpj,
+                    'telefones_changed',
+                    OLD.telefones IS DISTINCT
+                FROM NEW.telefones,
+                    'soft_deleted',
+                    OLD.deleted_at IS NULL
+                    AND NEW.deleted_at IS NOT NULL
+            ),
+            'operation',
+            'UPDATE',
+            'timestamp',
+            NOW()
         ),
         safe_user_id,
         COALESCE(user_email, 'sistema'),
         NOW(),
         row_to_json(OLD)::jsonb,
         row_to_json(NEW)::jsonb
-      );
-    END IF;
-    RETURN NEW;
-    
-  ELSIF TG_OP = 'DELETE' THEN
-    INSERT INTO public.client_logs (
-      client_id,
-      event_type,
-      details,
-      performed_by,
-      performed_by_email,
-      date,
-      old_data,
-      new_data
-    ) VALUES (
-      OLD.uuid,
-      'CLIENTE_EXCLUIDO',
-      jsonb_build_object(
-        'empresa', OLD.empresa,
-        'responsavel', OLD.responsavel,
-        'email', OLD.email,
-        'cnpj', OLD.cnpj,
-        'telefones', OLD.telefones,
-        'operation', 'DELETE',
-        'timestamp', NOW()
-      ),
-      safe_user_id,
-      COALESCE(user_email, 'sistema'),
-      NOW(),
-      row_to_json(OLD)::jsonb,
-      NULL
     );
-    RETURN OLD;
-  END IF;
-
-  RETURN NULL;
+END IF;
+RETURN NEW;
+ELSIF TG_OP = 'DELETE' THEN
+INSERT INTO public.client_logs (
+        client_id,
+        event_type,
+        details,
+        performed_by,
+        performed_by_email,
+        date,
+        old_data,
+        new_data
+    )
+VALUES (
+        OLD.uuid,
+        'CLIENTE_EXCLUIDO',
+        jsonb_build_object(
+            'empresa',
+            OLD.empresa,
+            'responsavel',
+            OLD.responsavel,
+            'email',
+            OLD.email,
+            'cnpj',
+            OLD.cnpj,
+            'telefones',
+            OLD.telefones,
+            'operation',
+            'DELETE',
+            'timestamp',
+            NOW()
+        ),
+        safe_user_id,
+        COALESCE(user_email, 'sistema'),
+        NOW(),
+        row_to_json(OLD)::jsonb,
+        NULL
+    );
+RETURN OLD;
+END IF;
+RETURN NULL;
 END;
 $$;
 
@@ -1262,11 +1330,9 @@ ALTER FUNCTION "public"."prevent_rented_association"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."set_updated_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
-    SET "search_path" TO ''
-    AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
+    SET "search_path" TO 'public'
+    AS $$ BEGIN NEW.updated_at = NOW();
+RETURN NEW;
 END;
 $$;
 
@@ -1277,18 +1343,18 @@ ALTER FUNCTION "public"."set_updated_at"() OWNER TO "postgres";
 CREATE OR REPLACE FUNCTION "public"."status_by_asset_type"() RETURNS TABLE("type" "text", "status" "text", "count" bigint)
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    ac.solution AS type,     -- text
-    ast.status AS status,    -- text
-    COUNT(*) AS count        -- bigint
-  FROM assets a
-  JOIN asset_solutions ac ON ac.id = a.solution_id
-  JOIN asset_status ast ON ast.id = a.status_id
-  WHERE a.deleted_at IS NULL
-  GROUP BY ac.solution, ast.status;
+    AS $$ BEGIN RETURN QUERY
+SELECT ac.solution AS type,
+    -- text
+    ast.status AS status,
+    -- text
+    COUNT(*) AS count -- bigint
+FROM assets a
+    JOIN asset_solutions ac ON ac.id = a.solution_id
+    JOIN asset_status ast ON ast.id = a.status_id
+WHERE a.deleted_at IS NULL
+GROUP BY ac.solution,
+    ast.status;
 END;
 $$;
 
@@ -1298,7 +1364,7 @@ ALTER FUNCTION "public"."status_by_asset_type"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."update_all_rented_days"() RETURNS "jsonb"
     LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     asset_record record;
@@ -1318,14 +1384,7 @@ BEGIN
             total_errors := total_errors + 1;
         END IF;
     END LOOP;
-
-    RETURN jsonb_build_object(
-        'success', true,
-        'total_processed', total_processed,
-        'total_updated', total_updated,
-        'total_errors', total_errors,
-        'execution_timestamp', NOW()
-    );
+    RETURN jsonb_build_object('success', true,'total_processed', total_processed,'total_updated', total_updated,'total_errors', total_errors,'execution_timestamp', NOW());
 END;
 $$;
 
@@ -1335,7 +1394,7 @@ ALTER FUNCTION "public"."update_all_rented_days"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."update_asset_rented_days"("asset_uuid" "text") RETURNS "jsonb"
     LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     current_rented_days integer := 0;
@@ -1360,7 +1419,7 @@ BEGIN
     SELECT COUNT(DISTINCT d)::integer INTO calculated_days
     FROM (
         SELECT generate_series(entry_date, exit_date, INTERVAL '1 day')::date AS d
-        FROM public.asset_client_assoc
+        FROM public.associations
         WHERE asset_id = asset_uuid
           AND exit_date IS NOT NULL
           AND entry_date IS NOT NULL
@@ -1395,10 +1454,10 @@ ALTER FUNCTION "public"."update_asset_rented_days"("asset_uuid" "text") OWNER TO
 CREATE OR REPLACE FUNCTION "public"."update_generic_updated_at_column"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
-    AS $$BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
-END;$$;
+    AS $$BEGIN NEW.updated_at = NOW();
+RETURN NEW;
+END;
+$$;
 
 
 ALTER FUNCTION "public"."update_generic_updated_at_column"() OWNER TO "postgres";
@@ -1407,19 +1466,15 @@ ALTER FUNCTION "public"."update_generic_updated_at_column"() OWNER TO "postgres"
 CREATE OR REPLACE FUNCTION "public"."update_profile_last_login"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  -- Atualizar o last_login no profiles quando o last_sign_in_at for atualizado
-  UPDATE public.profiles 
-  SET 
-    last_login = NEW.last_sign_in_at,
+    AS $$ BEGIN -- Atualizar o last_login no profiles quando o last_sign_in_at for atualizado
+UPDATE public.profiles
+SET last_login = NEW.last_sign_in_at,
     updated_at = NOW()
-  WHERE id = NEW.id;
-  
-  -- Log para debug (opcional)
-  RAISE LOG 'Updated last_login for user % to %', NEW.id, NEW.last_sign_in_at;
-  
-  RETURN NEW;
+WHERE id = NEW.id;
+RAISE LOG 'Updated last_login for user % to %',
+NEW.id,
+NEW.last_sign_in_at;
+RETURN NEW;
 END;
 $$;
 
@@ -1430,11 +1485,11 @@ ALTER FUNCTION "public"."update_profile_last_login"() OWNER TO "postgres";
 CREATE OR REPLACE FUNCTION "public"."user_has_profile"("user_id" "uuid") RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
-    AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM profiles WHERE id = user_id
-  );
+    AS $$ BEGIN RETURN EXISTS (
+        SELECT 1
+        FROM profiles
+        WHERE id = user_id
+    );
 END;
 $$;
 
@@ -1442,262 +1497,31 @@ $$;
 ALTER FUNCTION "public"."user_has_profile"("user_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint DEFAULT NULL::bigint) RETURNS "jsonb"
-    LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
-    AS $$
-DECLARE
-    asset_exists BOOLEAN := FALSE;
-    asset_status_id BIGINT;
-    asset_status_name TEXT;
-    active_associations_count INTEGER := 0;
-    status_disponivel_id BIGINT;
-    status_alocado_id BIGINT;
-    status_assinatura_id BIGINT;
-    validation_result JSONB;
-BEGIN
-    -- Log detalhado dos parâmetros de entrada
-    RAISE NOTICE '[validate_association_state] Iniciando validação - asset_id: %, operation: %, association_id: %', 
-        p_asset_id, p_operation, p_association_id;
-
-    -- Verificar se os parâmetros obrigatórios foram fornecidos
-    IF p_asset_id IS NULL OR trim(p_asset_id) = '' THEN
-        RAISE NOTICE '[validate_association_state] ERRO: asset_id é obrigatório';
-        RETURN jsonb_build_object(
-            'valid', false,
-            'error_code', 'INVALID_PARAMETERS',
-            'message', 'asset_id é obrigatório',
-            'asset_id', p_asset_id
-        );
-    END IF;
-
-    IF p_operation IS NULL OR p_operation NOT IN ('CREATE', 'END') THEN
-        RAISE NOTICE '[validate_association_state] ERRO: operation deve ser CREATE ou END, recebido: %', p_operation;
-        RETURN jsonb_build_object(
-            'valid', false,
-            'error_code', 'INVALID_PARAMETERS',
-            'message', 'operation deve ser CREATE ou END',
-            'operation', p_operation
-        );
-    END IF;
-
-    -- Buscar IDs de status dinamicamente com logging
-    SELECT id INTO status_disponivel_id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1;
-    SELECT id INTO status_alocado_id FROM asset_status WHERE LOWER(status) = 'em locação' LIMIT 1;
-    SELECT id INTO status_assinatura_id FROM asset_status WHERE LOWER(status) = 'em assinatura' LIMIT 1;
-
-    RAISE NOTICE '[validate_association_state] Status IDs encontrados - disponível: %, alocado: %, assinatura: %', 
-        status_disponivel_id, status_alocado_id, status_assinatura_id;
-
-    -- Verificar se encontrou os status necessários
-    IF status_disponivel_id IS NULL THEN
-        RAISE NOTICE '[validate_association_state] ERRO: Status disponível não encontrado';
-        RETURN jsonb_build_object(
-            'valid', false,
-            'error_code', 'STATUS_CONFIG_ERROR',
-            'message', 'Status disponível não encontrado no sistema'
-        );
-    END IF;
-
-    -- Verificar se o asset existe e obter status atual
-    BEGIN
-        SELECT 
-            CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END,
-            MAX(status_id)
-        INTO asset_exists, asset_status_id
-        FROM assets 
-        WHERE uuid = p_asset_id AND deleted_at IS NULL;
-
-        RAISE NOTICE '[validate_association_state] Asset encontrado: %, status_id atual: %', asset_exists, asset_status_id;
-    EXCEPTION
-        WHEN OTHERS THEN
-            RAISE NOTICE '[validate_association_state] ERRO ao buscar asset: %', SQLERRM;
-            RETURN jsonb_build_object(
-                'valid', false,
-                'error_code', 'DATABASE_ERROR',
-                'message', 'Erro ao verificar existência do asset',
-                'error_detail', SQLERRM,
-                'asset_id', p_asset_id
-            );
-    END;
-
-    IF NOT asset_exists THEN
-        RAISE NOTICE '[validate_association_state] ERRO: Asset não encontrado - %', p_asset_id;
-        RETURN jsonb_build_object(
-            'valid', false,
-            'error_code', 'ASSET_NOT_FOUND',
-            'message', 'Asset não encontrado',
-            'asset_id', p_asset_id
-        );
-    END IF;
-
-    -- Buscar nome do status atual
-    BEGIN
-        SELECT status INTO asset_status_name FROM asset_status WHERE id = asset_status_id;
-        RAISE NOTICE '[validate_association_state] Nome do status atual: %', asset_status_name;
-    EXCEPTION
-        WHEN OTHERS THEN
-            RAISE NOTICE '[validate_association_state] ERRO ao buscar nome do status: %', SQLERRM;
-            asset_status_name := 'Status desconhecido';
-    END;
-
-    -- Contar associações ativas
-    BEGIN
-        SELECT COUNT(*) INTO active_associations_count
-        FROM asset_client_assoc
-        WHERE asset_id = p_asset_id 
-          AND exit_date IS NULL 
-          AND deleted_at IS NULL;
-
-        RAISE NOTICE '[validate_association_state] Associações ativas encontradas: %', active_associations_count;
-    EXCEPTION
-        WHEN OTHERS THEN
-            RAISE NOTICE '[validate_association_state] ERRO ao contar associações ativas: %', SQLERRM;
-            RETURN jsonb_build_object(
-                'valid', false,
-                'error_code', 'DATABASE_ERROR',
-                'message', 'Erro ao verificar associações ativas',
-                'error_detail', SQLERRM,
-                'asset_id', p_asset_id
-            );
-    END;
-
-    -- Validações específicas por operação
-    IF p_operation = 'CREATE' THEN
-        RAISE NOTICE '[validate_association_state] Validando operação CREATE';
-        
-        -- Verificar se asset já está associado
-        IF active_associations_count > 0 THEN
-            RAISE NOTICE '[validate_association_state] Asset já possui % associação(ões) ativa(s)', active_associations_count;
-            RETURN jsonb_build_object(
-                'valid', false,
-                'error_code', 'ASSET_ALREADY_ASSOCIATED',
-                'message', 'Asset já possui associação ativa',
-                'asset_id', p_asset_id,
-                'current_status', asset_status_name,
-                'active_associations', active_associations_count
-            );
-        END IF;
-
-        -- Verificar se status permite nova associação
-        IF asset_status_id NOT IN (status_disponivel_id) THEN
-            RAISE NOTICE '[validate_association_state] Status % não permite nova associação', asset_status_name;
-            RETURN jsonb_build_object(
-                'valid', false,
-                'error_code', 'INVALID_STATUS_FOR_ASSOCIATION',
-                'message', 'Status do asset não permite nova associação',
-                'asset_id', p_asset_id,
-                'current_status', asset_status_name,
-                'current_status_id', asset_status_id
-            );
-        END IF;
-
-    ELSIF p_operation = 'END' THEN
-        RAISE NOTICE '[validate_association_state] Validando operação END';
-        
-        -- Verificar se existe associação para encerrar
-        IF active_associations_count = 0 THEN
-            RAISE NOTICE '[validate_association_state] Nenhuma associação ativa encontrada para encerrar';
-            RETURN jsonb_build_object(
-                'valid', false,
-                'error_code', 'NO_ACTIVE_ASSOCIATION',
-                'message', 'Não há associação ativa para encerrar',
-                'asset_id', p_asset_id,
-                'current_status', asset_status_name
-            );
-        END IF;
-
-        -- Verificar se a associação específica existe (se fornecida)
-        IF p_association_id IS NOT NULL THEN
-            IF NOT EXISTS (
-                SELECT 1 FROM asset_client_assoc 
-                WHERE id = p_association_id 
-                  AND asset_id = p_asset_id 
-                  AND exit_date IS NULL 
-                  AND deleted_at IS NULL
-            ) THEN
-                RAISE NOTICE '[validate_association_state] Associação específica % não encontrada', p_association_id;
-                RETURN jsonb_build_object(
-                    'valid', false,
-                    'error_code', 'ASSOCIATION_NOT_FOUND',
-                    'message', 'Associação específica não encontrada ou já encerrada',
-                    'asset_id', p_asset_id,
-                    'association_id', p_association_id
-                );
-            END IF;
-        END IF;
-    END IF;
-
-    -- Se chegou até aqui, validação passou
-    RAISE NOTICE '[validate_association_state] Validação APROVADA para asset %', p_asset_id;
-    RETURN jsonb_build_object(
-        'valid', true,
-        'asset_id', p_asset_id,
-        'current_status', asset_status_name,
-        'current_status_id', asset_status_id,
-        'active_associations', active_associations_count,
-        'message', 'Validação passou - operação pode prosseguir'
-    );
-
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE '[validate_association_state] EXCEÇÃO CAPTURADA: % (SQLSTATE: %)', SQLERRM, SQLSTATE;
-        RETURN jsonb_build_object(
-            'valid', false,
-            'error_code', 'VALIDATION_ERROR',
-            'message', 'Erro interno na validação',
-            'error_detail', SQLERRM,
-            'sqlstate', SQLSTATE,
-            'asset_id', p_asset_id
-        );
-END;
-$$;
-
-
-ALTER FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."validate_rented_days_integrity"() RETURNS TABLE("asset_id" "text", "current_rented_days" integer, "calculated_days" integer, "is_consistent" boolean, "message" "text")
     LANGUAGE "plpgsql"
-    SET "search_path" TO 'public, auth'
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
     asset_record RECORD;
-    calc_result JSONB;
+    calculated_days integer;
 BEGIN
-    FOR asset_record IN
-        SELECT uuid, rented_days
-        FROM assets 
-        WHERE deleted_at IS NULL
-        ORDER BY uuid
-        LIMIT 10 -- Limitar para teste inicial
-    LOOP
-        -- Simular cálculo sem atualizar
+    FOR asset_record IN SELECT uuid, rented_days FROM assets WHERE deleted_at IS NULL LOOP
         WITH periods AS (
             SELECT entry_date, exit_date
-            FROM asset_client_assoc
-            WHERE asset_id = asset_record.uuid 
+            FROM associations
+            WHERE (equipment_id = asset_record.uuid OR chip_id = asset_record.uuid)
               AND exit_date IS NOT NULL
               AND deleted_at IS NULL
               AND entry_date IS NOT NULL
               AND exit_date >= entry_date
-        ),
-        merged AS (
-            -- Simplificação: somar todos os períodos (pode ter pequena imprecisão por sobreposição)
-            SELECT COALESCE(SUM(exit_date - entry_date + 1), 0) as total_days
-            FROM periods
+        ), merged AS (
+            SELECT COALESCE(SUM(exit_date - entry_date + 1),0) AS total_days FROM periods
         )
-        SELECT total_days INTO calculated_days
-        FROM merged;
-        
+        SELECT total_days INTO calculated_days FROM merged;
         asset_id := asset_record.uuid;
-        current_rented_days := COALESCE(asset_record.rented_days, 0);
+        current_rented_days := COALESCE(asset_record.rented_days,0);
         is_consistent := (current_rented_days >= calculated_days);
-        message := CASE 
-            WHEN current_rented_days >= calculated_days THEN 'OK - Historical + Blue periods'
-            ELSE 'INCONSISTENT - Current value less than calculated'
-        END;
-        
+        message := CASE WHEN is_consistent THEN 'OK - Historical + Blue periods' ELSE 'INCONSISTENT - Current value less than calculated' END;
         RETURN NEXT;
     END LOOP;
 END;
@@ -1879,224 +1703,6 @@ CREATE TABLE IF NOT EXISTS "public"."associations" (
 
 
 ALTER TABLE "public"."associations" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_badges_catalog" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "icon_url" "text",
-    "criteria" "jsonb",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_badges_catalog" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_badges_catalog"."icon_url" IS 'URL or identifier for the badge icon';
-
-
-
-COMMENT ON COLUMN "public"."bits_badges_catalog"."criteria" IS 'Describes how to earn the badge, e.g., {"type": "referrals_made", "count": 5}';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_campaigns" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "point_multiplier" numeric(5,2),
-    "bonus_points" integer,
-    "applicable_to" "jsonb",
-    "start_date" timestamp with time zone NOT NULL,
-    "end_date" timestamp with time zone NOT NULL,
-    "is_active" boolean DEFAULT true NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_campaigns" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_campaigns"."point_multiplier" IS 'e.g., 1.50 for 1.5x points';
-
-
-
-COMMENT ON COLUMN "public"."bits_campaigns"."applicable_to" IS 'Describes what the campaign applies to, e.g., {"type": "all_referrals"} or {"type": "specific_mission", "mission_id": "..."}';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_levels_catalog" (
-    "level_number" integer NOT NULL,
-    "name" "text" NOT NULL,
-    "points_required" integer NOT NULL,
-    "benefits" "jsonb",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_levels_catalog" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_levels_catalog"."benefits" IS 'Describes benefits of this level, e.g., {"point_multiplier": 1.1, "exclusive_rewards": true}';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_missions_catalog" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "points_reward" integer DEFAULT 0,
-    "badge_reward_id" "uuid",
-    "criteria" "jsonb",
-    "start_date" timestamp with time zone,
-    "end_date" timestamp with time zone,
-    "is_active" boolean DEFAULT true NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_missions_catalog" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_missions_catalog"."criteria" IS 'Describes how to complete the mission, e.g., {"type": "refer_x_friends_in_y_days", "count": 3, "days": 30}';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_points_log" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "points" integer NOT NULL,
-    "action_type" "text" NOT NULL,
-    "related_referral_id" "uuid",
-    "related_reward_id" "uuid",
-    "description" "text",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."bits_points_log" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_referrals" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "referrer_user_id" "uuid" NOT NULL,
-    "referred_name" "text" NOT NULL,
-    "referred_company" "text",
-    "referred_email" "text" NOT NULL,
-    "referred_phone" "text",
-    "referral_link_used" "text",
-    "status" "public"."bits_referral_status_enum" DEFAULT 'pendente'::"public"."bits_referral_status_enum",
-    "points_earned" integer DEFAULT 0,
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    "deleted_at" timestamp with time zone,
-    "piperun_lead_id" "text",
-    "piperun_deal_status" "text",
-    "conversion_data" "jsonb"
-);
-
-
-ALTER TABLE "public"."bits_referrals" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_referrals"."piperun_lead_id" IS 'Lead ID from Piperun CRM.';
-
-
-
-COMMENT ON COLUMN "public"."bits_referrals"."piperun_deal_status" IS 'Deal status from Piperun CRM.';
-
-
-
-COMMENT ON COLUMN "public"."bits_referrals"."conversion_data" IS 'Additional data from CRM upon conversion.';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_rewards_catalog" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "points_required" integer NOT NULL,
-    "is_active" boolean DEFAULT true,
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."bits_rewards_catalog" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_user_badges" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "badge_id" "uuid" NOT NULL,
-    "earned_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_user_badges" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_user_missions" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "mission_id" "uuid" NOT NULL,
-    "status" "public"."bits_mission_status_enum" DEFAULT 'in_progress'::"public"."bits_mission_status_enum" NOT NULL,
-    "progress" "jsonb",
-    "completed_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_user_missions" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_user_missions"."progress" IS 'Tracks progress towards mission completion, e.g., {"referrals_made": 2}';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_user_profile_stats" (
-    "user_id" "uuid" NOT NULL,
-    "current_points_balance" integer DEFAULT 0 NOT NULL,
-    "total_points_earned" integer DEFAULT 0 NOT NULL,
-    "current_level_number" integer DEFAULT 1 NOT NULL,
-    "last_points_activity_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
-);
-
-
-ALTER TABLE "public"."bits_user_profile_stats" OWNER TO "postgres";
-
-
-COMMENT ON COLUMN "public"."bits_user_profile_stats"."last_points_activity_at" IS 'Timestamp of the last activity that affected points, useful for expiration logic.';
-
-
-
-CREATE TABLE IF NOT EXISTS "public"."bits_user_rewards" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "reward_id" "uuid" NOT NULL,
-    "redeemed_at" timestamp with time zone DEFAULT "now"(),
-    "points_spent" integer NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "deleted_at" timestamp with time zone
-);
-
-
-ALTER TABLE "public"."bits_user_rewards" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."client_logs" (
@@ -2287,7 +1893,6 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "email" "text" NOT NULL,
     "role" "public"."user_role_enum" DEFAULT 'cliente'::"public"."user_role_enum" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "bits_referral_code" "text",
     "is_active" boolean DEFAULT true,
     "is_approved" boolean DEFAULT true,
     "last_login" timestamp with time zone,
@@ -2327,9 +1932,9 @@ ALTER TABLE "public"."asset_status" ALTER COLUMN "id" ADD GENERATED BY DEFAULT A
 
 
 CREATE OR REPLACE VIEW "public"."v_active_clients" WITH ("security_invoker"='on') AS
- SELECT DISTINCT "asset_client_assoc"."client_id"
-   FROM "public"."asset_client_assoc"
-  WHERE (("asset_client_assoc"."exit_date" IS NULL) OR ("asset_client_assoc"."exit_date" > "now"()));
+ SELECT DISTINCT "associations"."client_id"
+   FROM "public"."associations"
+  WHERE (("associations"."status" = true) AND ("associations"."deleted_at" IS NULL));
 
 
 ALTER TABLE "public"."v_active_clients" OWNER TO "postgres";
@@ -2410,71 +2015,6 @@ ALTER TABLE ONLY "public"."associations"
 
 
 
-ALTER TABLE ONLY "public"."bits_badges_catalog"
-    ADD CONSTRAINT "bits_badges_catalog_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_campaigns"
-    ADD CONSTRAINT "bits_campaigns_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_levels_catalog"
-    ADD CONSTRAINT "bits_levels_catalog_pkey" PRIMARY KEY ("level_number");
-
-
-
-ALTER TABLE ONLY "public"."bits_missions_catalog"
-    ADD CONSTRAINT "bits_missions_catalog_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_points_log"
-    ADD CONSTRAINT "bits_points_log_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_referrals"
-    ADD CONSTRAINT "bits_referrals_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_rewards_catalog"
-    ADD CONSTRAINT "bits_rewards_catalog_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_badges"
-    ADD CONSTRAINT "bits_user_badges_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_badges"
-    ADD CONSTRAINT "bits_user_badges_user_id_badge_id_key" UNIQUE ("user_id", "badge_id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_missions"
-    ADD CONSTRAINT "bits_user_missions_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_missions"
-    ADD CONSTRAINT "bits_user_missions_user_id_mission_id_key" UNIQUE ("user_id", "mission_id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_profile_stats"
-    ADD CONSTRAINT "bits_user_profile_stats_pkey" PRIMARY KEY ("user_id");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_rewards"
-    ADD CONSTRAINT "bits_user_rewards_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."client_logs"
     ADD CONSTRAINT "client_logs_pkey" PRIMARY KEY ("id");
 
@@ -2527,11 +2067,6 @@ ALTER TABLE ONLY "public"."plans"
 
 ALTER TABLE ONLY "public"."profile_logs"
     ADD CONSTRAINT "profile_logs_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."profiles"
-    ADD CONSTRAINT "profiles_bits_referral_code_key" UNIQUE ("bits_referral_code");
 
 
 
@@ -2667,15 +2202,23 @@ CREATE OR REPLACE TRIGGER "asset_histories_log_trigger_before_delete" BEFORE DEL
 
 
 
-CREATE OR REPLACE TRIGGER "asset_status_update_history" AFTER UPDATE OF "status_id" ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."log_asset_status_change"();
-
-
-
 CREATE OR REPLACE TRIGGER "assets_after_insert" AFTER INSERT ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."log_asset_insert"();
 
 
 
 CREATE OR REPLACE TRIGGER "assets_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."assets" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
+
+
+
+CREATE OR REPLACE TRIGGER "associations_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."associations" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
+
+
+
+CREATE OR REPLACE TRIGGER "associations_status_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."associations" FOR EACH ROW EXECUTE FUNCTION "public"."log_and_update_status"();
+
+
+
+CREATE OR REPLACE TRIGGER "check_availability_before_association" BEFORE INSERT OR UPDATE ON "public"."associations" FOR EACH ROW EXECUTE FUNCTION "public"."check_asset_availability"();
 
 
 
@@ -2691,15 +2234,11 @@ CREATE OR REPLACE TRIGGER "clients_log_trigger" AFTER INSERT OR DELETE OR UPDATE
 
 
 
-CREATE OR REPLACE TRIGGER "handle_bits_referrals_updated_at" BEFORE UPDATE ON "public"."bits_referrals" FOR EACH ROW EXECUTE FUNCTION "public"."update_generic_updated_at_column"();
-
-
-
-CREATE OR REPLACE TRIGGER "handle_bits_rewards_catalog_updated_at" BEFORE UPDATE ON "public"."bits_rewards_catalog" FOR EACH ROW EXECUTE FUNCTION "public"."update_generic_updated_at_column"();
-
-
-
 CREATE OR REPLACE TRIGGER "plans_log_trigger" AFTER INSERT OR DELETE OR UPDATE ON "public"."plans" FOR EACH ROW EXECUTE FUNCTION "public"."log_profile_change"();
+
+
+
+CREATE OR REPLACE TRIGGER "prevent_rented_association_before" BEFORE INSERT ON "public"."associations" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_rented_association"();
 
 
 
@@ -2727,47 +2266,7 @@ CREATE OR REPLACE TRIGGER "set_association_types_updated_at" BEFORE UPDATE ON "p
 
 
 
-CREATE OR REPLACE TRIGGER "set_bits_badges_catalog_updated_at" BEFORE UPDATE ON "public"."bits_badges_catalog" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_campaigns_updated_at" BEFORE UPDATE ON "public"."bits_campaigns" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_levels_catalog_updated_at" BEFORE UPDATE ON "public"."bits_levels_catalog" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_missions_catalog_updated_at" BEFORE UPDATE ON "public"."bits_missions_catalog" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_points_log_updated_at" BEFORE UPDATE ON "public"."bits_points_log" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_referrals_updated_at" BEFORE UPDATE ON "public"."bits_referrals" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_rewards_catalog_updated_at" BEFORE UPDATE ON "public"."bits_rewards_catalog" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_user_badges_updated_at" BEFORE UPDATE ON "public"."bits_user_badges" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_user_missions_updated_at" BEFORE UPDATE ON "public"."bits_user_missions" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_user_profile_stats_updated_at" BEFORE UPDATE ON "public"."bits_user_profile_stats" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
-
-
-
-CREATE OR REPLACE TRIGGER "set_bits_user_rewards_updated_at" BEFORE UPDATE ON "public"."bits_user_rewards" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
+CREATE OR REPLACE TRIGGER "set_associations_updated_at" BEFORE UPDATE ON "public"."associations" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
 
@@ -2842,71 +2341,6 @@ ALTER TABLE ONLY "public"."assets"
 
 ALTER TABLE ONLY "public"."associations"
     ADD CONSTRAINT "association_type_id_fkey" FOREIGN KEY ("association_type_id") REFERENCES "public"."association_types"("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_missions_catalog"
-    ADD CONSTRAINT "bits_missions_catalog_badge_reward_id_fkey" FOREIGN KEY ("badge_reward_id") REFERENCES "public"."bits_badges_catalog"("id");
-
-
-
-ALTER TABLE ONLY "public"."bits_points_log"
-    ADD CONSTRAINT "bits_points_log_related_referral_id_fkey" FOREIGN KEY ("related_referral_id") REFERENCES "public"."bits_referrals"("id") ON DELETE SET NULL;
-
-
-
-ALTER TABLE ONLY "public"."bits_points_log"
-    ADD CONSTRAINT "bits_points_log_related_reward_id_fkey" FOREIGN KEY ("related_reward_id") REFERENCES "public"."bits_rewards_catalog"("id") ON DELETE SET NULL;
-
-
-
-ALTER TABLE ONLY "public"."bits_points_log"
-    ADD CONSTRAINT "bits_points_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_referrals"
-    ADD CONSTRAINT "bits_referrals_referrer_user_id_fkey" FOREIGN KEY ("referrer_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_badges"
-    ADD CONSTRAINT "bits_user_badges_badge_id_fkey" FOREIGN KEY ("badge_id") REFERENCES "public"."bits_badges_catalog"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_badges"
-    ADD CONSTRAINT "bits_user_badges_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_missions"
-    ADD CONSTRAINT "bits_user_missions_mission_id_fkey" FOREIGN KEY ("mission_id") REFERENCES "public"."bits_missions_catalog"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_missions"
-    ADD CONSTRAINT "bits_user_missions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_profile_stats"
-    ADD CONSTRAINT "bits_user_profile_stats_current_level_number_fkey" FOREIGN KEY ("current_level_number") REFERENCES "public"."bits_levels_catalog"("level_number");
-
-
-
-ALTER TABLE ONLY "public"."bits_user_profile_stats"
-    ADD CONSTRAINT "bits_user_profile_stats_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_rewards"
-    ADD CONSTRAINT "bits_user_rewards_reward_id_fkey" FOREIGN KEY ("reward_id") REFERENCES "public"."bits_rewards_catalog"("id") ON DELETE RESTRICT;
-
-
-
-ALTER TABLE ONLY "public"."bits_user_rewards"
-    ADD CONSTRAINT "bits_user_rewards_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -2995,43 +2429,11 @@ ALTER TABLE ONLY "public"."asset_status"
 
 
 
-CREATE POLICY "Admins can do everything with referrals" ON "public"."bits_referrals" TO "authenticated" USING ("public"."has_role"('admin'::"public"."user_role_enum"));
-
-
-
 CREATE POLICY "Admins can insert profile logs" ON "public"."profile_logs" FOR INSERT TO "authenticated" WITH CHECK ("public"."has_role"('admin'::"public"."user_role_enum"));
 
 
 
-CREATE POLICY "Admins can manage all points logs" ON "public"."bits_points_log" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Admins can manage all referrals" ON "public"."bits_referrals" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Admins can manage all user rewards" ON "public"."bits_user_rewards" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
-CREATE POLICY "Admins can manage rewards catalog" ON "public"."bits_rewards_catalog" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
-
-
-
 CREATE POLICY "Admins can view all profile logs" ON "public"."profile_logs" FOR SELECT TO "authenticated" USING ("public"."has_role"('admin'::"public"."user_role_enum"));
-
-
-
-CREATE POLICY "Afiliados can manage their own redeemed rewards" ON "public"."bits_user_rewards" USING ((("user_id" = "auth"."uid"()) AND "public"."is_afiliado"())) WITH CHECK ((("user_id" = "auth"."uid"()) AND "public"."is_afiliado"()));
-
-
-
-CREATE POLICY "Afiliados can manage their own referrals" ON "public"."bits_referrals" USING ((("referrer_user_id" = "auth"."uid"()) AND "public"."is_afiliado"())) WITH CHECK ((("referrer_user_id" = "auth"."uid"()) AND "public"."is_afiliado"()));
-
-
-
-CREATE POLICY "Afiliados can view their own points log" ON "public"."bits_points_log" FOR SELECT USING ((("user_id" = "auth"."uid"()) AND "public"."is_afiliado"()));
 
 
 
@@ -3076,34 +2478,6 @@ CREATE POLICY "Auth users can update" ON "public"."client_logs" FOR UPDATE TO "a
 
 
 CREATE POLICY "Auth users can update" ON "public"."clients" FOR UPDATE TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Authenticated users can read active campaigns" ON "public"."bits_campaigns" FOR SELECT TO "authenticated" USING (("is_active" = true));
-
-
-
-CREATE POLICY "Authenticated users can read badges catalog" ON "public"."bits_badges_catalog" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Authenticated users can read levels catalog" ON "public"."bits_levels_catalog" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Authenticated users can read missions catalog" ON "public"."bits_missions_catalog" FOR SELECT TO "authenticated" USING (true);
-
-
-
-CREATE POLICY "Authenticated users can view rewards catalog" ON "public"."bits_rewards_catalog" FOR SELECT USING (("auth"."role"() = 'authenticated'::"text"));
-
-
-
-CREATE POLICY "Clientes can create referrals" ON "public"."bits_referrals" FOR INSERT TO "authenticated" WITH CHECK (("referrer_user_id" = "auth"."uid"()));
-
-
-
-CREATE POLICY "Clientes can view their own referrals" ON "public"."bits_referrals" FOR SELECT TO "authenticated" USING (("referrer_user_id" = "auth"."uid"()));
 
 
 
@@ -3166,26 +2540,6 @@ CREATE POLICY "Enable update for users based on email" ON "public"."profiles" US
 CREATE POLICY "Only admins can view profile logs" ON "public"."profile_logs" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."profiles"
   WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."role" = 'admin'::"public"."user_role_enum")))));
-
-
-
-CREATE POLICY "Suporte can manage all referrals" ON "public"."bits_referrals" TO "authenticated" USING ("public"."has_role"('suporte'::"public"."user_role_enum"));
-
-
-
-CREATE POLICY "Users can update their own mission progress" ON "public"."bits_user_missions" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can view their own earned badges" ON "public"."bits_user_badges" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can view their own missions" ON "public"."bits_user_missions" FOR SELECT USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can view their own profile stats" ON "public"."bits_user_profile_stats" FOR SELECT USING (("auth"."uid"() = "user_id"));
 
 
 
@@ -3261,39 +2615,6 @@ ALTER TABLE "public"."assets" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."association_types" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_badges_catalog" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_campaigns" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_levels_catalog" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_missions_catalog" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_points_log" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_referrals" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_rewards_catalog" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_user_badges" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_user_missions" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_user_profile_stats" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."bits_user_rewards" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."client_logs" ENABLE ROW LEVEL SECURITY;
@@ -3527,12 +2848,6 @@ GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "servic
 
 
 
-GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "anon";
-GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
@@ -3573,33 +2888,6 @@ GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_user_self"("profile_id" "uuid") TO "service_role";
 
-GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "anon";
-GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "authenticated";
-GRANT ALL ON FUNCTION public.fetch_asset_info(text) TO "service_role";
-GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "anon";
-GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "authenticated";
-GRANT ALL ON FUNCTION public.get_client_name(uuid) TO "service_role";
-GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "anon";
-GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "authenticated";
-GRANT ALL ON FUNCTION public.get_solution_name(bigint) TO "service_role";
-GRANT ALL ON FUNCTION public.load_status_ids() TO "anon";
-GRANT ALL ON FUNCTION public.load_status_ids() TO "authenticated";
-GRANT ALL ON FUNCTION public.load_status_ids() TO "service_role";
-GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "anon";
-GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "authenticated";
-GRANT ALL ON FUNCTION public.validate_assoc_id(bigint, bigint) TO "service_role";
-GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "anon";
-GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "authenticated";
-GRANT ALL ON FUNCTION public.calc_new_status(text, date, date, bigint, record, bigint) TO "service_role";
-GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "anon";
-GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "authenticated";
-GRANT ALL ON FUNCTION public.update_asset_status(text, bigint, bigint) TO "service_role";
-GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "anon";
-GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "authenticated";
-GRANT ALL ON FUNCTION public.insert_asset_log(bigint, text, jsonb, bigint, bigint) TO "service_role";
-GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "anon";
-GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "authenticated";
-GRANT ALL ON FUNCTION public.log_trigger_error(bigint, text, text, text, text) TO "service_role";
 
 
 GRANT ALL ON FUNCTION "public"."log_and_update_status"() TO "anon";
@@ -3617,12 +2905,6 @@ GRANT ALL ON FUNCTION "public"."log_asset_insert"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."log_asset_soft_delete"() TO "anon";
 GRANT ALL ON FUNCTION "public"."log_asset_soft_delete"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."log_asset_soft_delete"() TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."log_asset_status_change"() TO "anon";
-GRANT ALL ON FUNCTION "public"."log_asset_status_change"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."log_asset_status_change"() TO "service_role";
 
 
 
@@ -3683,12 +2965,6 @@ GRANT ALL ON FUNCTION "public"."update_profile_last_login"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."user_has_profile"("user_id" "uuid") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint) TO "anon";
-GRANT ALL ON FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."validate_association_state"("p_asset_id" "text", "p_operation" "text", "p_association_id" bigint) TO "service_role";
 
 
 
@@ -3770,72 +3046,6 @@ GRANT ALL ON SEQUENCE "public"."association_types_id_seq" TO "service_role";
 GRANT ALL ON TABLE "public"."associations" TO "anon";
 GRANT ALL ON TABLE "public"."associations" TO "authenticated";
 GRANT ALL ON TABLE "public"."associations" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_badges_catalog" TO "anon";
-GRANT ALL ON TABLE "public"."bits_badges_catalog" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_badges_catalog" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_campaigns" TO "anon";
-GRANT ALL ON TABLE "public"."bits_campaigns" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_campaigns" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_levels_catalog" TO "anon";
-GRANT ALL ON TABLE "public"."bits_levels_catalog" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_levels_catalog" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_missions_catalog" TO "anon";
-GRANT ALL ON TABLE "public"."bits_missions_catalog" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_missions_catalog" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_points_log" TO "anon";
-GRANT ALL ON TABLE "public"."bits_points_log" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_points_log" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_referrals" TO "anon";
-GRANT ALL ON TABLE "public"."bits_referrals" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_referrals" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_rewards_catalog" TO "anon";
-GRANT ALL ON TABLE "public"."bits_rewards_catalog" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_rewards_catalog" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_user_badges" TO "anon";
-GRANT ALL ON TABLE "public"."bits_user_badges" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_user_badges" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_user_missions" TO "anon";
-GRANT ALL ON TABLE "public"."bits_user_missions" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_user_missions" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_user_profile_stats" TO "anon";
-GRANT ALL ON TABLE "public"."bits_user_profile_stats" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_user_profile_stats" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."bits_user_rewards" TO "anon";
-GRANT ALL ON TABLE "public"."bits_user_rewards" TO "authenticated";
-GRANT ALL ON TABLE "public"."bits_user_rewards" TO "service_role";
 
 
 
