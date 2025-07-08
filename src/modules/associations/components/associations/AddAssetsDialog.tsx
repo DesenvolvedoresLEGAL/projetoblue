@@ -104,7 +104,10 @@ export const AddAssetsDialog: React.FC<AddAssetsDialogProps> = ({
         client_id: existingAssociation.client_id,
         association_id: existingAssociation.association_id,
         entry_date: existingAssociation.entry_date,
-        asset_ids: selectedAssets.map(asset => asset.uuid),
+        assets: selectedAssets.map(asset => ({
+          id: asset.uuid,
+          solution_id: asset.solution_id
+        })),
         exit_date: existingAssociation.exit_date,
         notes: existingAssociation.notes,
         ssid: existingAssociation.ssid,

@@ -173,10 +173,11 @@ export async function fetchActiveAssociations() {
     if (import.meta.env.DEV) console.log('Executing fetchActiveAssociations query (optimized)');
   }
   const result = await supabase
-    .from('asset_client_assoc')
-    .select(`
+    .from('associations')
+      .select(`
       id,
-      asset_id,
+      equipment_id,
+      chip_id,
       client_id,
       association_id,
       entry_date,
@@ -211,10 +212,11 @@ export async function fetchAssociationsEndingToday() {
   }
   const today = new Date().toISOString().split('T')[0];
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
       id,
-      asset_id,
+      equipment_id,
+      chip_id,
       client_id,
       association_id,
       entry_date,
@@ -237,7 +239,7 @@ export async function fetchTopClientsWithAssociations() {
     if (import.meta.env.DEV) console.log('Executing fetchTopClientsWithAssociations query');
   }
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
       client_id,
       clients!inner(empresa)
@@ -260,7 +262,7 @@ export async function fetchAssociationsLast30Days() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   const result = await supabase
-    .from('asset_client_assoc')
+    .from('associations')
     .select(`
       id,
       association_id,

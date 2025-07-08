@@ -52,7 +52,7 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
 
     try {
       const { error } = await supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .update({
           entry_date: formData.entry_date,
           exit_date: formData.exit_date || null,
@@ -62,7 +62,7 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
           gb: formData.gb,
           updated_at: new Date().toISOString()
         })
-        .eq('id', association.id);
+        .eq('uuid', association.id);
 
       if (error) {
         if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', error);

@@ -115,15 +115,16 @@ export const useCreateAssociation = () => {
 
       // Preparar dados para inserção direta
       const insertPayload = data.selectedAssets.map(asset => ({
-        asset_id: asset.id,
         client_id: data.clientId,
-        association_id: data.associationTypeId,
+        association_type_id: data.associationTypeId,
         entry_date: formattedStartDate,
         exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : null,
         notes: data.generalConfig?.notes || null,
-        ssid: data.generalConfig?.ssid || null,
-        pass: data.generalConfig?.password || null,
-        gb: data.generalConfig?.dataLimit || null
+        equipment_ssid: data.generalConfig?.ssid || null,
+        equipment_pass: data.generalConfig?.password || null,
+        plan_gb: data.generalConfig?.dataLimit || null,
+        equipment_id: asset.solution_id === 11 ? null : asset.id,
+        chip_id: asset.solution_id === 11 ? asset.id : null
       }));
 
       if (import.meta.env.DEV) console.log('[useCreateAssociation] Payload de inserção:', insertPayload);
@@ -135,16 +136,16 @@ export const useCreateAssociation = () => {
           if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo associações diretamente...');
 
           const { data: inserted, error } = await supabase
-            .from('asset_client_assoc')
+            .from('associations')
             .insert(insertPayload)
-            .select('id');
+            .select('uuid');
 
           if (error) {
             if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro do Supabase:', error);
             throw new Error(error.message || 'Erro desconhecido ao criar associação');
           }
 
-          const insertedIds = inserted ? inserted.map(rec => rec.id as number) : [];
+          const insertedIds = inserted ? inserted.map(rec => rec.uuid as string) : [];
 
           const result = buildInsertResult(insertedIds, insertPayload.length);
 

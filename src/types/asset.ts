@@ -178,7 +178,6 @@ export interface AssetLog {
   created_at: string; // timestamp NOT NULL
 }
 
-
 // Interface corrigida para alinhar com tabela 'plans' do banco
 export interface Plan {
   id: number; // bigint NOT NULL (sequence)
