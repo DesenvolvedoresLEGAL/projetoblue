@@ -33,12 +33,11 @@ export const useAssociationActions = () => {
           // Usar transação manual sem RPC functions
           // Encerrar associação (definir exit_date)
           const { data: assocData, error: assocError } = await supabase
-            .from('asset_client_assoc')
+            .from('associations')
             .update({
               exit_date: new Date().toISOString().split('T')[0] // Data atual
             })
-            .eq('id', associationId)
-            .eq('asset_id', assetId)
+            .eq('uuid', associationId)
             .is('exit_date', null) // Só atualizar se ainda não tem exit_date
             .select()
             .single();

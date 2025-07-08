@@ -18,18 +18,18 @@ export const associationQueries = {
       if (import.meta.env.DEV) console.log(`Checking active associations for asset: ${assetId}`);
       
       const { data, error } = await supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .select(`
-          id,
+          uuid,
           client_id,
-          association_id,
+          association_type_id,
           entry_date,
           exit_date,
           clients!inner(nome),
           association_types!inner(type)
         `)
-        .eq('asset_id', assetId)
-        .is('exit_date', null)
+        .or('equipment_id.eq.' + assetId + ',chip_id.eq.' + assetId)
+        .eq('status', true)
         .is('deleted_at', null);
 
       if (error) {
@@ -38,9 +38,9 @@ export const associationQueries = {
       }
 
       const associations: AssetAssociation[] = (data || []).map(item => ({
-        id: item.id,
+        id: item.uuid,
         client_id: item.client_id,
-        association_id: item.association_id,
+        association_id: item.association_type_id,
         entry_date: item.entry_date,
         exit_date: item.exit_date,
         client_name: (item.clients as { nome?: string } | null)?.nome || 'Cliente não encontrado',
