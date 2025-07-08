@@ -19,11 +19,12 @@ export const useLeaseAssets = () => {
         }
         
         // Query para buscar ativos atualmente em locação (association_id = 1)
-        // Usando asset_client_assoc para identificar ativos associados
+        // Usando associations para identificar ativos associados
         const { data: leaseAssociations, error } = await supabase
-          .from('asset_client_assoc')
+          .from('associations')
           .select(`
-            asset_id,
+            equipment_id,
+            chip_id,
             association_id,
             exit_date,
             assets!inner(

@@ -1,3 +1,12 @@
+DROP TRIGGER IF EXISTS asset_status_update_history ON public.assets;
+DROP FUNCTION IF EXISTS public.log_and_update_status;
+DROP FUNCTION IF EXISTS public.log_asset_status_change;
+DROP FUNCTION IF EXISTS public.validate_association_state;
+DROP TRIGGER IF EXISTS associations_log_trigger ON public.associations;
+DROP TRIGGER IF EXISTS associations_status_log_trigger ON public.associations;
+DROP TRIGGER IF EXISTS check_availability_before_association ON public.associations;
+DROP TRIGGER IF EXISTS prevent_rented_association_before ON public.associations;
+DROP TRIGGER IF EXISTS set_associations_updated_at ON public.associations;
 -- Update functions and triggers to use associations table
 
 -- check_asset_availability
@@ -27,8 +36,6 @@ BEGIN
 END;
 $$;
 
-DROP FUNCTION IF EXISTS public.log_and_update_status;
-DROP FUNCTION IF EXISTS public.log_asset_status_change;
 
 -- update_all_rented_days
 CREATE OR REPLACE FUNCTION public.update_all_rented_days()
@@ -113,7 +120,6 @@ BEGIN
 END;
 $$;
 
-DROP FUNCTION IF EXISTS public.validate_association_state;
 
 -- validate_rented_days_integrity
 CREATE OR REPLACE FUNCTION public.validate_rented_days_integrity()
@@ -155,11 +161,6 @@ CREATE OR REPLACE VIEW public.v_active_clients WITH (security_invoker='on') AS
     AND associations.deleted_at IS NULL;
 
 -- recreate triggers on associations
-DROP TRIGGER IF EXISTS associations_log_trigger ON public.associations;
-DROP TRIGGER IF EXISTS associations_status_log_trigger ON public.associations;
-DROP TRIGGER IF EXISTS check_availability_before_association ON public.associations;
-DROP TRIGGER IF EXISTS prevent_rented_association_before ON public.associations;
-DROP TRIGGER IF EXISTS set_associations_updated_at ON public.associations;
 
 CREATE OR REPLACE TRIGGER associations_log_trigger
   AFTER INSERT OR DELETE OR UPDATE ON public.associations
