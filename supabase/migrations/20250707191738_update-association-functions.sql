@@ -1,5 +1,4 @@
 DROP TRIGGER IF EXISTS asset_status_update_history ON public.assets;
-DROP FUNCTION IF EXISTS public.log_and_update_status;
 DROP FUNCTION IF EXISTS public.log_asset_status_change;
 DROP FUNCTION IF EXISTS public.validate_association_state;
 DROP TRIGGER IF EXISTS associations_log_trigger ON public.associations;
