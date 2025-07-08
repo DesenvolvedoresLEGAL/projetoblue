@@ -39,7 +39,5 @@ SELECT
 FROM public.asset_logs_legacy
 WHERE event NOT LIKE 'ASSOCIATION_%';
 
-DROP TABLE public.asset_logs_legacy;
-DROP SEQUENCE IF EXISTS public.asset_history_id_seq;
 
 COMMIT;

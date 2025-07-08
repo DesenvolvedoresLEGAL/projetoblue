@@ -15,7 +15,7 @@ ALTER SEQUENCE IF EXISTS public.asset_history_id_seq OWNED BY public.asset_logs_
 CREATE TABLE public.association_logs (
     uuid uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES profiles(id),
-    association_uuid uuid NOT NULL REFERENCES associations(uuid),
+    association_uuid text NOT NULL REFERENCES associations(uuid),
     event text NOT NULL,
     details jsonb NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
@@ -41,7 +41,7 @@ CREATE POLICY "admin_total_access" ON public.association_logs TO authenticated U
 CREATE TABLE public.asset_logs (
     uuid uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id uuid NOT NULL REFERENCES profiles(id),
-    asset_id uuid NOT NULL REFERENCES assets(uuid),
+    asset_id text NOT NULL REFERENCES assets(uuid),
     event text NOT NULL,
     details jsonb NOT NULL,
     status_before_id bigint REFERENCES asset_status(id),
