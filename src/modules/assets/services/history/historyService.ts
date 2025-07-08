@@ -71,7 +71,15 @@ interface AssetLogWithRelationsRaw {
       iccid?: string;
       radio?: string;
       line_number?: number;
-    };
+    } | null;
+    chip?: {
+      uuid: string;
+      serial_number?: string;
+      model?: string;
+      iccid?: string;
+      radio?: string;
+      line_number?: number;
+    } | null;
     client?: {
       uuid: string;
       nome: string;
