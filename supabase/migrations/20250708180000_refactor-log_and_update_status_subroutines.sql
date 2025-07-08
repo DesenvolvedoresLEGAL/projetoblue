@@ -232,7 +232,7 @@ BEGIN
   client_name := get_client_name(NEW.client_id);
   solution_name := get_solution_name(asset_info.solution_id);
 
-  ids := load_status_ids();
+  SELECT * INTO ids FROM load_status_ids();
 
   valid_assoc_id := validate_assoc_id(NEW.id, OLD.id);
 
