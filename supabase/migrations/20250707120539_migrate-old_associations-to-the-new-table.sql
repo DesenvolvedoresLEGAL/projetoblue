@@ -1,3 +1,4 @@
+SET session_replication_role = replica;
 INSERT INTO associations (
   uuid,
   client_id,
@@ -19,8 +20,14 @@ INSERT INTO associations (
 SELECT
   gen_random_uuid(),
   aca.client_id,
-  CASE WHEN a.solution_id = 11 THEN NULL ELSE aca.asset_id END AS equipment_id,
-  CASE WHEN a.solution_id = 11 THEN aca.asset_id ELSE NULL END AS chip_id,
+  CASE
+    WHEN a.solution_id = 11 THEN NULL
+    ELSE aca.asset_id
+  END AS equipment_id,
+  CASE
+    WHEN a.solution_id = 11 THEN aca.asset_id
+    ELSE NULL
+  END AS chip_id,
   aca.entry_date,
   aca.exit_date,
   aca.association_id,
@@ -28,10 +35,15 @@ SELECT
   aca.gb,
   aca.ssid,
   aca.pass,
-  (aca.exit_date IS NULL OR aca.exit_date < aca.entry_date) AS status,
+  -- exemplo de status: ativo se exit_date for nulo
+  (aca.exit_date IS NULL OR aca.exit_date >= now()) AS status,
   aca.notes,
   aca.created_at,
   aca.updated_at,
   aca.deleted_at
-FROM asset_client_assoc aca
-JOIN assets a ON aca.asset_id = a.uuid;
+FROM asset_client_assoc AS aca
+JOIN assets AS a
+  ON aca.asset_id = a.uuid
+-- opcional: só migrar associações não deletadas
+WHERE aca.deleted_at IS NULL;
+SET session_replication_role = DEFAULT;
