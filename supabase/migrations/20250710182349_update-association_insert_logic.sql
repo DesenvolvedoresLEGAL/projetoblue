@@ -6,7 +6,6 @@ LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   IF asset_id IS NULL THEN
     RAISE NOTICE 'asset_id nulo – pulando';
-    RETURN;
   END IF;
   UPDATE assets
   SET status_id = (SELECT id FROM asset_status WHERE association = association_type_id),
