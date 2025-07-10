@@ -23,6 +23,14 @@ CREATE TABLE IF NOT EXISTS associations (
   constraint plan_id_fkey foreign key (plan_id) references plans(id)
 );
 
+DROP INDEX IF EXISTS idx_associations_status_active;
+DROP INDEX IF EXISTS idx_associations_client_id;
+DROP INDEX IF EXISTS idx_associations_equipment_id;
+DROP INDEX IF EXISTS idx_associations_chip_id;
+DROP INDEX IF EXISTS idx_associations_entry_date;
+DROP INDEX IF EXISTS idx_associations_exit_date;
+DROP INDEX IF EXISTS idx_associations_plan_id;
+
 CREATE INDEX IF NOT EXISTS idx_associations_status_active ON associations (status) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_associations_client_id ON associations (client_id) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_associations_equipment_id ON associations (equipment_id) WHERE deleted_at IS NULL;
