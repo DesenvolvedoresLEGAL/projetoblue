@@ -39,6 +39,12 @@ CREATE INDEX IF NOT EXISTS idx_associations_entry_date ON associations (entry_da
 CREATE INDEX IF NOT EXISTS idx_associations_exit_date ON associations (exit_date) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_associations_plan_id ON associations (plan_id) WHERE deleted_at IS NULL;
 
+ALTER TABLE public.associations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Auth users can insert" ON public.associations FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Auth users can update" ON public.associations FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Enable read access for all users" ON public.associations FOR SELECT USING (true);
+CREATE POLICY "admin_total_access" ON public.associations TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
 CREATE OR REPLACE FUNCTION check_association_assets()
 RETURNS TRIGGER AS $$
 BEGIN
