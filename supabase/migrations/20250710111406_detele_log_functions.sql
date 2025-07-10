@@ -1,0 +1,6 @@
+DROP FUNCTION IF EXISTS log_and_update_status CASCADE;
+DROP FUNCTION IF EXISTS log_asset_insert CASCADE;
+DROP FUNCTION IF EXISTS log_asset_soft_delete CASCADE;
+DROP FUNCTION IF EXISTS log_asset_status_change CASCADE;
+DROP FUNCTION IF EXISTS log_client_changes CASCADE;
+DROP FUNCTION IF EXISTS log_profile_change CASCADE;
