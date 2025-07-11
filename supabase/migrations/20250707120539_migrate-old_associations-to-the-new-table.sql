@@ -37,7 +37,7 @@ SELECT
   aca.pass,
   -- exemplo de status: ativo se exit_date for nulo
   (aca.exit_date IS NULL OR aca.exit_date >= now()) AS status,
-  aca.notes,
+  COALESCE(aca.notes, '') || ' | legacy_id: ' || COALESCE(aca.id::text, '') AS notes, -- Queria concatenar o valor assoc_id da tabela asset_client_assoc (aca) a esse valor notes
   aca.created_at,
   aca.updated_at,
   aca.deleted_at
