@@ -160,7 +160,7 @@ export function useAuthSession(
             if (import.meta.env.DEV) console.log('Auth session check timed out');
             updateState({ isLoading: false });
           }
-        }, 8000); // Aumentado de 5000 para 8000
+        }, 10000); // Aumentado de 5000 para 8000
 
         // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -234,7 +234,7 @@ export function useAuthSession(
             } catch (err) {
               if (import.meta.env.DEV) console.error('Error refreshing session:', err);
             }
-          }, 30 * 60 * 1000);
+          }, 2 * 60 * 60 * 1000);
         } catch (error) {
           clearTimeout(timeoutId);
           if (import.meta.env.DEV) console.error('Error checking session:', error);
