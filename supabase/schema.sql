@@ -254,8 +254,6 @@ $$;
 ALTER FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text", "p_resource_id" "text", "p_operation_data" "jsonb", "p_timeout_minutes" integer) OWNER TO "postgres";
 
 
-
-
 CREATE OR REPLACE FUNCTION "public"."admin_delete_user"("user_id" "uuid") RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -3895,9 +3893,6 @@ GRANT ALL ON FUNCTION "public"."acquire_operation_lock"("p_operation_type" "text
 
 
 
-
-
-
 GRANT ALL ON FUNCTION "public"."admin_delete_user"("user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."admin_delete_user"("user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_delete_user"("user_id" "uuid") TO "service_role";
@@ -4021,6 +4016,11 @@ GRANT ALL ON FUNCTION "public"."log_asset_status_change"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."log_client_changes"() TO "anon";
 GRANT ALL ON FUNCTION "public"."log_client_changes"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."log_client_changes"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."log_profile_change"() TO "anon";
+GRANT ALL ON FUNCTION "public"."log_profile_change"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."log_profile_change"() TO "service_role";
 
 

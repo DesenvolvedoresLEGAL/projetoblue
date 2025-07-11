@@ -1,3 +1,22 @@
+export interface AssociationRecord {
+  uuid: string;
+  client_id: string;
+  equipment_id?: string | null;
+  chip_id?: string | null;
+  entry_date: string;
+  exit_date?: string | null;
+  association_type_id: number;
+  plan_id?: number | null;
+  plan_gb?: number | null;
+  equipment_ssid?: string | null;
+  equipment_pass?: string | null;
+  status: boolean;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
 export interface AssociationGroup {
   groupKey: string;
   client_name: string;

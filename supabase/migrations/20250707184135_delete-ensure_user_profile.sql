@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS ensure_user_profile CASCADE;

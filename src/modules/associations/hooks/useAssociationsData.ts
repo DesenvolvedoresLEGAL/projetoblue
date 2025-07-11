@@ -21,15 +21,23 @@ interface UseAssociationsDataProps {
 }
 
 interface AssociationQueryRow {
-  id: number;
-  asset_id: string;
+  uuid: string;
+  equipment_id: string | null;
+  chip_id: string | null;
   client_id: string;
   entry_date: string;
   exit_date: string | null;
-  association_id: number;
+  association_type_id: number;
   created_at: string;
   clients?: { empresa?: string } | null;
-  assets?: {
+  equipment?: {
+    iccid?: string | null;
+    radio?: string | null;
+    line_number?: number | null;
+    solution_id: number;
+    asset_solutions?: { solution?: string } | null;
+  } | null;
+  chip?: {
     iccid?: string | null;
     radio?: string | null;
     line_number?: number | null;
@@ -51,8 +59,8 @@ const applySupabaseSearch = (
 
   if (type !== 'client_name') {
     query.or(
-      `iccid.like.%${sanitized}%,radio.like.%${sanitized.toUpperCase()}%,line_number.eq.${safedParseInt(sanitized)}`,
-      {'foreignTable': 'assets'}
+      `equipment.iccid.ilike.%${sanitized}%,equipment.radio.ilike.%${sanitized.toUpperCase()}%,equipment.line_number.eq.${safedParseInt(sanitized)},` +
+      `chip.iccid.ilike.%${sanitized}%,chip.radio.ilike.%${sanitized.toUpperCase()}%,chip.line_number.eq.${safedParseInt(sanitized)}`
     );
   } else {
     query.or(
@@ -97,17 +105,25 @@ export const useAssociationsData = ({
       }
 
       let query = supabase
-        .from('asset_client_assoc')
+        .from('associations')
         .select(`
-          id,
-          asset_id,
+          uuid,
+          equipment_id,
+          chip_id,
           client_id,
           entry_date,
           exit_date,
-          association_id,
+          association_type_id,
           created_at,
           clients!inner(empresa, responsavel, telefones, email),
-          assets!inner(
+          equipment:assets!equipment_id_fkey(
+            iccid,
+            radio,
+            line_number,
+            solution_id,
+            asset_solutions(solution)
+          ),
+          chip:assets!chip_id_fkey(
             iccid,
             radio,
             line_number,
@@ -165,21 +181,25 @@ export const useAssociationsData = ({
       }
 
       // Mapear dados para o formato esperado com line_number incluído
-      const mappedData: Association[] = data.map((item: AssociationQueryRow) => ({
-        id: item.id,
-        asset_id: item.asset_id,
+      const mappedData: Association[] = data.map((item: AssociationQueryRow) => {
+        const asset = item.equipment || item.chip;
+        const assetId = item.equipment_id || item.chip_id || '';
+        return {
+          id: item.uuid,
+          asset_id: assetId,
         client_id: item.client_id,
         entry_date: item.entry_date,
         exit_date: item.exit_date,
-        association_id: item.association_id,
+        association_id: item.association_type_id,
         created_at: item.created_at,
         client_name: item.clients?.empresa || 'Cliente não encontrado',
-        asset_iccid: item.assets?.iccid,
-        asset_radio: item.assets?.radio,
-        asset_line_number: item.assets?.line_number,
-        asset_solution_id: item.assets?.solution_id,
-        asset_solution_name: item.assets?.asset_solutions?.solution || 'Solução não encontrada'
-      }));
+          asset_iccid: asset?.iccid,
+          asset_radio: asset?.radio,
+          asset_line_number: asset?.line_number,
+          asset_solution_id: asset?.solution_id,
+          asset_solution_name: asset?.asset_solutions?.solution || 'Solução não encontrada'
+        };
+      });
 
       return {
         data: mappedData,

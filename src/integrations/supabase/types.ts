@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       asset_client_assoc: {
@@ -97,6 +122,81 @@ export type Database = {
         ]
       }
       asset_logs: {
+        Row: {
+          asset_id: string
+          created_at: string
+          deleted_at: string | null
+          details: Json
+          event: string
+          status_after_id: number | null
+          status_before_id: number | null
+          updated_at: string
+          user_id: string
+          uuid: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          deleted_at?: string | null
+          details: Json
+          event: string
+          status_after_id?: number | null
+          status_before_id?: number | null
+          updated_at?: string
+          user_id: string
+          uuid?: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          details?: Json
+          event?: string
+          status_after_id?: number | null
+          status_before_id?: number | null
+          updated_at?: string
+          user_id?: string
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "asset_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "v_problem_assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "asset_logs_status_after_id_fkey"
+            columns: ["status_after_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_logs_status_before_id_fkey"
+            columns: ["status_before_id"]
+            isOneToOne: false
+            referencedRelation: "asset_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_logs_legacy: {
         Row: {
           assoc_id: number | null
           created_at: string
@@ -334,6 +434,54 @@ export type Database = {
           },
         ]
       }
+      association_logs: {
+        Row: {
+          association_uuid: string
+          created_at: string
+          deleted_at: string | null
+          details: Json
+          event: string
+          updated_at: string
+          user_id: string
+          uuid: string
+        }
+        Insert: {
+          association_uuid: string
+          created_at?: string
+          deleted_at?: string | null
+          details: Json
+          event: string
+          updated_at?: string
+          user_id: string
+          uuid?: string
+        }
+        Update: {
+          association_uuid?: string
+          created_at?: string
+          deleted_at?: string | null
+          details?: Json
+          event?: string
+          updated_at?: string
+          user_id?: string
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "association_logs_association_uuid_fkey"
+            columns: ["association_uuid"]
+            isOneToOne: false
+            referencedRelation: "associations"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "association_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       association_types: {
         Row: {
           created_at: string
@@ -358,496 +506,109 @@ export type Database = {
         }
         Relationships: []
       }
-      bits_badges_catalog: {
+      associations: {
         Row: {
-          created_at: string
-          criteria: Json | null
-          description: string | null
-          icon_url: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_campaigns: {
-        Row: {
-          applicable_to: Json | null
-          bonus_points: number | null
-          created_at: string
-          description: string | null
-          end_date: string
-          id: string
-          is_active: boolean
-          name: string
-          point_multiplier: number | null
-          start_date: string
-          updated_at: string
-        }
-        Insert: {
-          applicable_to?: Json | null
-          bonus_points?: number | null
-          created_at?: string
-          description?: string | null
-          end_date: string
-          id?: string
-          is_active?: boolean
-          name: string
-          point_multiplier?: number | null
-          start_date: string
-          updated_at?: string
-        }
-        Update: {
-          applicable_to?: Json | null
-          bonus_points?: number | null
-          created_at?: string
-          description?: string | null
-          end_date?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          point_multiplier?: number | null
-          start_date?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_levels_catalog: {
-        Row: {
-          benefits: Json | null
-          created_at: string
-          level_number: number
-          name: string
-          points_required: number
-          updated_at: string
-        }
-        Insert: {
-          benefits?: Json | null
-          created_at?: string
-          level_number: number
-          name: string
-          points_required: number
-          updated_at?: string
-        }
-        Update: {
-          benefits?: Json | null
-          created_at?: string
-          level_number?: number
-          name?: string
-          points_required?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bits_missions_catalog: {
-        Row: {
-          badge_reward_id: string | null
-          created_at: string
-          criteria: Json | null
-          description: string | null
-          end_date: string | null
-          id: string
-          is_active: boolean
-          name: string
-          points_reward: number | null
-          start_date: string | null
-          updated_at: string
-        }
-        Insert: {
-          badge_reward_id?: string | null
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          points_reward?: number | null
-          start_date?: string | null
-          updated_at?: string
-        }
-        Update: {
-          badge_reward_id?: string | null
-          created_at?: string
-          criteria?: Json | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          points_reward?: number | null
-          start_date?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_missions_catalog_badge_reward_id_fkey"
-            columns: ["badge_reward_id"]
-            isOneToOne: false
-            referencedRelation: "bits_badges_catalog"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_points_log: {
-        Row: {
-          action_type: string
-          created_at: string | null
-          deleted_at: string | null
-          description: string | null
-          id: string
-          points: number
-          related_referral_id: string | null
-          related_reward_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          action_type: string
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          points: number
-          related_referral_id?: string | null
-          related_reward_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          action_type?: string
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          points?: number
-          related_referral_id?: string | null
-          related_reward_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_points_log_related_referral_id_fkey"
-            columns: ["related_referral_id"]
-            isOneToOne: false
-            referencedRelation: "bits_referrals"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_points_log_related_reward_id_fkey"
-            columns: ["related_reward_id"]
-            isOneToOne: false
-            referencedRelation: "bits_rewards_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_points_log_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_referrals: {
-        Row: {
-          conversion_data: Json | null
-          created_at: string | null
-          deleted_at: string | null
-          id: string
-          piperun_deal_status: string | null
-          piperun_lead_id: string | null
-          points_earned: number | null
-          referral_link_used: string | null
-          referred_company: string | null
-          referred_email: string
-          referred_name: string
-          referred_phone: string | null
-          referrer_user_id: string
-          status:
-            | Database["public"]["Enums"]["bits_referral_status_enum"]
-            | null
-          updated_at: string | null
-        }
-        Insert: {
-          conversion_data?: Json | null
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string
-          piperun_deal_status?: string | null
-          piperun_lead_id?: string | null
-          points_earned?: number | null
-          referral_link_used?: string | null
-          referred_company?: string | null
-          referred_email: string
-          referred_name: string
-          referred_phone?: string | null
-          referrer_user_id: string
-          status?:
-            | Database["public"]["Enums"]["bits_referral_status_enum"]
-            | null
-          updated_at?: string | null
-        }
-        Update: {
-          conversion_data?: Json | null
-          created_at?: string | null
-          deleted_at?: string | null
-          id?: string
-          piperun_deal_status?: string | null
-          piperun_lead_id?: string | null
-          points_earned?: number | null
-          referral_link_used?: string | null
-          referred_company?: string | null
-          referred_email?: string
-          referred_name?: string
-          referred_phone?: string | null
-          referrer_user_id?: string
-          status?:
-            | Database["public"]["Enums"]["bits_referral_status_enum"]
-            | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_referrals_referrer_user_id_fkey"
-            columns: ["referrer_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_rewards_catalog: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          points_required: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          points_required: number
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          points_required?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      bits_user_badges: {
-        Row: {
-          badge_id: string
-          created_at: string
-          earned_at: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          badge_id: string
-          created_at?: string
-          earned_at?: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          badge_id?: string
-          created_at?: string
-          earned_at?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_badges_badge_id_fkey"
-            columns: ["badge_id"]
-            isOneToOne: false
-            referencedRelation: "bits_badges_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_user_badges_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_user_missions: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          id: string
-          mission_id: string
-          progress: Json | null
-          status: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          mission_id: string
-          progress?: Json | null
-          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          mission_id?: string
-          progress?: Json | null
-          status?: Database["public"]["Enums"]["bits_mission_status_enum"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_missions_mission_id_fkey"
-            columns: ["mission_id"]
-            isOneToOne: false
-            referencedRelation: "bits_missions_catalog"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bits_user_missions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_user_profile_stats: {
-        Row: {
-          created_at: string
-          current_level_number: number
-          current_points_balance: number
-          last_points_activity_at: string | null
-          total_points_earned: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_level_number?: number
-          current_points_balance?: number
-          last_points_activity_at?: string | null
-          total_points_earned?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_level_number?: number
-          current_points_balance?: number
-          last_points_activity_at?: string | null
-          total_points_earned?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bits_user_profile_stats_current_level_number_fkey"
-            columns: ["current_level_number"]
-            isOneToOne: false
-            referencedRelation: "bits_levels_catalog"
-            referencedColumns: ["level_number"]
-          },
-          {
-            foreignKeyName: "bits_user_profile_stats_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bits_user_rewards: {
-        Row: {
+          association_type_id: number
+          chip_id: string | null
+          client_id: string
           created_at: string
           deleted_at: string | null
-          id: string
-          points_spent: number
-          redeemed_at: string | null
-          reward_id: string
+          entry_date: string
+          equipment_id: string | null
+          equipment_pass: string | null
+          equipment_ssid: string | null
+          exit_date: string | null
+          notes: string | null
+          plan_gb: number | null
+          plan_id: number | null
+          status: boolean
           updated_at: string
-          user_id: string
+          uuid: string
         }
         Insert: {
+          association_type_id: number
+          chip_id?: string | null
+          client_id: string
           created_at?: string
           deleted_at?: string | null
-          id?: string
-          points_spent: number
-          redeemed_at?: string | null
-          reward_id: string
+          entry_date: string
+          equipment_id?: string | null
+          equipment_pass?: string | null
+          equipment_ssid?: string | null
+          exit_date?: string | null
+          notes?: string | null
+          plan_gb?: number | null
+          plan_id?: number | null
+          status?: boolean
           updated_at?: string
-          user_id: string
+          uuid?: string
         }
         Update: {
+          association_type_id?: number
+          chip_id?: string | null
+          client_id?: string
           created_at?: string
           deleted_at?: string | null
-          id?: string
-          points_spent?: number
-          redeemed_at?: string | null
-          reward_id?: string
+          entry_date?: string
+          equipment_id?: string | null
+          equipment_pass?: string | null
+          equipment_ssid?: string | null
+          exit_date?: string | null
+          notes?: string | null
+          plan_gb?: number | null
+          plan_id?: number | null
+          status?: boolean
           updated_at?: string
-          user_id?: string
+          uuid?: string
         }
         Relationships: [
           {
-            foreignKeyName: "bits_user_rewards_reward_id_fkey"
-            columns: ["reward_id"]
+            foreignKeyName: "association_type_id_fkey"
+            columns: ["association_type_id"]
             isOneToOne: false
-            referencedRelation: "bits_rewards_catalog"
+            referencedRelation: "association_types"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bits_user_rewards_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "chip_id_fkey"
+            columns: ["chip_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "chip_id_fkey"
+            columns: ["chip_id"]
+            isOneToOne: false
+            referencedRelation: "v_problem_assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "v_problem_assets"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -1044,39 +805,6 @@ export type Database = {
         }
         Relationships: []
       }
-      operation_locks: {
-        Row: {
-          acquired_at: string
-          created_at: string
-          expires_at: string
-          id: string
-          operation_data: Json | null
-          operation_type: string
-          resource_id: string
-          user_id: string | null
-        }
-        Insert: {
-          acquired_at?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          operation_data?: Json | null
-          operation_type: string
-          resource_id: string
-          user_id?: string | null
-        }
-        Update: {
-          acquired_at?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          operation_data?: Json | null
-          operation_type?: string
-          resource_id?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       plans: {
         Row: {
           created_at: string
@@ -1148,7 +876,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          bits_referral_code: string | null
           created_at: string
           deleted_at: string | null
           email: string
@@ -1161,7 +888,6 @@ export type Database = {
           username: string
         }
         Insert: {
-          bits_referral_code?: string | null
           created_at?: string
           deleted_at?: string | null
           email: string
@@ -1174,7 +900,6 @@ export type Database = {
           username: string
         }
         Update: {
-          bits_referral_code?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string
@@ -1196,7 +921,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "asset_client_assoc_client_id_fkey"
+            foreignKeyName: "client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
@@ -1232,59 +957,9 @@ export type Database = {
       }
     }
     Functions: {
-      acquire_operation_lock: {
-        Args: {
-          p_operation_type: string
-          p_resource_id: string
-          p_operation_data?: Json
-          p_timeout_minutes?: number
-        }
-        Returns: Json
-      }
-      add_assets_to_association: {
-        Args: {
-          p_client_id: string
-          p_association_id: number
-          p_entry_date: string
-          p_asset_ids: string[]
-          p_exit_date?: string
-          p_notes?: string
-          p_ssid?: string
-          p_pass?: string
-          p_gb?: number
-        }
-        Returns: Json
-      }
       admin_delete_user: {
         Args: { user_id: string }
         Returns: boolean
-      }
-      admin_list_users: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          role: Database["public"]["Enums"]["user_role_enum"]
-          is_active: boolean
-          is_approved: boolean
-          created_at: string
-          last_login: string
-        }[]
-      }
-      admin_update_user_profile: {
-        Args: { user_id: string; profile_updates: Json }
-        Returns: boolean
-      }
-      admin_update_user_role: {
-        Args: {
-          user_id: string
-          new_role: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
-      }
-      cleanup_expired_locks: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
       detect_association_inconsistencies: {
         Args: Record<PropertyKey, never>
@@ -1294,22 +969,6 @@ export type Database = {
           expected_status_id: number
           issue_description: string
           corrected: boolean
-        }[]
-      }
-      ensure_user_profile: {
-        Args: {
-          user_id: string
-          user_email: string
-          user_role: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
-      }
-      fix_missing_profiles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          user_id: string
-          email: string
-          fixed: boolean
         }[]
       }
       has_minimum_role: {
@@ -1336,10 +995,6 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
-      release_operation_lock: {
-        Args: { p_lock_id: string }
-        Returns: boolean
-      }
       status_by_asset_type: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1360,14 +1015,6 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
-      validate_association_state: {
-        Args: {
-          p_asset_id: string
-          p_operation: string
-          p_association_id?: number
-        }
-        Returns: Json
-      }
       validate_rented_days_integrity: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1381,20 +1028,14 @@ export type Database = {
     }
     Enums: {
       asset_status_enum:
-        | "Disponível"
+        | "Dispon├¡vel"
         | "Alugado"
         | "Assinatura"
         | "Sem Dados"
         | "Bloqueado"
-        | "Manutenção"
+        | "Manuten├º├úo"
       asset_type_enum: "chip" | "equipment"
       association_type_enum: "aluguel" | "assinatura"
-      bits_mission_status_enum: "in_progress" | "completed" | "expired"
-      bits_referral_status_enum:
-        | "pendente"
-        | "em_negociacao"
-        | "fechado"
-        | "perdido"
       solution_type_enum:
         | "SPEEDY 5G"
         | "4BLACK"
@@ -1521,25 +1162,21 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       asset_status_enum: [
-        "Disponível",
+        "Dispon├¡vel",
         "Alugado",
         "Assinatura",
         "Sem Dados",
         "Bloqueado",
-        "Manutenção",
+        "Manuten├º├úo",
       ],
       asset_type_enum: ["chip", "equipment"],
       association_type_enum: ["aluguel", "assinatura"],
-      bits_mission_status_enum: ["in_progress", "completed", "expired"],
-      bits_referral_status_enum: [
-        "pendente",
-        "em_negociacao",
-        "fechado",
-        "perdido",
-      ],
       solution_type_enum: [
         "SPEEDY 5G",
         "4BLACK",
@@ -1557,3 +1194,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -99,14 +99,14 @@ export const useAssetSearch = ({
       if (excludeAssociatedToClient) {
         if (import.meta.env.DEV) console.log('useAssetSearch: Excluindo assets já associados ao cliente:', excludeAssociatedToClient);
         const { data: associatedAssets } = await supabase
-          .from('asset_client_assoc')
-          .select('asset_id')
+          .from('associations')
+          .select('equipment_id, chip_id')
           .eq('client_id', excludeAssociatedToClient)
-          .is('exit_date', null)
+          .eq('status', true)
           .is('deleted_at', null);
 
         if (associatedAssets && associatedAssets.length > 0) {
-          const associatedAssetIds = associatedAssets.map(assoc => assoc.asset_id);
+          const associatedAssetIds = associatedAssets.map(assoc => assoc.equipment_id || assoc.chip_id);
           query = query.not('uuid', 'in', `(${associatedAssetIds.join(',')})`);
         }
       }
