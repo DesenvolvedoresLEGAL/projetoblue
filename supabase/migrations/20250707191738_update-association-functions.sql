@@ -1,11 +1,11 @@
-DROP TRIGGER IF EXISTS public.asset_status_update_history ON public.assets;
+DROP TRIGGER IF EXISTS asset_status_update_history ON public.assets;
 DROP FUNCTION IF EXISTS public.log_asset_status_change;
 DROP FUNCTION IF EXISTS public.validate_association_state;
-DROP TRIGGER IF EXISTS public.associations_log_trigger ON public.associations;
-DROP TRIGGER IF EXISTS public.associations_status_log_trigger ON public.associations;
-DROP TRIGGER IF EXISTS public.check_availability_before_association ON public.associations;
-DROP TRIGGER IF EXISTS public.prevent_rented_association_before ON public.associations;
-DROP TRIGGER IF EXISTS public.set_associations_updated_at ON public.associations;
+DROP TRIGGER IF EXISTS associations_log_trigger ON public.associations;
+DROP TRIGGER IF EXISTS associations_status_log_trigger ON public.associations;
+DROP TRIGGER IF EXISTS check_availability_before_association ON public.associations;
+DROP TRIGGER IF EXISTS prevent_rented_association_before ON public.associations;
+DROP TRIGGER IF EXISTS set_associations_updated_at ON public.associations;
 -- Update functions and triggers to use associations table
 
 -- check_asset_availability
