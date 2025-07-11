@@ -18,7 +18,7 @@ BEGIN
   SET search_path TO public;
   IF EXISTS (
     SELECT 1
-    FROM associations a
+    FROM public.associations a
     WHERE (
             (NEW.equipment_id IS NOT NULL AND a.equipment_id = NEW.equipment_id) OR
             (NEW.chip_id IS NOT NULL AND a.chip_id = NEW.chip_id)
@@ -130,10 +130,10 @@ DECLARE
     asset_record RECORD;
     calculated_days integer;
 BEGIN
-    FOR asset_record IN SELECT uuid, rented_days FROM assets WHERE deleted_at IS NULL LOOP
+    FOR asset_record IN SELECT uuid, rented_days FROM public.assets WHERE deleted_at IS NULL LOOP
         WITH periods AS (
             SELECT entry_date, exit_date
-            FROM associations
+            FROM public.associations
             WHERE (equipment_id = asset_record.uuid OR chip_id = asset_record.uuid)
               AND exit_date IS NOT NULL
               AND deleted_at IS NULL
