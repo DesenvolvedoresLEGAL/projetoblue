@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       asset_client_assoc: {
@@ -1114,12 +1089,12 @@ export type Database = {
     }
     Enums: {
       asset_status_enum:
-        | "Dispon├¡vel"
+        | "Disponível"
         | "Alugado"
         | "Assinatura"
         | "Sem Dados"
         | "Bloqueado"
-        | "Manuten├º├úo"
+        | "Manutenção"
       asset_type_enum: "chip" | "equipment"
       association_type_enum: "aluguel" | "assinatura"
       solution_type_enum:
@@ -1260,18 +1235,15 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       asset_status_enum: [
-        "Dispon├¡vel",
+        "Disponível",
         "Alugado",
         "Assinatura",
         "Sem Dados",
         "Bloqueado",
-        "Manuten├º├úo",
+        "Manutenção",
       ],
       asset_type_enum: ["chip", "equipment"],
       association_type_enum: ["aluguel", "assinatura"],

@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowRight } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, ArrowRight, AlertTriangle, Info } from 'lucide-react';
 import { ResponsiveAssetModal } from './modal/ResponsiveAssetModal';
 import { SelectedAssetsGrid } from './SelectedAssetsGrid';
 import { AssociationGeneralConfigComponent } from './AssociationGeneralConfig';
 import { SelectedAsset } from '@modules/associations/types';
+import { useAssetBusinessRules } from '@modules/associations/hooks/useAssetBusinessRules';
 
 // Import the type separately to avoid naming conflicts
 import type { AssociationGeneralConfig } from './AssociationGeneralConfig';
@@ -37,6 +39,8 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   excludeAssociatedToClient
 }) => {
   const [showAssetModal, setShowAssetModal] = useState(false);
+  const { validateSelection } = useAssetBusinessRules(selectedAssets);
+  const validation = validateSelection;
 
   const handleAssetSelected = (asset: SelectedAsset) => {
     if (multipleSelection) {
@@ -79,12 +83,62 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         />
       )}
 
+      {/* Validação e Alertas */}
+      {selectedAssets.length > 0 && (
+        <div className="space-y-2">
+          {validation.errors.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="list-disc list-inside space-y-1">
+                  {validation.errors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {validation.warnings.length > 0 && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="list-disc list-inside space-y-1">
+                  {validation.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {validation.suggestions.length > 0 && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">Sugestões:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {validation.suggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
+
       {/* Ativos Selecionados */}
       <Card className="border-[#4D2BFB]/20">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               Ativos Selecionados ({selectedAssets.length})
+              {!validation.isValid && (
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              )}
             </CardTitle>
             <Button
               onClick={() => setShowAssetModal(true)}
@@ -130,11 +184,21 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         <div className="flex justify-end">
           <Button
             onClick={onProceed}
-            className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90 text-white"
+            disabled={!validation.isValid}
+            className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90 text-white disabled:opacity-50"
           >
             Prosseguir
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
+        </div>
+      )}
+
+      {/* Informação sobre bloqueio */}
+      {onProceed && selectedAssets.length > 0 && !validation.isValid && (
+        <div className="text-center">
+          <p className="text-sm text-red-600">
+            Corrija os problemas acima para continuar
+          </p>
         </div>
       )}
     </div>
