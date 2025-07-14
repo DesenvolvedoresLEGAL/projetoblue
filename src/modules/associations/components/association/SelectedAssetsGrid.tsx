@@ -41,19 +41,22 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
 
   const handleSaveConfiguration = (config: any) => {
     if (configurationModal.asset) {
-      console.log('=== PROCESSANDO CONFIGURAÇÃO NO GRID ===');
+      console.log('=== PROCESSAMENTO SÍNCRONO NO GRID ===');
       console.log('Asset original:', configurationModal.asset.uuid);
       console.log('Configuração recebida:', config);
       
+      // Fase 1: Processamento síncrono da associação bidirecional
       const updatedAsset = {
         ...configurationModal.asset,
         ...config
       };
       
       console.log('Asset atualizado:', updatedAsset);
+      
+      // Propagar imediatamente o asset principal
       onEditAsset(updatedAsset);
       
-      // Se há associação de CHIP e é um equipamento, processar imediatamente
+      // Se há associação de CHIP, processar imediatamente de forma síncrona
       if (config.associatedChipId && config.uuid && config.uuid !== config.associatedChipId) {
         // Encontrar o CHIP nos assets selecionados
         const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
@@ -65,22 +68,22 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
             notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
           };
           
-          console.log('CHIP associado atualizado no grid:', updatedChip);
+          console.log('CHIP associado atualizado sincronamente:', updatedChip);
           
-          // Atualizar o CHIP imediatamente
-          setTimeout(() => {
-            onEditAsset(updatedChip);
-          }, 10);
+          // Propagar CHIP imediatamente (sem setTimeout)
+          onEditAsset(updatedChip);
         }
       }
       
-      // Se é uma configuração de CHIP independente
+      // Processar configuração de CHIP independente
       if (config.uuid && config.uuid === configurationModal.asset.uuid && configurationModal.asset.type === 'CHIP') {
         console.log('Configuração de CHIP independente processada');
       }
+      
+      console.log('=== PROCESSAMENTO SÍNCRONO CONCLUÍDO ===');
     }
     
-    // Fechar modal
+    // Fechar modal após processamento
     setConfigurationModal({ open: false, asset: null });
   };
 

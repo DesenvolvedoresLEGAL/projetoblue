@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Smartphone, Check, AlertCircle } from 'lucide-react';
+import { Search, Smartphone, Check, AlertCircle, CheckCircle } from 'lucide-react';
 import { SelectedAsset } from '@modules/associations/types';
 import { useAvailableChips } from '@modules/associations/hooks/useAvailableChips';
 
@@ -28,19 +28,23 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isPrincipal, setIsPrincipal] = useState(true);
   const [selectedChip, setSelectedChip] = useState<SelectedAsset | null>(null);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const { chips, isLoading } = useAvailableChips({
     selectedAssets,
     excludeAssociatedToClient
   });
 
-  // Sincronizar com o chip associado atual
+  // Sincronizar com o chip associado atual - Fase 2 do plano
   useEffect(() => {
     if (currentAssociatedChip) {
       setSelectedChip(currentAssociatedChip);
       setIsPrincipal(currentAssociatedChip.isPrincipalChip || true);
+      setIsConfirmed(true);
+      console.log('ChipSelector sincronizado com chip atual:', currentAssociatedChip.uuid);
     } else {
       setSelectedChip(null);
+      setIsConfirmed(false);
     }
   }, [currentAssociatedChip]);
 
@@ -59,21 +63,32 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
   };
 
   const handleChipSelect = (chip: SelectedAsset) => {
+    console.log('CHIP selecionado localmente:', chip.uuid);
     setSelectedChip(chip);
-    console.log('CHIP selecionado localmente:', chip);
+    setIsConfirmed(false);
   };
 
   const handleConfirmSelection = () => {
     if (selectedChip) {
-      console.log('Confirmando seleção de CHIP:', selectedChip, 'isPrincipal:', isPrincipal);
+      console.log('=== CONFIRMAÇÃO MELHORADA DE CHIP ===');
+      console.log('Confirmando seleção de CHIP:', selectedChip.uuid, 'isPrincipal:', isPrincipal);
+      
+      setIsConfirmed(true);
       onChipSelected(selectedChip, isPrincipal);
+      
+      console.log('CHIP confirmado e propagado');
     }
   };
 
   const handleRemoveChip = () => {
+    console.log('=== REMOÇÃO MELHORADA DE CHIP ===');
     console.log('Removendo CHIP associado');
+    
     setSelectedChip(null);
+    setIsConfirmed(false);
     onChipRemoved();
+    
+    console.log('CHIP removido e propagado');
   };
 
   return (
@@ -82,23 +97,30 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
         <CardTitle className="flex items-center gap-2 text-sm">
           <Smartphone className="h-4 w-4 text-[#03F9FF]" />
           Associar CHIP
+          {isConfirmed && currentAssociatedChip && (
+            <Badge variant="outline" className="bg-green-100 text-green-800 ml-2">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Confirmado
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {currentAssociatedChip ? (
+        {currentAssociatedChip && isConfirmed ? (
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
               <div className="flex items-center gap-3">
-                <Smartphone className="h-4 w-4 text-blue-600" />
+                <Smartphone className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="font-medium text-sm">
                     {getChipIdentifier(currentAssociatedChip)}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                    <Badge variant="outline" className="bg-green-100 text-green-800">
+                      <CheckCircle className="h-3 w-3 mr-1" />
                       CHIP Associado
                     </Badge>
-                    <Badge variant="outline" className="bg-green-100 text-green-800">
+                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
                       {currentAssociatedChip.isPrincipalChip ? 'Principal' : 'Backup'}
                     </Badge>
                   </div>
@@ -191,12 +213,13 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
               )}
             </div>
 
-            {selectedChip && !currentAssociatedChip && (
+            {selectedChip && !isConfirmed && (
               <Button
                 onClick={handleConfirmSelection}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                Associar CHIP Selecionado
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Confirmar Associação do CHIP
               </Button>
             )}
           </div>

@@ -45,29 +45,41 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
     );
   };
 
-  // Lógica melhorada para detectar associações pendentes
+  // Lógica otimizada para detectar associações pendentes - Fase 3 do plano
   const findPendingAssociations = () => {
     const equipmentsThatNeedChip = selectedAssets.filter(needsChip);
     const availableChips = selectedAssets.filter(isChip);
     
+    console.log('=== DETECÇÃO OTIMIZADA DE ASSOCIAÇÕES ===');
     console.log('Equipamentos que precisam de CHIP:', equipmentsThatNeedChip.map(e => e.radio || e.model));
     console.log('CHIPs disponíveis:', availableChips.map(c => c.line_number || c.iccid));
 
     const associations = new Map<string, string>(); // equipmentId -> chipId
     
-    // Primeiro, mapear associações já salvas
+    // Primeiro: mapear associações bidirecionais já configuradas
     equipmentsThatNeedChip.forEach(equipment => {
-      const directlyAssociatedChip = availableChips.find(chip => 
+      // Verificar associação direta (equipamento -> chip)
+      if (equipment.associatedChipId) {
+        const directChip = availableChips.find(chip => chip.uuid === equipment.associatedChipId);
+        if (directChip) {
+          associations.set(equipment.uuid, directChip.uuid);
+          console.log(`Associação direta encontrada: ${equipment.radio || equipment.model} -> ${directChip.line_number || directChip.iccid}`);
+          return;
+        }
+      }
+      
+      // Verificar associação reversa (chip -> equipamento)
+      const reverseChip = availableChips.find(chip => 
         chip.associatedEquipmentId === equipment.uuid
       );
       
-      if (directlyAssociatedChip) {
-        associations.set(equipment.uuid, directlyAssociatedChip.uuid);
-        console.log(`Associação direta encontrada: ${equipment.radio || equipment.model} -> ${directlyAssociatedChip.line_number || directlyAssociatedChip.iccid}`);
+      if (reverseChip) {
+        associations.set(equipment.uuid, reverseChip.uuid);
+        console.log(`Associação reversa encontrada: ${equipment.radio || equipment.model} -> ${reverseChip.line_number || reverseChip.iccid}`);
       }
     });
 
-    // Em seguida, fazer matching automático para equipamentos sem associação
+    // Segundo: fazer matching automático para equipamentos sem associação
     const unassignedEquipments = equipmentsThatNeedChip.filter(equipment => 
       !associations.has(equipment.uuid)
     );
@@ -80,25 +92,26 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
     console.log('Equipamentos sem associação:', unassignedEquipments.map(e => e.radio || e.model));
     console.log('CHIPs sem associação:', unassignedChips.map(c => c.line_number || c.iccid));
 
-    // Fazer matching automático
+    // Fazer matching automático inteligente
     unassignedEquipments.forEach((equipment, index) => {
       if (index < unassignedChips.length) {
         const chip = unassignedChips[index];
         associations.set(equipment.uuid, chip.uuid);
-        console.log(`Matching automático: ${equipment.radio || equipment.model} -> ${chip.line_number || chip.iccid}`);
+        console.log(`Matching automático otimizado: ${equipment.radio || equipment.model} -> ${chip.line_number || chip.iccid}`);
       }
     });
 
+    console.log('=== DETECÇÃO CONCLUÍDA ===');
     return associations;
   };
 
-  // Valida a seleção atual de assets com lógica melhorada
+  // Valida a seleção atual de assets com lógica otimizada
   const validateSelection = useMemo((): AssetValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
     const suggestions: string[] = [];
 
-    console.log('=== INÍCIO DA VALIDAÇÃO ===');
+    console.log('=== VALIDAÇÃO OTIMIZADA INICIADA ===');
     console.log('Assets selecionados:', selectedAssets.map(a => ({
       uuid: a.uuid,
       type: a.type,
@@ -117,10 +130,10 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
     console.log(`Equipamentos que precisam de CHIP: ${equipmentsThatNeedChip.length}`);
     console.log(`CHIPs selecionados: ${selectedChips.length}`);
 
-    // Usar a nova lógica de associações pendentes
+    // Usar a lógica otimizada de associações pendentes
     const pendingAssociations = findPendingAssociations();
     
-    // Validar cada equipamento
+    // Validar cada equipamento com lógica melhorada
     equipmentsThatNeedChip.forEach(equipment => {
       const equipmentName = equipment.radio || equipment.model || equipment.uuid;
       const hasAssociation = pendingAssociations.has(equipment.uuid);
@@ -128,12 +141,27 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
       console.log(`Validando equipamento ${equipmentName}: tem associação = ${hasAssociation}`);
       
       if (!hasAssociation) {
-        errors.push(`${equipmentName} precisa ser associado a um CHIP`);
-        suggestions.push(`Selecione um CHIP para associar ao ${equipmentName}`);
+        // Verificar se há CHIPs disponíveis suficientes para matching automático
+        const availableChipsCount = selectedChips.filter(chip => 
+          !chip.associatedEquipmentId && 
+          !Array.from(pendingAssociations.values()).includes(chip.uuid)
+        ).length;
+        
+        const unassignedEquipmentsCount = equipmentsThatNeedChip.filter(eq => 
+          !pendingAssociations.has(eq.uuid)
+        ).length;
+        
+        if (availableChipsCount >= unassignedEquipmentsCount) {
+          console.log(`Matching automático disponível para ${equipmentName}`);
+          // Não adicionar erro - matching automático resolverá
+        } else {
+          errors.push(`${equipmentName} precisa ser associado a um CHIP`);
+          suggestions.push(`Selecione um CHIP para associar ao ${equipmentName}`);
+        }
       }
     });
 
-    // Verificar se há CHIPs suficientes
+    // Verificar balanceamento geral de CHIPs vs Equipamentos
     const availableChipsCount = selectedChips.filter(chip => 
       !chip.associatedEquipmentId || 
       equipmentsThatNeedChip.some(eq => eq.uuid === chip.associatedEquipmentId)
@@ -143,18 +171,20 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
 
     console.log(`CHIPs disponíveis: ${availableChipsCount}, Equipamentos precisando: ${equipmentsNeedingChipCount}`);
 
+    // Lógica otimizada de validação global
     if (equipmentsNeedingChipCount > 0 && availableChipsCount >= equipmentsNeedingChipCount) {
-      // Se há CHIPs suficientes, considerar válido mesmo sem associações explícitas salvas
-      const validAssociations = equipmentsNeedingChipCount <= availableChipsCount;
+      // Se há CHIPs suficientes, considerar válido mesmo sem associações explícitas
+      const canAutoMatch = equipmentsNeedingChipCount <= availableChipsCount;
       
-      if (validAssociations && errors.length > 0) {
+      if (canAutoMatch && errors.length > 0) {
         // Limpar erros se há matching possível
+        console.log('Limpando erros - matching automático disponível');
         errors.length = 0;
         suggestions.push('As associações entre equipamentos e CHIPs serão configuradas automaticamente');
       }
     }
 
-    // CHIPs sem associação (considerar como backup)
+    // CHIPs sem associação (informativo)
     selectedChips.forEach(chip => {
       const chipName = chip.line_number || chip.iccid || chip.uuid;
       const isAssociated = Array.from(pendingAssociations.values()).includes(chip.uuid);
@@ -166,7 +196,7 @@ export const useAssetBusinessRules = (selectedAssets: SelectedAsset[] = []) => {
 
     const isValid = errors.length === 0;
     
-    console.log('=== RESULTADO DA VALIDAÇÃO ===');
+    console.log('=== RESULTADO DA VALIDAÇÃO OTIMIZADA ===');
     console.log('Válido:', isValid);
     console.log('Erros:', errors);
     console.log('Avisos:', warnings);
