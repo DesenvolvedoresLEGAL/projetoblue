@@ -70,6 +70,13 @@ export interface ValidationResult {
   suggestions: string[];
 }
 
+export interface AssetValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  suggestions: string[];
+}
+
 export interface AssetBusinessRules {
   needsChip: boolean;
   isChip: boolean;
@@ -77,4 +84,12 @@ export interface AssetBusinessRules {
   isBackup: boolean;
   canBeAssociated: boolean;
   requiredFields: string[];
+}
+
+export interface AssetAssociationState {
+  selectedAssets: SelectedAsset[];
+  currentStep: 'client' | 'assets' | 'summary';
+  isLoading: boolean;
+  selectedClient: any | null; // Using any for now to avoid circular dependency
+  generalConfig: any | null; // Using any for now to avoid circular dependency
 }

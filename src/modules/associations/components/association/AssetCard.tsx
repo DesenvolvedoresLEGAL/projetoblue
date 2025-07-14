@@ -153,11 +153,11 @@ export const AssetCard: React.FC<AssetCardProps> = ({
                   </Button>
                 )}
                 
-                {shouldShowConfiguration() && onEdit && (
+                {shouldShowConfiguration() && onConfigure && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEdit(asset)}
+                    onClick={() => onConfigure(asset)}
                     className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50"
                   >
                     <Settings className="h-4 w-4" />
