@@ -1,175 +1,175 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Plus, User } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, Plus, Building, User, Phone, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/client';
-import { toast } from 'sonner';
-import { ClientForm } from './ClientForm';
-import { mapDatabaseClientToFrontend, formatPhoneForDisplay } from '@/utils/clientMappers';
 
 interface ClientSelectionProps {
+  selectedClient?: Client | null;
   onClientSelected: (client: Client) => void;
 }
 
-export const ClientSelection: React.FC<ClientSelectionProps> = ({ onClientSelected }) => {
+export const ClientSelection: React.FC<ClientSelectionProps> = ({
+  selectedClient,
+  onClientSelected
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
 
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery({
+  const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients', searchTerm],
     queryFn: async () => {
       let query = supabase
         .from('clients')
         .select('*')
         .is('deleted_at', null)
-        .order('empresa');
+        .order('nome');
 
       if (searchTerm.trim()) {
-        const term = searchTerm.trim().toLowerCase();
-        query = query.or(
-          `empresa.ilike.%${term}%,` +
-          `responsavel.ilike.%${term}%,` +
-          `email.ilike.%${term}%,` +
-          `telefones::text.ilike.%${term.replace(/\D/g, '')}%`
-        );
+        query = query.or(`nome.ilike.%${searchTerm}%,empresa.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query.limit(50);
-      
-      if (error) {
-        if (import.meta.env.DEV) console.error('Erro ao buscar clientes:', error);
-        throw error;
-      }
+      const { data, error } = await query;
+      if (error) throw error;
 
-      return (data || []).map(mapDatabaseClientToFrontend);
-    },
-    enabled: true
+      return data.map((dbClient): Client => ({
+        uuid: dbClient.uuid,
+        nome: dbClient.nome,
+        empresa: dbClient.empresa,
+        responsavel: dbClient.responsavel,
+        contato: dbClient.contato.toString(), // Convert number to string
+        email: dbClient.email || undefined,
+        cnpj: dbClient.cnpj || undefined,
+        telefones: dbClient.telefones,
+        created_at: dbClient.created_at,
+        updated_at: dbClient.updated_at,
+        deleted_at: dbClient.deleted_at || undefined
+      }));
+    }
   });
 
   const handleClientSelect = (client: Client) => {
     onClientSelected(client);
-    toast.success(`Cliente ${client.empresa} selecionado com sucesso!`);
-  };
-
-  const handleNewClientCreated = (newClient: Client) => {
-    setIsNewClientModalOpen(false);
-    onClientSelected(newClient);
-    toast.success('Cliente cadastrado e selecionado com sucesso!');
   };
 
   return (
-    <Card>
+    <Card className="border-[#4D2BFB]/20">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Selecionar Cliente
-        </CardTitle>
-        <CardDescription>
-          Busque por empresa, responsável, telefone ou email. Se não encontrar, cadastre um novo cliente.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5 text-[#03F9FF]" />
+            Selecionar Cliente
+          </CardTitle>
+          <Button
+            onClick={() => setShowNewClientForm(true)}
+            className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90 text-white"
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Cliente
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="search">Buscar Cliente</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              id="search"
-              placeholder="Digite empresa, responsável, telefone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Exemplos: "João Silva", "Empresa ABC", "(11) 99999-9999"
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {isLoadingClients ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando clientes...
-            </div>
-          ) : clients.length > 0 ? (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              <div className="text-sm text-muted-foreground mb-2">
-                {clients.length} cliente(s) encontrado(s):
-              </div>
-              {clients.map((client) => (
-                <div
-                  key={client.uuid}
-                  className="border rounded-lg p-3 hover:bg-muted/50 cursor-pointer transition-colors hover:border-primary"
-                  onClick={() => handleClientSelect(client)}
-                >
-                  <div className="font-medium text-primary">{client.empresa}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Responsável: {client.responsavel}
+        {selectedClient ? (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">{selectedClient.nome}</h3>
+                <p className="text-sm text-gray-600">{selectedClient.empresa}</p>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {selectedClient.responsavel}
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Telefones: {client.telefones.map(tel => formatPhoneForDisplay(tel)).join(', ')}
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-3 w-3" />
+                    {selectedClient.contato}
                   </div>
-                  {client.email && (
-                    <div className="text-sm text-muted-foreground">
-                      Email: {client.email}
+                  {selectedClient.email && (
+                    <div className="flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      {selectedClient.email}
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          ) : searchTerm.trim() ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="text-muted-foreground">
-                Nenhum cliente encontrado para "{searchTerm}"
               </div>
-              <Button
-                onClick={() => setIsNewClientModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Cadastrar Novo Cliente
-              </Button>
+              <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                Selecionado
+              </Badge>
             </div>
-          ) : (
-            <div className="text-center py-8 space-y-4">
-              <div className="text-muted-foreground">
-                Digite para buscar clientes existentes
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Busca por empresa, responsável, telefone ou email
-              </div>
-              <Button
-                onClick={() => setIsNewClientModalOpen(true)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Cadastrar Novo Cliente
-              </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onClientSelected(null as any)}
+              className="mt-3"
+            >
+              Alterar Cliente
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome, empresa ou email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          )}
-        </div>
 
-        <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do cliente para continuar com a associação.
-              </DialogDescription>
-            </DialogHeader>
-            <ClientForm
-              onSubmit={handleNewClientCreated}
-              onCancel={() => setIsNewClientModalOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {isLoading ? (
+                <div className="text-center py-4 text-gray-500">
+                  Carregando clientes...
+                </div>
+              ) : clients.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  <Building className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhum cliente encontrado</p>
+                  {searchTerm && (
+                    <p className="text-sm">
+                      Tente ajustar os termos de busca
+                    </p>
+                  )}
+                </div>
+              ) : (
+                clients.map((client) => (
+                  <Card
+                    key={client.uuid}
+                    className="cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                    onClick={() => handleClientSelect(client)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{client.nome}</h4>
+                          <p className="text-sm text-gray-600">{client.empresa}</p>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {client.responsavel}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {client.contato}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

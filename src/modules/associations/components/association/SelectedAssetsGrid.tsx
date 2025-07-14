@@ -32,6 +32,7 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
   const handleConfigureAsset = (asset: SelectedAsset) => {
+    console.log('Abrindo configuração para asset:', asset.uuid, asset.radio || asset.model);
     setConfigurationModal({
       open: true,
       asset
@@ -40,17 +41,19 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
 
   const handleSaveConfiguration = (config: any) => {
     if (configurationModal.asset) {
-      console.log('Processando configuração:', config);
+      console.log('=== PROCESSANDO CONFIGURAÇÃO NO GRID ===');
+      console.log('Asset original:', configurationModal.asset.uuid);
+      console.log('Configuração recebida:', config);
       
       const updatedAsset = {
         ...configurationModal.asset,
         ...config
       };
       
-      console.log('Ativo atualizado:', updatedAsset);
+      console.log('Asset atualizado:', updatedAsset);
       onEditAsset(updatedAsset);
       
-      // Se há associação de CHIP e é um equipamento
+      // Se há associação de CHIP e é um equipamento, processar imediatamente
       if (config.associatedChipId && config.uuid && config.uuid !== config.associatedChipId) {
         // Encontrar o CHIP nos assets selecionados
         const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
@@ -62,23 +65,18 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
             notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
           };
           
-          console.log('CHIP associado atualizado:', updatedChip);
-          onEditAsset(updatedChip);
+          console.log('CHIP associado atualizado no grid:', updatedChip);
+          
+          // Atualizar o CHIP imediatamente
+          setTimeout(() => {
+            onEditAsset(updatedChip);
+          }, 10);
         }
       }
       
-      // Se é uma configuração de CHIP que veio como segunda chamada
-      if (config.uuid && config.uuid !== configurationModal.asset.uuid) {
-        const chipAsset = assets.find(a => a.uuid === config.uuid);
-        if (chipAsset) {
-          const updatedChip = {
-            ...chipAsset,
-            ...config
-          };
-          
-          console.log('CHIP configurado:', updatedChip);
-          onEditAsset(updatedChip);
-        }
+      // Se é uma configuração de CHIP independente
+      if (config.uuid && config.uuid === configurationModal.asset.uuid && configurationModal.asset.type === 'CHIP') {
+        console.log('Configuração de CHIP independente processada');
       }
     }
     

@@ -12,3 +12,13 @@ export interface Client {
   updated_at: string;
   deleted_at?: string;
 }
+
+export interface ClientCreateData {
+  nome: string;
+  empresa: string;
+  responsavel: string;
+  contato: string;
+  email?: string;
+  cnpj?: string;
+  telefones?: any;
+}
