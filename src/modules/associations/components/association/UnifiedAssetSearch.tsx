@@ -93,21 +93,21 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
 
     const asset = data[0];
     return {
-      id: asset.uuid, // Map uuid to id for compatibility
+      id: asset.uuid,
       uuid: asset.uuid,
       radio: asset.radio,
       line_number: asset.line_number?.toString(),
       serial_number: asset.serial_number,
       iccid: asset.iccid,
       model: asset.model,
-      statusId: asset.status_id, // Correct property name
+      statusId: asset.status_id,
       solution_id: asset.solution_id,
       manufacturer_id: asset.manufacturer_id,
       status: asset.asset_status?.status,
-      solucao: asset.asset_solutions?.solution, // Changed from 'solution' to 'solucao'
-      brand: asset.manufacturers?.name,
-      type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT', // Explicit type casting
-      registrationDate: asset.created_at || new Date().toISOString() // Required property
+      solucao: asset.asset_solutions?.solution,
+      marca: asset.manufacturers?.name,
+      type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT',
+      registrationDate: asset.created_at || new Date().toISOString()
     };
   };
 
@@ -148,6 +148,9 @@ export const UnifiedAssetSearch: React.FC<UnifiedAssetSearchProps> = ({
             equipmentCount={equipmentCount}
             chipCount={chipCount}
             totalCount={assets.length}
+            onAssetSelected={onAssetSelected}
+            selectedAssets={selectedAssets}
+            selectingAssetId={selectingAssetId}
           />
           
           <SearchResults

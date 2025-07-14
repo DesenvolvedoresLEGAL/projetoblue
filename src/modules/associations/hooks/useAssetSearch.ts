@@ -2,15 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { SelectedAsset } from '@modules/associations/types';
-
-interface AssetSearchFilters {
-  solutionId?: number;
-  statusId?: number;
-  searchTerm?: string;
-  manufacturerId?: number;
-  assetType?: 'CHIP' | 'EQUIPMENT' | 'ALL';
-}
+import { SelectedAsset, AssetSearchFilters } from '@modules/associations/types';
 
 interface UseAssetSearchProps {
   filters?: AssetSearchFilters;
@@ -24,8 +16,7 @@ export const useAssetSearch = ({
   excludeAssociatedToClient
 }: UseAssetSearchProps = {}) => {
   const [localFilters, setLocalFilters] = useState<AssetSearchFilters>({
-    assetType: 'ALL',
-    statusId: 1, // Disponível por padrão
+    type: 'ALL',
     ...filters
   });
 
@@ -53,7 +44,7 @@ export const useAssetSearch = ({
         `)
         .is('deleted_at', null);
 
-      // Filtros básicos
+      // Aplicar filtros apenas se especificados
       if (localFilters.statusId) {
         query = query.eq('status_id', localFilters.statusId);
       }
@@ -67,9 +58,9 @@ export const useAssetSearch = ({
       }
 
       // Filtro por tipo de asset
-      if (localFilters.assetType === 'CHIP') {
+      if (localFilters.type === 'CHIP') {
         query = query.eq('solution_id', 11);
-      } else if (localFilters.assetType === 'EQUIPMENT') {
+      } else if (localFilters.type === 'EQUIPMENT') {
         query = query.neq('solution_id', 11);
       }
 
@@ -102,7 +93,7 @@ export const useAssetSearch = ({
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100); // Aumentado de 50 para 100
 
       if (error) {
         if (import.meta.env.DEV) console.error('useAssetSearch: Erro na busca:', error);
@@ -149,3 +140,5 @@ export const useAssetSearch = ({
     onFiltersUpdate
   };
 };
+
+export type { AssetSearchFilters };

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { AssetSearchFilters } from '@modules/associations/hooks/useAssetSearch';
+import { SelectedAsset } from '@modules/associations/types';
 import { Wifi, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -14,6 +15,9 @@ interface AdvancedSearchProps {
   equipmentCount: number;
   chipCount: number;
   totalCount: number;
+  onAssetSelected?: (asset: SelectedAsset) => void;
+  selectedAssets?: SelectedAsset[];
+  selectingAssetId?: string | null;
 }
 
 export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
@@ -34,10 +38,10 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           <Label className="text-sm font-medium">Tipo</Label>
           <div className={`grid gap-1 ${isMobile ? 'grid-cols-3' : 'grid-cols-3'}`}>
             {([
-  { key: 'all', label: 'Todos', icon: null },
-  { key: 'equipment', label: isMobile ? 'Equip.' : 'Equipamentos', icon: Wifi },
-  { key: 'chip', label: 'CHIPs', icon: Smartphone }
-] as const).map(({ key, label, icon: Icon }) => (
+              { key: 'ALL', label: 'Todos', icon: null },
+              { key: 'EQUIPMENT', label: isMobile ? 'Equip.' : 'Equipamentos', icon: Wifi },
+              { key: 'CHIP', label: 'CHIPs', icon: Smartphone }
+            ] as const).map(({ key, label, icon: Icon }) => (
               <Button
                 key={key}
                 variant={filters.type === key ? 'default' : 'outline'}
@@ -56,7 +60,7 @@ export const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
         <div className="space-y-2">
           <Label className="text-sm font-medium">Buscar</Label>
           <Input
-            value={filters.searchTerm}
+            value={filters.searchTerm || ''}
             onChange={(e) => onFiltersUpdate({ searchTerm: e.target.value })}
             placeholder={isMobile ? "ICCID, rádio..." : "ICCID, rádio, serial, linha..."}
             className="w-full"
