@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { supabase } from "@/integrations/supabase/client";
 import { Asset, AssetLog, StatusRecord } from "@/types/asset";

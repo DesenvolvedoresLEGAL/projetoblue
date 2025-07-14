@@ -106,7 +106,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onClientSelected(null as any)}
+              onClick={() => onClientSelected(null)}
               className="mt-3"
             >
               Alterar Cliente

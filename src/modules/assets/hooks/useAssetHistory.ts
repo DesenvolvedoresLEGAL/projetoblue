@@ -16,22 +16,24 @@ export interface ProcessedHistoryLog {
 }
 
 interface AssetHistory {
-    assoc_id: number;
+    asset_id: string;
     created_at: string;
-    date: string;
     deleted_at: string;
     details: {
       client_name: string,
       asset_name: string,
       old_status: string,
       new_status: string,
-      user_email: string
-    };
+      user_email: string,
+      asset_id?: string,
+      asset_uuid?: string
+    } | Record<string, never>;
     event: string | null;
-    id: number;
     status_after_id: number | null;
     status_before_id: number | null;
     updated_at: string;
+    user_id: string;
+    uuid: string;
 }
 
 export const useAssetHistory = () => {
@@ -49,8 +51,8 @@ export const useAssetHistory = () => {
         throw error;
       }
 
-      return (data || []).map((row: any) => ({
-        id: row.uuid || Date.now(), // Use uuid as id, fallback to timestamp
+      return (data || []).map((row: AssetHistory) => ({
+        id: parseInt(row.uuid) || Date.now(), // Convert uuid to number or use timestamp
         date: row.created_at || new Date().toISOString(),
         event: row.event || 'Unknown Event',
         description: row.event || 'No description',
@@ -83,24 +85,24 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
       }
 
       return (data || [])
-        .filter((row: any) => {
+        .filter((row: AssetHistory) => {
           // Filter by asset_id in details or other relevant fields
-          const details = row.details as Record<string, unknown> || {};
+          const details = row.details || {};
           return details.asset_id === assetId || details.asset_uuid === assetId;
         })
-        .map((row: any) => {
+        .map((row: AssetHistory) => {
           // Safe parsing of details field
           let parsedDetails: Record<string, unknown> = {};
           try {
             parsedDetails = (row.details as Record<string, unknown>) || {};
           } catch (e) {
-            if (import.meta.env.DEV) console.warn('Failed to parse details for history entry:', row.id);
+            if (import.meta.env.DEV) console.warn('Failed to parse details for history entry:', row.uuid);
             parsedDetails = {};
           }
 
           return {
-            id: row.id,
-            date: row.date || row.created_at,
+            id: parseInt(row.uuid) || Date.now(),
+            date: row.created_at,
             event: row.event || 'Unknown Event',
             description: row.event || 'No description',
             client_name: String(parsedDetails.client_name || ''),

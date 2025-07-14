@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface AssetHistoryEntry {
   id: number; // Changed from string to number to match database
