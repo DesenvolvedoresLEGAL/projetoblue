@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Settings, Wifi, Smartphone, Package } from 'lucide-react';
 import { SelectedAsset } from '@modules/associations/types';
 import { useQuery } from '@tanstack/react-query';
 import { referenceDataService } from '@modules/assets/services/referenceDataService';
+import { ChipSelector } from './ChipSelector';
 
 interface AssetConfig {
   notes: string;
@@ -22,6 +22,7 @@ interface AssetConfig {
   isPrincipalChip?: boolean;
   plan_id?: number | null;
   gb?: number;
+  associatedChipId?: string | null;
 }
 
 interface AssetConfigurationFormProps {
@@ -29,13 +30,17 @@ interface AssetConfigurationFormProps {
   open: boolean;
   onClose: () => void;
   onSave: (config: AssetConfig) => void;
+  selectedAssets?: SelectedAsset[];
+  excludeAssociatedToClient?: string;
 }
 
 export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   asset,
   open,
   onClose,
-  onSave
+  onSave,
+  selectedAssets = [],
+  excludeAssociatedToClient
 }) => {
   // Estados para configurações específicas do ativo
   const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
@@ -45,6 +50,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   const [customGb, setCustomGb] = useState(asset.gb || 0);
   const [rentedDays, setRentedDays] = useState(asset.rented_days || 30);
   const [notes, setNotes] = useState(asset.notes || '');
+  const [associatedChip, setAssociatedChip] = useState<SelectedAsset | null>(null);
 
   // Buscar planos disponíveis
   const { data: plans = [], isLoading: plansLoading } = useQuery({
@@ -66,6 +72,27 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     selectedPlan.nome.toLowerCase().includes('personalizado')
   );
 
+  // Verificar se o equipamento já tem um CHIP associado
+  useEffect(() => {
+    if (asset.associatedEquipmentId) {
+      const currentChip = selectedAssets.find(a => a.uuid === asset.associatedEquipmentId);
+      if (currentChip) {
+        setAssociatedChip(currentChip);
+      }
+    }
+  }, [asset.associatedEquipmentId, selectedAssets]);
+
+  const handleChipSelected = (chip: SelectedAsset, isPrincipal: boolean) => {
+    setAssociatedChip({
+      ...chip,
+      isPrincipalChip: isPrincipal
+    });
+  };
+
+  const handleChipRemoved = () => {
+    setAssociatedChip(null);
+  };
+
   const handleSave = () => {
     const config: AssetConfig = {
       notes,
@@ -76,6 +103,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       config.ssid_atual = ssidAtual;
       config.pass_atual = passAtual;
       config.rented_days = rentedDays;
+      config.associatedChipId = associatedChip?.uuid || null;
     }
 
     // Configurações específicas para CHIPs
@@ -139,56 +167,67 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
 
           {/* Configurações específicas para equipamentos */}
           {isEquipment && (
-            <Card className="border-[#4D2BFB]/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Wifi className="h-4 w-4 text-[#03F9FF]" />
-                  Configurações de Rede
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="ssid-atual" className="text-sm">SSID da Rede</Label>
-                    <Input
-                      id="ssid-atual"
-                      value={ssidAtual}
-                      onChange={(e) => setSsidAtual(e.target.value)}
-                      placeholder="Nome da rede WiFi"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Nome da rede WiFi que será configurada
-                    </p>
+            <>
+              <Card className="border-[#4D2BFB]/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Wifi className="h-4 w-4 text-[#03F9FF]" />
+                    Configurações de Rede
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ssid-atual" className="text-sm">SSID da Rede</Label>
+                      <Input
+                        id="ssid-atual"
+                        value={ssidAtual}
+                        onChange={(e) => setSsidAtual(e.target.value)}
+                        placeholder="Nome da rede WiFi"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Nome da rede WiFi que será configurada
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="pass-atual" className="text-sm">Senha da Rede</Label>
+                      <Input
+                        id="pass-atual"
+                        type="password"
+                        value={passAtual}
+                        onChange={(e) => setPassAtual(e.target.value)}
+                        placeholder="Senha da rede WiFi"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Senha para acesso à rede
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pass-atual" className="text-sm">Senha da Rede</Label>
+                    <Label htmlFor="rented-days" className="text-sm">Dias de Aluguel</Label>
                     <Input
-                      id="pass-atual"
-                      type="password"
-                      value={passAtual}
-                      onChange={(e) => setPassAtual(e.target.value)}
-                      placeholder="Senha da rede WiFi"
+                      id="rented-days"
+                      type="number"
+                      value={rentedDays}
+                      onChange={(e) => setRentedDays(parseInt(e.target.value) || 30)}
+                      placeholder="30"
+                      min="1"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Senha para acesso à rede
-                    </p>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-2">
-                  <Label htmlFor="rented-days" className="text-sm">Dias de Aluguel</Label>
-                  <Input
-                    id="rented-days"
-                    type="number"
-                    value={rentedDays}
-                    onChange={(e) => setRentedDays(parseInt(e.target.value) || 30)}
-                    placeholder="30"
-                    min="1"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              {/* Seletor de CHIP para equipamentos */}
+              <ChipSelector
+                selectedAssets={selectedAssets}
+                onChipSelected={handleChipSelected}
+                onChipRemoved={handleChipRemoved}
+                currentAssociatedChip={associatedChip}
+                excludeAssociatedToClient={excludeAssociatedToClient}
+              />
+            </>
           )}
 
           {/* Configurações específicas para CHIPs */}
