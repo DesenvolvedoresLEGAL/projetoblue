@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,6 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
       setIsPrincipal(true);
       setIsConfirmed(false);
       console.log('ChipSelector resetado - nenhum chip associado');
-      console.log('ChipSelector resetado - nenhum chip associado');
     }
     
     console.log('=== SINCRONIZAÇÃO OTIMIZADA CONCLUÍDA ===');
@@ -86,7 +86,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
         isPrincipalChip: isPrincipal,
         // Garantir que todas as propriedades estão presentes
         uuid: selectedChip.uuid,
-        tipo: selectedChip.tipo || 'CHIP',
+        type: selectedChip.type || 'CHIP',
         marca: selectedChip.marca || '',
         modelo: selectedChip.modelo || '',
         serial_number: selectedChip.serial_number || '',
@@ -119,7 +119,6 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
     console.log('=== REMOÇÃO DE CHIP ===');
     console.log('Removendo CHIP associado:', selectedChip?.uuid);
     
-    // Reset completo do estado
     // Reset completo do estado
     setSelectedChip(null);
     setIsPrincipal(true);

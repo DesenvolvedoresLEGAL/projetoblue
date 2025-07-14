@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from '@/integrations/supabase/client';
 import { Association } from '@/types/associations';
 import { toast } from 'sonner';
@@ -57,12 +56,12 @@ export const EditAssociationDialog: React.FC<EditAssociationDialogProps> = ({
           entry_date: formData.entry_date,
           exit_date: formData.exit_date || null,
           notes: formData.notes,
-          ssid: formData.ssid,
-          pass: formData.pass,
-          gb: formData.gb,
+          equipment_ssid: formData.ssid,
+          equipment_pass: formData.pass,
+          plan_gb: formData.gb,
           updated_at: new Date().toISOString()
         })
-        .eq('uuid', association.id);
+        .eq('uuid', association.id.toString());
 
       if (error) {
         if (import.meta.env.DEV) console.error('Erro ao atualizar associação:', error);

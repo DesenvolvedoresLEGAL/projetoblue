@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface Client {
@@ -5,7 +6,7 @@ export interface Client {
   nome: string;
   empresa: string;
   responsavel: string;
-  contato: string; // Mudando de number para string para consistência
+  contato: string; // Mantendo como string para consistência
   email?: string;
   cnpj?: string;
   telefones?: any;

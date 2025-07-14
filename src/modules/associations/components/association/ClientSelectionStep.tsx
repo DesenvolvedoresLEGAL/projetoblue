@@ -1,153 +1,194 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Search, Users, Building } from "lucide-react";
-import { useClientsData } from '@modules/clients/hooks/useClientsData';
-import { useAssetAssociationState } from '@modules/assets/hooks/useAssetAssociationState';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Search, Users, Plus, Building, Phone, Mail, User } from 'lucide-react';
+import { useClients } from '@modules/associations/hooks/useClients';
 import { Client } from '@/types/client';
 
-export const ClientSelectionStep: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { clients = [], isLoading } = useClientsData();
-  const { selectedClient, setSelectedClient, setCurrentStep } = useAssetAssociationState();
+interface ClientSelectionStepProps {
+  onClientSelected: (client: Client) => void;
+  selectedClient?: Client | null;
+}
 
-  const filteredClients = clients.filter(client => 
-    client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.cnpj && client.cnpj.includes(searchTerm)) ||
-    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({
+  onClientSelected,
+  selectedClient
+}) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const { clients, isLoading } = useClients();
+
+  const filteredClients = clients.filter(client => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      client.nome?.toLowerCase().includes(term) ||
+      client.empresa?.toLowerCase().includes(term) ||
+      client.email?.toLowerCase().includes(term) ||
+      client.contato?.toString().includes(term)
+    );
+  });
 
   const handleClientSelect = (client: Client) => {
-    if (import.meta.env.DEV) console.log('ClientSelectionStep: Cliente selecionado', client.uuid);
-    setSelectedClient(client);
-    // Automaticamente avançar para próximo step
-    setTimeout(() => {
-      setCurrentStep('assets');
-    }, 500);
+    console.log('Cliente selecionado:', client);
+    onClientSelected(client);
   };
 
-  if (isLoading) {
+  if (selectedClient) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4D2BFB] mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Carregando clientes...</p>
-        </div>
-      </div>
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-5 w-5 text-[#03F9FF]" />
+            Cliente Selecionado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-green-600" />
+                <span className="font-medium">{selectedClient.empresa}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-600">{selectedClient.nome}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-600">{selectedClient.contato}</span>
+              </div>
+              {selectedClient.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm text-gray-600">{selectedClient.email}</span>
+                </div>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onClientSelected(null as any)}
+              className="text-red-600 hover:bg-red-50"
+            >
+              Alterar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Buscar cliente por nome, CNPJ ou email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 border-[#4D2BFB]/20 focus:border-[#4D2BFB]"
-        />
-      </div>
+    <Card className="border-[#4D2BFB]/20">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Users className="h-5 w-5 text-[#03F9FF]" />
+          Selecionar Cliente
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="client-search">Buscar Cliente</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              id="client-search"
+              placeholder="Digite nome, empresa ou contato..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
 
-      {/* Selected Client Display */}
-      {selectedClient && (
-        <Card className="border-[#03F9FF] bg-[#03F9FF]/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-[#020CBC] flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              Cliente Selecionado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">{selectedClient.nome}</h3>
-                {selectedClient.cnpj && (
-                  <p className="text-sm text-muted-foreground">CNPJ: {selectedClient.cnpj}</p>
-                )}
-                {selectedClient.email && (
-                  <p className="text-sm text-muted-foreground">Email: {selectedClient.email}</p>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedClient(null)}
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                Alterar
-              </Button>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            {filteredClients.length} cliente(s) encontrado(s)
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="text-[#4D2BFB] border-[#4D2BFB] hover:bg-[#4D2BFB]/10"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Cliente
+          </Button>
+        </div>
+
+        <div className="max-h-60 overflow-y-auto space-y-2">
+          {isLoading ? (
+            <div className="text-center py-4 text-gray-500">
+              Carregando clientes...
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Clients List */}
-      {!selectedClient && (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {filteredClients.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          ) : filteredClients.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+              <p>Nenhum cliente encontrado</p>
+              <p className="text-sm">Tente ajustar sua busca ou criar um novo cliente</p>
+            </div>
           ) : (
             filteredClients.map((client) => (
-              <Card 
-                key={client.uuid} 
-                className="hover:shadow-md transition-shadow cursor-pointer border-[#4D2BFB]/20 hover:border-[#4D2BFB]/40"
+              <Card
+                key={client.uuid}
+                className="cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50/50"
                 onClick={() => handleClientSelect(client)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-[#020CBC]">{client.nome}</h3>
-                        <Badge variant="outline" className="text-xs">
-                          {client.cnpj ? 'PJ' : 'PF'}
-                        </Badge>
+                <CardContent className="p-3">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium">{client.empresa}</span>
                       </div>
-                      {client.cnpj && (
-                        <p className="text-sm text-muted-foreground">CNPJ: {client.cnpj}</p>
-                      )}
-                      {client.email && (
-                        <p className="text-sm text-muted-foreground">Email: {client.email}</p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        Contato: {client.contato}
-                      </p>
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800 text-xs">
+                        Cliente
+                      </Badge>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-[#4D2BFB]">
-                      Selecionar
-                    </Button>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3" />
+                        <span>{client.nome}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3 w-3" />
+                        <span>{client.contato}</span>
+                      </div>
+                      {client.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3 w-3" />
+                          <span>{client.email}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))
           )}
         </div>
-      )}
 
-      {/* Action Buttons */}
-      {selectedClient && (
-        <div className="flex justify-end pt-4">
-          <Button 
-            onClick={() => setCurrentStep('assets')}
-            className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90"
-          >
-            Continuar para Seleção de Ativos
-          </Button>
-        </div>
-      )}
-    </div>
+        {showCreateForm && (
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm text-gray-600 mb-3">
+              Formulário de criação rápida será implementado aqui
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateForm(false)}
+              className="w-full"
+            >
+              Fechar
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

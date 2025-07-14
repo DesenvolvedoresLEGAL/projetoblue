@@ -1,15 +1,24 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Building, Phone, Mail, Hash, User, Wifi, Smartphone } from 'lucide-react';
+import { 
+  CheckCircle, 
+  ArrowLeft, 
+  Save, 
+  User, 
+  Wifi, 
+  Smartphone, 
+  Calendar, 
+  FileText,
+  Settings
+} from 'lucide-react';
+import { Client } from '@/types/client';
 import { SelectedAsset } from '@modules/associations/types';
-
-import type { Client } from '@/types/client';
-import type { AssociationGeneralConfig } from './AssociationGeneralConfig';
-import { formatPhoneForDisplay } from '@/utils/clientMappers';
+import { AssociationGeneralConfig } from './AssociationGeneralConfig';
+import { AssociationValidationSummary } from './AssociationValidationSummary';
 
 interface AssociationSummaryProps {
   client: Client;
@@ -28,239 +37,212 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({
   onBack,
   isLoading = false
 }) => {
-  const getAssetIdentifier = (asset: SelectedAsset) => {
-    if (asset.type === 'CHIP') {
-      return asset.iccid || asset.line_number || asset.uuid.substring(0, 8);
-    }
-    return asset.radio || asset.serial_number || asset.uuid.substring(0, 8);
-  };
-
   const equipmentCount = assets.filter(asset => asset.type === 'EQUIPMENT').length;
   const chipCount = assets.filter(asset => asset.type === 'CHIP').length;
 
+  const getAssetIcon = (asset: SelectedAsset) => {
+    return asset.type === 'EQUIPMENT' ? 
+      <Wifi className="h-4 w-4 text-blue-600" /> : 
+      <Smartphone className="h-4 w-4 text-green-600" />;
+  };
+
+  const getAssetIdentifier = (asset: SelectedAsset) => {
+    if (asset.type === 'EQUIPMENT') {
+      return asset.radio || asset.serial_number || asset.model || asset.uuid;
+    } else {
+      return asset.line_number || asset.iccid || asset.uuid;
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
+      {/* Validação Summary */}
+      <AssociationValidationSummary
+        selectedAssets={assets}
+        generalConfig={generalConfig}
+        selectedClient={client}
+      />
+
+      {/* Resumo do Cliente */}
       <Card className="border-[#4D2BFB]/20">
-        <CardHeader>
-          <CardTitle className="text-xl text-[#4D2BFB] flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Resumo da Associação
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <User className="h-5 w-5 text-[#03F9FF]" />
+            Cliente Selecionado
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Informações do Cliente */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-              Informações do Cliente
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Building className="h-4 w-4" />
-                  <span className="text-sm font-medium">Empresa:</span>
-                </div>
-                <div className="font-medium text-gray-900 ml-6">
-                  {client?.empresa || 'Não informado'}
-                </div>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-medium">{client.empresa}</h3>
+                <p className="text-sm text-gray-600">{client.nome}</p>
+                <p className="text-sm text-gray-500">{client.contato}</p>
+                {client.email && (
+                  <p className="text-sm text-gray-500">{client.email}</p>
+                )}
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <User className="h-4 w-4" />
-                  <span className="text-sm font-medium">Responsável:</span>
-                </div>
-                <div className="font-medium text-gray-900 ml-6">
-                  {client?.responsavel || client?.nome || 'Não informado'}
-                </div>
-              </div>
-              
-              {client?.telefones && client.telefones.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm font-medium">Telefone(s):</span>
-                  </div>
-                  {client.telefones.map((t, idx) => (
-                    <div key={idx} className="font-medium text-gray-900 ml-6">
-                      {formatPhoneForDisplay(t)}
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {client?.email && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Mail className="h-4 w-4" />
-                    <span className="text-sm font-medium">Email:</span>
-                  </div>
-                  <div className="font-medium text-gray-900 ml-6">
-                    {client.email}
-                  </div>
-                </div>
-              )}
-              
-              {client?.cnpj && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Hash className="h-4 w-4" />
-                    <span className="text-sm font-medium">CNPJ:</span>
-                  </div>
-                  <div className="font-medium text-gray-900 ml-6">
-                    {client.cnpj}
-                  </div>
-                </div>
-              )}
+              <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                Cliente
+              </Badge>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <Separator />
-
-          {/* Resumo dos Ativos */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Ativos Associados ({assets.length})
-              </h3>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  <Wifi className="h-3 w-3 mr-1" />
-                  {equipmentCount} Equipamentos
-                </Badge>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  <Smartphone className="h-3 w-3 mr-1" />
-                  {chipCount} CHIPs
-                </Badge>
-              </div>
+      {/* Resumo dos Ativos */}
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Settings className="h-5 w-5 text-[#03F9FF]" />
+              Ativos Selecionados ({assets.length})
+            </CardTitle>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                <Wifi className="h-3 w-3 mr-1" />
+                {equipmentCount}
+              </Badge>
+              <Badge variant="outline" className="bg-green-100 text-green-800">
+                <Smartphone className="h-3 w-3 mr-1" />
+                {chipCount}
+              </Badge>
             </div>
-            
-            <div className="space-y-3">
-              {assets.map((asset, index) => (
-                <Card key={asset.uuid} className="border border-gray-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {/* Ícone do tipo */}
-                        <div className="flex-shrink-0">
-                          {asset.type === 'CHIP' ? (
-                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                              <Smartphone className="h-5 w-5 text-green-600" />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <Wifi className="h-5 w-5 text-blue-600" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Informações do ativo */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-gray-700">
-                              {index + 1}. {asset.type === 'CHIP' ? 'CHIP' : 'Equipamento'}:
-                            </span>
-                            <span className="font-semibold text-gray-900">
-                              {getAssetIdentifier(asset)}
-                            </span>
-                          </div>
-                          
-                          <div className="text-xs text-gray-600 space-y-1">
-                            {asset.type === 'CHIP' && asset.line_number && (
-                              <div>Linha: {asset.line_number}</div>
-                            )}
-                            {asset.model && (
-                              <div>Modelo: {asset.model}</div>
-                            )}
-                            {asset.brand && (
-                              <div>Marca: {asset.brand}</div>
-                            )}
-                            {asset.solucao && (
-                              <div>Solução: {asset.solucao}</div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Status */}
-                      <div className="flex-shrink-0">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          {asset.status}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {assets.map((asset, index) => (
+              <div key={asset.uuid} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {getAssetIcon(asset)}
+                  <div>
+                    <p className="font-medium text-sm">{getAssetIdentifier(asset)}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className={
+                        asset.type === 'EQUIPMENT' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      }>
+                        {asset.type === 'EQUIPMENT' ? 'Equipamento' : 'CHIP'}
+                      </Badge>
+                      {asset.associatedChip && (
+                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 text-xs">
+                          + CHIP {asset.associatedChip.isPrincipalChip ? 'Principal' : 'Backup'}
                         </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Configurações da Associação */}
-          {generalConfig && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Configurações da Associação
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Tipo de Associação:</span>
-                    <div className="font-medium text-gray-900 mt-1">
-                      {generalConfig.associationType || 'ALUGUEL'}
+                      )}
+                      {asset.associatedEquipmentId && (
+                        <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                          Associado a Equipamento
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                  
-                  <div>
-                    <span className="text-sm font-medium text-gray-600">Data de Início:</span>
-                    <div className="font-medium text-gray-900 mt-1">
-                      {generalConfig.startDate ? 
-                        new Date(generalConfig.startDate).toLocaleDateString('pt-BR') : 
-                        'Não definida'
-                      }
-                    </div>
-                  </div>
-                  
-                  {generalConfig.endDate && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600">Data de Fim:</span>
-                      <div className="font-medium text-gray-900 mt-1">
-                        {new Date(generalConfig.endDate).toLocaleDateString('pt-BR')}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {generalConfig.notes && (
-                    <div className="md:col-span-2">
-                      <span className="text-sm font-medium text-gray-600">Observações:</span>
-                      <div className="font-medium text-gray-900 mt-1">
-                        {generalConfig.notes}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Configuração Geral */}
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-5 w-5 text-[#03F9FF]" />
+            Configuração da Associação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Data de Início:</span>
+              </div>
+              <p className="text-sm text-gray-600 ml-6">
+                {generalConfig.startDate.toLocaleDateString('pt-BR')}
+              </p>
             </div>
+
+            {generalConfig.endDate && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium">Data de Fim:</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-6">
+                  {generalConfig.endDate.toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">Tipo:</span>
+              </div>
+              <p className="text-sm text-gray-600 ml-6">
+                {generalConfig.associationType === 1 ? 'Aluguel' : 'Assinatura'}
+              </p>
+            </div>
+
+            {generalConfig.planGb && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium">GB do Plano:</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-6">
+                  {generalConfig.planGb} GB
+                </p>
+              </div>
+            )}
+          </div>
+
+          {generalConfig.notes && (
+            <>
+              <Separator className="my-4" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium">Observações:</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-6 bg-gray-50 p-3 rounded">
+                  {generalConfig.notes}
+                </p>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
-      {/* Ações */}
-      <div className="flex items-center justify-between pt-4">
-        <Button 
-          variant="outline" 
-          onClick={onBack} 
-          className="border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/10"
+      {/* Botões de Ação */}
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={onBack}
           disabled={isLoading}
+          className="flex items-center gap-2"
         >
+          <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
-        <Button 
+
+        <Button
           onClick={onComplete}
-          className="bg-[#4D2BFB] hover:bg-[#3a1ecc] text-white"
           disabled={isLoading}
+          className="bg-[#4D2BFB] hover:bg-[#4D2BFB]/90 text-white flex items-center gap-2"
         >
-          {isLoading ? 'Criando Associações...' : 'Confirmar Associação'}
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Criando...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Criar Associação
+            </>
+          )}
         </Button>
       </div>
     </div>
