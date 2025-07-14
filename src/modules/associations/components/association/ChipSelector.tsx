@@ -35,8 +35,11 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
     excludeAssociatedToClient
   });
 
-  // Sincronizar com o chip associado atual - Fase 2 do plano
+  // FASE 3: Sincronização otimizada com o chip associado atual
   useEffect(() => {
+    console.log('=== FASE 3: SINCRONIZAÇÃO OTIMIZADA DO CHIP SELECTOR ===');
+    console.log('Chip atual recebido:', currentAssociatedChip?.uuid, currentAssociatedChip?.line_number || currentAssociatedChip?.iccid);
+    
     if (currentAssociatedChip) {
       setSelectedChip(currentAssociatedChip);
       setIsPrincipal(currentAssociatedChip.isPrincipalChip || true);
@@ -44,8 +47,12 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
       console.log('ChipSelector sincronizado com chip atual:', currentAssociatedChip.uuid);
     } else {
       setSelectedChip(null);
+      setIsPrincipal(true); // Reset para padrão
       setIsConfirmed(false);
+      console.log('ChipSelector resetado - nenhum chip associado');
     }
+    
+    console.log('=== SINCRONIZAÇÃO OTIMIZADA CONCLUÍDA ===');
   }, [currentAssociatedChip]);
 
   const filteredChips = chips.filter(chip => {
@@ -70,25 +77,33 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
 
   const handleConfirmSelection = () => {
     if (selectedChip) {
-      console.log('=== CONFIRMAÇÃO MELHORADA DE CHIP ===');
+      console.log('=== FASE 3: CONFIRMAÇÃO OTIMIZADA DE CHIP ===');
       console.log('Confirmando seleção de CHIP:', selectedChip.uuid, 'isPrincipal:', isPrincipal);
       
+      // Aplicar feedback visual imediato
       setIsConfirmed(true);
+      
+      // Propagar seleção com dados completos
       onChipSelected(selectedChip, isPrincipal);
       
-      console.log('CHIP confirmado e propagado');
+      console.log('CHIP confirmado e propagado com feedback visual');
     }
   };
 
   const handleRemoveChip = () => {
-    console.log('=== REMOÇÃO MELHORADA DE CHIP ===');
+    console.log('=== FASE 3: REMOÇÃO OTIMIZADA DE CHIP ===');
     console.log('Removendo CHIP associado');
     
+    // Reset completo do estado
     setSelectedChip(null);
+    setIsPrincipal(true); // Reset para padrão
     setIsConfirmed(false);
+    setSearchTerm(''); // Limpar busca
+    
+    // Propagar remoção
     onChipRemoved();
     
-    console.log('CHIP removido e propagado');
+    console.log('CHIP removido e estado resetado completamente');
   };
 
   return (

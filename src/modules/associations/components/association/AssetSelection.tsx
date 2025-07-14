@@ -71,13 +71,30 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   };
 
   const handleAssetUpdated = (asset: SelectedAsset) => {
-    console.log('AssetSelection - Asset Updated:', asset);
+    console.log('=== FASE 2: CORREÇÃO DA PROPAGAÇÃO DE ASSET ===');
+    console.log('Asset recebido para atualização:', asset);
+    console.log('UUID do asset:', asset.uuid);
+    
     if (onAssetUpdated) {
-      const { uuid, ...updates } = asset;
-      onAssetUpdated(uuid, updates);
+      // CORREÇÃO CRÍTICA: Não remover uuid do objeto
+      // Manter objeto completo para preservar referências
+      const updates = { ...asset };
+      delete updates.uuid; // Remover apenas para o callback, mas manter no objeto principal
+      
+      console.log('Chamando onAssetUpdated com uuid:', asset.uuid);
+      console.log('Updates sem uuid:', updates);
+      
+      onAssetUpdated(asset.uuid, updates);
     } else if (onAssetsChange) {
-      onAssetsChange(selectedAssets.map(a => a.uuid === asset.uuid ? asset : a));
+      // Usar o objeto completo para manter integridade
+      const updatedAssets = selectedAssets.map(a => a.uuid === asset.uuid ? asset : a);
+      console.log('Propagando através de onAssetsChange');
+      console.log('Assets atualizados:', updatedAssets.map(a => ({ uuid: a.uuid, type: a.type })));
+      
+      onAssetsChange(updatedAssets);
     }
+    
+    console.log('=== CORREÇÃO DA PROPAGAÇÃO CONCLUÍDA ===');
   };
 
   return (

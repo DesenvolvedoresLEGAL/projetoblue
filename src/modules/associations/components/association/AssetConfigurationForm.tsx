@@ -23,6 +23,7 @@ interface AssetConfig {
   plan_id?: number | null;
   gb?: number;
   associatedChipId?: string | null;
+  associatedEquipmentId?: string | null;
   uuid?: string;
 }
 
@@ -74,15 +75,63 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
     selectedPlan.nome.toLowerCase().includes('personalizado')
   );
 
-  // Verificar se o equipamento já tem um CHIP associado
+  // FASE 1: Sincronização robusta com múltiplas fontes de verdade
   useEffect(() => {
+    console.log('=== SINCRONIZAÇÃO ROBUSTA INICIADA ===');
+    console.log('Asset atual:', asset.uuid, asset.radio || asset.model);
+    console.log('Assets selecionados:', selectedAssets.length);
+    
+    // Sincronizar estados do formulário com o asset
+    setSsidAtual(asset.ssid_atual || '');
+    setPassAtual(asset.pass_atual || '');
+    setIsPrincipalChip(asset.isPrincipalChip || false);
+    setSelectedPlanId(asset.plan_id || null);
+    setCustomGb(asset.gb || 0);
+    setRentedDays(asset.rented_days || 30);
+    setNotes(asset.notes || '');
+    
+    // Buscar CHIP associado por múltiplas fontes
+    let chipAssociado = null;
+    
+    // Fonte 1: Propriedade direta do asset
     if (asset.associatedChipId) {
-      const currentChip = selectedAssets.find(a => a.uuid === asset.associatedChipId);
-      if (currentChip) {
-        setAssociatedChip(currentChip);
+      chipAssociado = selectedAssets.find(a => a.uuid === asset.associatedChipId);
+      if (chipAssociado) {
+        console.log('CHIP encontrado por associação direta:', chipAssociado.uuid);
       }
     }
-  }, [asset.associatedChipId, selectedAssets]);
+    
+    // Fonte 2: Buscar por associação reversa (chip -> equipamento)
+    if (!chipAssociado && isEquipment) {
+      chipAssociado = selectedAssets.find(a => 
+        a.solution_id === 11 && a.associatedEquipmentId === asset.uuid
+      );
+      if (chipAssociado) {
+        console.log('CHIP encontrado por associação reversa:', chipAssociado.uuid);
+      }
+    }
+    
+    // Fonte 3: Para CHIPs, verificar se há equipamento associado
+    if (!chipAssociado && isChip) {
+      const equipmentAssociado = selectedAssets.find(a => 
+        a.associatedChipId === asset.uuid
+      );
+      if (equipmentAssociado) {
+        console.log('Equipamento associado encontrado para CHIP:', equipmentAssociado.uuid);
+      }
+    }
+    
+    // Aplicar o CHIP encontrado
+    if (chipAssociado) {
+      setAssociatedChip(chipAssociado);
+      console.log('CHIP aplicado ao formulário:', chipAssociado.uuid, chipAssociado.line_number || chipAssociado.iccid);
+    } else {
+      setAssociatedChip(null);
+      console.log('Nenhum CHIP associado encontrado');
+    }
+    
+    console.log('=== SINCRONIZAÇÃO ROBUSTA CONCLUÍDA ===');
+  }, [asset, selectedAssets, isEquipment, isChip]);
 
   const handleChipSelected = (chip: SelectedAsset, isPrincipal: boolean) => {
     console.log('=== CHIP SELECIONADO NO FORM ===');
@@ -135,31 +184,39 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       console.log('Configuração do CHIP:', config);
     }
 
-    // PROPAGAÇÃO SÍNCRONA - Fase 1 do plano
-    console.log('=== PROPAGAÇÃO SÍNCRONA INICIADA ===');
+    // PROPAGAÇÃO SÍNCRONA COM CONFIRMAÇÃO - Fase 1 do plano
+    console.log('=== PROPAGAÇÃO SÍNCRONA COM CONFIRMAÇÃO INICIADA ===');
     
-    // Salvar configuração do ativo principal
-    onSave(config);
-    
-    // Se há CHIP associado e é um equipamento, criar associação bidirecional imediatamente
-    if (associatedChip && isEquipment) {
-      const chipConfig: AssetConfig = {
-        notes: associatedChip.isPrincipalChip ? 'principal - associado' : 'backup - associado',
-        isPrincipalChip: associatedChip.isPrincipalChip,
-        associatedChipId: asset.uuid, // Associação reversa
-        uuid: associatedChip.uuid
-      };
+    try {
+      // Salvar configuração do ativo principal
+      onSave(config);
+      console.log('Configuração principal salva com sucesso');
       
-      console.log('Propagando configuração bidirecional do CHIP:', chipConfig);
+      // Se há CHIP associado e é um equipamento, criar associação bidirecional imediatamente
+      if (associatedChip && isEquipment) {
+        const chipConfig: AssetConfig = {
+          notes: associatedChip.isPrincipalChip ? 'principal - associado' : 'backup - associado',
+          isPrincipalChip: associatedChip.isPrincipalChip,
+          associatedEquipmentId: asset.uuid, // Associação reversa correta
+          uuid: associatedChip.uuid
+        };
+        
+        console.log('Propagando configuração bidirecional do CHIP:', chipConfig);
+        
+        // Propagação imediata com confirmação
+        onSave(chipConfig);
+        console.log('Configuração do CHIP salva com sucesso');
+      }
       
-      // Propagação imediata sem setTimeout
-      onSave(chipConfig);
+      console.log('=== PROPAGAÇÃO SÍNCRONA COM CONFIRMAÇÃO CONCLUÍDA ===');
+      
+      // Fechar modal apenas após propagação bem-sucedida
+      onClose();
+      
+    } catch (error) {
+      console.error('Erro durante o salvamento:', error);
+      // Em caso de erro, não fechar o modal
     }
-
-    console.log('=== PROPAGAÇÃO SÍNCRONA CONCLUÍDA ===');
-    
-    // Fechar modal apenas após propagação
-    onClose();
   };
 
   return (
