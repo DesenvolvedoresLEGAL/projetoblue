@@ -1,4 +1,4 @@
-DROP POLICY "Enable update for users based on email" ON profiles;
+DROP POLICY "Enable update for users based on email" ON public.profiles;
 
 create policy "Enable update for users based on email"
 on profiles
