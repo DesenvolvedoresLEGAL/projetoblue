@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,8 +34,11 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
     excludeAssociatedToClient
   });
 
-  // Sincronizar com o chip associado atual - Fase 2 do plano
+  // Sincronização com chip associado atual
   useEffect(() => {
+    console.log('=== SINCRONIZAÇÃO COM CHIP ATUAL ===');
+    console.log('Chip atual recebido:', currentAssociatedChip?.uuid, currentAssociatedChip?.line_number || currentAssociatedChip?.iccid);
+    
     if (currentAssociatedChip) {
       setSelectedChip(currentAssociatedChip);
       setIsPrincipal(currentAssociatedChip.isPrincipalChip || true);
@@ -44,7 +46,9 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
       console.log('ChipSelector sincronizado com chip atual:', currentAssociatedChip.uuid);
     } else {
       setSelectedChip(null);
+      setIsPrincipal(true);
       setIsConfirmed(false);
+      console.log('ChipSelector resetado - nenhum chip associado');
     }
   }, [currentAssociatedChip]);
 
@@ -70,25 +74,66 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
 
   const handleConfirmSelection = () => {
     if (selectedChip) {
-      console.log('=== CONFIRMAÇÃO MELHORADA DE CHIP ===');
+      console.log('=== CONFIRMAÇÃO DE CHIP ===');
       console.log('Confirmando seleção de CHIP:', selectedChip.uuid, 'isPrincipal:', isPrincipal);
       
-      setIsConfirmed(true);
-      onChipSelected(selectedChip, isPrincipal);
+      // Criar objeto completo com todas as propriedades necessárias
+      const chipToAssociate: SelectedAsset = {
+        ...selectedChip,
+        isPrincipalChip: isPrincipal,
+        // Garantir que todas as propriedades estão presentes
+        uuid: selectedChip.uuid,
+        tipo: selectedChip.tipo || 'CHIP',
+        marca: selectedChip.marca || '',
+        modelo: selectedChip.modelo || '',
+        serial_number: selectedChip.serial_number || '',
+        iccid: selectedChip.iccid || '',
+        line_number: selectedChip.line_number || '',
+        // Adicionar timestamp para controle
+        associatedAt: new Date().toISOString()
+      };
       
-      console.log('CHIP confirmado e propagado');
+      console.log('Dados completos do chip a ser propagado:', chipToAssociate);
+      
+      // Aplicar feedback visual imediato
+      setIsConfirmed(true);
+      
+      // Propagar seleção com dados completos
+      try {
+        onChipSelected(chipToAssociate, isPrincipal);
+        console.log('CHIP confirmado e propagado com sucesso');
+      } catch (error) {
+        console.error('Erro ao propagar seleção de chip:', error);
+        // Reverter estado em caso de erro
+        setIsConfirmed(false);
+      }
+    } else {
+      console.warn('Tentativa de confirmação sem chip selecionado');
     }
   };
 
   const handleRemoveChip = () => {
-    console.log('=== REMOÇÃO MELHORADA DE CHIP ===');
-    console.log('Removendo CHIP associado');
+    console.log('=== REMOÇÃO DE CHIP ===');
+    console.log('Removendo CHIP associado:', selectedChip?.uuid);
     
+    // Reset completo do estado
     setSelectedChip(null);
+    setIsPrincipal(true);
     setIsConfirmed(false);
-    onChipRemoved();
+    setSearchTerm('');
     
-    console.log('CHIP removido e propagado');
+    // Propagar remoção
+    try {
+      onChipRemoved();
+      console.log('CHIP removido e estado resetado completamente');
+    } catch (error) {
+      console.error('Erro ao propagar remoção de chip:', error);
+    }
+  };
+
+  // Função para verificar se o chip está realmente confirmado
+  const isChipConfirmed = () => {
+    return isConfirmed && currentAssociatedChip && selectedChip?.uuid === currentAssociatedChip.uuid;
   };
 
   return (
@@ -97,7 +142,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
         <CardTitle className="flex items-center gap-2 text-sm">
           <Smartphone className="h-4 w-4 text-[#03F9FF]" />
           Associar CHIP
-          {isConfirmed && currentAssociatedChip && (
+          {isChipConfirmed() && (
             <Badge variant="outline" className="bg-green-100 text-green-800 ml-2">
               <CheckCircle className="h-3 w-3 mr-1" />
               Confirmado
@@ -106,14 +151,14 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {currentAssociatedChip && isConfirmed ? (
+        {isChipConfirmed() ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded">
               <div className="flex items-center gap-3">
                 <Smartphone className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="font-medium text-sm">
-                    {getChipIdentifier(currentAssociatedChip)}
+                    {getChipIdentifier(currentAssociatedChip!)}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className="bg-green-100 text-green-800">
@@ -121,7 +166,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
                       CHIP Associado
                     </Badge>
                     <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                      {currentAssociatedChip.isPrincipalChip ? 'Principal' : 'Backup'}
+                      {currentAssociatedChip!.isPrincipalChip ? 'Principal' : 'Backup'}
                     </Badge>
                   </div>
                 </div>
@@ -217,6 +262,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
               <Button
                 onClick={handleConfirmSelection}
                 className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={!selectedChip}
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Confirmar Associação do CHIP

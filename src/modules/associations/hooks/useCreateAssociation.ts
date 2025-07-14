@@ -14,14 +14,19 @@ interface CreateAssociationData {
     id: string;
     type: string;
     identifier: string;
-    solution_id?: number; // ADICIONADO para determinar se é CHIP
+    solution_id?: number;
+    associatedChipId?: string; // 🆕 NOVO: CHIP associado pelo usuário
+    isMainChip?: boolean;      // 🆕 NOVO: Se é CHIP principal
+    equipmentConfig?: {        // 🆕 NOVO: Configurações específicas
+      ssid?: string;
+      password?: string;
+      dataLimit?: number;
+      rentedDays?: number;
+    };
   }>;
   generalConfig: {
     notes?: string;
-    ssid?: string;
-    password?: string;
-    dataLimit?: number;
-    rentedDays: number;
+    // Remover configs de equipamento que agora são específicas
   };
 }
 
@@ -55,6 +60,7 @@ const buildInsertResult = (ids: string[], total: number): CreateAssociationResul
   };
 };
 
+// Substituir toda a seção "NOVA LÓGICA" por:
 export const useCreateAssociation = () => {
   const queryClient = useQueryClient();
   const { executeWithIdempotency } = useIdempotentAssociation();
@@ -64,7 +70,7 @@ export const useCreateAssociation = () => {
     mutationFn: async (data: CreateAssociationData): Promise<CreateAssociationResult> => {
       if (import.meta.env.DEV) console.log('[useCreateAssociation] Iniciando criação de associação com dados:', data);
 
-      // Validação de entrada
+      // Validação existente...
       const validationErrors: string[] = [];
       
       if (!data.clientId) {
@@ -83,13 +89,30 @@ export const useCreateAssociation = () => {
         validationErrors.push('selectedAssets vazio ou não fornecido');
       }
 
+      // 🆕 NOVA VALIDAÇÃO: Equipamentos que precisam de CHIP
+      const equipmentsThatNeedChip = data.selectedAssets.filter(
+        asset => [1, 2, 4].includes(asset.solution_id || 0)
+      );
+
+      const equipmentsWithoutChip = equipmentsThatNeedChip.filter(
+        equipment => !equipment.associatedChipId
+      );
+
+      if (equipmentsWithoutChip.length > 0) {
+        validationErrors.push(
+          `Equipamentos que precisam de CHIP não foram configurados: ${
+            equipmentsWithoutChip.map(e => e.identifier).join(', ')
+          }`
+        );
+      }
+
       if (validationErrors.length > 0) {
         const errorMsg = `Dados obrigatórios não fornecidos: ${validationErrors.join(', ')}`;
         if (import.meta.env.DEV) console.error('[useCreateAssociation] Erro de validação:', errorMsg);
         throw new Error(errorMsg);
       }
 
-      // Formatar data
+      // Formatação de data existente...
       let formattedStartDate: string;
       try {
         const dateObj = new Date(data.startDate);
@@ -103,8 +126,8 @@ export const useCreateAssociation = () => {
         throw new Error('Formato de data inválido');
       }
 
-      // NOVA LÓGICA: Agrupar assets por combinações equipment+chip
-      const associations: Array<{
+      // 🆕 NOVA LÓGICA DE ASSOCIAÇÃO
+ const associations: Array<{
         client_id: string;
         association_type_id: number;
         entry_date: string;
@@ -117,81 +140,51 @@ export const useCreateAssociation = () => {
         chip_id?: string;
       }> = [];
 
-      // Separar CHIPs e equipamentos
-      const chips = data.selectedAssets.filter(asset => asset.solution_id === 11);
-      const equipments = data.selectedAssets.filter(asset => asset.solution_id !== 11);
+      if (import.meta.env.DEV) console.log('[useCreateAssociation] Processando assets:', data.selectedAssets);
 
-      if (import.meta.env.DEV) console.log('[useCreateAssociation] CHIPs encontrados:', chips.length);
-      if (import.meta.env.DEV) console.log('[useCreateAssociation] Equipamentos encontrados:', equipments.length);
-
-      // Criar associações baseadas na nova lógica
-      equipments.forEach(equipment => {
-        // Equipamentos que precisam de CHIP (SPEEDY 5G, 4PLUS, 4BLACK)
-        if ([1, 2, 4].includes(equipment.solution_id || 0)) {
-          // Encontrar CHIP associado (deveria estar na lógica do frontend)
-          const associatedChip = chips.find(chip => 
-            // Aqui assumimos que o frontend já definiu a associação
-            // Em implementação completa, seria necessário lógica mais sofisticada
-            chips.length > 0
+      data.selectedAssets.forEach(asset => {
+        if (asset.solution_id === 11) {
+          // É um CHIP - só processar se não estiver associado a equipamento
+          const isAssociatedToEquipment = data.selectedAssets.some(
+            equipment => equipment.associatedChipId === asset.id
           );
-
-          associations.push({
-            client_id: data.clientId,
-            association_type_id: data.associationTypeId,
-            entry_date: formattedStartDate,
-            exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : undefined,
-            notes: data.generalConfig?.notes || undefined,
-            equipment_ssid: data.generalConfig?.ssid || undefined,
-            equipment_pass: data.generalConfig?.password || undefined,
-            plan_gb: data.generalConfig?.dataLimit || undefined,
-            equipment_id: equipment.id,
-            chip_id: associatedChip?.id || chips[0]?.id // Pega o primeiro CHIP se houver
-          });
-
-          // Remove o CHIP usado da lista para não duplicar
-          if (associatedChip) {
-            const chipIndex = chips.findIndex(c => c.id === associatedChip.id);
-            if (chipIndex > -1) chips.splice(chipIndex, 1);
-          } else if (chips.length > 0) {
-            chips.splice(0, 1); // Remove o primeiro
+          
+          if (!isAssociatedToEquipment) {
+            // CHIP independente (backup)
+            associations.push({
+              client_id: data.clientId,
+              association_type_id: data.associationTypeId,
+              entry_date: formattedStartDate,
+              exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : undefined,
+              notes: data.generalConfig?.notes,
+              equipment_id: undefined,
+              chip_id: asset.id,
+            });
           }
         } else {
-          // Outros equipamentos (sem CHIP)
+          // É um equipamento
+          const needsChip = [1, 2, 4].includes(asset.solution_id || 0);
+          
           associations.push({
             client_id: data.clientId,
             association_type_id: data.associationTypeId,
             entry_date: formattedStartDate,
             exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : undefined,
-            notes: data.generalConfig?.notes || undefined,
-            equipment_ssid: data.generalConfig?.ssid || undefined,
-            equipment_pass: data.generalConfig?.password || undefined,
-            plan_gb: data.generalConfig?.dataLimit || undefined,
-            equipment_id: equipment.id,
-            chip_id: undefined
+            notes: data.generalConfig?.notes,
+            equipment_id: asset.id,
+            chip_id: needsChip ? asset.associatedChipId : undefined,
+            // Usar configurações específicas do equipamento
+            equipment_ssid: asset.equipmentConfig?.ssid,
+            equipment_pass: asset.equipmentConfig?.password,
+            plan_gb: asset.equipmentConfig?.dataLimit,
           });
         }
-      });
-
-      // Processar CHIPs restantes como backup
-      chips.forEach(chip => {
-        associations.push({
-          client_id: data.clientId,
-          association_type_id: data.associationTypeId,
-          entry_date: formattedStartDate,
-          exit_date: data.endDate ? new Date(data.endDate).toISOString().split('T')[0] : undefined,
-          notes: data.generalConfig?.notes || undefined,
-          equipment_ssid: undefined,
-          equipment_pass: undefined,
-          plan_gb: data.generalConfig?.dataLimit || undefined,
-          equipment_id: undefined,
-          chip_id: chip.id
-        });
       });
 
       if (import.meta.env.DEV) console.log('[useCreateAssociation] Associações preparadas:', associations);
 
       // Executar com idempotência
-      return executeWithIdempotency(
+return executeWithIdempotency(
         `create_association_${data.clientId}_${data.associationTypeId}_${formattedStartDate}`,
         async () => {
           if (import.meta.env.DEV) console.log('[useCreateAssociation] Inserindo associações...');
