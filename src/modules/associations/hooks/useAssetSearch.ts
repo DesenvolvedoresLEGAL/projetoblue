@@ -1,49 +1,38 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SelectedAsset } from '@modules/associations/types';
-import { safedParseInt } from '@/utils/stringUtils';
 
-export interface AssetSearchFilters {
-  searchTerm: string;
-  selectedSolution: string;
-  selectedStatus: string;
-  type: 'all' | 'equipment' | 'chip';
+interface AssetSearchFilters {
+  solutionId?: number;
+  statusId?: number;
+  searchTerm?: string;
+  manufacturerId?: number;
+  assetType?: 'CHIP' | 'EQUIPMENT' | 'ALL';
 }
 
-interface UseAssetSearchOptions {
-  excludeAssociatedToClient?: string;
+interface UseAssetSearchProps {
+  filters?: AssetSearchFilters;
   selectedAssets?: SelectedAsset[];
+  excludeAssociatedToClient?: string;
 }
 
-export const useAssetSearch = ({ 
-  excludeAssociatedToClient, 
-  selectedAssets = [] 
-}: UseAssetSearchOptions = {}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSolution, setSelectedSolution] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [type, setType] = useState<'all' | 'equipment' | 'chip'>('all');
-  const [status, setStatus] = useState<'all' | 'available'>('available'); // Default para "available"
-
-  // Criar um Set dos UUIDs selecionados para performance
-  const selectedAssetIds = useMemo(() => 
-    new Set(selectedAssets.map(asset => asset.uuid)), 
-    [selectedAssets]
-  );
+export const useAssetSearch = ({
+  filters = {},
+  selectedAssets = [],
+  excludeAssociatedToClient
+}: UseAssetSearchProps = {}) => {
+  const [localFilters, setLocalFilters] = useState<AssetSearchFilters>({
+    assetType: 'ALL',
+    statusId: 1, // Disponível por padrão
+    ...filters
+  });
 
   const { data: assets = [], isLoading, error } = useQuery({
-    queryKey: ['assets-search', searchTerm, selectedSolution, selectedStatus, type, status, excludeAssociatedToClient],
+    queryKey: ['asset-search', localFilters, excludeAssociatedToClient],
     queryFn: async () => {
-      if (import.meta.env.DEV) console.log('useAssetSearch: Buscando assets', { 
-        searchTerm, 
-        selectedSolution, 
-        selectedStatus,
-        type,
-        status,
-        excludeAssociatedToClient 
-      });
+      if (import.meta.env.DEV) console.log('useAssetSearch: Buscando assets com filtros:', localFilters);
 
       let query = supabase
         .from('assets')
@@ -64,40 +53,34 @@ export const useAssetSearch = ({
         `)
         .is('deleted_at', null);
 
-      // Filtro por status "disponível" por padrão
-      if (status === 'available') {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por status disponível');
-        query = query.eq('status_id', 1); // Status "Disponível"
+      // Filtros básicos
+      if (localFilters.statusId) {
+        query = query.eq('status_id', localFilters.statusId);
       }
 
-      // Filtro por tipo de ativo baseado na solution
-      if (type === 'chip') {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por tipo CHIP');
-        query = query.eq('solution_id', 11); // CHIP solution_id = 11
-      } else if (type === 'equipment') {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por tipo equipamento');
-        query = query.neq('solution_id', 11); // Todos exceto CHIP
+      if (localFilters.solutionId) {
+        query = query.eq('solution_id', localFilters.solutionId);
       }
 
-      // Filtros de busca
-      if (searchTerm.trim()) {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro de busca por termo:', searchTerm);
-        query = query.or(`radio.ilike.%${searchTerm.toLowerCase()}%,iccid.ilike.%${searchTerm}%,line_number.eq.${safedParseInt(searchTerm)},iccid.like.%${searchTerm}%`);
+      if (localFilters.manufacturerId) {
+        query = query.eq('manufacturer_id', localFilters.manufacturerId);
       }
 
-      if (selectedSolution) {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por solução:', selectedSolution);
-        query = query.eq('solution_id', parseInt(selectedSolution, 10));
+      // Filtro por tipo de asset
+      if (localFilters.assetType === 'CHIP') {
+        query = query.eq('solution_id', 11);
+      } else if (localFilters.assetType === 'EQUIPMENT') {
+        query = query.neq('solution_id', 11);
       }
 
-      if (selectedStatus) {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Aplicando filtro por status:', selectedStatus);
-        query = query.eq('status_id', parseInt(selectedStatus, 10));
+      // Busca por termo
+      if (localFilters.searchTerm && localFilters.searchTerm.trim()) {
+        const term = localFilters.searchTerm.trim();
+        query = query.or(`radio.ilike.%${term}%,serial_number.ilike.%${term}%,iccid.ilike.%${term}%,line_number.eq.${term},model.ilike.%${term}%`);
       }
 
-      // Excluir assets já associados ao cliente (se fornecido)
+      // Excluir assets já associados ao cliente específico
       if (excludeAssociatedToClient) {
-        if (import.meta.env.DEV) console.log('useAssetSearch: Excluindo assets já associados ao cliente:', excludeAssociatedToClient);
         const { data: associatedAssets } = await supabase
           .from('associations')
           .select('equipment_id, chip_id')
@@ -106,20 +89,27 @@ export const useAssetSearch = ({
           .is('deleted_at', null);
 
         if (associatedAssets && associatedAssets.length > 0) {
-          const associatedAssetIds = associatedAssets.map(assoc => assoc.equipment_id || assoc.chip_id);
-          query = query.not('uuid', 'in', `(${associatedAssetIds.join(',')})`);
+          const excludeIds = [
+            ...associatedAssets.map(a => a.equipment_id).filter(Boolean),
+            ...associatedAssets.map(a => a.chip_id).filter(Boolean)
+          ];
+          
+          if (excludeIds.length > 0) {
+            query = query.not('uuid', 'in', `(${excludeIds.join(',')})`);
+          }
         }
       }
 
       const { data, error } = await query
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) {
-        if (import.meta.env.DEV) console.error('Erro ao buscar assets:', error);
+        if (import.meta.env.DEV) console.error('useAssetSearch: Erro na busca:', error);
         throw error;
       }
 
-      const mappedAssets = data?.map(asset => ({
+      return (data || []).map(asset => ({
         id: asset.uuid,
         uuid: asset.uuid,
         radio: asset.radio,
@@ -132,69 +122,30 @@ export const useAssetSearch = ({
         manufacturer_id: asset.manufacturer_id,
         status: asset.asset_status?.status,
         solucao: asset.asset_solutions?.solution,
-        brand: asset.manufacturers?.name,
-        type: (asset.iccid ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT',
+        marca: asset.manufacturers?.name,
+        type: (asset.solution_id === 11 ? 'CHIP' : 'EQUIPMENT') as 'CHIP' | 'EQUIPMENT',
         registrationDate: asset.created_at || new Date().toISOString()
-      })) || [];
-
-      if (import.meta.env.DEV) console.log('useAssetSearch: Assets encontrados:', mappedAssets.length);
-      return mappedAssets;
+      })) as SelectedAsset[];
     },
-    enabled: true
+    staleTime: 30000, // 30 segundos
+    refetchOnWindowFocus: false
   });
 
-  // Filtrar assets já selecionados apenas na exibição
-  const availableAssets = useMemo(() => {
-    const filtered = assets.filter(asset => !selectedAssetIds.has(asset.uuid));
-    if (import.meta.env.DEV) console.log('useAssetSearch: Assets disponíveis após filtro', {
-      total: assets.length,
-      selectedCount: selectedAssets.length,
-      availableCount: filtered.length
-    });
-    return filtered;
-  }, [assets, selectedAssetIds, selectedAssets.length]);
+  // Filtrar assets já selecionados
+  const filteredAssets = useMemo(() => {
+    const selectedUuids = new Set(selectedAssets.map(a => a.uuid));
+    return assets.filter(asset => !selectedUuids.has(asset.uuid));
+  }, [assets, selectedAssets]);
 
-  const resetFilters = useCallback(() => {
-    setSearchTerm('');
-    setSelectedSolution('');
-    setSelectedStatus('');
-    setType('all');
-    setStatus('available'); // Manter "available" como padrão
-  }, []);
-
-  const filters: AssetSearchFilters = {
-    searchTerm,
-    selectedSolution,
-    selectedStatus,
-    type
+  const onFiltersUpdate = (newFilters: Partial<AssetSearchFilters>) => {
+    setLocalFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  const onFiltersUpdate = useCallback((updates: Partial<AssetSearchFilters>) => {
-    if (import.meta.env.DEV) console.log('useAssetSearch: Atualizando filtros:', updates);
-    
-    if (updates.searchTerm !== undefined) setSearchTerm(updates.searchTerm);
-    if (updates.selectedSolution !== undefined) setSelectedSolution(updates.selectedSolution);
-    if (updates.selectedStatus !== undefined) setSelectedStatus(updates.selectedStatus);
-    if (updates.type !== undefined) setType(updates.type);
-  }, []);
-
   return {
-    assets: availableAssets,
-    searchTerm,
-    setSearchTerm,
-    selectedSolution,
-    setSelectedSolution,
-    selectedStatus,
-    setSelectedStatus,
-    type,
-    setType,
-    status,
-    setStatus,
+    assets: filteredAssets,
     isLoading,
     error,
-    resetFilters,
-    filters,
+    filters: localFilters,
     onFiltersUpdate
   };
 };
-
