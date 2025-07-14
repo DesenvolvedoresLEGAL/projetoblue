@@ -40,11 +40,27 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
 
   const handleSaveConfiguration = (config: any) => {
     if (configurationModal.asset) {
+      // Atualizar o ativo principal
       const updatedAsset = {
         ...configurationModal.asset,
         ...config
       };
       onEditAsset(updatedAsset);
+      
+      // Se há associação de CHIP, processar atualização do CHIP também
+      if (config.associatedChipId && config.uuid !== config.associatedChipId) {
+        // Encontrar o CHIP nos assets selecionados ou criar referência
+        const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
+        if (chipAsset) {
+          const updatedChip = {
+            ...chipAsset,
+            associatedEquipmentId: configurationModal.asset.uuid,
+            isPrincipalChip: config.isPrincipalChip || false,
+            notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
+          };
+          onEditAsset(updatedChip);
+        }
+      }
     }
     setConfigurationModal({ open: false, asset: null });
   };

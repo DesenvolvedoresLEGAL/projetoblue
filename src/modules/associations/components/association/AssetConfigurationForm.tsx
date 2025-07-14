@@ -23,6 +23,7 @@ interface AssetConfig {
   plan_id?: number | null;
   gb?: number;
   associatedChipId?: string | null;
+  uuid?: string; // Para identificar qual ativo está sendo configurado
 }
 
 interface AssetConfigurationFormProps {
@@ -42,6 +43,7 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   selectedAssets = [],
   excludeAssociatedToClient
 }) => {
+  
   // Estados para configurações específicas do ativo
   const [ssidAtual, setSsidAtual] = useState(asset.ssid_atual || '');
   const [passAtual, setPassAtual] = useState(asset.pass_atual || '');
@@ -83,10 +85,12 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
   }, [asset.associatedEquipmentId, selectedAssets]);
 
   const handleChipSelected = (chip: SelectedAsset, isPrincipal: boolean) => {
-    setAssociatedChip({
+    const updatedChip = {
       ...chip,
-      isPrincipalChip: isPrincipal
-    });
+      isPrincipalChip: isPrincipal,
+      associatedEquipmentId: asset.uuid // Associar CHIP ao equipamento
+    };
+    setAssociatedChip(updatedChip);
   };
 
   const handleChipRemoved = () => {
@@ -114,7 +118,26 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       config.notes = isPrincipalChip ? 'principal' : 'backup';
     }
 
+    // Salvar configuração do ativo principal
     onSave(config);
+    
+    // Se há CHIP associado, também salvá-lo
+    if (associatedChip && isEquipment) {
+      const chipConfig: AssetConfig = {
+        notes: associatedChip.isPrincipalChip ? 'principal' : 'backup',
+        isPrincipalChip: associatedChip.isPrincipalChip,
+        associatedChipId: asset.uuid // Referência bidirecional
+      };
+      
+      // Notificar sobre a atualização do CHIP através do callback
+      setTimeout(() => {
+        onSave({ ...chipConfig, uuid: associatedChip.uuid });
+      }, 100);
+      
+      // Feedback para o usuário - removido toast temporariamente
+    } else {
+      // Configuração salva sem CHIP associado
+    }
   };
 
   return (

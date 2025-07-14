@@ -55,7 +55,8 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
   const handleConfirmSelection = () => {
     if (selectedChip) {
       onChipSelected(selectedChip, isPrincipal);
-      setSelectedChip(null);
+      // Manter o chip selecionado no estado para feedback visual
+      // O estado será limpo quando o modal for fechado
     }
   };
 
