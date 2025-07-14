@@ -49,7 +49,10 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
       setIsPrincipal(true);
       setIsConfirmed(false);
       console.log('ChipSelector resetado - nenhum chip associado');
+      console.log('ChipSelector resetado - nenhum chip associado');
     }
+    
+    console.log('=== SINCRONIZAÇÃO OTIMIZADA CONCLUÍDA ===');
   }, [currentAssociatedChip]);
 
   const filteredChips = chips.filter(chip => {
@@ -116,6 +119,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
     console.log('=== REMOÇÃO DE CHIP ===');
     console.log('Removendo CHIP associado:', selectedChip?.uuid);
     
+    // Reset completo do estado
     // Reset completo do estado
     setSelectedChip(null);
     setIsPrincipal(true);

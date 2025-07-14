@@ -12,6 +12,8 @@ interface SelectedAssetsGridProps {
   assets: SelectedAsset[];
   onRemoveAsset: (assetId: string) => void;
   onEditAsset: (asset: SelectedAsset) => void;
+  onChipAssociation?: (assetId: string, chipData: any, isPrincipal: boolean) => void;
+  onChipRemoval?: (assetId: string) => void;
   excludeAssociatedToClient?: string;
 }
 
@@ -19,6 +21,8 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
   assets,
   onRemoveAsset,
   onEditAsset,
+  onChipAssociation,
+  onChipRemoval,
   excludeAssociatedToClient
 }) => {
   const [configurationModal, setConfigurationModal] = useState<{
@@ -42,46 +46,53 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
 
   const handleSaveConfiguration = (config: any) => {
     if (configurationModal.asset) {
-      console.log('=== PROCESSAMENTO SÍNCRONO NO GRID ===');
+      console.log('=== FASE 2: PROCESSAMENTO SÍNCRONO MELHORADO NO GRID ===');
       console.log('Asset original:', configurationModal.asset.uuid);
       console.log('Configuração recebida:', config);
       
-      // Fase 1: Processamento síncrono da associação bidirecional
-      const updatedAsset = {
-        ...configurationModal.asset,
-        ...config
-      };
-      
-      console.log('Asset atualizado:', updatedAsset);
-      
-      // Propagar imediatamente o asset principal
-      onEditAsset(updatedAsset);
-      
-      // Se há associação de CHIP, processar imediatamente de forma síncrona
-      if (config.associatedChipId && config.uuid && config.uuid !== config.associatedChipId) {
-        // Encontrar o CHIP nos assets selecionados
-        const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
-        if (chipAsset) {
-          const updatedChip = {
-            ...chipAsset,
-            associatedEquipmentId: config.uuid,
-            isPrincipalChip: config.isPrincipalChip || false,
-            notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
-          };
-          
-          console.log('CHIP associado atualizado sincronamente:', updatedChip);
-          
-          // Propagar CHIP imediatamente (sem setTimeout)
-          onEditAsset(updatedChip);
+      try {
+        // Processamento síncrono da associação bidirecional
+        const updatedAsset = {
+          ...configurationModal.asset,
+          ...config
+        };
+        
+        console.log('Asset atualizado:', updatedAsset);
+        
+        // Propagar imediatamente o asset principal
+        onEditAsset(updatedAsset);
+        console.log('Asset principal propagado com sucesso');
+        
+        // Se há associação de CHIP, processar imediatamente de forma síncrona
+        if (config.associatedChipId && config.uuid && config.uuid !== config.associatedChipId) {
+          // Encontrar o CHIP nos assets selecionados
+          const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
+          if (chipAsset) {
+            const updatedChip = {
+              ...chipAsset,
+              associatedEquipmentId: config.uuid,
+              isPrincipalChip: config.isPrincipalChip || false,
+              notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
+            };
+            
+            console.log('CHIP associado atualizado sincronamente:', updatedChip);
+            
+            // Propagar CHIP imediatamente (sem setTimeout)
+            onEditAsset(updatedChip);
+            console.log('CHIP associado propagado com sucesso');
+          }
         }
+        
+        // Processar configuração de CHIP independente
+        if (config.uuid && config.uuid === configurationModal.asset.uuid && configurationModal.asset.type === 'CHIP') {
+          console.log('Configuração de CHIP independente processada');
+        }
+        
+        console.log('=== PROCESSAMENTO SÍNCRONO MELHORADO CONCLUÍDO ===');
+        
+      } catch (error) {
+        console.error('Erro durante o processamento síncrono:', error);
       }
-      
-      // Processar configuração de CHIP independente
-      if (config.uuid && config.uuid === configurationModal.asset.uuid && configurationModal.asset.type === 'CHIP') {
-        console.log('Configuração de CHIP independente processada');
-      }
-      
-      console.log('=== PROCESSAMENTO SÍNCRONO CONCLUÍDO ===');
     }
     
     // Fechar modal após processamento

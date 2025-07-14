@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -46,7 +47,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   console.log('AssetSelection - Selected Assets:', selectedAssets);
   console.log('AssetSelection - Validation Result:', validation);
 
-  const handleAssetSelected = (asset: SelectedAsset) => {
+  const handleAssetSelected = useCallback((asset: SelectedAsset) => {
     console.log('AssetSelection - Asset Selected:', asset);
     if (multipleSelection) {
       if (onAssetAdded) {
@@ -59,26 +60,125 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         onAssetsChange([asset]);
       }
     }
-  };
+  }, [multipleSelection, onAssetAdded, onAssetsChange, selectedAssets]);
 
-  const handleAssetRemoved = (assetId: string) => {
+  const handleAssetRemoved = useCallback((assetId: string) => {
     console.log('AssetSelection - Asset Removed:', assetId);
     if (onAssetRemoved) {
       onAssetRemoved(assetId);
     } else if (onAssetsChange) {
       onAssetsChange(selectedAssets.filter(a => a.uuid !== assetId));
     }
-  };
+  }, [onAssetRemoved, onAssetsChange, selectedAssets]);
 
-  const handleAssetUpdated = (asset: SelectedAsset) => {
-    console.log('AssetSelection - Asset Updated:', asset);
-    if (onAssetUpdated) {
-      const { uuid, ...updates } = asset;
-      onAssetUpdated(uuid, updates);
-    } else if (onAssetsChange) {
-      onAssetsChange(selectedAssets.map(a => a.uuid === asset.uuid ? asset : a));
+  const handleAssetUpdated = useCallback((updatedAsset: SelectedAsset) => {
+    console.log('=== RECEBENDO DADOS DO AssetConfigurationForm ===');
+    console.log('Asset completo recebido:', updatedAsset);
+    console.log('UUID do asset:', updatedAsset.uuid);
+    console.log('Tipo do asset:', updatedAsset.type);
+
+    // Verificar se o asset existe na lista atual
+    const existingAssetIndex = selectedAssets.findIndex(a => a.uuid === updatedAsset.uuid);
+
+    if (existingAssetIndex === -1) {
+      console.error('Asset não encontrado na lista atual:', updatedAsset.uuid);
+      return;
     }
-  };
+
+    console.log('Asset encontrado no índice:', existingAssetIndex);
+
+    // Mesclar dados existentes com os novos dados
+    const currentAsset = selectedAssets[existingAssetIndex];
+    const mergedAsset: SelectedAsset = {
+      ...currentAsset,
+      ...updatedAsset,
+      // Garantir que propriedades críticas não sejam perdidas
+      uuid: currentAsset.uuid,
+      type: currentAsset.type,
+      // Manter dados de configuração se existirem
+      ...(updatedAsset.associatedChip && { associatedChip: updatedAsset.associatedChip }),
+      ...(updatedAsset.configuration && { configuration: updatedAsset.configuration }),
+      ...(updatedAsset.customFields && { customFields: updatedAsset.customFields }),
+      // Timestamp de última atualização
+      lastUpdated: new Date().toISOString()
+    };
+
+    console.log('Asset mesclado:', mergedAsset);
+
+    // Propagação usando callback apropriado
+    if (onAssetUpdated) {
+      // Preparar updates sem modificar o objeto original
+      const updates = { ...mergedAsset };
+      delete updates.uuid; // Remover uuid apenas para o callback
+
+      console.log('Propagando via onAssetUpdated - UUID:', mergedAsset.uuid);
+      console.log('Updates enviados:', updates);
+
+      onAssetUpdated(mergedAsset.uuid, updates);
+    } else if (onAssetsChange) {
+      // Criar nova lista com asset atualizado
+      const updatedAssets = selectedAssets.map(asset =>
+        asset.uuid === mergedAsset.uuid ? mergedAsset : asset
+      );
+
+      console.log('Propagando via onAssetsChange');
+      console.log('Lista atualizada:', updatedAssets.map(a => ({
+        uuid: a.uuid,
+        type: a.type,
+        hasChip: !!a.associatedChip,
+        hasConfig: !!a.configuration
+      })));
+
+      onAssetsChange(updatedAssets);
+    }
+
+    console.log('=== PROPAGAÇÃO DE DADOS CONCLUÍDA ===');
+  }, [selectedAssets, onAssetUpdated, onAssetsChange]);
+
+  // Função para lidar com atualização de chips especificamente
+  const handleChipAssociation = useCallback((assetId: string, chipData: any, isPrincipal: boolean) => {
+    console.log('=== ASSOCIAÇÃO DE CHIP ===');
+    console.log('Asset ID:', assetId);
+    console.log('Chip Data:', chipData);
+    console.log('Is Principal:', isPrincipal);
+
+    const assetIndex = selectedAssets.findIndex(a => a.uuid === assetId);
+    if (assetIndex === -1) {
+      console.error('Asset não encontrado para associação de chip:', assetId);
+      return;
+    }
+
+    const updatedAsset: SelectedAsset = {
+      ...selectedAssets[assetIndex],
+      associatedChip: {
+        ...chipData,
+        isPrincipalChip: isPrincipal
+      },
+      lastUpdated: new Date().toISOString()
+    };
+
+    handleAssetUpdated(updatedAsset);
+  }, [selectedAssets, handleAssetUpdated]);
+
+  // Função para lidar com remoção de chips
+  const handleChipRemoval = useCallback((assetId: string) => {
+    console.log('=== REMOÇÃO DE CHIP ===');
+    console.log('Asset ID:', assetId);
+
+    const assetIndex = selectedAssets.findIndex(a => a.uuid === assetId);
+    if (assetIndex === -1) {
+      console.error('Asset não encontrado para remoção de chip:', assetId);
+      return;
+    }
+
+    const updatedAsset: SelectedAsset = {
+      ...selectedAssets[assetIndex],
+      associatedChip: undefined,
+      lastUpdated: new Date().toISOString()
+    };
+
+    handleAssetUpdated(updatedAsset);
+  }, [selectedAssets, handleAssetUpdated]);
 
   return (
     <div className="space-y-6">
@@ -162,6 +262,8 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
               assets={selectedAssets}
               onRemoveAsset={handleAssetRemoved}
               onEditAsset={handleAssetUpdated}
+              onChipAssociation={handleChipAssociation}
+              onChipRemoval={handleChipRemoval}
             />
           ) : (
             <div className="text-center py-8 text-gray-500">
@@ -208,6 +310,23 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
             Corrija os problemas acima para continuar
           </p>
         </div>
+      )}
+
+      {/* Debug Info - Remover em produção */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <CardTitle className="text-sm text-yellow-800">Debug Info</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xs text-yellow-700 space-y-1">
+              <p>Total Assets: {selectedAssets.length}</p>
+              <p>Assets with Chips: {selectedAssets.filter(a => a.associatedChip).length}</p>
+              <p>Assets with Config: {selectedAssets.filter(a => a.configuration).length}</p>
+              <p>Validation Valid: {validation.isValid ? 'Yes' : 'No'}</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

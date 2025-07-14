@@ -54,6 +54,11 @@ export interface SelectedAsset {
   // Campos para associação
   associatedEquipmentId?: string;
   associatedChipId?: string;
+  // Campos adicionais para configuração estendida
+  associatedChip?: SelectedAsset | null;
+  configuration?: any;
+  customFields?: Record<string, any>;
+  lastUpdated?: string;
 }
 
 export interface AssetSearchFilters {
