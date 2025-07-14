@@ -88,7 +88,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           Resultados ({assets.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4 space-y-4 overflow-y-auto h-[calc(60vh-200px)]">
         <div 
           className={`
             grid gap-3 
