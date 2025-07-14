@@ -3,7 +3,7 @@ export interface Client {
   nome: string;
   empresa: string;
   responsavel: string;
-  contato: number;
+  contato: string;
   email?: string;
   cnpj?: string;
   telefones: string[];
@@ -56,6 +56,8 @@ export interface UpdateClientRequest extends Partial<CreateClientRequest> {
 
 // Define ClientCreateData type here if not exported from "@/types/client"
 export type ClientCreateData = {
+  nome: string;
+  contato: string;
   empresa: string;
   responsavel: string;
   telefones: string[];
