@@ -101,7 +101,7 @@ export function RegisterAssetForm() {
             <Tabs
               value={assetType}
               onValueChange={(value) => {
-                const newAssetType = value as 'CHIP' | 'EQUIPAMENTO';
+                const newAssetType = value as 'CHIP' | 'EQUIPMENT';
                 if (import.meta.env.DEV) console.log('Trocando tipo de ativo para:', newAssetType);
                 setAssetType(newAssetType);
                 
@@ -129,7 +129,7 @@ export function RegisterAssetForm() {
                   {isMobile ? 'CHIP' : 'Chip / SIM Card'}
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="EQUIPAMENTO"
+                  value="EQUIPMENT"
                   className={`flex items-center gap-2 ${isMobile ? 'text-sm px-2' : 'text-base px-4'} font-semibold data-[state=active]:bg-legal-primary data-[state=active]:text-white`}
                 >
                   <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
@@ -348,7 +348,7 @@ export function RegisterAssetForm() {
               </TabsContent>
 
               {/* FORMULÁRIO DE EQUIPAMENTO - Mobile Optimized */}
-              <TabsContent value="EQUIPAMENTO" className="space-y-4 md:space-y-6">
+              <TabsContent value="EQUIPMENT" className="space-y-4 md:space-y-6">
                 <Alert className="bg-blue-50 border-legal-primary/30">
                   <Router className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-legal-primary`} />
                   <AlertDescription className={`text-legal-dark ${isMobile ? 'text-sm' : ''}`}>

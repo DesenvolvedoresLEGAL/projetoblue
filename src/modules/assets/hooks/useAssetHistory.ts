@@ -49,9 +49,9 @@ export const useAssetHistory = () => {
         throw error;
       }
 
-      return (data || []).map((row: AssetHistory) => ({
-        id: row.id,
-        date: row.date || row.created_at,
+      return (data || []).map((row: any) => ({
+        id: row.uuid || Date.now(), // Use uuid as id, fallback to timestamp
+        date: row.created_at || new Date().toISOString(),
         event: row.event || 'Unknown Event',
         description: row.event || 'No description',
         client_name: row.details?.client_name || 'Unknown',

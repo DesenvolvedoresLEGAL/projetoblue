@@ -1,11 +1,22 @@
 
 export interface AssetHistoryEntry {
-  id: string;
+  id: number; // Changed from string to number to match database
   date: string;
   event: string;
   description: string;
   user?: string;
   details?: Record<string, any>;
+  // Added missing properties that code expects
+  assetIds?: string[];
+  clientId?: string;
+  timestamp?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Added missing properties for asset logs compatibility
+  status_before_id?: number;
+  status_after_id?: number;
+  assoc_id?: number;
+  deleted_at?: string;
 }
 
 export interface AssociationLogEntry {

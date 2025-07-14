@@ -31,11 +31,11 @@ const AssetHistory = () => {
       }
 
       // Transform the data to match AssetHistoryEntry interface
-      return (data || []).map((row: AssetLog): AssetHistoryEntry => ({
-        id: row.id,
-        assoc_id: row.assoc_id,
-        date: row.date,
-        event: row.event,
+      return (data || []).map((row: any): AssetHistoryEntry => ({
+        id: row.uuid ? parseInt(row.uuid.replace(/-/g, '').substring(0, 10), 16) : Date.now(), // Convert UUID to number
+        date: row.created_at || new Date().toISOString(),
+        event: row.event || 'Unknown Event',
+        description: row.event || 'No description',
         details: (row.details as Record<string, unknown>) || {},
         status_before_id: row.status_before_id,
         status_after_id: row.status_after_id,

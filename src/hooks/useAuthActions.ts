@@ -265,7 +265,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
                 last_login: new Date().toISOString(),
                 is_active: profileData.is_active,
                 is_approved: profileData.is_approved,
-                bits_referral_code: profileData.bits_referral_code,
+                // bits_referral_code: profileData.bits_referral_code, // Removed - property doesn't exist
                 updated_at: profileData.updated_at,
                 deleted_at: profileData.deleted_at
               };

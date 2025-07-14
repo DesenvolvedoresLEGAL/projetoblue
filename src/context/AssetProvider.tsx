@@ -128,7 +128,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     return (entry: Omit<AssetHistoryEntry, "id" | "timestamp">) => {
       const newEntry: AssetHistoryEntry = {
         ...entry,
-        id: Date.now(),
+        id: Date.now(), // Keep as number to match interface
         timestamp: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
