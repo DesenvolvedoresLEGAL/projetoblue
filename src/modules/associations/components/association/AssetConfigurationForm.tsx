@@ -23,7 +23,7 @@ interface AssetConfig {
   plan_id?: number | null;
   gb?: number;
   associatedChipId?: string | null;
-  uuid?: string; // Para identificar qual ativo está sendo configurado
+  uuid?: string;
 }
 
 interface AssetConfigurationFormProps {
@@ -76,30 +76,34 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
 
   // Verificar se o equipamento já tem um CHIP associado
   useEffect(() => {
-    if (asset.associatedEquipmentId) {
-      const currentChip = selectedAssets.find(a => a.uuid === asset.associatedEquipmentId);
+    if (asset.associatedChipId) {
+      const currentChip = selectedAssets.find(a => a.uuid === asset.associatedChipId);
       if (currentChip) {
         setAssociatedChip(currentChip);
       }
     }
-  }, [asset.associatedEquipmentId, selectedAssets]);
+  }, [asset.associatedChipId, selectedAssets]);
 
   const handleChipSelected = (chip: SelectedAsset, isPrincipal: boolean) => {
     const updatedChip = {
       ...chip,
       isPrincipalChip: isPrincipal,
-      associatedEquipmentId: asset.uuid // Associar CHIP ao equipamento
+      associatedEquipmentId: asset.uuid,
+      notes: isPrincipal ? 'principal' : 'backup'
     };
     setAssociatedChip(updatedChip);
+    console.log('CHIP selecionado:', updatedChip);
   };
 
   const handleChipRemoved = () => {
     setAssociatedChip(null);
+    console.log('CHIP removido da associação');
   };
 
   const handleSave = () => {
     const config: AssetConfig = {
       notes,
+      uuid: asset.uuid
     };
 
     // Configurações específicas para equipamentos
@@ -118,26 +122,32 @@ export const AssetConfigurationForm: React.FC<AssetConfigurationFormProps> = ({
       config.notes = isPrincipalChip ? 'principal' : 'backup';
     }
 
+    console.log('Salvando configuração:', config);
+    
     // Salvar configuração do ativo principal
     onSave(config);
     
-    // Se há CHIP associado, também salvá-lo
+    // Se há CHIP associado e é um equipamento, salvar o CHIP também
     if (associatedChip && isEquipment) {
       const chipConfig: AssetConfig = {
-        notes: associatedChip.isPrincipalChip ? 'principal' : 'backup',
+        notes: associatedChip.isPrincipalChip ? 'principal - associado' : 'backup - associado',
         isPrincipalChip: associatedChip.isPrincipalChip,
-        associatedChipId: asset.uuid // Referência bidirecional
+        associatedChipId: asset.uuid,
+        uuid: associatedChip.uuid
       };
       
-      // Notificar sobre a atualização do CHIP através do callback
-      setTimeout(() => {
-        onSave({ ...chipConfig, uuid: associatedChip.uuid });
-      }, 100);
+      console.log('Salvando configuração do CHIP:', chipConfig);
       
-      // Feedback para o usuário - removido toast temporariamente
-    } else {
-      // Configuração salva sem CHIP associado
+      // Salvar configuração do CHIP após um pequeno delay
+      setTimeout(() => {
+        onSave(chipConfig);
+      }, 100);
     }
+
+    // Fechar modal após salvamento
+    setTimeout(() => {
+      onClose();
+    }, 200);
   };
 
   return (

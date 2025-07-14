@@ -90,6 +90,29 @@ export interface AssetAssociationState {
   selectedAssets: SelectedAsset[];
   currentStep: 'client' | 'assets' | 'summary';
   isLoading: boolean;
-  selectedClient: any | null; // Using any for now to avoid circular dependency
-  generalConfig: any | null; // Using any for now to avoid circular dependency
+  selectedClient: any | null;
+  generalConfig: any | null;
+}
+
+// Nova interface para configuração de associação
+export interface ChipAssociation {
+  equipmentId: string;
+  chipId: string;
+  isPrincipal: boolean;
+  notes?: string;
+}
+
+export interface AssetConfigurationState {
+  asset: SelectedAsset;
+  configuration: {
+    notes?: string;
+    ssid_atual?: string;
+    pass_atual?: string;
+    rented_days?: number;
+    isPrincipalChip?: boolean;
+    plan_id?: number | null;
+    gb?: number;
+    associatedChipId?: string | null;
+  };
+  associatedChip?: SelectedAsset | null;
 }

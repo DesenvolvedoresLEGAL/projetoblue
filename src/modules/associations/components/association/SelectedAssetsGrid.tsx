@@ -40,28 +40,49 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
 
   const handleSaveConfiguration = (config: any) => {
     if (configurationModal.asset) {
-      // Atualizar o ativo principal
+      console.log('Processando configuração:', config);
+      
       const updatedAsset = {
         ...configurationModal.asset,
         ...config
       };
+      
+      console.log('Ativo atualizado:', updatedAsset);
       onEditAsset(updatedAsset);
       
-      // Se há associação de CHIP, processar atualização do CHIP também
-      if (config.associatedChipId && config.uuid !== config.associatedChipId) {
-        // Encontrar o CHIP nos assets selecionados ou criar referência
+      // Se há associação de CHIP e é um equipamento
+      if (config.associatedChipId && config.uuid && config.uuid !== config.associatedChipId) {
+        // Encontrar o CHIP nos assets selecionados
         const chipAsset = assets.find(a => a.uuid === config.associatedChipId);
         if (chipAsset) {
           const updatedChip = {
             ...chipAsset,
-            associatedEquipmentId: configurationModal.asset.uuid,
+            associatedEquipmentId: config.uuid,
             isPrincipalChip: config.isPrincipalChip || false,
             notes: (config.isPrincipalChip ? 'principal' : 'backup') + ' - associado'
           };
+          
+          console.log('CHIP associado atualizado:', updatedChip);
+          onEditAsset(updatedChip);
+        }
+      }
+      
+      // Se é uma configuração de CHIP que veio como segunda chamada
+      if (config.uuid && config.uuid !== configurationModal.asset.uuid) {
+        const chipAsset = assets.find(a => a.uuid === config.uuid);
+        if (chipAsset) {
+          const updatedChip = {
+            ...chipAsset,
+            ...config
+          };
+          
+          console.log('CHIP configurado:', updatedChip);
           onEditAsset(updatedChip);
         }
       }
     }
+    
+    // Fechar modal
     setConfigurationModal({ open: false, asset: null });
   };
 

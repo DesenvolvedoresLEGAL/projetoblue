@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,16 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
     excludeAssociatedToClient
   });
 
+  // Sincronizar com o chip associado atual
+  useEffect(() => {
+    if (currentAssociatedChip) {
+      setSelectedChip(currentAssociatedChip);
+      setIsPrincipal(currentAssociatedChip.isPrincipalChip || true);
+    } else {
+      setSelectedChip(null);
+    }
+  }, [currentAssociatedChip]);
+
   const filteredChips = chips.filter(chip => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
@@ -50,19 +60,20 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
 
   const handleChipSelect = (chip: SelectedAsset) => {
     setSelectedChip(chip);
+    console.log('CHIP selecionado localmente:', chip);
   };
 
   const handleConfirmSelection = () => {
     if (selectedChip) {
+      console.log('Confirmando seleção de CHIP:', selectedChip, 'isPrincipal:', isPrincipal);
       onChipSelected(selectedChip, isPrincipal);
-      // Manter o chip selecionado no estado para feedback visual
-      // O estado será limpo quando o modal for fechado
     }
   };
 
   const handleRemoveChip = () => {
-    onChipRemoved();
+    console.log('Removendo CHIP associado');
     setSelectedChip(null);
+    onChipRemoved();
   };
 
   return (
@@ -88,7 +99,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
                       CHIP Associado
                     </Badge>
                     <Badge variant="outline" className="bg-green-100 text-green-800">
-                      Principal
+                      {currentAssociatedChip.isPrincipalChip ? 'Principal' : 'Backup'}
                     </Badge>
                   </div>
                 </div>
@@ -180,7 +191,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
               )}
             </div>
 
-            {selectedChip && (
+            {selectedChip && !currentAssociatedChip && (
               <Button
                 onClick={handleConfirmSelection}
                 className="w-full bg-blue-600 hover:bg-blue-700"
