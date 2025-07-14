@@ -109,6 +109,20 @@ const App = () => (
                     {/* Dashboard routes - Available to all authenticated users */}
                     <Route path="dashboard" element={<Dashboard />} />
 
+                    {/* Dev routes - Available to all authenticated users for development */}
+                    <Route path="dev">
+                      <Route path="asset">
+                        <Route
+                          path="association"
+                          element={
+                            <AuthRoute requiredRole="suporte">
+                              <AssetAssociation />
+                            </AuthRoute>
+                          }
+                        />
+                      </Route>
+                    </Route>
+
                     {/* Assets module routes - Requires suporte or above */}
                     <Route path="assets">
                       <Route
