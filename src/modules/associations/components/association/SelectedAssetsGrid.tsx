@@ -12,6 +12,8 @@ interface SelectedAssetsGridProps {
   assets: SelectedAsset[];
   onRemoveAsset: (assetId: string) => void;
   onEditAsset: (asset: SelectedAsset) => void;
+  onChipAssociation?: (assetId: string, chipData: any, isPrincipal: boolean) => void;
+  onChipRemoval?: (assetId: string) => void;
   excludeAssociatedToClient?: string;
 }
 
@@ -19,6 +21,8 @@ export const SelectedAssetsGrid: React.FC<SelectedAssetsGridProps> = ({
   assets,
   onRemoveAsset,
   onEditAsset,
+  onChipAssociation,
+  onChipRemoval,
   excludeAssociatedToClient
 }) => {
   const [configurationModal, setConfigurationModal] = useState<{
