@@ -42,7 +42,12 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   const { validateSelection } = useAssetBusinessRules(selectedAssets);
   const validation = validateSelection;
 
+  // Debug logging
+  console.log('AssetSelection - Selected Assets:', selectedAssets);
+  console.log('AssetSelection - Validation Result:', validation);
+
   const handleAssetSelected = (asset: SelectedAsset) => {
+    console.log('AssetSelection - Asset Selected:', asset);
     if (multipleSelection) {
       if (onAssetAdded) {
         onAssetAdded(asset);
@@ -57,6 +62,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   };
 
   const handleAssetRemoved = (assetId: string) => {
+    console.log('AssetSelection - Asset Removed:', assetId);
     if (onAssetRemoved) {
       onAssetRemoved(assetId);
     } else if (onAssetsChange) {
@@ -65,6 +71,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
   };
 
   const handleAssetUpdated = (asset: SelectedAsset) => {
+    console.log('AssetSelection - Asset Updated:', asset);
     if (onAssetUpdated) {
       const { uuid, ...updates } = asset;
       onAssetUpdated(uuid, updates);
@@ -179,7 +186,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         onCancel={() => setShowAssetModal(false)}
       />
 
-      {/* Botão de Prosseguir (apenas se fornecido) */}
+      {/* Botão de Prosseguir */}
       {onProceed && selectedAssets.length > 0 && (
         <div className="flex justify-end">
           <Button
