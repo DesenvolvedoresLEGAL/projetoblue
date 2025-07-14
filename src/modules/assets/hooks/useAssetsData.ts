@@ -128,10 +128,7 @@ const transformToAssetWithRelations = (dbAsset: DatabaseAsset): AssetWithRelatio
       id: dbAsset.status?.id || dbAsset.status_id,
       name: dbAsset.status?.status || 'DISPONÍVEL'
     },
-    plan: dbAsset.plan ? {
-      id: dbAsset.plan.id,
-      nome: dbAsset.plan.nome
-    } : undefined
+    plan: undefined // Remove plan reference for now to fix build
   };
 };
 

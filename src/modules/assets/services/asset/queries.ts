@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Asset, AssetLog, StatusRecord, Manufacturer } from "@/types/asset";
+import { Asset, AssetLog, StatusRecord } from "@/types/asset";
 import {
   AssetListParams,
   AssetStatusByType,
@@ -82,7 +82,7 @@ export const getAssets = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item));
 
     return { data: assets, count: count || 0 };
   } catch (error) {
@@ -121,7 +121,7 @@ export const getAssetById = async (id: string): Promise<Asset | null> => {
       return null;
     }
 
-    const asset = mapAssetFromDb(data);
+    const asset = mapAssetFromDb(data as any);
     return asset;
   } catch (error) {
     if (import.meta.env.DEV) console.error(`Error in getAssetById for ID ${id}:`, error);
@@ -155,7 +155,7 @@ export const getAssetsByStatus = async (statusId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item));
     if (import.meta.env.DEV) console.log(`Retrieved ${assets.length} assets with status ID ${statusId}`);
     return assets;
   } catch (error) {
@@ -193,7 +193,7 @@ export const getAssetsByType = async (typeId: number): Promise<Asset[]> => {
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item));
     if (import.meta.env.DEV) console.log(`Retrieved ${assets.length} assets with type ID ${typeId}`);
     return assets;
   } catch (error) {
@@ -279,7 +279,7 @@ export const getAssetsByMultipleStatus = async (
       throw error;
     }
 
-    const assets: Asset[] = (data || []).map(mapAssetFromDb);
+    const assets: Asset[] = (data || []).map((item: any) => mapAssetFromDb(item));
     if (import.meta.env.DEV) console.log(
       `Retrieved ${assets.length} assets with status IDs ${statusIds.join(
         ", "
@@ -375,7 +375,7 @@ export const getAssetLogs = async (
       return [];
     }
 
-    const assetLogs: AssetLog[] = data.map(mapAssetLogFromDb);
+    const assetLogs: AssetLog[] = data.map((item: any) => mapAssetLogFromDb(item));
 
     return assetLogs;
   } catch (error) {

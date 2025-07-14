@@ -83,12 +83,12 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
       }
 
       return (data || [])
-        .filter((row: AssetHistory) => {
+        .filter((row: any) => {
           // Filter by asset_id in details or other relevant fields
           const details = row.details as Record<string, unknown> || {};
           return details.asset_id === assetId || details.asset_uuid === assetId;
         })
-        .map((row: AssetHistory) => {
+        .map((row: any) => {
           // Safe parsing of details field
           let parsedDetails: Record<string, unknown> = {};
           try {

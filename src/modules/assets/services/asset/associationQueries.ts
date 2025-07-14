@@ -38,7 +38,7 @@ export const associationQueries = {
       }
 
       const associations: AssetAssociation[] = (data || []).map(item => ({
-        id: item.uuid,
+        id: parseInt(item.uuid.replace(/-/g, '').substring(0, 10), 16) || 0,
         client_id: item.client_id,
         association_id: item.association_type_id,
         entry_date: item.entry_date,
