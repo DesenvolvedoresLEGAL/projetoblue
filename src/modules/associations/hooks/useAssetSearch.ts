@@ -93,7 +93,6 @@ export const useAssetSearch = ({
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
-        .limit(100); // Aumentado de 50 para 100
 
       if (error) {
         if (import.meta.env.DEV) console.error('useAssetSearch: Erro na busca:', error);

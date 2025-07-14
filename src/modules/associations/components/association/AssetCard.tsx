@@ -85,7 +85,7 @@ export const AssetCard: React.FC<AssetCardProps> = ({
               {asset.marca && (
                 <p><span className="font-medium">Marca:</span> {asset.marca}</p>
               )}
-              {asset.associatedEquipmentId && (
+              {asset.associatedEquipmentId && (p
                 <div className="flex items-center gap-1 text-blue-600">
                   <Link className="h-3 w-3" />
                   <span className="text-xs">Associado a equipamento</span>
