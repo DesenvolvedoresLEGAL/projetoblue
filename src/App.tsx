@@ -22,7 +22,6 @@ import AssetsManagement from "@modules/assets/pages/AssetsManagement";
 import AssetsRanking from "@modules/assets/pages/AssetsRanking";
 import AssetAssociation from "@modules/associations/pages/AssetAssociation";
 import AssociationsList from "@modules/associations/pages/AssociationsList";
-import NewAssociationsPage from "@modules/new-associations/pages/NewAssociationsPage";
 import Clients from "@modules/clients/pages/Clients";
 import RegisterClient from "@modules/clients/pages/RegisterClient";
 import Association from "@modules/associations/pages/Association";
@@ -117,7 +116,7 @@ const App = () => (
                           path="association"
                           element={
                             <AuthRoute requiredRole="suporte">
-                              <NewAssociationsPage />
+                              <AssetAssociation />
                             </AuthRoute>
                           }
                         />
