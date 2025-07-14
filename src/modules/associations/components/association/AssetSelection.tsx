@@ -184,6 +184,7 @@ export const AssetSelection: React.FC<AssetSelectionProps> = ({
         excludeAssociatedToClient={excludeAssociatedToClient}
         multipleSelection={multipleSelection}
         onCancel={() => setShowAssetModal(false)}
+        onConfirm={() => setShowAssetModal(false)}
       />
 
       {/* Botão de Prosseguir */}

@@ -60,9 +60,9 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         <div 
           className={`
             grid gap-3 
+            overflow-y-scroll
             ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}
-            ${isMobile ? 'max-h-[50vh]' : 'max-h-[60vh]'} 
-            overflow-y-auto
+            ${isMobile ? 'max-h-[25vh]' : 'max-h-[35vh]'} 
           `}
         >
           {assets.map((asset) => (

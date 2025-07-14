@@ -46,7 +46,7 @@ export const DesktopAssetModal: React.FC<DesktopAssetModalProps> = ({
   onCancel,
   isLoading,
   confirmText = 'Confirmar',
-  cancelText = 'Cancelar'
+  cancelText = 'Fechar'
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,14 +95,12 @@ export const DesktopAssetModal: React.FC<DesktopAssetModalProps> = ({
           >
             {cancelText}
           </Button>
-          {onConfirm && (
             <Button
               onClick={onConfirm}
               disabled={isLoading || selectedAssets.length === 0}
             >
-              {isLoading ? 'Processando...' : `${confirmText} (${selectedAssets.length})`}
+              {isLoading ? 'Processando...' : `${confirmText}`}
             </Button>
-          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
