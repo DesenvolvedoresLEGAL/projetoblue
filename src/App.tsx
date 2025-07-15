@@ -35,6 +35,7 @@ import AdminConfig from "./pages/AdminConfig";
 import Unauthorized from "./pages/Unauthorized";
 import Topology from "./pages/Topology";
 import Discovery from "./pages/Discovery";
+import AssetAssociation from "./pages/AssetAssociation";
 
 // BITS™ Pages
 import BitsDashboard from "@modules/bits/pages/BitsDashboard";
@@ -161,6 +162,14 @@ const App = () => (
                         element={
                           <AuthRoute requiredRole="suporte">
                             <History />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="associations"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <AssetAssociation />
                           </AuthRoute>
                         }
                       />
