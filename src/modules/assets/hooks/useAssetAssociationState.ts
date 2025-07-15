@@ -1,11 +1,34 @@
 
 import { useState, useEffect } from 'react';
-import {
-  AssetAssociationState,
-  SelectedAsset,
-} from '@modules/associations/types';
 import type { Client } from '@/types/client';
-import type { AssociationGeneralConfig } from '@modules/associations/components/association/AssociationGeneralConfig';
+
+interface SelectedAsset {
+  id: string;
+  uuid: string;
+  type: 'CHIP' | 'EQUIPMENT';
+  registrationDate: string;
+  status?: string;
+  statusId?: number;
+  associatedEquipmentId?: string;
+  isPrincipalChip?: boolean;
+}
+
+interface AssociationGeneralConfig {
+  associationType: number;
+  startDate: Date;
+  endDate?: Date;
+  notes: string;
+  planId?: number;
+  planGb?: number;
+}
+
+interface AssetAssociationState {
+  selectedAssets: SelectedAsset[];
+  currentStep: 'client' | 'assets' | 'summary';
+  isLoading: boolean;
+  selectedClient: Client | null;
+  generalConfig: AssociationGeneralConfig | null;
+}
 
 const STORAGE_KEY = 'asset_association_state';
 
