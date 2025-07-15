@@ -20,11 +20,8 @@ import AssetsDashboard from "@modules/assets/pages/AssetsDashboard";
 import AssetsInventory from "@modules/assets/pages/AssetsInventory";
 import AssetsManagement from "@modules/assets/pages/AssetsManagement";
 import AssetsRanking from "@modules/assets/pages/AssetsRanking";
-import AssetAssociation from "@modules/associations/pages/AssetAssociation";
-import AssociationsList from "@modules/associations/pages/AssociationsList";
 import Clients from "@modules/clients/pages/Clients";
 import RegisterClient from "@modules/clients/pages/RegisterClient";
-import Association from "@modules/associations/pages/Association";
 import Subscriptions from "./pages/Subscriptions";
 import Monitoring from "./pages/Monitoring";
 import History from "@modules/assets/pages/AssetHistory";
@@ -109,20 +106,6 @@ const App = () => (
                     {/* Dashboard routes - Available to all authenticated users */}
                     <Route path="dashboard" element={<Dashboard />} />
 
-                    {/* Dev routes - Available to all authenticated users for development */}
-                    <Route path="dev">
-                      <Route path="asset">
-                        <Route
-                          path="association"
-                          element={
-                            <AuthRoute requiredRole="suporte">
-                              <AssetAssociation />
-                            </AuthRoute>
-                          }
-                        />
-                      </Route>
-                    </Route>
-
                     {/* Assets module routes - Requires suporte or above */}
                     <Route path="assets">
                       <Route
@@ -170,22 +153,6 @@ const App = () => (
                         element={
                           <AuthRoute requiredRole="suporte">
                             <RegisterAsset />
-                          </AuthRoute>
-                        }
-                      />
-                      <Route
-                        path="associations"
-                        element={
-                          <AuthRoute requiredRole="suporte">
-                            <AssetAssociation />
-                          </AuthRoute>
-                        }
-                      />
-                      <Route
-                        path="associations-list"
-                        element={
-                          <AuthRoute requiredRole="suporte">
-                            <AssociationsList />
                           </AuthRoute>
                         }
                       />
@@ -405,20 +372,8 @@ const App = () => (
                       path="register-asset"
                       element={<Navigate to="/assets/register" replace />}
                     />
-                    <Route
-                      path="link-asset"
-                      element={<Navigate to="/assets/association" replace />}
-                    />
 
                     {/* Legacy routes for backward compatibility */}
-                    <Route
-                      path="/assets/association"
-                      element={<Navigate to="/assets/associations" replace />}
-                    />
-                    <Route
-                      path="/associations"
-                      element={<Navigate to="/assets/associations" replace />}
-                    />
                     <Route
                       path="/inventory"
                       element={<Navigate to="/assets/inventory" replace />}
@@ -426,10 +381,6 @@ const App = () => (
                     <Route
                       path="/history"
                       element={<Navigate to="/assets/history" replace />}
-                    />
-                    <Route
-                      path="/association"
-                      element={<Navigate to="/assets/association" replace />}
                     />
                     <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/monitoring" element={<Monitoring />} />

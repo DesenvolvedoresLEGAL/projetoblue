@@ -3,11 +3,50 @@ import React from 'react';
 import { ArrowLeft, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { StandardPageHeader } from '@/components/ui/standard-page-header';
 import { StandardFiltersCard } from '@/components/ui/standard-filters-card';
-import { ClientForm } from '@modules/associations/components/association/ClientForm';
 import { Client } from '@/types/client';
 import { useClientRegistrationState } from '@modules/clients/hooks/useClientRegistrationState';
+
+interface ClientFormProps {
+  onSubmit: (client: Client) => void;
+  onCancel: () => void;
+}
+
+const ClientForm: React.FC<ClientFormProps> = ({ onSubmit, onCancel }) => {
+  const [name, setName] = React.useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newClient: Client = {
+      uuid: '',
+      nome: name,
+      empresa: name,
+      responsavel: '',
+      contato: '',
+      created_at: '',
+      updated_at: ''
+    };
+    onSubmit(newClient);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Nome do cliente"
+      />
+      <div className="flex gap-2">
+        <Button type="submit">Salvar</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 const RegisterClient: React.FC = () => {
   const navigate = useNavigate();
