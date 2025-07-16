@@ -59,17 +59,17 @@ export const associationsAdvancedService = {
         notes,
         created_at,
         updated_at,
-        clients!associations_client_id_fkey (
+        clients!client_id_fkey (
           nome,
           contato,
           responsavel,
           empresa,
           email
         ),
-        association_types!associations_association_type_id_fkey (
+        association_types!association_type_id_fkey (
           type
         ),
-        plans!associations_plan_id_fkey (
+        plans!plan_id_fkey (
           nome,
           tamanho_gb
         )

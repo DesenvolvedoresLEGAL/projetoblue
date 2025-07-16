@@ -144,7 +144,6 @@ export const useAssociationsListOptimized = () => {
       await associationsOptimizedService.finalizeAssociation(associationId);
       
       toast({
-        title: "Sucesso",
         description: "A associação foi finalizada com sucesso.",
       });
       
@@ -153,7 +152,6 @@ export const useAssociationsListOptimized = () => {
     } catch (error) {
       console.error('Erro ao finalizar associação:', error);
       toast({
-        title: "Erro",
         description: "Ocorreu um erro ao finalizar a associação. Tente novamente ou contate o suporte.",
         variant: "destructive",
       });
