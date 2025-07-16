@@ -42,7 +42,7 @@ export const associationsListService = {
           tamanho_gb
         )
       `)
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     // Apply status filter
     if (filters.status === 'active') {
