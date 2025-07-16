@@ -11,6 +11,23 @@ import {
 } from '../types/associationsList';
 import { groupAssociationsByClient } from '../utils/associationsUtils';
 
+// Debounce hook for search optimization
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 export const useAssociationsList = () => {
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
@@ -36,23 +53,35 @@ export const useAssociationsList = () => {
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-  // Query for associations data
+  // Debounce search query to avoid excessive API calls
+  const debouncedSearchQuery = useDebounce(search.query, 300);
+
+  // Create search object with debounced query
+  const debouncedSearch = useMemo(() => ({
+    ...search,
+    query: debouncedSearchQuery
+  }), [search.searchType, debouncedSearchQuery]);
+
+  // Query for associations data with improved caching
   const {
     data: associationsData,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['associations-list', filters, search, pagination.page],
-    queryFn: () => associationsListService.getAssociationsWithDetails(filters, search, pagination),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryKey: ['associations-list', filters, debouncedSearch, pagination.page],
+    queryFn: () => associationsListService.getAssociationsWithDetails(filters, debouncedSearch, pagination),
+    staleTime: 1000 * 60 * 2, // 2 minutes - reduced for fresher data
+    gcTime: 1000 * 60 * 10, // 10 minutes cache time
+    refetchOnWindowFocus: false, // Avoid unnecessary refetches
   });
 
-  // Query for filter options
+  // Query for filter options with longer cache
   const { data: filterOptions } = useQuery({
     queryKey: ['associations-filter-options'],
     queryFn: associationsListService.getFilterOptions,
     staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour cache time
   });
 
   // Group associations by client
@@ -108,17 +137,20 @@ export const useAssociationsList = () => {
     try {
       await associationsListService.finalizeAssociation(associationId);
       
-      toast.success(
-        "Associação finalizada\n A associação foi finalizada com sucesso.",
-      );
+      toast({
+        title: "Associação finalizada",
+        description: "A associação foi finalizada com sucesso.",
+      });
       
       // Refresh data
       refetch();
     } catch (error) {
       console.error('Erro ao finalizar associação:', error);
-      toast.error(
-        "Ocorreu um erro ao finalizar a associação.\nTente novamente ou contate o suporte.",
-      );
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao finalizar a associação. Tente novamente ou contate o suporte.",
+        variant: "destructive",
+      });
     }
   }, [refetch]);
 
