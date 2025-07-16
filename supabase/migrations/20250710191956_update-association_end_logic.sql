@@ -10,7 +10,6 @@ BEGIN
     WHERE uuid = asset_id;
 END;
 $$;
-
 -- Função trigger
 CREATE OR REPLACE FUNCTION public.association_end_logic() 
 RETURNS "trigger" 
@@ -41,9 +40,7 @@ BEGIN
     RETURN NEW;
 END;
 $$;
-
 CREATE OR REPLACE TRIGGER association_end_logic_trigger
 AFTER UPDATE ON public.associations FOR EACH ROW EXECUTE FUNCTION public.association_end_logic();
-
 ALTER FUNCTION public.association_end_logic()
 SET search_path = 'public';

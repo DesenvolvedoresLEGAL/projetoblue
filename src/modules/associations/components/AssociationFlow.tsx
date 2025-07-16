@@ -1,15 +1,15 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ClientSelectionStep } from "./association/ClientSelectionStep";
-import { AssetSelectionStep } from "./association/AssetSelectionStep";
-import { ConfigurationStep } from "./association/ConfigurationStep";
-import { PlanConfigStep } from "./association/PlanConfigStep";
-import { NotesStep } from "./association/NotesStep";
-import { AssociationSummary } from "./association/AssociationSummary";
+import { ClientSelectionStep } from "./ClientSelectionStep";
+import { AssetSelectionStep } from "./AssetSelectionStep";
+import { ConfigurationStep } from "./ConfigurationStep";
+import { PlanConfigStep } from "./PlanConfigStep";
+import { NotesStep } from "./NotesStep";
+import { AssociationSummary } from "./AssociationSummary";
 import { useAssociationFlow } from "../hooks/useAssociationFlow";
 
 const STEPS = [
@@ -55,7 +55,7 @@ export const AssociationFlow = () => {
       {/* Stepper */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center flex-wrap gap-4 justify-center">
             {STEPS.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <div className="flex items-center">
@@ -71,8 +71,10 @@ export const AssociationFlow = () => {
                     {step.title}
                   </span>
                 </div>
-                {index < STEPS.length - 1 && (
+                {index < STEPS.length - 1 ? (
                   <ChevronRight className="mx-4 h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="mx-4 h-4 w-4 text-transparent" />
                 )}
               </div>
             ))}

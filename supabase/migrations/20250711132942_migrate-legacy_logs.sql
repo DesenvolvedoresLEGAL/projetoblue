@@ -39,7 +39,6 @@ WHERE al.assoc_id IS NOT NULL
     'ASSOCIATION_STATUS_UPDATED',
     'ASSOCIATION_REMOVED'
   );
-
 -- Migrate asset related logs
 INSERT INTO asset_logs (
   uuid,
@@ -95,5 +94,4 @@ WHERE (al.event = 'ASSET_CRIADO'
     (SELECT uuid FROM assets WHERE line_number = (al.details->>'line_number')::bigint),
     (SELECT uuid FROM assets WHERE radio = al.details->>'radio')
   ) IS NOT NULL;
-
 SET session_replication_role = DEFAULT;

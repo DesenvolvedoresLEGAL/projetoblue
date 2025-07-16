@@ -47,7 +47,6 @@ BEGIN
     RETURN NULL;
 END;
 $$;
-
 CREATE OR REPLACE FUNCTION public.log_asset_event()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER
@@ -97,14 +96,11 @@ BEGIN
     RETURN NULL;
 END;
 $$;
-
 CREATE TRIGGER associations_logging_trigger
 AFTER INSERT OR UPDATE OR DELETE ON public.associations
 FOR EACH ROW EXECUTE FUNCTION public.log_association_event();
-
 CREATE TRIGGER assets_logging_trigger
 AFTER INSERT OR UPDATE OR DELETE ON public.assets
 FOR EACH ROW EXECUTE FUNCTION public.log_asset_event();
-
-alter function public.log_asset_event() set search_path = 'public';                              
-alter function public.log_association_event() set search_path = 'public';  
+alter function public.log_asset_event() set search_path = 'public';
+alter function public.log_association_event() set search_path = 'public';

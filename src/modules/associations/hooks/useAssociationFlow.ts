@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useReducer, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { associationService } from "../services/associationService";
@@ -82,61 +83,85 @@ export const useAssociationFlow = () => {
     }
   }, [state]);
 
-  const createAssociation = useCallback(async () => {
-    try {
-      // Group assets by type for association creation
-      const equipments = state.selectedAssets.filter(asset => 
-        asset.solution_id !== 11 // Not a chip
-      );
-      const chips = state.selectedAssets.filter(asset => 
-        asset.solution_id === 11 // Is a chip
-      );
+const createAssociation = useCallback(async () => {
+  try {
+    // Group assets by type
+    const equipments = state.selectedAssets.filter(asset => asset.solution_id !== 11);
+    const chips = [...state.selectedAssets.filter(asset => asset.solution_id === 11)];
+    const associations = [];
+    const usedChipIds = new Set();
 
-      // Create associations based on business rules
-      const associations = [];
-
-      // If we have both equipment and chips, create combined associations
-      if (equipments.length > 0 && chips.length > 0) {
-        for (const equipment of equipments) {
-          // For SPEEDY 5G, 4 PLUS, 4 BLACK - associate with a chip
-          if ([2, 3, 4].includes(equipment.solution_id)) {
-            const chip = chips.shift(); // Take first available chip
-            if (chip) {
-              associations.push({
-                client_id: state.client.uuid,
-                equipment_id: equipment.uuid,
-                chip_id: chip.uuid,
-                entry_date: state.entryDate,
-                exit_date: state.exitDate || null,
-                association_type_id: state.associationType,
-                plan_id: state.planId || null,
-                plan_gb: state.planGb || 0,
-                equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
-                equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
-                notes: state.notes || null,
-              });
-            }
-          } else {
-            // Other equipment types go alone
-            associations.push({
-              client_id: state.client.uuid,
-              equipment_id: equipment.uuid,
-              chip_id: null,
-              entry_date: state.entryDate,
-              exit_date: state.exitDate || null,
-              association_type_id: state.associationType,
-              plan_id: state.planId || null,
-              plan_gb: state.planGb || 0,
-              equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
-              equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
-              notes: state.notes || null,
-            });
-          }
+    // Process equipment associations first
+    for (const equipment of equipments) {
+      if ([1, 2, 4].includes(equipment.solution_id)) {
+        // Equipment that requires chip
+        const configuredId = state.assetConfiguration[equipment.uuid]?.chip_id || null;
+        
+        if (!configuredId) {
+          throw new Error(`Equipamento ${equipment.radio || equipment.serial_number} requer um chip principal.`);
         }
+        
+        // Find the configured chip
+        const chipIndex = chips.findIndex(c => c.uuid === configuredId);
+        
+        if (chipIndex === -1) {
+          // Chip isn't in selectedAssets, it must be from availableChips
+          // Mark as used to avoid duplicates
+          usedChipIds.add(configuredId);
+          
+          associations.push({
+            client_id: state.client.uuid,
+            equipment_id: equipment.uuid,
+            chip_id: configuredId,
+            entry_date: state.entryDate,
+            exit_date: state.exitDate || null,
+            association_type_id: state.associationType,
+            plan_id: state.planId || null,
+            plan_gb: state.planGb || 0,
+            equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
+            equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
+            notes: state.notes || null,
+          });
+        } else {
+          // Chip is in selectedAssets, remove it from array to avoid duplicates
+          const chip = chips.splice(chipIndex, 1)[0];
+          usedChipIds.add(chip.uuid);
+          
+          associations.push({
+            client_id: state.client.uuid,
+            equipment_id: equipment.uuid,
+            chip_id: chip.uuid,
+            entry_date: state.entryDate,
+            exit_date: state.exitDate || null,
+            association_type_id: state.associationType,
+            plan_id: state.planId || null,
+            plan_gb: state.planGb || 0,
+            equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
+            equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
+            notes: state.notes || null,
+          });
+        }
+      } else {
+        // Regular equipment without chip requirement
+        associations.push({
+          client_id: state.client.uuid,
+          equipment_id: equipment.uuid,
+          chip_id: null,
+          entry_date: state.entryDate,
+          exit_date: state.exitDate || null,
+          association_type_id: state.associationType,
+          plan_id: state.planId || null,
+          plan_gb: state.planGb || 0,
+          equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
+          equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
+          notes: state.notes || null,
+        });
       }
-
-      // Handle remaining chips (backup chips or standalone)
-      for (const chip of chips) {
+    }
+    
+    // Process remaining chips as backups
+    for (const chip of chips) {
+      if (!usedChipIds.has(chip.uuid)) {
         associations.push({
           client_id: state.client.uuid,
           equipment_id: null,
@@ -148,47 +173,26 @@ export const useAssociationFlow = () => {
           plan_gb: state.planGb || 0,
           equipment_ssid: null,
           equipment_pass: null,
-          notes: state.notes || null,
+          notes: `BACKUP | ${state.notes || ''}`,
         });
       }
-
-      // Handle standalone equipment
-      if (equipments.length > 0 && chips.length === 0) {
-        for (const equipment of equipments) {
-          associations.push({
-            client_id: state.client.uuid,
-            equipment_id: equipment.uuid,
-            chip_id: null,
-            entry_date: state.entryDate,
-            exit_date: state.exitDate || null,
-            association_type_id: state.associationType,
-            plan_id: state.planId || null,
-            plan_gb: state.planGb || 0,
-            equipment_ssid: state.assetConfiguration[equipment.uuid]?.ssid || null,
-            equipment_pass: state.assetConfiguration[equipment.uuid]?.password || null,
-            notes: state.notes || null,
-          });
-        }
-      }
-
+    }
       // Create all associations
       for (const association of associations) {
         await associationService.create(association);
       }
 
-      toast({
-        title: "Sucesso",
-        description: `${associations.length} associação(ões) criada(s) com sucesso!`,
-      });
+      toast.success(
+        `${associations.length} associação(ões) criada(s) com sucesso!`
+      );
 
       dispatch({ type: 'RESET' });
     } catch (error) {
       console.error("Erro ao criar associações:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao criar associações. Tente novamente.",
-        variant: "destructive",
-      });
+
+      toast.error(
+        "Erro ao criar associações. Tente novamente.\n" + error
+      );
       throw error;
     }
   }, [state]);

@@ -13,7 +13,6 @@ BEGIN
   WHERE uuid = asset_id;
 END;
 $$;
-
 -- Função trigger
 CREATE OR REPLACE FUNCTION public.association_insert_logic()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
@@ -46,8 +45,6 @@ END IF;
   RETURN NEW;
 END;
 $$;
-
 CREATE OR REPLACE TRIGGER association_insert_logic AFTER INSERT ON public.associations FOR EACH ROW EXECUTE FUNCTION public.association_insert_logic();
-
 ALTER FUNCTION public.association_insert_logic() SET search_path = 'public';
 ALTER FUNCTION public.update_asset_status_by_association(text, bigint) SET search_path = 'public';
