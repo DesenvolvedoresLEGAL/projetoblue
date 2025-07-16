@@ -109,7 +109,15 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
 
   const handleChipSelect = (assetId: string, chipId: string) => {
     const currentChip = state.assetConfiguration[assetId]?.chip_id;
-    handleAssetConfig(assetId, 'chip_id', currentChip === chipId ? '' : chipId);
+    const newChipId = currentChip === chipId ? '' : chipId;
+    handleAssetConfig(assetId, 'chip_id', newChipId);
+
+    // If a chip is being set as the main chip and it exists in the
+    // selectedAssets list, remove it to avoid duplicates
+    if (newChipId && state.selectedAssets.some((a: any) => a.uuid === chipId)) {
+      const newAssets = state.selectedAssets.filter((a: any) => a.uuid !== chipId);
+      dispatch({ type: 'SET_ASSETS', payload: newAssets });
+    }
   };
 
   const equipmentAssets = state.selectedAssets.filter((asset: any) => asset.solution_id !== 11);
