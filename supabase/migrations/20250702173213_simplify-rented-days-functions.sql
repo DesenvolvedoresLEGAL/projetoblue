@@ -53,7 +53,6 @@ BEGIN
     );
 END;
 $$;
-
 CREATE OR REPLACE FUNCTION public.update_all_rented_days()
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -87,7 +86,6 @@ BEGIN
     );
 END;
 $$;
-
 GRANT ALL ON FUNCTION public.update_asset_rented_days(text) TO anon;
 GRANT ALL ON FUNCTION public.update_asset_rented_days(text) TO authenticated;
 GRANT ALL ON FUNCTION public.update_asset_rented_days(text) TO service_role;

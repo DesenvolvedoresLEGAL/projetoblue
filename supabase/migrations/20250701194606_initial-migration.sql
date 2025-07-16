@@ -1,5 +1,3 @@
-
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -539,31 +537,28 @@ DECLARE
 BEGIN
   -- Buscar IDs de status
   SELECT id INTO status_disponivel_id FROM asset_status WHERE LOWER(status) IN ('disponível', 'disponivel') LIMIT 1;
-  SELECT id INTO status_alocado_id FROM asset_status WHERE id = 2 LIMIT 1;
-
+  SELECT id INTO status_alocado_id FROM asset_status WHERE LOWER(status) = 'alocado' LIMIT 1;
+  
   -- Verificar assets que deveriam estar disponíveis mas não estão
   FOR inconsistency_record IN
-    SELECT DISTINCT
+    SELECT DISTINCT 
       a.uuid as asset_uuid,
       a.status_id as current_status,
       status_disponivel_id as expected_status,
       'Asset should be available - no active associations' as description
     FROM assets a
-    LEFT JOIN associations assoc ON (a.uuid = assoc.equipment_id OR a.uuid = assoc.chip_id)
-      AND assoc.exit_date IS NULL
-      AND assoc.deleted_at IS NULL
-      AND assoc.status = TRUE
-    WHERE assoc.uuid IS NULL
+    LEFT JOIN asset_client_assoc aca ON a.uuid = aca.asset_id AND aca.exit_date IS NULL
+    WHERE aca.asset_id IS NULL 
       AND a.status_id != status_disponivel_id
       AND a.deleted_at IS NULL
   LOOP
     -- Corrigir o status
-    UPDATE assets
-    SET status_id = status_disponivel_id
+    UPDATE assets 
+    SET status_id = status_disponivel_id 
     WHERE uuid = inconsistency_record.asset_uuid;
-
+    
     correction_count := correction_count + 1;
-
+    
     -- Registrar a correção no log
     INSERT INTO asset_logs (
       date, event, details, status_before_id, status_after_id
@@ -579,7 +574,7 @@ BEGIN
       inconsistency_record.current_status,
       status_disponivel_id
     );
-
+    
     -- Preparar retorno
     asset_id := inconsistency_record.asset_uuid;
     current_status_id := inconsistency_record.current_status;
@@ -588,29 +583,27 @@ BEGIN
     corrected := TRUE;
     RETURN NEXT;
   END LOOP;
-
+  
   -- Verificar assets que deveriam estar alocados mas não estão
   FOR inconsistency_record IN
-    SELECT DISTINCT
-      CASE WHEN assoc.equipment_id IS NOT NULL THEN assoc.equipment_id ELSE assoc.chip_id END AS asset_uuid,
+    SELECT DISTINCT 
+      aca.asset_id as asset_uuid,
       a.status_id as current_status,
       status_alocado_id as expected_status,
       'Asset should be allocated - has active association' as description
-    FROM associations assoc
-    JOIN assets a ON a.uuid = assoc.equipment_id OR a.uuid = assoc.chip_id
-    WHERE assoc.exit_date IS NULL
-      AND assoc.deleted_at IS NULL
-      AND assoc.status = TRUE
+    FROM asset_client_assoc aca
+    JOIN assets a ON aca.asset_id = a.uuid
+    WHERE aca.exit_date IS NULL 
       AND a.status_id != status_alocado_id
       AND a.deleted_at IS NULL
   LOOP
     -- Corrigir o status
-    UPDATE assets
-    SET status_id = status_alocado_id
+    UPDATE assets 
+    SET status_id = status_alocado_id 
     WHERE uuid = inconsistency_record.asset_uuid;
-
+    
     correction_count := correction_count + 1;
-
+    
     -- Registrar a correção no log
     INSERT INTO asset_logs (
       date, event, details, status_before_id, status_after_id
@@ -626,7 +619,7 @@ BEGIN
       inconsistency_record.current_status,
       status_alocado_id
     );
-
+    
     -- Preparar retorno
     asset_id := inconsistency_record.asset_uuid;
     current_status_id := inconsistency_record.current_status;
@@ -635,7 +628,7 @@ BEGIN
     corrected := TRUE;
     RETURN NEXT;
   END LOOP;
-
+  
   RAISE NOTICE 'Inconsistency detection completed. % corrections made.', correction_count;
   RETURN;
 END;
@@ -643,6 +636,83 @@ $$;
 
 
 ALTER FUNCTION "public"."detect_association_inconsistencies"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  -- Try to insert the profile if it doesn't exist
+  INSERT INTO public.profiles (id, email, role, is_active, is_approved)
+  VALUES (user_id, user_email, user_role, true, true)
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    updated_at = NOW();
+  
+  RETURN TRUE;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'Error ensuring profile for %: %', user_email, SQLERRM;
+    RETURN FALSE;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."fix_missing_profiles"() RETURNS TABLE("user_id" "uuid", "email" "text", "fixed" boolean)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  u RECORD;
+  fixed_count INT := 0;
+  error_count INT := 0;
+BEGIN
+  FOR u IN 
+    SELECT au.id, au.email 
+    FROM auth.users au
+    LEFT JOIN public.profiles p ON au.id = p.id
+    WHERE p.id IS NULL
+  LOOP
+    BEGIN
+      INSERT INTO public.profiles (id, email, role, is_active, is_approved)
+      VALUES (
+        u.id,
+        u.email,
+        'cliente'::user_role_enum,
+        true,
+        true
+      );
+      fixed_count := fixed_count + 1;
+      user_id := u.id;
+      email := u.email;
+      fixed := true;
+      RAISE NOTICE 'Perfil criado com sucesso para usuário %', u.email;
+      RETURN NEXT;
+    EXCEPTION WHEN OTHERS THEN
+      error_count := error_count + 1;
+      user_id := u.id;
+      email := u.email;
+      fixed := false;
+      RAISE NOTICE 'Erro ao criar perfil para %: %', u.email, SQLERRM;
+      RETURN NEXT;
+    END;
+  END LOOP;
+  
+  RAISE NOTICE 'Resumo: % perfis criados, % erros', fixed_count, error_count;
+  RETURN;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."fix_missing_profiles"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."fix_missing_profiles"() IS 'Função para recuperar perfis de usuários que possam ter sido criados sem o perfil correspondente devido a problemas no trigger.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
@@ -1496,21 +1566,21 @@ BEGIN
   SET LOCAL search_path TO public;
 
   -- Buscar status atual do asset
-  SELECT a.status_id, ast.status
+  SELECT a.status_id, ast.status 
   INTO current_status_id, current_status_name
   FROM assets a
   JOIN asset_status ast ON a.status_id = ast.id
   WHERE a.uuid = NEW.asset_id;
 
   -- Buscar ID do status alocado dinamicamente
-  SELECT id INTO status_alocado_id
-  FROM asset_status
-  WHERE id = 2
+  SELECT id INTO status_alocado_id 
+  FROM asset_status 
+  WHERE LOWER(status) = 'alocado' 
   LIMIT 1;
 
   -- Verificar se o asset já está alocado
   IF current_status_id = status_alocado_id THEN
-    RAISE EXCEPTION 'Não é possível associar o asset %, pois ele já está alocado (status: %).',
+    RAISE EXCEPTION 'Não é possível associar o asset %, pois ele já está alocado (status: %).', 
       NEW.asset_id, current_status_name;
   END IF;
 
@@ -2632,73 +2702,6 @@ ALTER TABLE "public"."asset_status" ALTER COLUMN "id" ADD GENERATED BY DEFAULT A
     CACHE 1
 );
 
-CREATE TABLE IF NOT EXISTS "public"."associations" (
-  uuid text not null default gen_random_uuid (),
-  client_id text not null,
-  equipment_id text null,
-  chip_id text null,
-  entry_date date not null,
-  exit_date date null,
-  association_type_id bigint not null,
-  plan_id bigint null,
-  plan_gb bigint null default '0'::bigint,
-  equipment_ssid text null,
-  equipment_pass text null,
-  status boolean not null default TRUE, -- status como um booleano sendo false - encerrado - e true - ativo.
-  notes text null,
-  created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now(),
-  deleted_at timestamp with time zone null,
-  constraint associations_pkey primary key (uuid),
-  constraint client_id_fkey foreign key (client_id) references clients(uuid),
-  constraint equipment_id_fkey foreign key (equipment_id) references assets(uuid),
-  constraint chip_id_fkey foreign key (chip_id) references assets(uuid),
-  constraint association_type_id_fkey foreign key (association_type_id) references association_types(id),
-  constraint plan_id_fkey foreign key (plan_id) references plans(id)
-);
-
-DROP INDEX IF EXISTS idx_associations_status_active;
-DROP INDEX IF EXISTS idx_associations_client_id;
-DROP INDEX IF EXISTS idx_associations_equipment_id;
-DROP INDEX IF EXISTS idx_associations_chip_id;
-DROP INDEX IF EXISTS idx_associations_entry_date;
-DROP INDEX IF EXISTS idx_associations_exit_date;
-DROP INDEX IF EXISTS idx_associations_plan_id;
-
-CREATE INDEX IF NOT EXISTS idx_associations_status_active ON associations (status) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_client_id ON associations (client_id) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_equipment_id ON associations (equipment_id) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_chip_id ON associations (chip_id) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_entry_date ON associations (entry_date) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_exit_date ON associations (exit_date) WHERE deleted_at IS NULL;
-CREATE INDEX IF NOT EXISTS idx_associations_plan_id ON associations (plan_id) WHERE deleted_at IS NULL;
-
-ALTER TABLE "public"."associations" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Auth users can insert" ON public.associations FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Auth users can update" ON public.associations FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Enable read access for all users" ON public.associations FOR SELECT USING (true);
-CREATE POLICY "admin_total_access" ON public.associations TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
-
-CREATE OR REPLACE FUNCTION check_association_assets()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Valida equipment_id: NÃO pode ser solution_id = 11
-  IF NEW.equipment_id IS NOT NULL AND EXISTS (
-    SELECT 1 FROM assets WHERE uuid = NEW.equipment_id AND solution_id = 11
-  ) THEN
-    RAISE EXCEPTION 'equipment_id não pode referenciar asset com solution_id = 11';
-  END IF;
-
-  -- Valida chip_id: SÓ pode ser solution_id = 11
-  IF NEW.chip_id IS NOT NULL AND EXISTS (
-    SELECT 1 FROM assets WHERE uuid = NEW.chip_id AND solution_id <> 11
-  ) THEN
-    RAISE EXCEPTION 'chip_id não pode referenciar asset com solution_id diferente de 11';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE VIEW "public"."v_active_clients" WITH ("security_invoker"='on') AS
@@ -3927,6 +3930,18 @@ GRANT ALL ON FUNCTION "public"."cleanup_expired_locks"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "anon";
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."detect_association_inconsistencies"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "anon";
+GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."ensure_user_profile"("user_id" "uuid", "user_email" "text", "user_role" "public"."user_role_enum") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "anon";
+GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."fix_missing_profiles"() TO "service_role";
 
 
 

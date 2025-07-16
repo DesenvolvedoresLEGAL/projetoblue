@@ -80,7 +80,6 @@ BEGIN
     RETURN NULL;
 END;
 $$;
-
 GRANT ALL ON FUNCTION public.log_profile_change() TO anon;
 GRANT ALL ON FUNCTION public.log_profile_change() TO authenticated;
 GRANT ALL ON FUNCTION public.log_profile_change() TO service_role;

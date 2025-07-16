@@ -35,8 +35,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
-
 -- update_all_rented_days
 CREATE OR REPLACE FUNCTION public.update_all_rented_days()
 RETURNS jsonb
@@ -64,7 +62,6 @@ BEGIN
     RETURN jsonb_build_object('success', true,'total_processed', total_processed,'total_updated', total_updated,'total_errors', total_errors,'execution_timestamp', NOW());
 END;
 $$;
-
 CREATE OR REPLACE FUNCTION public.update_asset_rented_days("asset_uuid" "text") RETURNS "jsonb"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public, auth'
@@ -119,8 +116,6 @@ BEGIN
     );
 END;
 $$;
-
-
 -- validate_rented_days_integrity
 CREATE OR REPLACE FUNCTION public.validate_rented_days_integrity()
 RETURNS TABLE(asset_id text, current_rented_days integer, calculated_days integer, is_consistent boolean, message text)
@@ -152,32 +147,23 @@ BEGIN
     END LOOP;
 END;
 $$;
-
 -- view update
 CREATE OR REPLACE VIEW public.v_active_clients WITH (security_invoker='on') AS
  SELECT DISTINCT associations.client_id
    FROM public.associations
   WHERE associations.status = TRUE
     AND associations.deleted_at IS NULL;
-
 -- recreate triggers on associations
 
 CREATE OR REPLACE TRIGGER associations_log_trigger
   AFTER INSERT OR DELETE OR UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.log_profile_change();
-
 CREATE OR REPLACE TRIGGER associations_status_log_trigger
   AFTER INSERT OR DELETE OR UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.log_and_update_status();
-
 CREATE OR REPLACE TRIGGER check_availability_before_association
   BEFORE INSERT OR UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.check_asset_availability();
-
-CREATE OR REPLACE TRIGGER prevent_rented_association_before
-  BEFORE INSERT ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.prevent_rented_association();
-
 CREATE OR REPLACE TRIGGER set_associations_updated_at
   BEFORE UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();

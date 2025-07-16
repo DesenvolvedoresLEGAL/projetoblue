@@ -6,5 +6,4 @@ WHERE id = NEW.id;
 RETURN NEW;
 END;
 $$;
-
 CREATE OR REPLACE TRIGGER "profiles_update_last_login" AFTER UPDATE ON auth.users FOR EACH ROW EXECUTE FUNCTION public.update_profile_last_login();
