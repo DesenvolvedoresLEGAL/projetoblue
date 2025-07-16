@@ -12,7 +12,7 @@ export interface UserProfile {
   last_login?: string;
   is_active: boolean;
   is_approved: boolean;
-  bits_referral_code?: string;
+  bits_referral_code?: string; // Adicionado campo bits_referral_code
   updated_at?: string;
   deleted_at?: string; // Adicionado para soft delete
 }

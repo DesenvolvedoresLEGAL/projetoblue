@@ -20,8 +20,9 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
   };
 
   const baseUrl = window.location.origin;
-  const referralUrl = profile?.bits_referral_code 
-    ? `${baseUrl}/register?ref=${profile.bits_referral_code}`
+  const referralCode = profile?.bits_referral_code;
+  const referralUrl = referralCode 
+    ? `${baseUrl}/register?ref=${referralCode}`
     : '';
 
   const copyToClipboard = () => {
@@ -49,7 +50,7 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
       <CardContent>
         {isLoading ? (
           <div className="h-10 bg-gray-100 animate-pulse rounded-md"></div>
-        ) : profile?.bits_referral_code ? (
+        ) : referralCode ? (
           <div className="flex space-x-2">
             <Input 
               readOnly
@@ -70,8 +71,8 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="text-xs text-muted-foreground">
-          {profile?.bits_referral_code ? (
-            `Seu código: ${profile.bits_referral_code}`
+          {referralCode ? (
+            `Seu código: ${referralCode}`
           ) : (
             'Gere seu código para começar a indicar'
           )}
@@ -87,7 +88,7 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               Gerando...
             </>
-          ) : profile?.bits_referral_code ? (
+          ) : referralCode ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4" />
               Gerar novo código
