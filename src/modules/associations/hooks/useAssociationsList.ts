@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { associationsListService } from '../services/associationsListService';
 import { 
-  AssociationWithDetails,
   AssociationGroup, 
   FilterOptions, 
   SearchOptions, 
