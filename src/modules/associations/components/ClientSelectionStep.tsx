@@ -179,44 +179,46 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
         </div>
       </div>
 
-      {state.client && (
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center text-green-800">
-              <User className="mr-2 h-5 w-5" />
-              Cliente Selecionado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              <p className="font-semibold">{state.client.nome}</p>
-              <p className="text-sm text-muted-foreground">{state.client.empresa}</p>
-              <p className="text-sm text-muted-foreground">Responsável: {state.client.responsavel}</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="grid gap-4 h-[40vh] overflow-y-scroll grid-cols-1 md:grid-cols-2">
         {filteredClients.map((client) => (
           <Card 
-            key={client.uuid} 
-            className={`cursor-pointer transition-colors hover:border-primary ${
-              state.client?.uuid === client.uuid ? 'border-primary bg-primary/5' : ''
+          key={client.uuid} 
+          className={`cursor-pointer transition-colors hover:border-primary ${
+            state.client?.uuid === client.uuid ? 'border-primary bg-primary/5' : ''
             }`}
             onClick={() => dispatch({ type: 'SET_CLIENT', payload: client })}
-          >
+            >
             <CardContent className="p-4">
               <div className="space-y-1">
                 <p className="font-semibold">{client.nome}</p>
                 <p className="text-sm text-muted-foreground">{client.empresa}</p>
                 <p className="text-sm text-muted-foreground">Responsável: {client.responsavel}</p>
               </div>
+
             </CardContent>
           </Card>
         ))}
       </div>
 
+        {state.client && (
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-green-800">
+                <User className="mr-2 h-5 w-5" />
+                Cliente Selecionado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                <p className="font-semibold">{state.client.nome}</p>
+                <p className="text-sm text-muted-foreground">{state.client.empresa}</p>
+                <p className="text-sm text-muted-foreground">Responsável: {state.client.responsavel}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
       {filteredClients.length === 0 && searchTerm && (
         <div className="text-center py-8 text-muted-foreground">
           <p>Nenhum cliente encontrado com "{searchTerm}"</p>
