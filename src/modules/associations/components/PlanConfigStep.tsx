@@ -102,17 +102,6 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
               </p>
             )}
           </div>
-
-          {state.planId && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm">
-                <strong>Plano selecionado:</strong> {selectedPlan?.nome}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                GB configurados: {state.planGb || 0} GB
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
