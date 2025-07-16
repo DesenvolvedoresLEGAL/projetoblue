@@ -1,45 +1,13 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Users, Phone, Building } from 'lucide-react';
-import { generateMockAssociations } from '../data/mockData';
-import { ClientAssociationGroup, AssociationWithRelations } from '../types/associationsTypes';
+import { useAssociationsList } from '../hooks/useAssociationsList';
+import { formatPhone } from '../utils/associationFormatters';
+import ExpandedAssociations from '../components/ExpandedAssociations';
 
 const AssociationsList: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  
-  // Gerar dados mockados
-  const mockAssociations = useMemo(() => generateMockAssociations(), []);
-  
-  // Agrupar associações por cliente
-  const clientGroups = useMemo(() => {
-    const groups = new Map<string, ClientAssociationGroup>();
-    
-    mockAssociations.forEach(association => {
-      const clientId = association.client_id;
-      
-      if (!groups.has(clientId)) {
-        groups.set(clientId, {
-          client: association.client,
-          associations: [],
-          totalAssociations: 0,
-          activeAssociations: 0,
-          inactiveAssociations: 0
-        });
-      }
-      
-      const group = groups.get(clientId)!;
-      group.associations.push(association);
-      group.totalAssociations++;
-      
-      if (association.status) {
-        group.activeAssociations++;
-      } else {
-        group.inactiveAssociations++;
-      }
-    });
-    
-    return Array.from(groups.values());
-  }, [mockAssociations]);
+  const { clientGroups, stats, loading, error } = useAssociationsList();
   
   const toggleRow = (clientId: string) => {
     const newExpanded = new Set(expandedRows);
@@ -51,13 +19,27 @@ const AssociationsList: React.FC = () => {
     setExpandedRows(newExpanded);
   };
   
-  const formatPhone = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 11) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-    }
-    return phone;
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <p className="text-muted-foreground">Carregando associações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center text-red-600">
+          <p className="font-medium">Erro ao carregar associações</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
@@ -77,19 +59,15 @@ const AssociationsList: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Total de Clientes</div>
-            <div className="text-2xl font-semibold text-foreground">{clientGroups.length}</div>
+            <div className="text-2xl font-semibold text-foreground">{stats.totalClients}</div>
           </div>
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Total de Associações</div>
-            <div className="text-2xl font-semibold text-foreground">
-              {clientGroups.reduce((sum, group) => sum + group.totalAssociations, 0)}
-            </div>
+            <div className="text-2xl font-semibold text-foreground">{stats.totalAssociations}</div>
           </div>
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Associações Ativas</div>
-            <div className="text-2xl font-semibold text-green-600">
-              {clientGroups.reduce((sum, group) => sum + group.activeAssociations, 0)}
-            </div>
+            <div className="text-2xl font-semibold text-green-600">{stats.activeAssociations}</div>
           </div>
         </div>
       </div>
@@ -158,79 +136,11 @@ const AssociationsList: React.FC = () => {
                   {/* Linhas expandidas com detalhes das associações */}
                   {expandedRows.has(group.client.uuid) && (
                     <tr>
-                      <td colSpan={5} className="p-0 bg-muted/20">
-                        <div className="p-4 space-y-3">
-                          <h4 className="font-medium text-foreground mb-3">
-                            Associações do Cliente ({group.associations.length})
-                          </h4>
-                          <div className="space-y-2">
-                            {group.associations.map((association) => (
-                              <div 
-                                key={association.uuid}
-                                className="bg-card rounded border p-3 space-y-2"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      association.status ? 'bg-green-500' : 'bg-red-500'
-                                    }`} />
-                                    <span className="font-medium text-sm">
-                                      {association.status ? 'Ativa' : 'Inativa'}
-                                    </span>
-                                    {association.equipment?.solution?.solution && (
-                                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                        {association.equipment.solution.solution}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {association.entry_date}
-                                    {association.exit_date && ` → ${association.exit_date}`}
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                                  {association.equipment && (
-                                    <div>
-                                      <span className="text-muted-foreground">Equipamento:</span>
-                                      <div className="font-medium">
-                                        {association.equipment.model || 'N/A'}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        {association.equipment.radio || association.equipment.serial_number}
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {association.chip && (
-                                    <div>
-                                      <span className="text-muted-foreground">Chip:</span>
-                                      <div className="font-medium">
-                                        {association.chip.iccid || 'N/A'}
-                                      </div>
-                                      <div className="text-muted-foreground">
-                                        {association.chip.line_number ? formatPhone(association.chip.line_number.toString()) : 'N/A'}
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {association.plan_gb && (
-                                    <div>
-                                      <span className="text-muted-foreground">Plano:</span>
-                                      <div className="font-medium">{association.plan_gb}GB</div>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {association.notes && (
-                                  <div className="text-xs text-muted-foreground mt-2">
-                                    <strong>Observações:</strong> {association.notes}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                      <td colSpan={5} className="p-0">
+                        <ExpandedAssociations 
+                          associations={group.associations}
+                          clientName={group.client.nome}
+                        />
                       </td>
                     </tr>
                   )}
@@ -243,8 +153,8 @@ const AssociationsList: React.FC = () => {
       
       {/* Footer com informações */}
       <div className="text-sm text-muted-foreground text-center">
-        Mostrando {clientGroups.length} clientes com{' '}
-        {clientGroups.reduce((sum, group) => sum + group.totalAssociations, 0)} associações no total
+        Mostrando {stats.totalClients} clientes com{' '}
+        {stats.totalAssociations} associações no total
       </div>
     </div>
   );

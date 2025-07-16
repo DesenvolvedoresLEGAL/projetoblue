@@ -64,22 +64,6 @@ interface AssetLogWithRelationsRaw {
       radio?: string;
       line_number?: number;
     };
-    chip?: {
-      uuid: string;
-      serial_number?: string;
-      model?: string;
-      iccid?: string;
-      radio?: string;
-      line_number?: number;
-    } | null;
-    chip?: {
-      uuid: string;
-      serial_number?: string;
-      model?: string;
-      iccid?: string;
-      radio?: string;
-      line_number?: number;
-    } | null;
     client?: {
       uuid: string;
       nome: string;
@@ -103,29 +87,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
         status_after_id,
         assoc_id,
         fk_asset_logs_status_before:asset_status!fk_asset_logs_status_before(status),
-        fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status),
-        fk_asset_logs_assoc_id:associations!left(
-          equipment:assets!equipment_id(
-            uuid,
-            serial_number,
-            model,
-            iccid,
-            radio,
-            line_number
-          ),
-          chip:assets!chip_id(
-            uuid,
-            serial_number,
-            model,
-            iccid,
-            radio,
-            line_number
-          ),
-          client:clients!client_id(
-            uuid,
-            nome
-          )
-        )
+        fk_asset_logs_status_after:asset_status!fk_asset_logs_status_after(status)
       `)
       .order('date', { ascending: false })
       .limit(100); // Limita a 100 registros mais recentes para performance
@@ -146,7 +108,7 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
     }
 
     // Mapear os dados para a interface esperada, lidando com assoc_id NULL
-    const mappedData = data.map((log: AssetLogWithRelationsRaw) => ({
+    const mappedData = data.map((log: any) => ({
       id: log.id,
       date: log.date,
       event: log.event,
