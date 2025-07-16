@@ -5,6 +5,7 @@ import type { Database } from './types';
 import {
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_SERVICE_KEY,
 } from './config';
 
 // TEMPORARY SOLUTION:
