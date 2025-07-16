@@ -55,7 +55,7 @@ export const AssociationFlow = () => {
       {/* Stepper */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center flex-wrap gap-4 justify-center">
             {STEPS.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <div className="flex items-center">
@@ -71,8 +71,10 @@ export const AssociationFlow = () => {
                     {step.title}
                   </span>
                 </div>
-                {index < STEPS.length - 1 && (
+                {index < STEPS.length - 1 ? (
                   <ChevronRight className="mx-4 h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronRight className="mx-4 h-4 w-4 text-transparent" />
                 )}
               </div>
             ))}
