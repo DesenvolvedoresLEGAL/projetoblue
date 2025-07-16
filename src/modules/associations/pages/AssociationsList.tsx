@@ -4,10 +4,44 @@ import { ChevronDown, ChevronRight, Users, Phone, Building } from 'lucide-react'
 import { useAssociationsList } from '../hooks/useAssociationsList';
 import { formatPhone } from '../utils/associationFormatters';
 import ExpandedAssociations from '../components/ExpandedAssociations';
+import { SearchBar } from '../components/SearchBar';
+import { PaginationControls } from '../components/PaginationControls';
+import { SearchResultHighlight } from '../components/SearchResultHighlight';
+import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
+import { usePagination } from '../hooks/usePagination';
+
+const ITEMS_PER_PAGE = 11;
 
 const AssociationsList: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const { clientGroups, stats, loading, error } = useAssociationsList();
+  
+  const { 
+    filteredGroups, 
+    searchType, 
+    totalMatches, 
+    isSearching 
+  } = useAssociationsSearch({ 
+    clientGroups, 
+    searchTerm 
+  });
+  
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    startIndex,
+    endIndex,
+    totalItems,
+    goToPage,
+    canGoNext,
+    canGoPrevious
+  } = usePagination({
+    data: filteredGroups,
+    itemsPerPage: ITEMS_PER_PAGE
+  });
   
   const toggleRow = (clientId: string) => {
     const newExpanded = new Set(expandedRows);
@@ -72,6 +106,17 @@ const AssociationsList: React.FC = () => {
         </div>
       </div>
       
+      {/* Search Bar */}
+      <div className="bg-card rounded-lg border p-6">
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchType={searchType}
+          isSearching={isSearching}
+          totalMatches={totalMatches}
+        />
+      </div>
+      
       {/* Table */}
       <div className="bg-card rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
@@ -86,75 +131,126 @@ const AssociationsList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {clientGroups.map((group) => (
-                <React.Fragment key={group.client.uuid}>
-                  {/* Linha principal do cliente */}
-                  <tr 
-                    className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                    onClick={() => toggleRow(group.client.uuid)}
-                  >
-                    <td className="p-4">
-                      <div className="space-y-1">
-                        <div className="font-medium text-foreground">{group.client.nome}</div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building className="h-4 w-4" />
-                          {group.client.empresa}
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center">
+                    <div className="text-muted-foreground">
+                      {searchTerm.trim() ? (
+                        <>
+                          <p className="font-medium">Nenhum resultado encontrado</p>
+                          <p className="text-sm">
+                            Tente buscar por outro termo ou verifique a ortografia
+                          </p>
+                        </>
+                      ) : (
+                        <p>Nenhuma associação encontrada</p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((group) => (
+                  <React.Fragment key={group.client.uuid}>
+                    {/* Linha principal do cliente */}
+                    <tr 
+                      className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => toggleRow(group.client.uuid)}
+                    >
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          <div className="font-medium text-foreground">
+                            <SearchResultHighlight 
+                              text={group.client.nome}
+                              searchTerm={searchType === 'client_name' ? searchTerm : ''}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Building className="h-4 w-4" />
+                            <SearchResultHighlight 
+                              text={group.client.empresa}
+                              searchTerm={searchType === 'client_name' ? searchTerm : ''}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="space-y-1">
-                        <div className="font-medium text-foreground">{group.totalAssociations}</div>
-                        <div className="text-sm text-muted-foreground">
-                          <span className="text-green-600">{group.activeAssociations} ativas</span>
-                          {group.inactiveAssociations > 0 && (
-                            <span className="text-muted-foreground"> • {group.inactiveAssociations} inativas</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          <div className="font-medium text-foreground">{group.totalAssociations}</div>
+                          <div className="text-sm text-muted-foreground">
+                            <span className="text-green-600">{group.activeAssociations} ativas</span>
+                            {group.inactiveAssociations > 0 && (
+                              <span className="text-muted-foreground"> • {group.inactiveAssociations} inativas</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-foreground">{formatPhone(group.client.contato)}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-foreground">{group.client.responsavel}</span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex justify-center">
+                          {expandedRows.has(group.client.uuid) ? (
+                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
                           )}
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-foreground">{formatPhone(group.client.contato)}</span>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="text-foreground">{group.client.responsavel}</span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex justify-center">
-                        {expandedRows.has(group.client.uuid) ? (
-                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  
-                  {/* Linhas expandidas com detalhes das associações */}
-                  {expandedRows.has(group.client.uuid) && (
-                    <tr>
-                      <td colSpan={5} className="p-0">
-                        <ExpandedAssociations 
-                          associations={group.associations}
-                          clientName={group.client.nome}
-                        />
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
+                    
+                    {/* Linhas expandidas com detalhes das associações */}
+                    {expandedRows.has(group.client.uuid) && (
+                      <tr>
+                        <td colSpan={5} className="p-0">
+                          <ExpandedAssociations 
+                            associations={group.associations}
+                            clientName={group.client.nome}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
       
+      {/* Pagination */}
+      {filteredGroups.length > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          className="bg-card rounded-lg border p-6"
+        />
+      )}
+      
       {/* Footer com informações */}
       <div className="text-sm text-muted-foreground text-center">
-        Mostrando {stats.totalClients} clientes com{' '}
-        {stats.totalAssociations} associações no total
+        {searchTerm.trim() ? (
+          <>
+            Mostrando {totalMatches} {totalMatches === 1 ? 'cliente' : 'clientes'} encontrado
+            {totalMatches !== 1 ? 's' : ''} de {stats.totalClients} total
+          </>
+        ) : (
+          <>
+            Mostrando {stats.totalClients} clientes com{' '}
+            {stats.totalAssociations} associações no total
+          </>
+        )}
       </div>
     </div>
   );
