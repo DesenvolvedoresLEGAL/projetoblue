@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface ConfigurationStepProps {
   state: any;
@@ -48,10 +49,10 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const fetchSolutions = async () => {
     try {
       const { data, error } = await supabase
-        .from('solutions')
+        .from('asset_solutions')
         .select('*')
-        .in('name', ['SPEEDY 5g', '4PLUS', '4BLACK'])
-        .eq('deleted_at', null);
+        .in('id', [1, 2, 3])
+        .is('deleted_at', null);
 
       if (error) throw error;
       return data || [];
@@ -64,10 +65,11 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const fetchAvailableChips = async () => {
     try {
       const { data, error } = await supabase
-        .from('chips')
+        .from('assets')
         .select('*')
-        .eq('deleted_at', null)
-        .eq('status', 'available');
+        .eq('solution_id', 11)
+        .eq('status_id', 1)
+        .is('deleted_at', null);
 
       if (error) throw error;
       return data || [];
