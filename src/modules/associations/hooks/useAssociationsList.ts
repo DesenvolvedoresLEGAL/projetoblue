@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { associationsListService } from '../services/associationsListService';
@@ -57,7 +57,7 @@ export const useAssociationsList = () => {
   });
 
   // Group associations by client
-  const associationGroups: AssociationGroup[] = React.useMemo(() => {
+  const associationGroups: AssociationGroup[] = useMemo(() => {
     if (!associationsData?.data) return [];
     
     const grouped = groupAssociationsByClient(associationsData.data);
