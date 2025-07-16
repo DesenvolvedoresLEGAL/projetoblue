@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,29 +37,21 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .eq('deleted_at', null)
+        .or('deleted_at.is.null')
         .order('nome');
 
       if (error) throw error;
       setClients(data || []);
     } catch (error) {
-      console.error("Erro ao buscar clientes:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar clientes",
-        variant: "destructive",
-      });
+      if (import.meta.env.DEV) console.error("Erro ao buscar clientes:", error);
+      toast.error('Erro ao carregar clientes');
     }
   };
 
   const handleCreateClient = async () => {
     try {
       if (!newClient.nome || !newClient.empresa || !newClient.responsavel || !newClient.contato) {
-        toast({
-          title: "Campos obrigatórios",
-          description: "Preencha Nome, Empresa, Responsável e Contato",
-          variant: "destructive",
-        });
+        toast.warning("Campos obrigatórios\nPreencha Nome, Empresa, Responsável e Contato");
         return;
       }
 
@@ -85,17 +78,10 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
         cnpj: ""
       });
 
-      toast({
-        title: "Sucesso",
-        description: "Cliente criado com sucesso!",
-      });
+      toast.message('Cliente criado com sucesso!');
     } catch (error) {
-      console.error("Erro ao criar cliente:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao criar cliente",
-        variant: "destructive",
-      });
+      if (import.meta.env.DEV) console.error("Erro ao criar cliente:", error);
+      toast.error("Erro ao criar cliente");
     }
   };
 

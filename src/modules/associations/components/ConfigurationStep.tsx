@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       const { data, error } = await supabase
         .from('association_types')
         .select('*')
-        .eq('deleted_at', null)
+        .is('deleted_at', null)
         .order('id');
 
       if (error) throw error;

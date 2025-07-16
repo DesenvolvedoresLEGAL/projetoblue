@@ -1,17 +1,17 @@
-
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { 
-  User, 
-  Monitor, 
-  Smartphone, 
-  Calendar, 
-  Package, 
+import {
+  Calendar,
+  CheckCircle,
   FileText,
-  CheckCircle 
+  Monitor,
+  Package,
+  Smartphone,
+  User
 } from "lucide-react";
+import React from "react";
 
 interface AssociationSummaryProps {
   state: any;
@@ -46,6 +46,18 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
       default: return "Não definido";
     }
   };
+
+  function mapPlanId(): string {
+    switch (state.planId) {
+      case 1: return "SPEEDY 5G LITE";
+      case 2: return "SPEEDY 5G PLUS";
+      case 3: return "SPEEDY 5G PRO";
+      case 4: return "SPEEDY 5G ULTRA";
+      case 5: return "ILIMITADO";
+      case 6: return "CUSTOMIZADO";
+      default: return "CUSTOMIZADO";
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -181,7 +193,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
                   {state.planId && (
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Plano:</span>
-                      <span className="text-sm font-medium">Plano ID {state.planId}</span>
+                      <span className="text-sm font-medium">Plano {mapPlanId()}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
@@ -211,4 +223,4 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
       </Card>
     </div>
   );
-};
+}

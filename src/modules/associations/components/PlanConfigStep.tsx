@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
       const { data, error } = await supabase
         .from('plans')
         .select('*')
-        .eq('deleted_at', null)
+        .is('deleted_at', null)
         .order('nome');
 
       if (error) throw error;

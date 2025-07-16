@@ -12,7 +12,7 @@ export const useClientSearch = (searchTerm: string) => {
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .is('deleted_at', null)
+        .or('deleted_at.is.null')
         .order('empresa');
       
       if (error) throw error;

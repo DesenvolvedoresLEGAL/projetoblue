@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useReducer, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import { associationService } from "../services/associationService";
@@ -176,19 +177,17 @@ export const useAssociationFlow = () => {
         await associationService.create(association);
       }
 
-      toast({
-        title: "Sucesso",
-        description: `${associations.length} associação(ões) criada(s) com sucesso!`,
-      });
+      toast.success(
+        `${associations.length} associação(ões) criada(s) com sucesso!`
+      );
 
       dispatch({ type: 'RESET' });
     } catch (error) {
       console.error("Erro ao criar associações:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao criar associações. Tente novamente.",
-        variant: "destructive",
-      });
+
+      toast.error(
+        "Erro ao criar associações. Tente novamente."
+      );
       throw error;
     }
   }, [state]);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,19 +33,14 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
           asset_solutions!inner(solution),
           asset_status!inner(status)
         `)
-        .eq('status_id', 1) // Only available assets
-        .eq('deleted_at', null)
+        .or('status_id.eq.1, deleted_at.is.null')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAssets(data || []);
     } catch (error) {
       console.error("Erro ao buscar ativos:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar ativos disponíveis",
-        variant: "destructive",
-      });
+      toast.error('Erro ao carregar ativos disponíveis.');
     } finally {
       setLoading(false);
     }
