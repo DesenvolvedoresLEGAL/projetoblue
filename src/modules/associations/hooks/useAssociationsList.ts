@@ -137,20 +137,14 @@ export const useAssociationsList = () => {
     try {
       await associationsListService.finalizeAssociation(associationId);
       
-      toast({
-        title: "Associação finalizada",
-        description: "A associação foi finalizada com sucesso.",
-      });
+      toast.success("A associação foi finalizada com sucesso.",
+      );
       
       // Refresh data
       refetch();
     } catch (error) {
       console.error('Erro ao finalizar associação:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao finalizar a associação. Tente novamente ou contate o suporte.",
-        variant: "destructive",
-      });
+      toast.error("Ocorreu um erro ao finalizar a associação. Tente novamente ou contate o suporte.");
     }
   }, [refetch]);
 
