@@ -197,7 +197,7 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
         </Card>
       )}
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 h-[40vh] overflow-y-scroll grid-cols-1 md:grid-cols-2">
         {filteredClients.map((client) => (
           <Card 
             key={client.uuid} 
