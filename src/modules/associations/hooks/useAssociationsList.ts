@@ -71,9 +71,9 @@ export const useAssociationsList = () => {
   } = useQuery({
     queryKey: ['associations-list', filters, debouncedSearch, pagination.page],
     queryFn: () => associationsListService.getAssociationsWithDetails(filters, debouncedSearch, pagination),
-    staleTime: 1000 * 60 * 2, // 2 minutes - reduced for fresher data
+    staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes cache time
-    refetchOnWindowFocus: false, // Avoid unnecessary refetches
+    refetchOnWindowFocus: false,
   });
 
   // Query for filter options with longer cache
@@ -84,17 +84,68 @@ export const useAssociationsList = () => {
     gcTime: 1000 * 60 * 60, // 1 hour cache time
   });
 
-  // Group associations by client
-  const associationGroups: AssociationGroup[] = useMemo(() => {
+  // Process associations with client-side filtering for complex filters
+  const processedAssociations = useMemo(() => {
     if (!associationsData?.data) return [];
     
-    const grouped = groupAssociationsByClient(associationsData.data);
+    let filteredData = associationsData.data;
+
+    // Apply complex filters that couldn't be done at database level
+    
+    // Filter by asset type (priority vs others)
+    if (filters.assetType === 'priority') {
+      filteredData = filteredData.filter(item => 
+        item.equipment_solution_id && [1, 2, 4].includes(item.equipment_solution_id)
+      );
+    } else if (filters.assetType === 'others') {
+      filteredData = filteredData.filter(item => 
+        !item.equipment_solution_id || ![1, 2, 4].includes(item.equipment_solution_id)
+      );
+    }
+
+    // Filter by manufacturer (for chips only)
+    if (filters.manufacturer !== 'all') {
+      filteredData = filteredData.filter(item => 
+        item.chip_manufacturer_id === filters.manufacturer
+      );
+    }
+
+    // Apply advanced search filtering
+    if (debouncedSearch.query.trim()) {
+      const searchTerm = debouncedSearch.query.toLowerCase();
+      
+      filteredData = filteredData.filter(item => {
+        const matchesClient = debouncedSearch.searchType === 'all' || debouncedSearch.searchType === 'client' 
+          ? item.client_name.toLowerCase().includes(searchTerm)
+          : false;
+          
+        const matchesICCID = debouncedSearch.searchType === 'all' || debouncedSearch.searchType === 'iccid'
+          ? item.chip_iccid?.toLowerCase().includes(searchTerm) || 
+            item.chip_iccid?.slice(-6).includes(searchTerm) // Corrigido de -5 para -6
+          : false;
+          
+        const matchesRadio = debouncedSearch.searchType === 'all' || debouncedSearch.searchType === 'radio'
+          ? item.equipment_radio?.toLowerCase().includes(searchTerm)
+          : false;
+          
+        return matchesClient || matchesICCID || matchesRadio;
+      });
+    }
+
+    return filteredData;
+  }, [associationsData?.data, filters.assetType, filters.manufacturer, debouncedSearch]);
+
+  // Group associations by client
+  const associationGroups: AssociationGroup[] = useMemo(() => {
+    if (!processedAssociations.length) return [];
+    
+    const grouped = groupAssociationsByClient(processedAssociations);
     
     return grouped.map(group => ({
       ...group,
       is_expanded: expandedGroups.has(group.client_id)
     }));
-  }, [associationsData?.data, expandedGroups]);
+  }, [processedAssociations, expandedGroups]);
 
   // Update pagination total when data changes
   useEffect(() => {

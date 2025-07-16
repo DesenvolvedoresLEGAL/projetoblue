@@ -8,8 +8,8 @@ export const associationsListService = {
     search: SearchOptions,
     pagination: PaginationOptions
   ) {
-    // Main query - optimized for listing with essential data only
-    let query = supabase
+    // Build base query with all necessary joins
+    let baseQuery = supabase
       .from('associations')
       .select(`
         uuid,
@@ -44,41 +44,24 @@ export const associationsListService = {
       `)
       .is('deleted_at', null);
 
-    // Apply status filter
-    if (filters.status === 'active') {
-      query = query.eq('status', true);
-    } else if (filters.status === 'inactive') {
-      query = query.eq('status', false);
-    }
+    // Apply filters at database level
+    baseQuery = this.applyFilters(baseQuery, filters, search);
 
-    // Apply association type filter
-    if (filters.associationType !== 'all') {
-      query = query.eq('association_type_id', filters.associationType);
-    }
+    // Get total count with same filters for pagination
+    const countQuery = this.buildCountQuery(filters, search);
+    const { count } = await countQuery;
 
-    // Apply date range filter
-    if (filters.dateRange.start) {
-      query = query.gte('entry_date', filters.dateRange.start);
-    }
-    if (filters.dateRange.end) {
-      query = query.lte('entry_date', filters.dateRange.end);
-    }
-
-    // Apply pagination
+    // Apply pagination and ordering
     const from = (pagination.page - 1) * pagination.limit;
     const to = from + pagination.limit - 1;
     
-    query = query.range(from, to);
-
-    // Order by created_at desc for better performance
-    query = query.order('created_at', { ascending: false });
-
-    const { data, error, count } = await query;
+    const { data, error } = await baseQuery
+      .range(from, to)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     // Get equipment and chip details for the associations in batch
-    const associationIds = (data || []).map(item => item.uuid);
     const [equipmentData, chipData] = await Promise.all([
       this.getEquipmentDetails(data || []),
       this.getChipDetails(data || [])
@@ -136,53 +119,55 @@ export const associationsListService = {
       };
     });
 
-    // Apply additional filters that couldn't be done in the query
-    let filteredData = transformedData;
+    return {
+      data: transformedData,
+      total: count || 0
+    };
+  },
 
-    // Filter by asset type (priority vs others)
-    if (filters.assetType === 'priority') {
-      filteredData = filteredData.filter(item => 
-        item.equipment_solution_id && [1, 2, 4].includes(item.equipment_solution_id)
-      );
-    } else if (filters.assetType === 'others') {
-      filteredData = filteredData.filter(item => 
-        !item.equipment_solution_id || ![1, 2, 4].includes(item.equipment_solution_id)
-      );
+  applyFilters(query: any, filters: FilterOptions, search: SearchOptions) {
+    // Apply status filter
+    if (filters.status === 'active') {
+      query = query.eq('status', true);
+    } else if (filters.status === 'inactive') {
+      query = query.eq('status', false);
     }
 
-    // Filter by manufacturer (for chips only)
-    if (filters.manufacturer !== 'all') {
-      filteredData = filteredData.filter(item => 
-        item.chip_manufacturer_id === filters.manufacturer
-      );
+    // Apply association type filter
+    if (filters.associationType !== 'all') {
+      query = query.eq('association_type_id', filters.associationType);
     }
 
-    // Apply search filtering
+    // Apply date range filter
+    if (filters.dateRange.start) {
+      query = query.gte('entry_date', filters.dateRange.start);
+    }
+    if (filters.dateRange.end) {
+      query = query.lte('entry_date', filters.dateRange.end);
+    }
+
+    // Apply search filtering at database level
     if (search.query.trim()) {
       const searchTerm = search.query.toLowerCase();
       
-      filteredData = filteredData.filter(item => {
-        const matchesClient = search.searchType === 'all' || search.searchType === 'client' 
-          ? item.client_name.toLowerCase().includes(searchTerm)
-          : false;
-          
-        const matchesICCID = search.searchType === 'all' || search.searchType === 'iccid'
-          ? item.chip_iccid?.toLowerCase().includes(searchTerm) || 
-            item.chip_iccid?.slice(-5).includes(searchTerm)
-          : false;
-          
-        const matchesRadio = search.searchType === 'all' || search.searchType === 'radio'
-          ? item.equipment_radio?.toLowerCase().includes(searchTerm)
-          : false;
-          
-        return matchesClient || matchesICCID || matchesRadio;
-      });
+      if (search.searchType === 'client' || search.searchType === 'all') {
+        // For client search, we'll need to use the joined clients table
+        // This will be handled in the main query with ilike
+      }
+      
+      // For equipment/chip searches, we'll handle these in the equipment/chip queries
     }
 
-    return {
-      data: filteredData,
-      total: count || 0
-    };
+    return query;
+  },
+
+  buildCountQuery(filters: FilterOptions, search: SearchOptions) {
+    let countQuery = supabase
+      .from('associations')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null);
+
+    return this.applyFilters(countQuery, filters, search);
   },
 
   async getEquipmentDetails(associations: any[]) {
@@ -205,7 +190,7 @@ export const associationsListService = {
         )
       `)
       .in('uuid', equipmentIds)
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     if (error) throw error;
 
@@ -239,7 +224,7 @@ export const associationsListService = {
         )
       `)
       .in('uuid', chipIds)
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     if (error) throw error;
 
@@ -258,14 +243,14 @@ export const associationsListService = {
     const { data: associationTypes } = await supabase
       .from('association_types')
       .select('id, type')
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     // Get manufacturers that are operators (for chips)
     const { data: operators } = await supabase
       .from('manufacturers')
       .select('id, name')
       .eq('description', 'OPERADORA')
-      .eq('deleted_at', null);
+      .is('deleted_at', null);
 
     return {
       associationTypes: associationTypes || [],
