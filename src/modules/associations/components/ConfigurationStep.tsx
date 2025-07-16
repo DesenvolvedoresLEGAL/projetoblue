@@ -5,13 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigurationStepProps {
   state: any;
   dispatch: any;
+}
+
+interface Chip {
+  id: string;
+  number: string;
+  status: string;
 }
 
 export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dispatch }) => {
