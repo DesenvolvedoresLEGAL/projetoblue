@@ -39,12 +39,12 @@ import AssetAssociation from "./pages/AssetAssociation";
 import AssociationsList from "@modules/associations/pages/AssociationsList";
 
 // BITS™ Pages
-import BitsDashboard from "@modules/bits/pages/BitsDashboard";
-import BitsIndicateNow from "@modules/bits/pages/BitsIndicateNow";
-import BitsMyReferrals from "@modules/bits/pages/BitsMyReferrals";
-import BitsPointsAndRewards from "@modules/bits/pages/BitsPointsAndRewards";
-import BitsSettings from "@modules/bits/pages/BitsSettings";
-import BitsHelpAndSupport from "@modules/bits/pages/BitsHelpAndSupport";
+// import BitsDashboard from "@modules/bits/pages/BitsDashboard";
+// import BitsIndicateNow from "@modules/bits/pages/BitsIndicateNow";
+// import BitsMyReferrals from "@modules/bits/pages/BitsMyReferrals";
+// import BitsPointsAndRewards from "@modules/bits/pages/BitsPointsAndRewards";
+// import BitsSettings from "@modules/bits/pages/BitsSettings";
+// import BitsHelpAndSupport from "@modules/bits/pages/BitsHelpAndSupport";
 
 // Tickets Pages
 import TicketsDashboard from "@modules/tickets/pages/TicketsDashboard";
@@ -287,7 +287,7 @@ const App = () => (
                       <Route path="discovery" element={<Discovery />} />
                     </Route>
 
-                    {/* BITS™ module routes - Available to cliente or above */}
+                    {/* BITS™ module routes - Available to cliente or above
                     <Route path="bits">
                       <Route
                         index
@@ -337,7 +337,7 @@ const App = () => (
                           </AuthRoute>
                         }
                       />
-                    </Route>
+                    </Route> */}
 
                     {/* Client management routes - Requires suporte or above */}
                     <Route
