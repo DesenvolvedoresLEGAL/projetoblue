@@ -1,8 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 export const associationService = {
-  async create(associationData: Record<string, unknown>) {
+  async create(associationData: TablesInsert<'associations'>) {
     const { data, error } = await supabase
       .from('associations')
       .insert(associationData)
@@ -50,7 +51,7 @@ export const associationService = {
     return data;
   },
 
-  async update(id: string, updates: Record<string, unknown>) {
+  async update(id: string, updates: Partial<TablesInsert<'associations'>>) {
     const { data, error } = await supabase
       .from('associations')
       .update(updates)
