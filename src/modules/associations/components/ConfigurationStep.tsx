@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Settings } from "lucide-react";
+import { Calendar, Settings, SquareCodeIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigurationStepProps {
@@ -13,27 +13,22 @@ interface ConfigurationStepProps {
   dispatch: any;
 }
 
+interface Chip {
+  id: string;
+  number: string;
+  status: string;
+}
+
 export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dispatch }) => {
   const [associationTypes, setAssociationTypes] = useState<any[]>([]);
+  const [solutions, setSolutions] = useState<[]>([]);
+  const [availableChips, setAvailableChips] = useState<Chip[]>([]);
 
   useEffect(() => {
     fetchAssociationTypes();
+    fetchSolutions();
+    fetchAvailableChips();
   }, []);
-
-  const fetchSolutions = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('asset_solutions')
-      .select('*')
-      .is('deleted_at', null);
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error("Erro ao buscar soluções:", error);
-    return [];
-  }
-};
 
   const fetchAssociationTypes = async () => {
     try {
@@ -47,6 +42,40 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       setAssociationTypes(data || []);
     } catch (error) {
       console.error("Erro ao buscar tipos de associação:", error);
+    }
+  };
+
+  const fetchSolutions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('asset_solutions')
+        .select('*')
+        .is('deleted_at', null)
+        .order('id');
+
+      if (error) throw error;
+      setSolutions(data as [] || []);
+    } catch (error) {
+      console.error("Erro ao buscar soluções:", error);
+    }
+  };
+
+  const fetchAvailableChips = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .or('status_id.eq.1,solution_id.eq.11,deleted_at.is.null')
+        .order('created_at');
+
+      if (error) throw error;
+      setAvailableChips(data?.map(chip => ({
+        id: chip.uuid,
+        number: chip.line_number.toString(),
+        status: chip.status_id.toString()
+      })) || []);
+    } catch (error) {
+      console.error("Erro ao buscar chips disponíveis:", error);
     }
   };
 
@@ -79,6 +108,9 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   };
 
   const equipmentAssets = state.selectedAssets.filter((asset: any) => asset.solution_id !== 11);
+  const assetsWithSpecificSolutions = state.selectedAssets.filter((asset: any) => 
+    [1, 2, 4].includes(asset.solution_id)
+  );
 
   return (
     <div className="space-y-6">
@@ -175,6 +207,48 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                         onChange={(e) => handleAssetConfig(asset.uuid, 'password', e.target.value)}
                       />
                     </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Chip Configuration */}
+      {assetsWithSpecificSolutions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <SquareCodeIcon className="mr-2 h-5 w-5" />
+              Configuração de Chip Principal
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {assetsWithSpecificSolutions.map((asset: any) => {
+              const config = state.assetConfiguration[asset.uuid] || {};
+              
+              return (
+                <div key={asset.uuid} className="p-4 border rounded-lg space-y-3">
+                  <h4 className="font-medium">
+                    {asset.radio || asset.serial_number || asset.model || "Equipamento"}
+                  </h4>
+                  
+                  <div>
+                    <Label htmlFor={`chip_id-${asset.uuid}`}>Chip Principal</Label>
+                    <select
+                      id={`chip_id-${asset.uuid}`}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2"
+                      value={config.chip_id || ''}
+                      onChange={(e) => handleAssetConfig(asset.uuid, 'chip_id', e.target.value)}
+                    >
+                      <option value="">Selecione um chip</option>
+                      {availableChips.map((chip) => (
+                        <option key={chip.id} value={chip.id}>
+                          {chip.number}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               );
