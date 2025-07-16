@@ -20,6 +20,21 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     fetchAssociationTypes();
   }, []);
 
+  const fetchSolutions = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('asset_solutions')
+      .select('*')
+      .is('deleted_at', null);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Erro ao buscar soluções:", error);
+    return [];
+  }
+};
+
   const fetchAssociationTypes = async () => {
     try {
       const { data, error } = await supabase
