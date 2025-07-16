@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Settings, SquareCodeIcon } from "lucide-react";
+import { Calendar, Settings, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigurationStepProps {
@@ -21,13 +21,13 @@ interface Chip {
 
 export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dispatch }) => {
   const [associationTypes, setAssociationTypes] = useState<any[]>([]);
-  const [solutions, setSolutions] = useState<[]>([]);
-  const [availableChips, setAvailableChips] = useState<Chip[]>([]);
+  const [solutions, setSolutions] = useState<any[]>([]);
+  const [availableChips, setAvailableChips] = useState<any[]>([]);
 
   useEffect(() => {
     fetchAssociationTypes();
-    fetchSolutions();
-    fetchAvailableChips();
+    fetchSolutions().then(setSolutions);
+    fetchAvailableChips().then(setAvailableChips);
   }, []);
 
   const fetchAssociationTypes = async () => {
@@ -48,34 +48,32 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const fetchSolutions = async () => {
     try {
       const { data, error } = await supabase
-        .from('asset_solutions')
+        .from('solutions')
         .select('*')
-        .is('deleted_at', null)
-        .order('id');
+        .in('name', ['SPEEDY 5g', '4PLUS', '4BLACK'])
+        .eq('deleted_at', null);
 
       if (error) throw error;
-      setSolutions(data as [] || []);
+      return data || [];
     } catch (error) {
-      console.error("Erro ao buscar soluções:", error);
+      console.error('Erro ao buscar soluções:', error);
+      return [];
     }
   };
 
   const fetchAvailableChips = async () => {
     try {
       const { data, error } = await supabase
-        .from('assets')
+        .from('chips')
         .select('*')
-        .or('status_id.eq.1,solution_id.eq.11,deleted_at.is.null')
-        .order('created_at');
+        .eq('deleted_at', null)
+        .eq('status', 'available');
 
       if (error) throw error;
-      setAvailableChips(data?.map(chip => ({
-        id: chip.uuid,
-        number: chip.line_number.toString(),
-        status: chip.status_id.toString()
-      })) || []);
+      return data || [];
     } catch (error) {
-      console.error("Erro ao buscar chips disponíveis:", error);
+      console.error('Erro ao buscar chips disponíveis:', error);
+      return [];
     }
   };
 
@@ -107,10 +105,13 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     });
   };
 
+  const handleChipSelect = (assetId: string, chipId: string) => {
+    const currentChip = state.assetConfiguration[assetId]?.chip_id;
+    handleAssetConfig(assetId, 'chip_id', currentChip === chipId ? '' : chipId);
+  };
+
   const equipmentAssets = state.selectedAssets.filter((asset: any) => asset.solution_id !== 11);
-  const assetsWithSpecificSolutions = state.selectedAssets.filter((asset: any) => 
-    [1, 2, 4].includes(asset.solution_id)
-  );
+  const assetsWithSpecificSolutions = state.selectedAssets.filter((asset: any) => [1, 4, 2].includes(asset.solution_id));
 
   return (
     <div className="space-y-6">
@@ -215,40 +216,62 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
         </Card>
       )}
 
-      {/* Chip Configuration */}
+      {/* Main Chip Configuration */}
       {assetsWithSpecificSolutions.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <SquareCodeIcon className="mr-2 h-5 w-5" />
+              <Settings className="mr-2 h-5 w-5" />
               Configuração de Chip Principal
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {assetsWithSpecificSolutions.map((asset: any) => {
               const config = state.assetConfiguration[asset.uuid] || {};
-              
+
               return (
                 <div key={asset.uuid} className="p-4 border rounded-lg space-y-3">
                   <h4 className="font-medium">
-                    {asset.radio || asset.serial_number || asset.model || "Equipamento"}
+                    {asset.radio || asset.serial_number || asset.model || 'Equipamento'}
                   </h4>
-                  
-                  <div>
-                    <Label htmlFor={`chip_id-${asset.uuid}`}>Chip Principal</Label>
-                    <select
-                      id={`chip_id-${asset.uuid}`}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2"
-                      value={config.chip_id || ''}
-                      onChange={(e) => handleAssetConfig(asset.uuid, 'chip_id', e.target.value)}
-                    >
-                      <option value="">Selecione um chip</option>
-                      {availableChips.map((chip) => (
-                        <option key={chip.id} value={chip.id}>
-                          {chip.number}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="space-y-3">
+                    <Label>Chip Principal</Label>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {availableChips.map((chip) => {
+                        const isSelected = config.chip_id === chip.uuid;
+                        return (
+                          <Card
+                            key={chip.uuid}
+                            className={`cursor-pointer transition-colors hover:border-primary ${
+                              isSelected ? 'border-primary bg-primary/5' : ''
+                            }`}
+                            onClick={() => handleChipSelect(asset.uuid, chip.uuid)}
+                          >
+                            <CardContent className="p-3">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      CHIP
+                                    </Badge>
+                                    {isSelected && <Plus className="h-4 w-4 text-primary" />}
+                                  </div>
+                                  <p className="font-medium">{chip.iccid || 'Sem ICCID'}</p>
+                                  {chip.line_number && (
+                                    <p className="text-sm text-muted-foreground">
+                                      Linha: {chip.line_number}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                      {availableChips.length === 0 && (
+                        <p className="text-center text-muted-foreground py-4">Nenhum chip disponível</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
