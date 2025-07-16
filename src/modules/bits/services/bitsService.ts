@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Referral, 
@@ -22,6 +23,31 @@ const handleError = (error: Error, message: string) => {
   throw error;
 };
 
+// Mock data for development until BITS tables are created
+const mockReferrals: Referral[] = [];
+const mockTransactions: PointTransaction[] = [];
+const mockRewards: Reward[] = [];
+const mockUserRewards: UserReward[] = [];
+const mockBadges: Badge[] = [];
+const mockUserBadges: UserBadge[] = [];
+const mockCampaigns: Campaign[] = [];
+const mockMissions: Mission[] = [];
+const mockUserMissions: UserMission[] = [];
+const mockLevels: Level[] = [
+  {
+    level_number: 1,
+    name: "Iniciante",
+    points_required: 0,
+    benefits: {}
+  },
+  {
+    level_number: 2,
+    name: "Intermediário",
+    points_required: 100,
+    benefits: {}
+  }
+];
+
 // Referrals
 export const referralService = {
   // Get referrals for the current user
@@ -30,14 +56,16 @@ export const referralService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_referrals')
-        .select('*')
-        .eq('referrer_user_id', userAuth.user.id)
-        .order('created_at', { ascending: false });
+      // TODO: Replace with actual table query when bits_referrals table is created
+      // const { data, error } = await supabase
+      //   .from('bits_referrals')
+      //   .select('*')
+      //   .eq('referrer_user_id', userAuth.user.id)
+      //   .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockReferrals.filter(r => r.referrer_user_id === userAuth.user.id);
     } catch (error) {
       handleError(error as Error, "Failed to fetch referrals");
       return [];
@@ -50,19 +78,32 @@ export const referralService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_referrals')
-        .insert({
-          ...referralData,
-          referrer_user_id: userAuth.user.id,
-          status: 'pendente',
-          points_earned: 0
-        })
-        .select()
-        .single();
+      // TODO: Replace with actual table insert when bits_referrals table is created
+      // const { data, error } = await supabase
+      //   .from('bits_referrals')
+      //   .insert({
+      //     ...referralData,
+      //     referrer_user_id: userAuth.user.id,
+      //     status: 'pendente',
+      //     points_earned: 0
+      //   })
+      //   .select()
+      //   .single();
       
-      if (error) throw error;
-      return data;
+      // if (error) throw error;
+      
+      const newReferral: Referral = {
+        id: `mock-${Date.now()}`,
+        referrer_user_id: userAuth.user.id,
+        ...referralData,
+        status: 'pendente',
+        points_earned: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      mockReferrals.push(newReferral);
+      return newReferral;
     } catch (error) {
       handleError(error as Error, "Failed to create referral");
       return null;
@@ -72,14 +113,16 @@ export const referralService = {
   // Get referral by ID
   async getReferralById(id: string): Promise<Referral | null> {
     try {
-      const { data, error } = await supabase
-        .from('bits_referrals')
-        .select('*')
-        .eq('id', id)
-        .single();
+      // TODO: Replace with actual table query when bits_referrals table is created
+      // const { data, error } = await supabase
+      //   .from('bits_referrals')
+      //   .select('*')
+      //   .eq('id', id)
+      //   .single();
       
-      if (error) throw error;
-      return data;
+      // if (error) throw error;
+      
+      return mockReferrals.find(r => r.id === id) || null;
     } catch (error) {
       handleError(error as Error, "Failed to fetch referral");
       return null;
@@ -95,14 +138,16 @@ export const pointsService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_points_log')
-        .select('*')
-        .eq('user_id', userAuth.user.id)
-        .order('created_at', { ascending: false });
+      // TODO: Replace with actual table query when bits_points_log table is created
+      // const { data, error } = await supabase
+      //   .from('bits_points_log')
+      //   .select('*')
+      //   .eq('user_id', userAuth.user.id)
+      //   .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockTransactions.filter(t => t.user_id === userAuth.user.id);
     } catch (error) {
       handleError(error as Error, "Failed to fetch point transactions");
       return [];
@@ -115,26 +160,31 @@ export const pointsService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_user_profile_stats')
-        .select('*')
-        .eq('user_id', userAuth.user.id)
-        .single();
+      // TODO: Replace with actual table query when bits_user_profile_stats table is created
+      // const { data, error } = await supabase
+      //   .from('bits_user_profile_stats')
+      //   .select('*')
+      //   .eq('user_id', userAuth.user.id)
+      //   .single();
       
-      if (error) {
-        // If the user doesn't have stats yet, return default values
-        if (error.code === 'PGRST116') {
-          return {
-            user_id: userAuth.user.id,
-            current_points_balance: 0,
-            total_points_earned: 0,
-            current_level_number: 1
-          };
-        }
-        throw error;
-      }
+      // if (error) {
+      //   if (error.code === 'PGRST116') {
+      //     return {
+      //       user_id: userAuth.user.id,
+      //       current_points_balance: 0,
+      //       total_points_earned: 0,
+      //       current_level_number: 1
+      //     };
+      //   }
+      //   throw error;
+      // }
       
-      return data;
+      return {
+        user_id: userAuth.user.id,
+        current_points_balance: 0,
+        total_points_earned: 0,
+        current_level_number: 1
+      };
     } catch (error) {
       handleError(error as Error, "Failed to fetch user stats");
       return null;
@@ -147,14 +197,16 @@ export const rewardsService = {
   // Get all available rewards
   async getAvailableRewards(): Promise<Reward[]> {
     try {
-      const { data, error } = await supabase
-        .from('bits_rewards_catalog')
-        .select('*')
-        .eq('is_active', true)
-        .order('points_required', { ascending: true });
+      // TODO: Replace with actual table query when bits_rewards_catalog table is created
+      // const { data, error } = await supabase
+      //   .from('bits_rewards_catalog')
+      //   .select('*')
+      //   .eq('is_active', true)
+      //   .order('points_required', { ascending: true });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockRewards;
     } catch (error) {
       handleError(error as Error, "Failed to fetch rewards");
       return [];
@@ -167,14 +219,16 @@ export const rewardsService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_user_rewards')
-        .select('*, bits_rewards_catalog(*)')
-        .eq('user_id', userAuth.user.id)
-        .order('redeemed_at', { ascending: false });
+      // TODO: Replace with actual table query when bits_user_rewards table is created
+      // const { data, error } = await supabase
+      //   .from('bits_user_rewards')
+      //   .select('*, bits_rewards_catalog(*)')
+      //   .eq('user_id', userAuth.user.id)
+      //   .order('redeemed_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockUserRewards.filter(r => r.user_id === userAuth.user.id);
     } catch (error) {
       handleError(error as Error, "Failed to fetch user rewards");
       return [];
@@ -188,54 +242,9 @@ export const rewardsService = {
       const stats = await pointsService.getUserStats();
       if (!stats) throw new Error("Could not get user stats");
       
-      // Get reward details to check points required
-      const { data: reward, error: rewardError } = await supabase
-        .from('bits_rewards_catalog')
-        .select('*')
-        .eq('id', rewardId)
-        .single();
-      
-      if (rewardError) throw rewardError;
-      
-      if (!reward) throw new Error("Reward not found");
-      if (!reward.is_active) throw new Error("Reward is not active");
-      if (stats.current_points_balance < reward.points_required) {
-        throw new Error("Not enough points to redeem this reward");
-      }
-      
-      const { data: userAuth } = await supabase.auth.getUser();
-      if (!userAuth.user) throw new Error("User not authenticated");
-      
-      // Start a transaction using RPC (would require a custom function in Supabase)
-      // For now, we'll do it in sequence
-      
-      // 1. Create the user reward
-      const { data: userReward, error: redemptionError } = await supabase
-        .from('bits_user_rewards')
-        .insert({
-          user_id: userAuth.user.id,
-          reward_id: rewardId,
-          points_spent: reward.points_required
-        })
-        .select()
-        .single();
-      
-      if (redemptionError) throw redemptionError;
-      
-      // 2. Record the points transaction
-      const { error: pointsError } = await supabase
-        .from('bits_points_log')
-        .insert({
-          user_id: userAuth.user.id,
-          points: -reward.points_required,
-          action_type: 'reward_redemption',
-          description: `Resgaste: ${reward.name}`,
-          related_reward_id: rewardId
-        });
-      
-      if (pointsError) throw pointsError;
-      
-      return userReward;
+      // For mock implementation, just return null since no rewards exist
+      toast.error("Feature not available - BITS tables not yet created");
+      return null;
     } catch (error) {
       handleError(error as Error, "Failed to redeem reward");
       return null;
@@ -248,13 +257,15 @@ export const badgesService = {
   // Get all badges
   async getAllBadges(): Promise<Badge[]> {
     try {
-      const { data, error } = await supabase
-        .from('bits_badges_catalog')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // TODO: Replace with actual table query when bits_badges_catalog table is created
+      // const { data, error } = await supabase
+      //   .from('bits_badges_catalog')
+      //   .select('*')
+      //   .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockBadges;
     } catch (error) {
       handleError(error as Error, "Failed to fetch badges");
       return [];
@@ -267,14 +278,16 @@ export const badgesService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_user_badges')
-        .select('*, bits_badges_catalog(*)')
-        .eq('user_id', userAuth.user.id)
-        .order('earned_at', { ascending: false });
+      // TODO: Replace with actual table query when bits_user_badges table is created
+      // const { data, error } = await supabase
+      //   .from('bits_user_badges')
+      //   .select('*, bits_badges_catalog(*)')
+      //   .eq('user_id', userAuth.user.id)
+      //   .order('earned_at', { ascending: false });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockUserBadges.filter(b => b.user_id === userAuth.user.id);
     } catch (error) {
       handleError(error as Error, "Failed to fetch user badges");
       return [];
@@ -287,17 +300,19 @@ export const campaignService = {
   // Get active campaigns
   async getActiveCampaigns(): Promise<Campaign[]> {
     try {
-      const today = new Date().toISOString();
+      // TODO: Replace with actual table query when bits_campaigns table is created
+      // const today = new Date().toISOString();
+      // 
+      // const { data, error } = await supabase
+      //   .from('bits_campaigns')
+      //   .select('*')
+      //   .eq('is_active', true)
+      //   .lte('start_date', today)
+      //   .gte('end_date', today);
       
-      const { data, error } = await supabase
-        .from('bits_campaigns')
-        .select('*')
-        .eq('is_active', true)
-        .lte('start_date', today)
-        .gte('end_date', today);
+      // if (error) throw error;
       
-      if (error) throw error;
-      return data || [];
+      return mockCampaigns;
     } catch (error) {
       handleError(error as Error, "Failed to fetch active campaigns");
       return [];
@@ -310,17 +325,19 @@ export const missionService = {
   // Get active missions
   async getActiveMissions(): Promise<Mission[]> {
     try {
-      const today = new Date().toISOString();
+      // TODO: Replace with actual table query when bits_missions_catalog table is created
+      // const today = new Date().toISOString();
+      // 
+      // const { data, error } = await supabase
+      //   .from('bits_missions_catalog')
+      //   .select('*')
+      //   .eq('is_active', true)
+      //   .or(`start_date.is.null,start_date.lte.${today}`)
+      //   .or(`end_date.is.null,end_date.gte.${today}`);
       
-      const { data, error } = await supabase
-        .from('bits_missions_catalog')
-        .select('*')
-        .eq('is_active', true)
-        .or(`start_date.is.null,start_date.lte.${today}`)
-        .or(`end_date.is.null,end_date.gte.${today}`);
+      // if (error) throw error;
       
-      if (error) throw error;
-      return data || [];
+      return mockMissions;
     } catch (error) {
       handleError(error as Error, "Failed to fetch active missions");
       return [];
@@ -333,13 +350,15 @@ export const missionService = {
       const { data: userAuth } = await supabase.auth.getUser();
       if (!userAuth.user) throw new Error("User not authenticated");
       
-      const { data, error } = await supabase
-        .from('bits_user_missions')
-        .select('*, bits_missions_catalog(*)')
-        .eq('user_id', userAuth.user.id);
+      // TODO: Replace with actual table query when bits_user_missions table is created
+      // const { data, error } = await supabase
+      //   .from('bits_user_missions')
+      //   .select('*, bits_missions_catalog(*)')
+      //   .eq('user_id', userAuth.user.id);
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockUserMissions.filter(m => m.user_id === userAuth.user.id);
     } catch (error) {
       handleError(error as Error, "Failed to fetch user missions");
       return [];
@@ -352,13 +371,15 @@ export const levelService = {
   // Get all levels
   async getAllLevels(): Promise<Level[]> {
     try {
-      const { data, error } = await supabase
-        .from('bits_levels_catalog')
-        .select('*')
-        .order('level_number', { ascending: true });
+      // TODO: Replace with actual table query when bits_levels_catalog table is created
+      // const { data, error } = await supabase
+      //   .from('bits_levels_catalog')
+      //   .select('*')
+      //   .order('level_number', { ascending: true });
       
-      if (error) throw error;
-      return data || [];
+      // if (error) throw error;
+      
+      return mockLevels;
     } catch (error) {
       handleError(error as Error, "Failed to fetch levels");
       return [];
@@ -371,14 +392,16 @@ export const levelService = {
       const stats = await pointsService.getUserStats();
       if (!stats) return null;
       
-      const { data, error } = await supabase
-        .from('bits_levels_catalog')
-        .select('*')
-        .eq('level_number', stats.current_level_number)
-        .single();
+      // TODO: Replace with actual table query when bits_levels_catalog table is created
+      // const { data, error } = await supabase
+      //   .from('bits_levels_catalog')
+      //   .select('*')
+      //   .eq('level_number', stats.current_level_number)
+      //   .single();
       
-      if (error) throw error;
-      return data;
+      // if (error) throw error;
+      
+      return mockLevels.find(l => l.level_number === stats.current_level_number) || mockLevels[0];
     } catch (error) {
       handleError(error as Error, "Failed to fetch user level");
       return null;
@@ -391,21 +414,21 @@ export const levelService = {
       const stats = await pointsService.getUserStats();
       if (!stats) return null;
       
-      const { data, error } = await supabase
-        .from('bits_levels_catalog')
-        .select('*')
-        .gt('level_number', stats.current_level_number)
-        .order('level_number', { ascending: true })
-        .limit(1)
-        .single();
+      // TODO: Replace with actual table query when bits_levels_catalog table is created
+      // const { data, error } = await supabase
+      //   .from('bits_levels_catalog')
+      //   .select('*')
+      //   .gt('level_number', stats.current_level_number)
+      //   .order('level_number', { ascending: true })
+      //   .limit(1)
+      //   .single();
       
-      if (error) {
-        // If no next level (user at max level), this will error
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
+      // if (error) {
+      //   if (error.code === 'PGRST116') return null;
+      //   throw error;
+      // }
       
-      return data;
+      return mockLevels.find(l => l.level_number > stats.current_level_number) || null;
     } catch (error) {
       handleError(error as Error, "Failed to fetch next level");
       return null;
@@ -434,6 +457,7 @@ export const bitsProfileService = {
       
       return {
         ...data,
+        bits_referral_code: data.bits_referral_code || null,
         stats
       };
     } catch (error) {

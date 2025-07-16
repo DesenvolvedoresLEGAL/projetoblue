@@ -20,7 +20,8 @@ export const ReferralLink: React.FC<ReferralLinkProps> = ({ className = '' }) =>
   };
 
   const baseUrl = window.location.origin;
-  const referralCode = profile?.bits_referral_code;
+  // Access bits_referral_code correctly from the profile object
+  const referralCode = profile?.bits_referral_code || null;
   const referralUrl = referralCode 
     ? `${baseUrl}/register?ref=${referralCode}`
     : '';
