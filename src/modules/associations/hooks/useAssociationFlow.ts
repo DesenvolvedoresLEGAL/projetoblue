@@ -86,10 +86,10 @@ export const useAssociationFlow = () => {
   const createAssociation = useCallback(async () => {
     try {
       // Group assets by type for association creation
-      const equipments = state.selectedAssets.filter(asset => 
+      const equipments = state.selectedAssets.filter(asset =>
         asset.solution_id !== 11 // Not a chip
       );
-      const chips = state.selectedAssets.filter(asset => 
+      const chips = state.selectedAssets.filter(asset =>
         asset.solution_id === 11 // Is a chip
       );
 
@@ -100,8 +100,18 @@ export const useAssociationFlow = () => {
       if (equipments.length > 0 && chips.length > 0) {
         for (const equipment of equipments) {
           // For SPEEDY 5G, 4 PLUS, 4 BLACK - associate with a chip
-          if ([2, 3, 4].includes(equipment.solution_id)) {
-            const chip = chips.shift(); // Take first available chip
+          if ([1, 4, 2].includes(equipment.solution_id)) {
+            const configuredId = state.assetConfiguration[equipment.uuid]?.chip_id;
+            let chip;
+            if (configuredId) {
+              const index = chips.findIndex(c => c.uuid === configuredId);
+              if (index !== -1) {
+                chip = chips.splice(index, 1)[0];
+              }
+            }
+            if (!chip) {
+              chip = chips.shift(); // Take first available chip
+            }
             if (chip) {
               associations.push({
                 client_id: state.client.uuid,

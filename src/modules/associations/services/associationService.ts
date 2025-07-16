@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const associationService = {
-  async create(associationData: any) {
+  async create(associationData: Record<string, unknown>) {
     const { data, error } = await supabase
       .from('associations')
       .insert(associationData)
@@ -50,7 +50,7 @@ export const associationService = {
     return data;
   },
 
-  async update(id: string, updates: any) {
+  async update(id: string, updates: Record<string, unknown>) {
     const { data, error } = await supabase
       .from('associations')
       .update(updates)
