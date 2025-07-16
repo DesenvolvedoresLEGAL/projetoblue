@@ -1,8 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+// Tipo específico para criação de associações
+type AssociationInsert = TablesInsert<'associations'>;
+
+// Tipo específico para atualização de associações
+type AssociationUpdate = TablesUpdate<'associations'>;
 
 export const associationService = {
-  async create(associationData: Record<string, unknown>) {
+  async create(associationData: AssociationInsert) {
     const { data, error } = await supabase
       .from('associations')
       .insert(associationData)
@@ -50,7 +57,7 @@ export const associationService = {
     return data;
   },
 
-  async update(id: string, updates: Record<string, unknown>) {
+  async update(id: string, updates: AssociationUpdate) {
     const { data, error } = await supabase
       .from('associations')
       .update(updates)
