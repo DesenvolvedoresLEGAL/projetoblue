@@ -18,6 +18,8 @@ export const useLeaseAssets = () => {
           if (import.meta.env.DEV) console.log('🔍 Fetching lease assets data...');
         }
         
+        const today = new Date().toISOString().split('T')[0];
+        
         // Query para buscar ativos atualmente em locação (association_type_id = 1)
         const { data: leaseAssociations, error } = await supabase
           .from('associations')
@@ -41,7 +43,7 @@ export const useLeaseAssets = () => {
           .eq('association_type_id', 1) // Locação
           .eq('status', true) // Associações ativas
           .is('deleted_at', null)
-          .or('exit_date.is.null,exit_date.gte.' + new Date().toISOString().split('T')[0]);
+          .or(`exit_date.is.null,exit_date.gte.${today}`);
 
         if (error) {
           if (import.meta.env.DEV) console.error('❌ Error fetching lease assets:', error);

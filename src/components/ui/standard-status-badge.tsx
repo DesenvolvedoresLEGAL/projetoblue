@@ -16,7 +16,7 @@ export const StandardStatusBadge: React.FC<StandardStatusBadgeProps> = ({
   type = 'status',
   className
 }) => {
-  const getStatusVariant = (status: string, type: string) => {
+  const getStatusVariant = (status: string, type: string): VariantProps<typeof badgeVariants>["variant"] => {
     // Para eventos de histórico
     if (type === 'event') {
       switch (status) {
@@ -56,8 +56,7 @@ export const StandardStatusBadge: React.FC<StandardStatusBadgeProps> = ({
     }
   };
 
-  const variant: VariantProps<typeof badgeVariants>["variant"] =
-    getStatusVariant(status, type);
+  const variant = getStatusVariant(status, type);
 
   return (
     <Badge

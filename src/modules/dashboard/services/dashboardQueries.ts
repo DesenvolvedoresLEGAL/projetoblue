@@ -1,345 +1,165 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 // Fetch total assets count
-export async function fetchTotalAssets() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchTotalAssets query');
-  }
-  const result = await supabase
+export const fetchTotalAssets = async () => {
+  return await supabase
     .from('assets')
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchTotalAssets result:', result);
-  }
-  return result;
-}
+};
 
-// Fetch active clients count
-export async function fetchActiveClients() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchActiveClients query');
-  }
-  const result = await supabase
-    .from('v_active_clients')
-    .select('*', { count: 'exact', head: true });
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchActiveClients result:', result);
-  }
-  return result;
-}
+// Fetch active clients count from associations
+export const fetchActiveClients = async () => {
+  return await supabase
+    .from('associations')
+    .select('client_id', { count: 'exact', head: true })
+    .eq('status', true)
+    .is('deleted_at', null)
+    .is('exit_date', null);
+};
 
-// Fetch assets with issues count
-export async function fetchAssetsWithIssues() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchAssetsWithIssues query');
-  }
-  const result = await supabase
-    .from('v_problem_assets')
-    .select('*', { count: 'exact', head: true });
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchAssetsWithIssues result:', result);
-  }
-  return result;
-}
+// Fetch assets with issues (status indicating problems)
+export const fetchAssetsWithIssues = async () => {
+  return await supabase
+    .from('assets')
+    .select('*', { count: 'exact', head: true })
+    .in('status_id', [5, 6, 4]) // BLOQUEADO, MANUTENÇÃO, SEM DADOS
+    .is('deleted_at', null);
+};
 
-// Fetch recent assets
-export async function fetchRecentAssets() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchRecentAssets query');
-  }
-  const result = await supabase
+// Fetch recent assets (last 30 days)
+export const fetchRecentAssets = async () => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  return await supabase
     .from('assets')
     .select(`
-      uuid, serial_number, iccid, line_number, radio, solution_id, status_id, model
+      uuid,
+      radio,
+      line_number,
+      serial_number,
+      iccid,
+      solution_id,
+      status_id,
+      created_at
     `)
+    .gte('created_at', thirtyDaysAgo.toISOString())
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(5);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchRecentAssets result:', result);
-  }
-  return result;
-}
+    .limit(10);
+};
 
-// Fetch recent events
-export async function fetchRecentEvents() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchRecentEvents query');
-  }
-  const result = await supabase
+// Fetch recent events from asset_logs
+export const fetchRecentEvents = async () => {
+  return await supabase
     .from('asset_logs')
-    .select('id, event, date, details')
-    .order('date', { ascending: false })
-    .limit(5);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchRecentEvents result:', result);
-  }
-  return result;
-}
+    .select(`
+      uuid,
+      event,
+      details,
+      created_at
+    `)
+    .order('created_at', { ascending: false })
+    .limit(10);
+};
 
-// Fetch status breakdown
-export async function fetchStatusBreakdown() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchStatusBreakdown query');
-  }
-  const result = await supabase
-    .rpc('status_by_asset_type');
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchStatusBreakdown result:', result);
-  }
-  return result;
-}
-
-// Fetch solutions data
-export async function fetchSolutions() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchSolutions query');
-  }
-  const result = await supabase
-    .from('asset_solutions')
-    .select('id, solution');
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchSolutions result:', result);
-  }
-  return result;
-}
-
-// Fetch status data
-export async function fetchStatuses() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchStatuses query');
-  }
-  const result = await supabase
-    .from('asset_status')
-    .select('id, status');
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchStatuses result:', result);
-  }
-  return result;
-}
-
-// NEW: Fetch aggregated data by status only (for PieChart)
-export async function fetchStatusSummary() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchStatusSummary query');
-  }
-  const result = await supabase
+// Fetch status summary for chart
+export const fetchStatusSummary = async () => {
+  return await supabase
     .from('assets')
     .select(`
       status_id,
-      asset_status!inner(status)
+      asset_status!inner(id, status)
     `)
     .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchStatusSummary result:', result);
-  }
-  return result;
-}
+};
 
-// NEW: Fetch detailed breakdown by type and status (for tooltip)
-export async function fetchDetailedStatusBreakdown() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchDetailedStatusBreakdown query');
-  }
-  const result = await supabase
+// Fetch detailed status breakdown by type
+export const fetchDetailedStatusBreakdown = async () => {
+  return await supabase
     .from('assets')
     .select(`
       solution_id,
       status_id,
-      asset_solutions!inner(solution),
-      asset_status!inner(status)
+      asset_solutions!inner(id, solution),
+      asset_status!inner(id, status)
     `)
     .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchDetailedStatusBreakdown result:', result);
-  }
-  return result;
-}
+};
 
-// NEW: Fetch active associations - OTIMIZADO para evitar N+1 queries
-export async function fetchActiveAssociations() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchActiveAssociations query (optimized)');
-  }
-  const result = await supabase
+// Fetch solutions lookup
+export const fetchSolutions = async () => {
+  return await supabase
+    .from('asset_solutions')
+    .select('*')
+    .order('solution');
+};
+
+// Fetch statuses lookup
+export const fetchStatuses = async () => {
+  return await supabase
+    .from('asset_status')
+    .select('*')
+    .order('status');
+};
+
+// Fetch active associations with all related data
+export const fetchActiveAssociations = async () => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  return await supabase
     .from('associations')
-      .select(`
-      id,
+    .select(`
+      uuid,
+      client_id,
       equipment_id,
       chip_id,
-      client_id,
-      association_id,
       entry_date,
       exit_date,
-      clients!inner(empresa),
-      association_types!inner(type),
-      assets!inner(
+      association_type_id,
+      plan_id,
+      plan_gb,
+      equipment_ssid,
+      equipment_pass,
+      status,
+      notes,
+      created_at,
+      updated_at,
+      clients!inner(
         uuid,
+        nome,
+        empresa,
+        responsavel,
+        contato,
+        email,
+        cnpj
+      ),
+      equipment:assets!equipment_id_fkey(
+        uuid,
+        solution_id,
+        status_id,
+        model,
         serial_number,
         radio,
-        line_number,
-        rented_days,
-        status_id,
+        asset_solutions!inner(solution)
+      ),
+      chip:assets!chip_id_fkey(
+        uuid,
         solution_id,
-        asset_solutions!inner(solution),
-        asset_status!inner(status)
+        status_id,
+        line_number,
+        iccid,
+        asset_solutions!inner(solution)
+      ),
+      association_types!inner(
+        id,
+        type
       )
     `)
-    .is('exit_date', null)
-    .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchActiveAssociations result (optimized):', result);
-  }
-  return result;
-}
-
-// NEW: Fetch associations ending today
-export async function fetchAssociationsEndingToday() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchAssociationsEndingToday query');
-  }
-  const today = new Date().toISOString().split('T')[0];
-  const result = await supabase
-    .from('associations')
-    .select(`
-      id,
-      equipment_id,
-      chip_id,
-      client_id,
-      association_id,
-      entry_date,
-      exit_date,
-      clients!inner(empresa),
-      association_types!inner(type)
-    `)
-    .eq('exit_date', today)
-    .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchAssociationsEndingToday result:', result);
-  }
-  return result;
-}
-
-// NEW: Fetch top clients with associations
-export async function fetchTopClientsWithAssociations() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchTopClientsWithAssociations query');
-  }
-  const result = await supabase
-    .from('associations')
-    .select(`
-      client_id,
-      clients!inner(empresa)
-    `)
-    .is('exit_date', null)
-    .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchTopClientsWithAssociations result:', result);
-  }
-  return result;
-}
-
-// NEW: Fetch associations from last 30 days
-export async function fetchAssociationsLast30Days() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchAssociationsLast30Days query');
-  }
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
-  const result = await supabase
-    .from('associations')
-    .select(`
-      id,
-      association_id,
-      entry_date,
-      exit_date,
-      created_at,
-      association_types!inner(type)
-    `)
-    .gte('created_at', thirtyDaysAgo.toISOString())
-    .is('deleted_at', null);
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchAssociationsLast30Days result:', result);
-  }
-  return result;
-}
-
-// NEW: Enhanced recent events with user information
-export async function fetchEnhancedRecentEvents() {
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('Executing fetchEnhancedRecentEvents query');
-  }
-  
-  // First get the events
-  const eventsResult = await supabase
-    .from('asset_logs')
-    .select('id, event, date, details, status_before_id, status_after_id')
-    .in('event', ['ASSET_CRIADO', 'ASSOCIATION_CREATED', 'ASSOCIATION_REMOVED', 'STATUS_UPDATED'])
-    .order('date', { ascending: false })
-    .limit(10);
-  
-  if (eventsResult.error) {
-    if (process.env.NODE_ENV === 'development') {
-      if (import.meta.env.DEV) console.log('fetchEnhancedRecentEvents error:', eventsResult.error);
-    }
-    return eventsResult;
-  }
-
-  // Extract unique user IDs from event details
-  const userIds = new Set<string>();
-  eventsResult.data?.forEach(event => {
-    const details = event.details as Record<string, unknown>;
-    if (details?.user_id && details.user_id !== '00000000-0000-0000-0000-000000000000') {
-      userIds.add(details.user_id);
-    }
-  });
-
-  // Fetch user profiles if we have user IDs
-  const usersMap = new Map<string, string>();
-  if (userIds.size > 0) {
-    const usersResult = await supabase
-      .from('profiles')
-      .select('id, email')
-      .in('id', Array.from(userIds));
-    
-    if (usersResult.data) {
-      usersResult.data.forEach(user => {
-        usersMap.set(user.id, user.email);
-      });
-    }
-  }
-
-  // Add user information to events
-  const enrichedData = eventsResult.data?.map(event => ({
-    ...event,
-    user_email: (() => {
-      const details = event.details as Record<string, unknown>;
-      const userId = details?.user_id;
-      if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
-        return null;
-      }
-      return usersMap.get(userId) || null;
-    })()
-  }));
-
-  if (process.env.NODE_ENV === 'development') {
-    if (import.meta.env.DEV) console.log('fetchEnhancedRecentEvents enriched result:', { ...eventsResult, data: enrichedData });
-  }
-  return { ...eventsResult, data: enrichedData };
-}
+    .eq('status', true)
+    .is('deleted_at', null)
+    .or(`exit_date.is.null,exit_date.gte.${today}`)
+    .order('created_at', { ascending: false });
+};

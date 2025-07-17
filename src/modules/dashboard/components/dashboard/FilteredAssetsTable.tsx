@@ -9,7 +9,6 @@ import { formatRelativeTime } from '@/utils/dashboardUtils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
-import { getAssetIdentifier } from '@/utils/assetUtils';
 import type { AssetWithRelations } from '@/types/assetWithRelations';
 
 interface FilteredAssetsTableProps {
@@ -32,7 +31,7 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
     
     const statusLower = status.toLowerCase();
     if (statusLower === 'disponivel' || statusLower === 'disponível') {
-      return 'success';
+      return 'default';
     } else if (statusLower.includes('bloqueado') || statusLower.includes('manut') || statusLower.includes('sem dados')) {
       return 'destructive';
     } else {
@@ -91,7 +90,7 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
                     </TableCell>
                     <TableCell>{getAssetTypeLabel(asset)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(asset.status?.status)}>
+                      <Badge variant={getStatusBadgeVariant(asset.status?.status || '')}>
                         {asset.status?.status || '-'}
                       </Badge>
                     </TableCell>

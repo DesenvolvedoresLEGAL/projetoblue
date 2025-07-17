@@ -17,8 +17,8 @@ export function HistoryAccessPanel() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('asset_logs')
-        .select('id, event, date, details, status_after_id, status_before_id, assoc_id')
-        .order('date', { ascending: false })
+        .select('uuid, event, created_at, details, status_after_id, status_before_id')
+        .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
@@ -45,7 +45,7 @@ export function HistoryAccessPanel() {
 
   // Helper function to format the event description
   const formatEventDescription = (event: string, details: Record<string, unknown> | null) => {
-    if (details?.description) return details.description;
+    if (details?.description) return String(details.description);
     
     if (event.includes('CRIADO')) {
       return 'Ativo registrado no sistema';
@@ -64,10 +64,10 @@ export function HistoryAccessPanel() {
   const getAssetIdentifier = (details: Record<string, unknown> | null) => {
     if (!details) return 'N/A';
     
-    if (details.radio) return details.radio;
-    if (details.serial_number) return details.serial_number;
-    if (details.iccid) return details.iccid;
-    if (details.asset_id) return details.asset_id.substring(0, 8) + '...';
+    if (details.radio) return String(details.radio);
+    if (details.serial_number) return String(details.serial_number);
+    if (details.iccid) return String(details.iccid);
+    if (details.asset_id) return String(details.asset_id).substring(0, 8) + '...';
     
     return 'N/A';
   };
@@ -113,12 +113,12 @@ export function HistoryAccessPanel() {
                   </TableHeader>
                   <TableBody>
                     {recentEvents?.map((event) => (
-                      <TableRow key={event.id} className="hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
+                      <TableRow key={event.uuid} className="hover:bg-legal-primary/5 dark:hover:bg-legal-secondary/5 transition-colors duration-200">
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-legal-secondary dark:text-legal-secondary" />
                             <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
-                              {formatRelativeTime(new Date(event.date))}
+                              {formatRelativeTime(new Date(event.created_at))}
                             </span>
                           </div>
                         </TableCell>

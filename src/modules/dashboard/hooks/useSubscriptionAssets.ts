@@ -18,6 +18,8 @@ export const useSubscriptionAssets = () => {
           if (import.meta.env.DEV) console.log('🔍 Fetching subscription assets data...');
         }
         
+        const today = new Date().toISOString().split('T')[0];
+        
         // Query para buscar ativos atualmente em assinatura (association_type_id = 2)
         const { data: subscriptionAssociations, error } = await supabase
           .from('associations')
@@ -41,7 +43,7 @@ export const useSubscriptionAssets = () => {
           .eq('association_type_id', 2) // Assinatura
           .eq('status', true) // Associações ativas
           .is('deleted_at', null)
-          .or('exit_date.is.null,exit_date.gte.' + new Date().toISOString().split('T')[0]);
+          .or(`exit_date.is.null,exit_date.gte.${today}`);
 
         if (error) {
           if (import.meta.env.DEV) console.error('❌ Error fetching subscription assets:', error);
