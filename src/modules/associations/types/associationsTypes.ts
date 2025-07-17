@@ -29,6 +29,13 @@ export interface AssetSolution {
   updated_at: string;
 }
 
+export interface AssetStatus {
+  id: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Asset {
   uuid: string;
   model?: string;
@@ -38,11 +45,16 @@ export interface Asset {
   radio?: string;
   solution_id?: number;
   manufacturer_id?: number;
+  status_id?: number;
   rented_days: number;
   admin_user: string;
   admin_pass: string;
   created_at: string;
   updated_at: string;
+  // Relacionamentos
+  manufacturer?: Manufacturer;
+  solution?: AssetSolution;
+  status?: AssetStatus;
 }
 
 export interface Association {
@@ -65,8 +77,11 @@ export interface Association {
 
 export interface AssociationWithRelations extends Association {
   client: Client;
-  equipment?: Asset & { manufacturer?: Manufacturer; solution?: AssetSolution };
-  chip?: Asset & { manufacturer?: Manufacturer; solution?: AssetSolution };
+  equipment?: Asset;
+  chip?: Asset;
+  // Informações derivadas
+  chipType?: 'principal' | 'backup' | 'none';
+  hasNonChipAssets?: boolean;
 }
 
 export interface ClientAssociationGroup {
@@ -75,4 +90,18 @@ export interface ClientAssociationGroup {
   totalAssociations: number;
   activeAssociations: number;
   inactiveAssociations: number;
+  // Estatísticas por tipo
+  principalChips: number;
+  backupChips: number;
+  equipmentOnly: number;
+}
+
+export interface AssociationStats {
+  totalClients: number;
+  totalAssociations: number;
+  activeAssociations: number;
+  inactiveAssociations: number;
+  principalChips: number;
+  backupChips: number;
+  equipmentOnly: number;
 }

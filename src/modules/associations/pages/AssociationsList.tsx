@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Users, Phone, Building } from 'lucide-react';
+import { ChevronDown, ChevronRight, Users, Phone, Building, Smartphone, Router } from 'lucide-react';
 import { useAssociationsList } from '../hooks/useAssociationsList';
 import { useEndAssociation } from '../hooks/useEndAssociation';
 import { formatPhone } from '../utils/associationFormatters';
@@ -13,6 +13,7 @@ import { SearchResultHighlight } from '../components/SearchResultHighlight';
 import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
 import { usePagination } from '../hooks/usePagination';
 import { AssociationWithRelations } from '../types/associationsTypes';
+import ChipTypeIndicator from '../components/ChipTypeIndicator';
 
 const ITEMS_PER_PAGE = 11;
 
@@ -109,11 +110,11 @@ const AssociationsList: React.FC = () => {
           </h1>
         </div>
         <p className="text-muted-foreground">
-          Visualize e gerencie todas as associações de clientes com seus equipamentos
+          Visualize e gerencie todas as associações de clientes com seus equipamentos e chips
         </p>
         
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {/* Stats expandidas */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Total de Clientes</div>
             <div className="text-2xl font-semibold text-foreground">{stats.totalClients}</div>
@@ -125,6 +126,27 @@ const AssociationsList: React.FC = () => {
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Associações Ativas</div>
             <div className="text-2xl font-semibold text-green-600">{stats.activeAssociations}</div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+            <div className="text-sm text-muted-foreground text-center">Chips Principais</div>
+            <div className="text-2xl font-semibold text-blue-600 flex items-center gap-1">
+              <Smartphone className="h-5 w-5" />
+              {stats.principalChips}
+            </div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+            <div className="text-sm text-muted-foreground text-center">Chips Backup</div>
+            <div className="text-2xl font-semibold text-purple-600 flex items-center gap-1">
+              <Smartphone className="h-5 w-5" />
+              {stats.backupChips}
+            </div>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+            <div className="text-sm text-muted-foreground text-center">Só Equipamentos</div>
+            <div className="text-2xl font-semibold text-orange-600 flex items-center gap-1">
+              <Router className="h-5 w-5" />
+              {stats.equipmentOnly}
+            </div>
           </div>
         </div>
       </div>
@@ -147,7 +169,8 @@ const AssociationsList: React.FC = () => {
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left p-4 font-medium text-foreground">Cliente</th>
-                <th className="text-left p-4 font-medium text-foreground">Total Associações</th>
+                <th className="text-left p-4 font-medium text-foreground">Associações</th>
+                <th className="text-left p-4 font-medium text-foreground">Tipos</th>
                 <th className="text-left p-4 font-medium text-foreground">Contato</th>
                 <th className="text-left p-4 font-medium text-foreground">Responsável</th>
                 <th className="w-12 p-4"></th>
@@ -156,7 +179,7 @@ const AssociationsList: React.FC = () => {
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center">
+                  <td colSpan={6} className="p-8 text-center">
                     <div className="text-muted-foreground">
                       {searchTerm.trim() ? (
                         <>
@@ -208,6 +231,22 @@ const AssociationsList: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-4">
+                        <div className="flex flex-wrap gap-1">
+                          {group.principalChips > 0 && (
+                            <ChipTypeIndicator chipType="principal" className="text-xs" />
+                          )}
+                          {group.backupChips > 0 && (
+                            <ChipTypeIndicator chipType="backup" className="text-xs" />
+                          )}
+                          {group.equipmentOnly > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                              <Router className="h-3 w-3" />
+                              {group.equipmentOnly}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground" />
                           <span className="text-foreground">{formatPhone(group.client.contato)}</span>
@@ -230,7 +269,7 @@ const AssociationsList: React.FC = () => {
                     {/* Linhas expandidas com detalhes das associações */}
                     {expandedRows.has(group.client.uuid) && (
                       <tr>
-                        <td colSpan={5} className="p-0">
+                        <td colSpan={6} className="p-0">
                           <ExpandedAssociations 
                             associations={group.associations}
                             clientName={group.client.nome}
@@ -273,7 +312,7 @@ const AssociationsList: React.FC = () => {
         ) : (
           <>
             Mostrando {stats.totalClients} clientes com{' '}
-            {stats.totalAssociations} associações no total
+            {stats.totalAssociations} associações ({stats.principalChips} chips principais, {stats.backupChips} chips backup, {stats.equipmentOnly} só equipamentos)
           </>
         )}
       </div>

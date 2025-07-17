@@ -1,31 +1,47 @@
 
-import React, { useState, useMemo } from 'react';
-import { generateMockAssociations } from '../data/mockData';
-import { ClientAssociationGroup, AssociationWithRelations } from '../types/associationsTypes';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { associationService } from '../services/associationService';
+import { ClientAssociationGroup, AssociationWithRelations, AssociationStats } from '../types/associationsTypes';
+import { getChipType } from '../utils/chipUtils';
 
 export const useAssociationsList = () => {
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   
-  // Simular carregamento inicial
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setInitialLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [refreshKey]);
-  
-  // Dados mockados - futuramente será substituído por chamada à API
-  const associations = useMemo(() => generateMockAssociations(), [refreshKey]);
+  // Buscar dados reais da API
+  const {
+    data: associations = [],
+    isLoading: initialLoading,
+    error: queryError,
+    refetch
+  } = useQuery({
+    queryKey: ['associations', refreshKey],
+    queryFn: async () => {
+      console.log('Fetching associations...');
+      const data = await associationService.getAll();
+      console.log('Associations fetched:', data.length);
+      return data;
+    },
+    staleTime: 30 * 1000, // 30 segundos
+    gcTime: 5 * 60 * 1000, // 5 minutos
+  });
+
+  // Processar associações para adicionar informações derivadas
+  const processedAssociations = useMemo(() => {
+    return associations.map(association => ({
+      ...association,
+      chipType: getChipType(association),
+      hasNonChipAssets: Boolean(association.equipment?.solution_id && association.equipment.solution_id !== 11)
+    }));
+  }, [associations]);
   
   // Agrupar associações por cliente
   const clientGroups = useMemo(() => {
     const groups = new Map<string, ClientAssociationGroup>();
     
-    associations.forEach(association => {
+    processedAssociations.forEach(association => {
       const clientId = association.client_id;
       
       if (!groups.has(clientId)) {
@@ -34,7 +50,10 @@ export const useAssociationsList = () => {
           associations: [],
           totalAssociations: 0,
           activeAssociations: 0,
-          inactiveAssociations: 0
+          inactiveAssociations: 0,
+          principalChips: 0,
+          backupChips: 0,
+          equipmentOnly: 0
         });
       }
       
@@ -47,22 +66,61 @@ export const useAssociationsList = () => {
       } else {
         group.inactiveAssociations++;
       }
+
+      // Contabilizar tipos de associação
+      switch (association.chipType) {
+        case 'principal':
+          group.principalChips++;
+          break;
+        case 'backup':
+          group.backupChips++;
+          break;
+        case 'none':
+          if (association.equipment_id) {
+            group.equipmentOnly++;
+          }
+          break;
+      }
     });
     
     return Array.from(groups.values());
-  }, [associations]);
+  }, [processedAssociations]);
   
-  const stats = useMemo(() => ({
-    totalClients: clientGroups.length,
-    totalAssociations: clientGroups.reduce((sum, group) => sum + group.totalAssociations, 0),
-    activeAssociations: clientGroups.reduce((sum, group) => sum + group.activeAssociations, 0),
-    inactiveAssociations: clientGroups.reduce((sum, group) => sum + group.inactiveAssociations, 0)
-  }), [clientGroups]);
+  const stats: AssociationStats = useMemo(() => {
+    const totals = clientGroups.reduce((acc, group) => ({
+      totalClients: acc.totalClients + 1,
+      totalAssociations: acc.totalAssociations + group.totalAssociations,
+      activeAssociations: acc.activeAssociations + group.activeAssociations,
+      inactiveAssociations: acc.inactiveAssociations + group.inactiveAssociations,
+      principalChips: acc.principalChips + group.principalChips,
+      backupChips: acc.backupChips + group.backupChips,
+      equipmentOnly: acc.equipmentOnly + group.equipmentOnly
+    }), {
+      totalClients: 0,
+      totalAssociations: 0,
+      activeAssociations: 0,
+      inactiveAssociations: 0,
+      principalChips: 0,
+      backupChips: 0,
+      equipmentOnly: 0
+    });
+
+    return totals;
+  }, [clientGroups]);
   
-  const refresh = () => {
+  const refresh = async () => {
     setRefreshKey(prev => prev + 1);
-    setInitialLoading(true);
+    await refetch();
   };
+
+  // Atualizar estado de erro
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError.message || 'Erro ao carregar associações');
+    } else {
+      setError(null);
+    }
+  }, [queryError]);
   
   return {
     clientGroups,
@@ -70,7 +128,7 @@ export const useAssociationsList = () => {
     loading,
     initialLoading,
     error,
-    associations,
+    associations: processedAssociations,
     refresh
   };
 };
