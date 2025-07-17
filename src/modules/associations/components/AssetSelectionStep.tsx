@@ -26,18 +26,19 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
 
   const fetchAvailableAssets = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: dataAssets, error: errorAssets } = await supabase
         .from('assets')
         .select(`
           *,
           asset_solutions!inner(solution),
           asset_status!inner(status)
         `)
-        .or('status_id.eq.1, deleted_at.is.null')
+        .eq('status_id', 1)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setAssets(data || []);
+      if (errorAssets) throw errorAssets;
+      setAssets(dataAssets || []);
     } catch (error) {
       console.error("Erro ao buscar ativos:", error);
       toast.error('Erro ao carregar ativos disponíveis.');
