@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Users, Phone, Building, Smartphone, Router } from 'lucide-react';
 import { useAssociationsList } from '../hooks/useAssociationsList';
 import { useEndAssociation } from '../hooks/useEndAssociation';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
+import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { formatPhone } from '../utils/associationFormatters';
 import ExpandedAssociations from '../components/ExpandedAssociations';
 import EndAssociationModal from '../components/EndAssociationModal';
@@ -14,6 +15,11 @@ import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
 import { usePagination } from '../hooks/usePagination';
 import { AssociationWithRelations } from '../types/associationsTypes';
 import ChipTypeIndicator from '../components/ChipTypeIndicator';
+import EmptyState from '../components/states/EmptyState';
+import MobileStats from '../components/mobile/MobileStats';
+import MobileFilters from '../components/mobile/MobileFilters';
+import AssociationCard from '../components/mobile/AssociationCard';
+import { toast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 11;
 
@@ -23,6 +29,7 @@ const AssociationsList: React.FC = () => {
   const [selectedAssociation, setSelectedAssociation] = useState<AssociationWithRelations | null>(null);
   const [endingAssociationId, setEndingAssociationId] = useState<string | null>(null);
 
+  const { isMobile } = useResponsiveLayout();
   const { clientGroups, stats, loading, initialLoading, error, refresh } = useAssociationsList();
 
   const {
@@ -55,7 +62,21 @@ const AssociationsList: React.FC = () => {
       setSelectedAssociation(null);
       setEndingAssociationId(null);
       refresh();
+      toast({
+        title: "Associação finalizada",
+        description: "A associação foi finalizada com sucesso."
+      });
     }
+  });
+
+  // Navegação por teclado
+  useKeyboardNavigation({
+    onEscape: () => {
+      if (selectedAssociation) {
+        setSelectedAssociation(null);
+      }
+    },
+    isEnabled: true
   });
 
   const toggleRow = (clientId: string) => {
@@ -80,7 +101,16 @@ const AssociationsList: React.FC = () => {
       await endAssociation(selectedAssociation, exitDate, notes);
     } catch (error) {
       setEndingAssociationId(null);
+      toast({
+        title: "Erro",
+        description: "Não foi possível finalizar a associação. Tente novamente.",
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
   };
 
   // Loading inicial com skeleton
@@ -91,10 +121,7 @@ const AssociationsList: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center text-red-600">
-          <p className="font-medium">Erro ao carregar associações</p>
-          <p className="text-sm">{error}</p>
-        </div>
+        <EmptyState type="error" />
       </div>
     );
   }
@@ -102,102 +129,120 @@ const AssociationsList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-card rounded-lg border p-6">
+      <div className="bg-card rounded-lg border p-4 md:p-6">
         <div className="flex items-center gap-3 mb-2">
           <Users className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="text-xl md:text-2xl font-semibold text-foreground">
             Listagem de Associações
           </h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm md:text-base">
           Visualize e gerencie todas as associações de clientes com seus equipamentos e chips
         </p>
 
-        {/* Stats expandidas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground">Total de Clientes</div>
-            <div className="text-2xl font-semibold text-foreground">{stats.totalClients}</div>
+        {/* Stats - Mobile vs Desktop */}
+        {isMobile ? (
+          <div className="mt-4">
+            <MobileStats stats={stats} />
           </div>
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground">Total de Associações</div>
-            <div className="text-2xl font-semibold text-foreground">{stats.totalAssociations}</div>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground">Associações Ativas</div>
-            <div className="text-2xl font-semibold text-green-600">{stats.activeAssociations}</div>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
-            <div className="text-sm text-muted-foreground text-center">Chips Principais</div>
-            <div className="text-2xl font-semibold text-blue-600 flex items-center gap-1">
-              <Smartphone className="h-5 w-5" />
-              {stats.principalChips}
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Total de Clientes</div>
+              <div className="text-2xl font-semibold text-foreground">{stats.totalClients}</div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Total de Associações</div>
+              <div className="text-2xl font-semibold text-foreground">{stats.totalAssociations}</div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="text-sm text-muted-foreground">Associações Ativas</div>
+              <div className="text-2xl font-semibold text-green-600">{stats.activeAssociations}</div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+              <div className="text-sm text-muted-foreground text-center">Chips Principais</div>
+              <div className="text-2xl font-semibold text-blue-600 flex items-center gap-1">
+                <Smartphone className="h-5 w-5" />
+                {stats.principalChips}
+              </div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+              <div className="text-sm text-muted-foreground text-center">Chips Backup</div>
+              <div className="text-2xl font-semibold text-purple-600 flex items-center gap-1">
+                <Smartphone className="h-5 w-5" />
+                {stats.backupChips}
+              </div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
+              <div className="text-sm text-muted-foreground text-center">Só Equipamentos</div>
+              <div className="text-2xl font-semibold text-orange-600 flex items-center gap-1">
+                <Router className="h-5 w-5" />
+                {stats.equipmentOnly}
+              </div>
             </div>
           </div>
-          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
-            <div className="text-sm text-muted-foreground text-center">Chips Backup</div>
-            <div className="text-2xl font-semibold text-purple-600 flex items-center gap-1">
-              <Smartphone className="h-5 w-5" />
-              {stats.backupChips}
-            </div>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
-            <div className="text-sm text-muted-foreground text-center">Só Equipamentos</div>
-            <div className="text-2xl font-semibold text-orange-600 flex items-center gap-1">
-              <Router className="h-5 w-5" />
-              {stats.equipmentOnly}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-card rounded-lg border p-6">
-        <SearchBar
+      {/* Search Bar - Mobile vs Desktop */}
+      {isMobile ? (
+        <MobileFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           searchType={searchType}
           isSearching={isSearching}
           totalMatches={totalMatches}
         />
-      </div>
+      ) : (
+        <div className="bg-card rounded-lg border p-6">
+          <SearchBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchType={searchType}
+            isSearching={isSearching}
+            totalMatches={totalMatches}
+          />
+        </div>
+      )}
 
-      {/* Table */}
-      <div className="bg-card rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="text-left p-4 font-medium text-foreground">Cliente</th>
-                <th className="text-left p-4 font-medium text-foreground">Associações</th>
-                <th className="text-left p-4 font-medium text-foreground">Tipos</th>
-                <th className="text-left p-4 font-medium text-foreground">Contato</th>
-                <th className="text-left p-4 font-medium text-foreground">Responsável</th>
-                <th className="w-12 p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
+      {/* Content - Mobile Cards vs Desktop Table */}
+      {paginatedData.length === 0 ? (
+        <div className="bg-card rounded-lg border p-8">
+          <EmptyState
+            type={searchTerm.trim() ? 'search' : 'no-data'}
+            searchTerm={searchTerm}
+            onClearSearch={searchTerm.trim() ? handleClearSearch : undefined}
+          />
+        </div>
+      ) : isMobile ? (
+        <div className="space-y-4">
+          {paginatedData.map((group) => (
+            <AssociationCard
+              key={group.client.uuid}
+              group={group}
+              onEndAssociation={handleEndAssociation}
+              endingAssociationId={endingAssociationId}
+              searchTerm={searchTerm}
+              searchType={searchType}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-card rounded-lg border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b">
                 <tr>
-                  <td colSpan={6} className="p-8 text-center">
-                    <div className="text-muted-foreground">
-                      {searchTerm.trim() ? (
-                        <>
-                          <p className="font-medium">Nenhum resultado encontrado</p>
-                          <p className="text-sm">
-                            Tente buscar por outro termo ou verifique a ortografia
-                          </p>
-                        </>
-                      ) : (
-                        <p>Nenhuma associação encontrada</p>
-                      )}
-                    </div>
-                  </td>
+                  <th className="text-left p-4 font-medium text-foreground">Cliente</th>
+                  <th className="text-left p-4 font-medium text-foreground">Associações</th>
+                  <th className="text-left p-4 font-medium text-foreground">Tipos</th>
+                  <th className="text-left p-4 font-medium text-foreground">Contato</th>
+                  <th className="text-left p-4 font-medium text-foreground">Responsável</th>
+                  <th className="w-12 p-4"></th>
                 </tr>
-              ) : (
-                // Usar flatMap para criar um array plano de elementos tr
-                paginatedData.flatMap((group) => {
-                  // Criar um array com a linha principal
+              </thead>
+              <tbody>
+                {paginatedData.flatMap((group) => {
                   const mainRow = (
                     <tr
                       key={`client-${group.client.uuid}`}
@@ -268,11 +313,11 @@ const AssociationsList: React.FC = () => {
                       </td>
                     </tr>
                   );
-                  // Se a linha estiver expandida, adicionar a linha de detalhes
+
                   if (expandedRows.has(group.client.uuid)) {
                     return [
                       mainRow,
-                      <tr key={`expanded-${group.client.uuid}`}>
+                      <tr key={`expanded-${group.client.uuid}`} className="animate-fade-in">
                         <td colSpan={6} className="p-0">
                           <ExpandedAssociations
                             associations={group.associations}
@@ -285,14 +330,13 @@ const AssociationsList: React.FC = () => {
                     ];
                   }
 
-                  // Caso contrário, retornar apenas a linha principal
                   return [mainRow];
-                })
-              )}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Pagination */}
       {filteredGroups.length > 0 && (
@@ -305,7 +349,7 @@ const AssociationsList: React.FC = () => {
           startIndex={startIndex}
           endIndex={endIndex}
           totalItems={totalItems}
-          className="bg-card rounded-lg border p-6"
+          className="bg-card rounded-lg border p-4 md:p-6"
         />
       )}
 
