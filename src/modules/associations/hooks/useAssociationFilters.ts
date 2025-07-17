@@ -70,14 +70,16 @@ export const useAssociationFilters = ({
         // Filtro de fabricante/operadora
         if (filters.manufacturer !== 'all') {
           const equipmentManufacturer = association.equipment?.manufacturer?.name;
-          const chipNotes = association.chip?.notes;
+          const chipManufacturer = association.chip?.manufacturer?.name;
+          const equipmentIsOperadora = association.equipment?.manufacturer?.description === 'Operadora';
+          const chipIsOperadora = association.chip?.manufacturer?.description === 'Operadora';
           
-          // Se é uma operadora (notes="OPERADORA")
+          // Se é uma operadora
           if (filters.manufacturer === 'operadora') {
-            if (!chipNotes || chipNotes !== 'OPERADORA') return false;
+            if (!equipmentIsOperadora && !chipIsOperadora) return false;
           } else {
             // Se é um fabricante específico
-            if (equipmentManufacturer !== filters.manufacturer) return false;
+            if (equipmentManufacturer !== filters.manufacturer && chipManufacturer !== filters.manufacturer) return false;
           }
         }
 
@@ -213,9 +215,12 @@ export const useAssociationFilters = ({
       { value: 'all', label: 'Todos', count: clientGroups.length }
     ];
 
-    // Adicionar operadoras
+    // Adicionar operadoras (baseado em manufacturer?.description === 'Operadora')
     const operatorCount = clientGroups.filter(group =>
-      group.associations.some(a => a.chip?.notes === 'OPERADORA')
+      group.associations.some(a => 
+        a.equipment?.manufacturer?.description === 'Operadora' ||
+        a.chip?.manufacturer?.description === 'Operadora'
+      )
     ).length;
 
     if (operatorCount > 0) {
@@ -231,20 +236,40 @@ export const useAssociationFilters = ({
     
     clientGroups.forEach(group => {
       group.associations.forEach(association => {
-        const manufacturer = association.equipment?.manufacturer?.name;
-        if (manufacturer) {
-          const count = manufacturers.get(manufacturer) || 0;
-          manufacturers.set(manufacturer, count + 1);
+        // Verificar fabricante do equipamento
+        const equipmentManufacturer = association.equipment?.manufacturer?.name;
+        if (equipmentManufacturer && association.equipment?.manufacturer?.description !== 'Operadora') {
+          const currentCount = manufacturers.get(equipmentManufacturer) || 0;
+          manufacturers.set(equipmentManufacturer, currentCount + 1);
+        }
+
+        // Verificar fabricante do chip
+        const chipManufacturer = association.chip?.manufacturer?.name;
+        if (chipManufacturer && association.chip?.manufacturer?.description !== 'Operadora') {
+          const currentCount = manufacturers.get(chipManufacturer) || 0;
+          manufacturers.set(chipManufacturer, currentCount + 1);
         }
       });
     });
 
-    manufacturers.forEach((count, manufacturer) => {
-      options.push({
-        value: manufacturer,
-        label: manufacturer,
-        count
-      });
+    // Contar grupos que têm associações com cada fabricante
+    manufacturers.forEach((_, manufacturer) => {
+      const count = clientGroups.filter(group =>
+        group.associations.some(association =>
+          (association.equipment?.manufacturer?.name === manufacturer && 
+           association.equipment?.manufacturer?.description !== 'Operadora') ||
+          (association.chip?.manufacturer?.name === manufacturer && 
+           association.chip?.manufacturer?.description !== 'Operadora')
+        )
+      ).length;
+
+      if (count > 0) {
+        options.push({
+          value: manufacturer,
+          label: manufacturer,
+          count
+        });
+      }
     });
 
     return options;
