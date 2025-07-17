@@ -43,6 +43,8 @@ const AssociationsList: React.FC = () => {
     filteredGroups: filteredByFilters,
     statusOptions,
     associationTypeOptions,
+    assetTypeOptions,
+    manufacturerOptions,
     updateFilter,
     clearFilters,
     hasActiveFilters
@@ -215,6 +217,8 @@ const AssociationsList: React.FC = () => {
           filters={filters}
           statusOptions={statusOptions}
           associationTypeOptions={associationTypeOptions}
+          assetTypeOptions={assetTypeOptions}
+          manufacturerOptions={manufacturerOptions}
           onFilterChange={updateFilter}
           onClearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}

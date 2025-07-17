@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { AssociationFilters, FilterOption, AssociationType } from '../types/filterTypes';
+import { AssociationFilters, FilterOption, AssociationType, AssetTypeOption, ManufacturerOption } from '../types/filterTypes';
 import { ClientAssociationGroup } from '../types/associationsTypes';
 
 interface UseAssociationFiltersProps {
@@ -8,13 +8,23 @@ interface UseAssociationFiltersProps {
   associationTypes?: AssociationType[];
 }
 
+// Definir os tipos de ativo
+const ASSET_TYPE_OPTIONS: AssetTypeOption[] = [
+  { value: 'all', label: 'Todos', solutionIds: [] },
+  { value: 'chips_speedy', label: 'Chips + SPEEDY', solutionIds: [11] }, // Chips com SPEEDY
+  { value: 'chips', label: 'Chips', solutionIds: [11] }, // Apenas chips
+  { value: 'equipment', label: 'Equipamentos', solutionIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12] } // Excluir chips (solution_id = 11)
+];
+
 export const useAssociationFilters = ({ 
   clientGroups, 
   associationTypes = [] 
 }: UseAssociationFiltersProps) => {
   const [filters, setFilters] = useState<AssociationFilters>({
     status: 'all',
-    associationType: 'all'
+    associationType: 'all',
+    assetType: 'all',
+    manufacturer: 'all'
   });
 
   // Aplicar filtros aos grupos de clientes
@@ -29,6 +39,58 @@ export const useAssociationFilters = ({
         // Filtro de tipo de associação
         if (filters.associationType !== 'all' && 
             association.association_type_id !== filters.associationType) return false;
+
+        // Filtro de tipo de ativo
+        if (filters.assetType !== 'all') {
+          const hasChip = association.chip_id !== null;
+          const hasEquipment = association.equipment_id !== null;
+          const chipSolution = association.chip?.solution_id;
+          const equipmentSolution = association.equipment?.solution_id;
+
+          switch (filters.assetType) {
+            case 'chips_speedy':
+              // Chips com SPEEDY (chip + equipment onde equipment é SPEEDY)
+              if (!hasChip || !hasEquipment) return false;
+              if (chipSolution !== 11) return false; // Chip deve ser solution_id = 11
+              if (![1, 2, 4].includes(equipmentSolution || 0)) return false; // Equipment deve ser SPEEDY
+              break;
+            case 'chips':
+              // Apenas chips (sem equipamentos ou com equipamentos não-SPEEDY)
+              if (!hasChip) return false;
+              if (chipSolution !== 11) return false;
+              if (hasEquipment && [1, 2, 4].includes(equipmentSolution || 0)) return false; // Não pode ter SPEEDY
+              break;
+            case 'equipment':
+              // Apenas equipamentos (sem chips)
+              if (!hasEquipment || hasChip) return false;
+              break;
+          }
+        }
+
+        // Filtro de fabricante/operadora
+        if (filters.manufacturer !== 'all') {
+          const equipmentManufacturer = association.equipment?.manufacturer?.name;
+          const chipNotes = association.chip?.notes;
+          
+          // Se é uma operadora (notes="OPERADORA")
+          if (filters.manufacturer === 'operadora') {
+            if (!chipNotes || chipNotes !== 'OPERADORA') return false;
+          } else {
+            // Se é um fabricante específico
+            if (equipmentManufacturer !== filters.manufacturer) return false;
+          }
+        }
+
+        // Filtro de período (entry_date)
+        if (filters.entryDateFrom) {
+          const entryDate = new Date(association.entry_date);
+          if (entryDate < filters.entryDateFrom) return false;
+        }
+
+        if (filters.entryDateTo) {
+          const entryDate = new Date(association.entry_date);
+          if (entryDate > filters.entryDateTo) return false;
+        }
 
         return true;
       });
@@ -111,7 +173,84 @@ export const useAssociationFilters = ({
     return options;
   }, [clientGroups, associationTypes]);
 
-  const updateFilter = (key: keyof AssociationFilters, value: string | number) => {
+  // Opções para filtro de tipo de ativo
+  const assetTypeOptions = useMemo((): FilterOption[] => {
+    return ASSET_TYPE_OPTIONS.map(option => {
+      if (option.value === 'all') {
+        return { ...option, count: clientGroups.length };
+      }
+
+      const count = clientGroups.filter(group => 
+        group.associations.some(association => {
+          const hasChip = association.chip_id !== null;
+          const hasEquipment = association.equipment_id !== null;
+          const chipSolution = association.chip?.solution_id;
+          const equipmentSolution = association.equipment?.solution_id;
+
+          switch (option.value) {
+            case 'chips_speedy':
+              return hasChip && hasEquipment && 
+                     chipSolution === 11 && 
+                     [1, 2, 4].includes(equipmentSolution || 0);
+            case 'chips':
+              return hasChip && chipSolution === 11 && 
+                     (!hasEquipment || ![1, 2, 4].includes(equipmentSolution || 0));
+            case 'equipment':
+              return hasEquipment && !hasChip;
+            default:
+              return false;
+          }
+        })
+      ).length;
+
+      return { ...option, count };
+    });
+  }, [clientGroups]);
+
+  // Opções para filtro de fabricante/operadora
+  const manufacturerOptions = useMemo((): FilterOption[] => {
+    const options: FilterOption[] = [
+      { value: 'all', label: 'Todos', count: clientGroups.length }
+    ];
+
+    // Adicionar operadoras
+    const operatorCount = clientGroups.filter(group =>
+      group.associations.some(a => a.chip?.notes === 'OPERADORA')
+    ).length;
+
+    if (operatorCount > 0) {
+      options.push({
+        value: 'operadora',
+        label: 'Operadoras',
+        count: operatorCount
+      });
+    }
+
+    // Adicionar fabricantes únicos
+    const manufacturers = new Map<string, number>();
+    
+    clientGroups.forEach(group => {
+      group.associations.forEach(association => {
+        const manufacturer = association.equipment?.manufacturer?.name;
+        if (manufacturer) {
+          const count = manufacturers.get(manufacturer) || 0;
+          manufacturers.set(manufacturer, count + 1);
+        }
+      });
+    });
+
+    manufacturers.forEach((count, manufacturer) => {
+      options.push({
+        value: manufacturer,
+        label: manufacturer,
+        count
+      });
+    });
+
+    return options;
+  }, [clientGroups]);
+
+  const updateFilter = (key: keyof AssociationFilters, value: any) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
@@ -121,17 +260,26 @@ export const useAssociationFilters = ({
   const clearFilters = () => {
     setFilters({
       status: 'all',
-      associationType: 'all'
+      associationType: 'all',
+      assetType: 'all',
+      manufacturer: 'all'
     });
   };
 
-  const hasActiveFilters = filters.status !== 'all' || filters.associationType !== 'all';
+  const hasActiveFilters = filters.status !== 'all' || 
+                         filters.associationType !== 'all' ||
+                         filters.assetType !== 'all' ||
+                         filters.manufacturer !== 'all' ||
+                         filters.entryDateFrom ||
+                         filters.entryDateTo;
 
   return {
     filters,
     filteredGroups,
     statusOptions,
     associationTypeOptions,
+    assetTypeOptions,
+    manufacturerOptions,
     updateFilter,
     clearFilters,
     hasActiveFilters

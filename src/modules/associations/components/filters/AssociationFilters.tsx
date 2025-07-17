@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -9,13 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AssociationFilters as IAssociationFilters, FilterOption } from '../../types/filterTypes';
 
 interface AssociationFiltersProps {
   filters: IAssociationFilters;
   statusOptions: FilterOption[];
   associationTypeOptions: FilterOption[];
-  onFilterChange: (key: keyof IAssociationFilters, value: string | number) => void;
+  assetTypeOptions: FilterOption[];
+  manufacturerOptions: FilterOption[];
+  onFilterChange: (key: keyof IAssociationFilters, value: string | number | Date | undefined) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -24,6 +27,8 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
   filters,
   statusOptions,
   associationTypeOptions,
+  assetTypeOptions,
+  manufacturerOptions,
   onFilterChange,
   onClearFilters,
   hasActiveFilters
@@ -46,7 +51,7 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {/* Filtro de Status */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
@@ -107,34 +112,88 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
           </Select>
         </div>
 
-        {/* Espaço para filtros futuros */}
+        {/* Filtro de Tipo de Ativo */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
+          <label className="text-sm font-medium text-foreground">
             Tipo de Ativo
           </label>
-          <Select disabled>
-            <SelectTrigger className="opacity-50">
-              <SelectValue placeholder="Em breve" />
+          <Select
+            value={filters.assetType}
+            onValueChange={(value) => onFilterChange('assetType', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o tipo de ativo" />
             </SelectTrigger>
+            <SelectContent>
+              {assetTypeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{option.label}</span>
+                    {option.count !== undefined && (
+                      <span className="text-muted-foreground text-xs ml-2">
+                        ({option.count})
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
 
+        {/* Filtro de Fabricante/Operadora */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">
-            Período
+          <label className="text-sm font-medium text-foreground">
+            Fabricante/Operadora
           </label>
-          <Select disabled>
-            <SelectTrigger className="opacity-50">
-              <SelectValue placeholder="Em breve" />
+          <Select
+            value={filters.manufacturer}
+            onValueChange={(value) => onFilterChange('manufacturer', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione fabricante" />
             </SelectTrigger>
+            <SelectContent>
+              {manufacturerOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{option.label}</span>
+                    {option.count !== undefined && (
+                      <span className="text-muted-foreground text-xs ml-2">
+                        ({option.count})
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
+        </div>
+
+        {/* Filtro de Período */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Período de Entrada
+          </label>
+          <div className="space-y-2">
+            <DatePicker
+              date={filters.entryDateFrom}
+              setDate={(date) => onFilterChange('entryDateFrom', date)}
+              placeholder="Data inicial"
+            />
+            <DatePicker
+              date={filters.entryDateTo}
+              setDate={(date) => onFilterChange('entryDateTo', date)}
+              placeholder="Data final"
+            />
+          </div>
         </div>
       </div>
 
       {/* Indicador de filtros ativos */}
       {hasActiveFilters && (
         <div className="mt-4 pt-4 border-t">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>Filtros ativos:</span>
             {filters.status !== 'all' && (
               <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
@@ -144,6 +203,21 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
             {filters.associationType !== 'all' && (
               <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
                 Tipo: {associationTypeOptions.find(o => o.value === filters.associationType)?.label}
+              </span>
+            )}
+            {filters.assetType !== 'all' && (
+              <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
+                Ativo: {assetTypeOptions.find(o => o.value === filters.assetType)?.label}
+              </span>
+            )}
+            {filters.manufacturer !== 'all' && (
+              <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
+                Fabricante: {manufacturerOptions.find(o => o.value === filters.manufacturer)?.label}
+              </span>
+            )}
+            {(filters.entryDateFrom || filters.entryDateTo) && (
+              <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs">
+                Período: {filters.entryDateFrom ? filters.entryDateFrom.toLocaleDateString('pt-BR') : '...'} - {filters.entryDateTo ? filters.entryDateTo.toLocaleDateString('pt-BR') : '...'}
               </span>
             )}
           </div>
