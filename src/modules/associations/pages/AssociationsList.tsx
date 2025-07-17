@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Users, Phone, Building, Smartphone, Router } from 'lucide-react';
 import { useAssociationsList } from '../hooks/useAssociationsList';
@@ -153,7 +154,7 @@ const AssociationsList: React.FC = () => {
               <div className="text-2xl font-semibold text-green-600">{stats.activeAssociations}</div>
             </div>
             <div className="bg-muted/50 rounded-lg p-4 flex flex-col items-center">
-              <div className="text-sm text-muted-foreground text-center">Chips Principais</div>
+              <div className="text-sm text-muted-foreground text-center">Chips + SPEEDY</div>
               <div className="text-2xl font-semibold text-blue-600 flex items-center gap-1">
                 <Smartphone className="h-5 w-5" />
                 {stats.principalChips}
@@ -356,7 +357,7 @@ const AssociationsList: React.FC = () => {
         ) : (
           <>
             Mostrando {stats.totalClients} clientes com{' '}
-            {stats.totalAssociations} associações ({stats.principalChips} chips principais, {stats.backupChips} chips backup, {stats.equipmentOnly} só equipamentos)
+            {stats.totalAssociations} associações ({stats.principalChips} chips + SPEEDY, {stats.backupChips} chips backup, {stats.equipmentOnly} só equipamentos)
           </>
         )}
       </div>

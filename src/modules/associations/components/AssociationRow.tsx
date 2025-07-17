@@ -84,7 +84,7 @@ const AssociationRow: React.FC<AssociationRowProps> = ({
         {hasChip && association.chip && (
           <AssetDetailsView
             asset={association.chip}
-            title={association.chipType === 'principal' ? 'Chip Principal' : 'Chip Backup'}
+            title={association.chipType === 'principal' ? 'Chip + SPEEDY' : 'Chip Backup'}
           />
         )}
       </div>

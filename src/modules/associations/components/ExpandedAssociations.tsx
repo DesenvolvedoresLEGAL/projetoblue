@@ -47,7 +47,7 @@ const ExpandedAssociations: React.FC<ExpandedAssociationsProps> = ({
           <div className="flex gap-1">
             {stats.principal > 0 && (
               <Badge variant="default" className="text-xs">
-                {stats.principal} Principal{stats.principal > 1 ? 's' : ''}
+                {stats.principal} Chip + SPEEDY
               </Badge>
             )}
             {stats.backup > 0 && (
