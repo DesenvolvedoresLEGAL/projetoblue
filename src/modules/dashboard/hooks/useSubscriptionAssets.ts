@@ -18,23 +18,30 @@ export const useSubscriptionAssets = () => {
           if (import.meta.env.DEV) console.log('🔍 Fetching subscription assets data...');
         }
         
-        // Query para buscar ativos atualmente em assinatura (association_id = 2)
-        // Usando associations para identificar ativos associados
+        // Query para buscar ativos atualmente em assinatura (association_type_id = 2)
         const { data: subscriptionAssociations, error } = await supabase
           .from('associations')
           .select(`
+            uuid,
             equipment_id,
             chip_id,
-            association_id,
+            status,
             exit_date,
-            assets!inner(
+            equipment:assets!equipment_id_fkey(
+              uuid,
+              solution_id,
+              asset_solutions!inner(solution)
+            ),
+            chip:assets!chip_id_fkey(
+              uuid,
               solution_id,
               asset_solutions!inner(solution)
             )
           `)
-          .eq('association_id', 2) // Assinatura
-          .or('exit_date.is.null,exit_date.gt.' + new Date().toISOString().split('T')[0])
-          .is('deleted_at', null);
+          .eq('association_type_id', 2) // Assinatura
+          .eq('status', true) // Associações ativas
+          .is('deleted_at', null)
+          .or('exit_date.is.null,exit_date.gte.' + new Date().toISOString().split('T')[0]);
 
         if (error) {
           if (import.meta.env.DEV) console.error('❌ Error fetching subscription assets:', error);
@@ -54,16 +61,27 @@ export const useSubscriptionAssets = () => {
         };
 
         subscriptionAssociations?.forEach((assoc) => {
-          const solutionName = assoc.assets?.asset_solutions?.solution?.toUpperCase();
-          
-          if (solutionName === 'CHIP') {
-            counts.chips++;
-          } else if (solutionName === 'SPEEDY 5G') {
-            counts.speedys++;
-          } else {
-            counts.equipments++;
+          // Contar equipamentos (equipment_id preenchido)
+          if (assoc.equipment_id && assoc.equipment) {
+            const solutionName = assoc.equipment.asset_solutions?.solution?.toUpperCase();
+            
+            if (solutionName === 'SPEEDY 5G') {
+              counts.speedys++;
+            } else {
+              counts.equipments++;
+            }
+            counts.total++;
           }
-          counts.total++;
+          
+          // Contar chips (chip_id preenchido)
+          if (assoc.chip_id && assoc.chip) {
+            const solutionName = assoc.chip.asset_solutions?.solution?.toUpperCase();
+            
+            if (solutionName === 'CHIP') {
+              counts.chips++;
+            }
+            counts.total++;
+          }
         });
 
         if (process.env.NODE_ENV === 'development') {
