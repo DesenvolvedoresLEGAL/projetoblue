@@ -11,12 +11,12 @@ export const detectSearchType = (searchTerm: string): SearchResult['type'] => {
   if (!trimmed) return 'client_name';
   
   // Detecta ICCID (19-20 dígitos ou últimos 5 dígitos)
-  if (/^\d{5}$/.test(trimmed) || /^\d{19,20}$/.test(trimmed)) {
+  if (/^\d{0,6}$/.test(trimmed) || /^\d{19,20}$/.test(trimmed)) {
     return 'iccid';
   }
+  if (/^[A-Za-z0-9\-_]+$/.test(trimmed) && trimmed.length <= 20 && !trimmed.includes(' ')) {
   
   // Detecta RADIO (alfanumérico sem espaços, até 20 caracteres)
-  if (/^[A-Za-z0-9\-_]+$/.test(trimmed) && trimmed.length <= 20 && !trimmed.includes(' ')) {
     return 'radio';
   }
   
