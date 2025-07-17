@@ -5,10 +5,21 @@ import { ClientAssociationGroup, AssociationWithRelations } from '../types/assoc
 
 export const useAssociationsList = () => {
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Simular carregamento inicial
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [refreshKey]);
   
   // Dados mockados - futuramente será substituído por chamada à API
-  const associations = useMemo(() => generateMockAssociations(), []);
+  const associations = useMemo(() => generateMockAssociations(), [refreshKey]);
   
   // Agrupar associações por cliente
   const clientGroups = useMemo(() => {
@@ -48,11 +59,18 @@ export const useAssociationsList = () => {
     inactiveAssociations: clientGroups.reduce((sum, group) => sum + group.inactiveAssociations, 0)
   }), [clientGroups]);
   
+  const refresh = () => {
+    setRefreshKey(prev => prev + 1);
+    setInitialLoading(true);
+  };
+  
   return {
     clientGroups,
     stats,
     loading,
+    initialLoading,
     error,
-    associations
+    associations,
+    refresh
   };
 };

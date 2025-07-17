@@ -3,12 +3,19 @@ import React from 'react';
 import { AssociationWithRelations } from '../types/associationsTypes';
 import { getEquipmentInfo, getChipInfo, getOperatorInfo, getAssociationPeriod } from '../utils/associationFormatters';
 import { Badge } from '@/components/ui/badge';
+import EndAssociationButton from './EndAssociationButton';
 
 interface AssociationRowProps {
   association: AssociationWithRelations;
+  onEndAssociation?: (association: AssociationWithRelations) => void;
+  isEndingAssociation?: boolean;
 }
 
-const AssociationRow: React.FC<AssociationRowProps> = ({ association }) => {
+const AssociationRow: React.FC<AssociationRowProps> = ({ 
+  association, 
+  onEndAssociation,
+  isEndingAssociation = false 
+}) => {
   const getAssetTypeIcon = () => {
     // Assets com solution_id 1,2,4 têm prioridade máxima
     if (association.equipment?.solution_id && [1, 2, 4].includes(association.equipment.solution_id)) {
@@ -44,8 +51,17 @@ const AssociationRow: React.FC<AssociationRowProps> = ({ association }) => {
             </span>
           )}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {getAssociationPeriod(association)}
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-muted-foreground">
+            {getAssociationPeriod(association)}
+          </div>
+          {onEndAssociation && (
+            <EndAssociationButton
+              association={association}
+              onEndAssociation={onEndAssociation}
+              isLoading={isEndingAssociation}
+            />
+          )}
         </div>
       </div>
       

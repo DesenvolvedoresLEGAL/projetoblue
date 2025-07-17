@@ -2,21 +2,27 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Users, Phone, Building } from 'lucide-react';
 import { useAssociationsList } from '../hooks/useAssociationsList';
+import { useEndAssociation } from '../hooks/useEndAssociation';
 import { formatPhone } from '../utils/associationFormatters';
 import ExpandedAssociations from '../components/ExpandedAssociations';
+import EndAssociationModal from '../components/EndAssociationModal';
+import AssociationsListSkeleton from '../components/AssociationsListSkeleton';
 import { SearchBar } from '../components/SearchBar';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchResultHighlight } from '../components/SearchResultHighlight';
 import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
 import { usePagination } from '../hooks/usePagination';
+import { AssociationWithRelations } from '../types/associationsTypes';
 
 const ITEMS_PER_PAGE = 11;
 
 const AssociationsList: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAssociation, setSelectedAssociation] = useState<AssociationWithRelations | null>(null);
+  const [endingAssociationId, setEndingAssociationId] = useState<string | null>(null);
   
-  const { clientGroups, stats, loading, error } = useAssociationsList();
+  const { clientGroups, stats, loading, initialLoading, error, refresh } = useAssociationsList();
   
   const { 
     filteredGroups, 
@@ -42,6 +48,14 @@ const AssociationsList: React.FC = () => {
     data: filteredGroups,
     itemsPerPage: ITEMS_PER_PAGE
   });
+
+  const { endAssociation, isLoading: isEndingAssociation } = useEndAssociation({
+    onSuccess: () => {
+      setSelectedAssociation(null);
+      setEndingAssociationId(null);
+      refresh();
+    }
+  });
   
   const toggleRow = (clientId: string) => {
     const newExpanded = new Set(expandedRows);
@@ -52,16 +66,25 @@ const AssociationsList: React.FC = () => {
     }
     setExpandedRows(newExpanded);
   };
+
+  const handleEndAssociation = (association: AssociationWithRelations) => {
+    setSelectedAssociation(association);
+  };
+
+  const handleConfirmEndAssociation = async (exitDate: string, notes?: string) => {
+    if (!selectedAssociation) return;
+    
+    try {
+      setEndingAssociationId(selectedAssociation.uuid);
+      await endAssociation(selectedAssociation, exitDate, notes);
+    } catch (error) {
+      setEndingAssociationId(null);
+    }
+  };
   
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-muted-foreground">Carregando associações...</p>
-        </div>
-      </div>
-    );
+  // Loading inicial com skeleton
+  if (initialLoading) {
+    return <AssociationsListSkeleton />;
   }
 
   if (error) {
@@ -211,6 +234,8 @@ const AssociationsList: React.FC = () => {
                           <ExpandedAssociations 
                             associations={group.associations}
                             clientName={group.client.nome}
+                            onEndAssociation={handleEndAssociation}
+                            endingAssociationId={endingAssociationId}
                           />
                         </td>
                       </tr>
@@ -252,6 +277,15 @@ const AssociationsList: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Modal de Finalizar Associação */}
+      <EndAssociationModal
+        isOpen={!!selectedAssociation}
+        onOpenChange={(open) => !open && setSelectedAssociation(null)}
+        association={selectedAssociation}
+        onConfirm={handleConfirmEndAssociation}
+        isLoading={isEndingAssociation}
+      />
     </div>
   );
 };
