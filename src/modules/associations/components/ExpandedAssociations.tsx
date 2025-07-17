@@ -22,14 +22,17 @@ const ExpandedAssociations: React.FC<ExpandedAssociationsProps> = ({
   // Agrupar associações por status
   const groupedAssociations = groupAssociationsByStatus(associations);
 
-  // Estatísticas por tipo
+  // Estatísticas por tipo - contar apenas associações ativas
   const stats = associations.reduce((acc, association) => {
-    if (association.chipType === 'principal') acc.principal++;
-    else if (association.chipType === 'backup') acc.backup++;
-    else if (association.equipment_id) acc.equipment++;
-    
-    if (association.status) acc.active++;
-    else acc.inactive++;
+    if (association.status) {
+      if (association.chipType === 'principal') acc.principal++;
+      else if (association.chipType === 'backup') acc.backup++;
+      else if (association.equipment_id) acc.equipment++;
+      
+      acc.active++;
+    } else {
+      acc.inactive++;
+    }
     
     return acc;
   }, { principal: 0, backup: 0, equipment: 0, active: 0, inactive: 0 });

@@ -37,7 +37,7 @@ export const useAssociationsList = () => {
     }));
   }, [associations]);
   
-  // Agrupar associações por cliente
+  // Agrupar associações por cliente, filtrando apenas clientes com associações ativas
   const clientGroups = useMemo(() => {
     const groups = new Map<string, ClientAssociationGroup>();
     
@@ -67,23 +67,26 @@ export const useAssociationsList = () => {
         group.inactiveAssociations++;
       }
 
-      // Contabilizar tipos de associação
-      switch (association.chipType) {
-        case 'principal':
-          group.principalChips++;
-          break;
-        case 'backup':
-          group.backupChips++;
-          break;
-        case 'none':
-          if (association.equipment_id) {
-            group.equipmentOnly++;
-          }
-          break;
+      // Contabilizar tipos de associação apenas para associações ativas
+      if (association.status) {
+        switch (association.chipType) {
+          case 'principal':
+            group.principalChips++;
+            break;
+          case 'backup':
+            group.backupChips++;
+            break;
+          case 'none':
+            if (association.equipment_id) {
+              group.equipmentOnly++;
+            }
+            break;
+        }
       }
     });
     
-    return Array.from(groups.values());
+    // Filtrar apenas grupos com associações ativas
+    return Array.from(groups.values()).filter(group => group.activeAssociations > 0);
   }, [processedAssociations]);
   
   const stats: AssociationStats = useMemo(() => {
