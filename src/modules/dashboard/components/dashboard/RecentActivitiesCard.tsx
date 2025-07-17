@@ -7,19 +7,41 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { capitalize } from '@/utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
 
-interface RecentActivity {
-  id: number;
-  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
-  description: string;
-  assetName?: string;
-  clientName?: string;
-  timestamp: string;
-  details?: Record<string, unknown>;
-  performedBy?: string; // NEW: User who performed the action
+// interface RecentActivity {
+//   id: number;
+//   type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
+//   description: string;
+//   assetName?: string;
+//   clientName?: string;
+//   timestamp: string;
+//   details?: Record<string, unknown>;
+//   performedBy?: string; // NEW: User who performed the action
+// }
+
+interface RecentActivityAsset {
+  uuid: string;
+  user_id: string;
+  asset_id: string;
+  event: string;
+  status_after: string; // JOIN WITH ASSET_STATUS
+  status_before: string; // JOIN WITH ASSET_STATUS
+  details: Record<string, unknown>; // OLD AND NEW ASSETS JSONB
+  created_at: string;
+  updated_at: string;
+}
+
+interface RecentActivityAssociation {
+  uuid: string;
+  user_id: string;
+  association_id: string;
+  event: string;
+  details: Record<string, unknown>; // OLD AND NEW ASSOCIATION JSONB
+  created_at: string;
+  updated_at: string;
 }
 
 interface RecentActivitiesCardProps {
-  activities: RecentActivity[];
+  activities: (RecentActivityAsset | RecentActivityAssociation)[];
   isLoading?: boolean;
 }
 
