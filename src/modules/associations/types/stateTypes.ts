@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+import { AssociationQueryParams } from "./apiTypes";
+import { AssociationWithRelations } from "./associationsTypes";
+import { AssociationCardData, AssociationSummary } from "./cardTypes";
 
 // Estados de loading para diferentes operações
 export interface LoadingStates {

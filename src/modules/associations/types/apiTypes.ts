@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 
 import { AssociationCardData, AssociationSummary } from './cardTypes';
 import { AssociationWithRelations, Client, Asset } from './associationsTypes';
+
 
 // Tipos base para respostas da API
 export interface ApiResponse<T> {
