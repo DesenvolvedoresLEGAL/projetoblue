@@ -2,6 +2,8 @@
 import { useState, useMemo } from 'react';
 import { AssociationFilters, FilterOption, AssociationType, AssetTypeOption, ManufacturerOption } from '../types/filterTypes';
 import { ClientAssociationGroup } from '../types/associationsTypes';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseAssociationFiltersProps {
   clientGroups: ClientAssociationGroup[];
@@ -25,6 +27,21 @@ export const useAssociationFilters = ({
     associationType: 'all',
     assetType: 'all',
     manufacturer: 'all'
+  });
+
+  // Buscar todos os fabricantes da tabela manufacturers
+  const { data: allManufacturers = [] } = useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('manufacturers')
+        .select('id, name, description')
+        .is('deleted_at', null)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
   });
 
   // Aplicar filtros aos grupos de clientes
@@ -71,15 +88,10 @@ export const useAssociationFilters = ({
         if (filters.manufacturer !== 'all') {
           const equipmentManufacturer = association.equipment?.manufacturer?.name;
           const chipManufacturer = association.chip?.manufacturer?.name;
-          const equipmentIsOperadora = association.equipment?.manufacturer?.description === 'Operadora';
-          const chipIsOperadora = association.chip?.manufacturer?.description === 'Operadora';
           
-          // Se é uma operadora
-          if (filters.manufacturer === 'operadora') {
-            if (!equipmentIsOperadora && !chipIsOperadora) return false;
-          } else {
-            // Se é um fabricante específico
-            if (equipmentManufacturer !== filters.manufacturer && chipManufacturer !== filters.manufacturer) return false;
+          // Verificar se a associação tem algum ativo do fabricante selecionado
+          if (equipmentManufacturer !== filters.manufacturer && chipManufacturer !== filters.manufacturer) {
+            return false;
           }
         }
 
@@ -209,71 +221,31 @@ export const useAssociationFilters = ({
     });
   }, [clientGroups]);
 
-  // Opções para filtro de fabricante/operadora
+  // Opções para filtro de fabricante/operadora - listar todos os fabricantes
   const manufacturerOptions = useMemo((): FilterOption[] => {
     const options: FilterOption[] = [
       { value: 'all', label: 'Todos', count: clientGroups.length }
     ];
 
-    // Adicionar operadoras (baseado em manufacturer?.description === 'Operadora')
-    const operatorCount = clientGroups.filter(group =>
-      group.associations.some(a => 
-        a.equipment?.manufacturer?.description === 'Operadora' ||
-        a.chip?.manufacturer?.description === 'Operadora'
-      )
-    ).length;
-
-    if (operatorCount > 0) {
-      options.push({
-        value: 'operadora',
-        label: 'Operadoras',
-        count: operatorCount
-      });
-    }
-
-    // Adicionar fabricantes únicos
-    const manufacturers = new Map<string, number>();
-    
-    clientGroups.forEach(group => {
-      group.associations.forEach(association => {
-        // Verificar fabricante do equipamento
-        const equipmentManufacturer = association.equipment?.manufacturer?.name;
-        if (equipmentManufacturer && association.equipment?.manufacturer?.description !== 'Operadora') {
-          const currentCount = manufacturers.get(equipmentManufacturer) || 0;
-          manufacturers.set(equipmentManufacturer, currentCount + 1);
-        }
-
-        // Verificar fabricante do chip
-        const chipManufacturer = association.chip?.manufacturer?.name;
-        if (chipManufacturer && association.chip?.manufacturer?.description !== 'Operadora') {
-          const currentCount = manufacturers.get(chipManufacturer) || 0;
-          manufacturers.set(chipManufacturer, currentCount + 1);
-        }
-      });
-    });
-
-    // Contar grupos que têm associações com cada fabricante
-    manufacturers.forEach((_, manufacturer) => {
+    // Adicionar todos os fabricantes da tabela manufacturers
+    allManufacturers.forEach(manufacturer => {
+      // Contar quantos grupos têm associações com este fabricante
       const count = clientGroups.filter(group =>
         group.associations.some(association =>
-          (association.equipment?.manufacturer?.name === manufacturer && 
-           association.equipment?.manufacturer?.description !== 'Operadora') ||
-          (association.chip?.manufacturer?.name === manufacturer && 
-           association.chip?.manufacturer?.description !== 'Operadora')
+          association.equipment?.manufacturer?.name === manufacturer.name ||
+          association.chip?.manufacturer?.name === manufacturer.name
         )
       ).length;
 
-      if (count > 0) {
-        options.push({
-          value: manufacturer,
-          label: manufacturer,
-          count
-        });
-      }
+      options.push({
+        value: manufacturer.name,
+        label: manufacturer.name,
+        count
+      });
     });
 
     return options;
-  }, [clientGroups]);
+  }, [clientGroups, allManufacturers]);
 
   const updateFilter = (key: keyof AssociationFilters, value: any) => {
     setFilters(prev => ({
