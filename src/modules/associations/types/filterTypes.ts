@@ -12,6 +12,7 @@ export interface FilterOption {
   value: string | number;
   label: string;
   count?: number;
+  isDisabled?: boolean;
 }
 
 export interface AssociationType {

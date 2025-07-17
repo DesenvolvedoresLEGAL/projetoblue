@@ -148,17 +148,26 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
           </label>
           <Select
             value={filters.manufacturer}
-            onValueChange={(value) => onFilterChange('manufacturer', value)}
+            onValueChange={(value) => {
+              // Ignorar separadores
+              if (value.startsWith('separator_')) return;
+              onFilterChange('manufacturer', value);
+            }}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione fabricante" />
             </SelectTrigger>
             <SelectContent>
               {manufacturerOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()}>
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value.toString()}
+                  disabled={option.isDisabled}
+                  className={option.isDisabled ? "font-semibold text-muted-foreground text-center" : ""}
+                >
                   <div className="flex items-center justify-between w-full">
                     <span>{option.label}</span>
-                    {option.count !== undefined && (
+                    {option.count !== undefined && !option.isDisabled && (
                       <span className="text-muted-foreground text-xs ml-2">
                         ({option.count})
                       </span>

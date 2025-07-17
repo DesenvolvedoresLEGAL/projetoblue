@@ -221,28 +221,67 @@ export const useAssociationFilters = ({
     });
   }, [clientGroups]);
 
-  // Opções para filtro de fabricante/operadora - listar todos os fabricantes
+  // Opções para filtro de fabricante/operadora - separados por grupos
   const manufacturerOptions = useMemo((): FilterOption[] => {
     const options: FilterOption[] = [
       { value: 'all', label: 'Todos', count: clientGroups.length }
     ];
 
-    // Adicionar todos os fabricantes da tabela manufacturers
-    allManufacturers.forEach(manufacturer => {
-      // Contar quantos grupos têm associações com este fabricante
-      const count = clientGroups.filter(group =>
-        group.associations.some(association =>
-          association.equipment?.manufacturer?.name === manufacturer.name ||
-          association.chip?.manufacturer?.name === manufacturer.name
-        )
-      ).length;
+    // Separar operadoras e fabricantes
+    const operators = allManufacturers.filter(m => m.description === 'Operadora');
+    const manufacturers = allManufacturers.filter(m => m.description !== 'Operadora');
 
+    // Adicionar operadoras primeiro (se existirem)
+    if (operators.length > 0) {
+      // Adicionar um separador visual para operadoras
       options.push({
-        value: manufacturer.name,
-        label: manufacturer.name,
-        count
+        value: 'separator_operators',
+        label: '── OPERADORAS ──',
+        count: undefined,
+        isDisabled: true
       });
-    });
+
+      operators.forEach(operator => {
+        const count = clientGroups.filter(group =>
+          group.associations.some(association =>
+            association.equipment?.manufacturer?.name === operator.name ||
+            association.chip?.manufacturer?.name === operator.name
+          )
+        ).length;
+
+        options.push({
+          value: operator.name,
+          label: operator.name,
+          count
+        });
+      });
+    }
+
+    // Adicionar fabricantes (se existirem)
+    if (manufacturers.length > 0) {
+      // Adicionar um separador visual para fabricantes
+      options.push({
+        value: 'separator_manufacturers',
+        label: '── FABRICANTES ──',
+        count: undefined,
+        isDisabled: true
+      });
+
+      manufacturers.forEach(manufacturer => {
+        const count = clientGroups.filter(group =>
+          group.associations.some(association =>
+            association.equipment?.manufacturer?.name === manufacturer.name ||
+            association.chip?.manufacturer?.name === manufacturer.name
+          )
+        ).length;
+
+        options.push({
+          value: manufacturer.name,
+          label: manufacturer.name,
+          count
+        });
+      });
+    }
 
     return options;
   }, [clientGroups, allManufacturers]);
