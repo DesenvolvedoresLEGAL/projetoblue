@@ -26,7 +26,7 @@ export const associationService = {
       .from('associations')
       .select(`
         *,
-        client:clients!associations_client_id_fkey(
+        client:clients!client_id_fkey(
           uuid,
           nome,
           empresa,
@@ -37,7 +37,7 @@ export const associationService = {
           created_at,
           updated_at
         ),
-        equipment:assets!associations_equipment_id_fkey(
+        equipment:assets!equipment_id_fkey(
           uuid,
           model,
           serial_number,
@@ -74,7 +74,7 @@ export const associationService = {
             updated_at
           )
         ),
-        chip:assets!associations_chip_id_fkey(
+        chip:assets!chip_id_fkey(
           uuid,
           model,
           serial_number,
@@ -117,7 +117,7 @@ export const associationService = {
           created_at,
           updated_at
         ),
-        plan:plans(
+        plan:plans!plan_id_fkey(
           id,
           nome,
           tamanho_gb,

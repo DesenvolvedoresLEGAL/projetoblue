@@ -22,19 +22,19 @@ const AssociationsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAssociation, setSelectedAssociation] = useState<AssociationWithRelations | null>(null);
   const [endingAssociationId, setEndingAssociationId] = useState<string | null>(null);
-  
+
   const { clientGroups, stats, loading, initialLoading, error, refresh } = useAssociationsList();
-  
-  const { 
-    filteredGroups, 
-    searchType, 
-    totalMatches, 
-    isSearching 
-  } = useAssociationsSearch({ 
-    clientGroups, 
-    searchTerm 
+
+  const {
+    filteredGroups,
+    searchType,
+    totalMatches,
+    isSearching
+  } = useAssociationsSearch({
+    clientGroups,
+    searchTerm
   });
-  
+
   const {
     currentPage,
     totalPages,
@@ -57,7 +57,7 @@ const AssociationsList: React.FC = () => {
       refresh();
     }
   });
-  
+
   const toggleRow = (clientId: string) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(clientId)) {
@@ -74,7 +74,7 @@ const AssociationsList: React.FC = () => {
 
   const handleConfirmEndAssociation = async (exitDate: string, notes?: string) => {
     if (!selectedAssociation) return;
-    
+
     try {
       setEndingAssociationId(selectedAssociation.uuid);
       await endAssociation(selectedAssociation, exitDate, notes);
@@ -82,7 +82,7 @@ const AssociationsList: React.FC = () => {
       setEndingAssociationId(null);
     }
   };
-  
+
   // Loading inicial com skeleton
   if (initialLoading) {
     return <AssociationsListSkeleton />;
@@ -98,7 +98,7 @@ const AssociationsList: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -112,7 +112,7 @@ const AssociationsList: React.FC = () => {
         <p className="text-muted-foreground">
           Visualize e gerencie todas as associações de clientes com seus equipamentos e chips
         </p>
-        
+
         {/* Stats expandidas */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
           <div className="bg-muted/50 rounded-lg p-4">
@@ -150,7 +150,7 @@ const AssociationsList: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Search Bar */}
       <div className="bg-card rounded-lg border p-6">
         <SearchBar
@@ -161,7 +161,7 @@ const AssociationsList: React.FC = () => {
           totalMatches={totalMatches}
         />
       </div>
-      
+
       {/* Table */}
       <div className="bg-card rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
@@ -195,24 +195,26 @@ const AssociationsList: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((group) => (
-                  <React.Fragment key={group.client.uuid}>
-                    {/* Linha principal do cliente */}
-                    <tr 
+                // Usar flatMap para criar um array plano de elementos tr
+                paginatedData.flatMap((group) => {
+                  // Criar um array com a linha principal
+                  const mainRow = (
+                    <tr
+                      key={`client-${group.client.uuid}`}
                       className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                       onClick={() => toggleRow(group.client.uuid)}
                     >
                       <td className="p-4">
                         <div className="space-y-1">
                           <div className="font-medium text-foreground">
-                            <SearchResultHighlight 
+                            <SearchResultHighlight
                               text={group.client.nome}
                               searchTerm={searchType === 'client_name' ? searchTerm : ''}
                             />
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Building className="h-4 w-4" />
-                            <SearchResultHighlight 
+                            <SearchResultHighlight
                               text={group.client.empresa}
                               searchTerm={searchType === 'client_name' ? searchTerm : ''}
                             />
@@ -265,12 +267,14 @@ const AssociationsList: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                    
-                    {/* Linhas expandidas com detalhes das associações */}
-                    {expandedRows.has(group.client.uuid) && (
-                      <tr>
+                  );
+                  // Se a linha estiver expandida, adicionar a linha de detalhes
+                  if (expandedRows.has(group.client.uuid)) {
+                    return [
+                      mainRow,
+                      <tr key={`expanded-${group.client.uuid}`}>
                         <td colSpan={6} className="p-0">
-                          <ExpandedAssociations 
+                          <ExpandedAssociations
                             associations={group.associations}
                             clientName={group.client.nome}
                             onEndAssociation={handleEndAssociation}
@@ -278,15 +282,18 @@ const AssociationsList: React.FC = () => {
                           />
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))
+                    ];
+                  }
+
+                  // Caso contrário, retornar apenas a linha principal
+                  return [mainRow];
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
-      
+
       {/* Pagination */}
       {filteredGroups.length > 0 && (
         <PaginationControls
@@ -301,7 +308,7 @@ const AssociationsList: React.FC = () => {
           className="bg-card rounded-lg border p-6"
         />
       )}
-      
+
       {/* Footer com informações */}
       <div className="text-sm text-muted-foreground text-center">
         {searchTerm.trim() ? (
