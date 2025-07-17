@@ -191,7 +191,7 @@ const createAssociation = useCallback(async () => {
       console.error("Erro ao criar associações:", error);
 
       toast.error(
-        "Erro ao criar associações. Tente novamente.\n" + error
+        "Erro ao criar associações. Tente novamente.\nO ativo " + error.message.split(' ').slice(3, 1000).join(' ')
       );
       throw error;
     }
