@@ -1,129 +1,149 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, ExternalLink } from "lucide-react";
-import { AssetWithRelations } from "@/types/assetWithRelations";
-import { StandardStatusBadge } from "@/components/ui/standard-status-badge";
+import { Bell, Calendar, ExternalLink, Loader2 } from "lucide-react";
+import type { AssetWithRelations } from '@/types/assetWithRelations';
+import { useRentedAssets } from '@modules/dashboard/hooks/useRentedAssets';
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { Badge } from '@/components/ui/badge';
 
-interface RentedAssetsCardProps {
-  assets?: AssetWithRelations[];
-  isLoading?: boolean;
-}
+export const RentedAssetsCard = () => {
+  const { data: rentedAssets, isLoading, error } = useRentedAssets();
+  const navigate = useNavigate();
 
-export function RentedAssetsCard({ assets = [], isLoading }: RentedAssetsCardProps) {
-  // Filter rented assets (status_id = 2 typically means rented/allocated)
-  const rentedAssets = assets.filter(asset => 
-    asset.status_id === 2 || 
-    asset.status?.name?.toLowerCase().includes('alocado') ||
-    asset.status?.name?.toLowerCase().includes('locação')
-  );
+  const handleViewAll = () => {
+    // Navigate to inventory with filter for rented assets
+    navigate('/assets/inventory?rented_days=gt.0');
+  };
 
-  const processedAssets = rentedAssets.map(asset => {
-    const chipCount = asset.solucao?.name === 'CHIP' ? 1 : 0;
-    const speedyCount = asset.solucao?.name === 'SPEEDY 5G' ? 1 : 0;
-    const equipmentCount = !chipCount && !speedyCount ? 1 : 0;
+  const getAssetIdentifier = (asset: AssetWithRelations) => {
+    if (asset.radio) return asset.radio;
+    if (asset.line_number) return asset.line_number.toString();
+    if (asset.serial_number) return asset.serial_number;
+    return asset.uuid.substring(0, 8);
+  };
 
-    return {
-      ...asset,
-      identifier: asset.radio || 
-                 asset.line_number?.toString() || 
-                 asset.serial_number || 
-                 asset.iccid || 
-                 'N/A',
-      type: asset.solucao?.name || 'Unknown',
-      chipCount,
-      speedyCount,
-      equipmentCount
-    };
-  });
-
-  const totalChips = processedAssets.reduce((sum, asset) => sum + asset.chipCount, 0);
-  const totalSpeedys = processedAssets.reduce((sum, asset) => sum + asset.speedyCount, 0);
-  const totalEquipments = processedAssets.reduce((sum, asset) => sum + asset.equipmentCount, 0);
+  const getAssetTypeDisplay = (asset: AssetWithRelations) => {
+    if (asset.solution?.solution === 'CHIP') return 'CHIP';
+    if (asset.solution?.solution === 'SPEEDY 5G') return 'Speedy 5G';
+    return asset.model || asset.solution?.solution || 'Equipamento';
+  };
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Ativos Alugados
+      <Card className="h-full shadow-legal dark:shadow-legal-dark">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-dark dark:text-text-primary-dark">Ativos Alugados</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            Carregando ativos alugados...
-          </div>
+        <CardContent className="flex items-center justify-center h-40">
+          <Loader2 className="h-6 w-6 animate-spin text-legal-primary dark:text-legal-secondary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="h-full shadow-legal dark:shadow-legal-dark">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-dark dark:text-text-primary-dark">Ativos Alugados</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-40 text-muted-foreground">
+          Erro ao carregar dados
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          Ativos Alugados ({rentedAssets.length})
+    <Card className="h-full flex flex-col shadow-legal dark:shadow-legal-dark hover:shadow-legal-lg dark:hover:shadow-legal-dark-lg transition-shadow duration-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-legal-primary dark:text-legal-secondary" />
+            <span className="text-legal-primary dark:text-legal-secondary font-semibold">Ranking de locação</span>
+          </div>
+          <Badge variant="secondary" className="bg-legal-secondary/20 text-legal-primary dark:bg-legal-secondary/30 dark:text-legal-secondary text-xs">
+            {rentedAssets?.length || 0} ativos
+          </Badge>
         </CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
+          Ranking de ativos pelo número de dias alugados
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-primary">{totalChips}</div>
-            <div className="text-sm text-muted-foreground">Chips</div>
+      <CardContent className="flex-1 overflow-y-auto space-y-3">
+        {!rentedAssets || rentedAssets.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Nenhum ativo alugado encontrado</p>
           </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-primary">{totalSpeedys}</div>
-            <div className="text-sm text-muted-foreground">Speedys</div>
-          </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-primary">{totalEquipments}</div>
-            <div className="text-sm text-muted-foreground">Equipamentos</div>
-          </div>
-        </div>
-
-        {/* Asset List */}
-        <ScrollArea className="h-48">
-          <div className="space-y-2">
-            {processedAssets.length > 0 ? (
-              processedAssets.map((asset) => (
-                <div key={asset.uuid} className="flex items-center justify-between p-2 rounded border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {asset.identifier}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {asset.type}
-                    </p>
+        ) : (
+          <>
+            {/* Assets List */}
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {rentedAssets.slice(0, 10).map((asset) => {
+                const isOverThirtyDays = asset.rented_days > 30;
+                
+                return (
+                  <div
+                    key={asset.uuid}
+                    className={cn(
+                      "relative p-4 rounded-md transition-all duration-200 border h-full",
+                      isOverThirtyDays 
+                        ? "border-l-4 border-legal-primary bg-legal-primary/5 dark:bg-legal-primary/10 border-l-legal-primary hover:bg-legal-primary/10 dark:hover:bg-legal-primary/15" 
+                        : "border-border hover:bg-muted/50 hover:border-legal-primary/30 dark:hover:border-legal-secondary/30"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate text-legal-dark dark:text-text-primary-dark">
+                            {getAssetIdentifier(asset)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Status: {asset.status?.status}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={cn(
+                          "text-sm font-medium transition-colors duration-200",
+                          isOverThirtyDays 
+                            ? "text-legal-primary dark:text-legal-secondary" 
+                            : "text-foreground"
+                        )}>
+                          {asset.rented_days} dias
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StandardStatusBadge 
-                      status={asset.status?.name || 'Unknown'}
-                      variant="secondary"
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum ativo alugado no momento
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+                );
+              })}
+            </div>
 
-        {/* Action Button */}
-        <div className="mt-4">
-          <Button variant="outline" size="sm" className="w-full">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Ver Todos os Alugados
-          </Button>
-        </div>
+            {/* View All Button */}
+            <div className="pt-3 border-t border-legal-primary/20 dark:border-legal-secondary/20">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleViewAll}
+                className="w-full h-10 border-legal-primary text-legal-primary hover:bg-legal-primary hover:text-white dark:border-legal-secondary dark:text-legal-secondary dark:hover:bg-legal-secondary dark:hover:text-bg-primary-dark transition-all duration-200"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ver todos os ativos alugados
+              </Button>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
-}
+};
