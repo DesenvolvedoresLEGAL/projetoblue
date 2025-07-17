@@ -1,70 +1,62 @@
 
-import React from 'react';
+import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { badgeVariants } from "@/components/ui/badge-variants";
-import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 interface StandardStatusBadgeProps {
   status: string;
-  type?: 'status' | 'event' | 'association';
+  variant?: "default" | "secondary" | "destructive" | "outline";
   className?: string;
 }
 
-export const StandardStatusBadge: React.FC<StandardStatusBadgeProps> = ({
-  status,
-  type = 'status',
-  className
-}) => {
-  const getStatusVariant = (status: string, type: string) => {
-    // Para eventos de histórico
-    if (type === 'event') {
-      switch (status) {
-        case 'Ativo Criado':
-        case 'Associação Criada':
-          return 'default';
-        case 'Status Atualizado':
-        case 'Status da Associação Atualizado':
-          return 'secondary';
-        case 'Associação Removida':
-        case 'Ativo Removido':
-          return 'destructive';
-        case 'Inconsistência Corrigida':
-          return 'success';
-        default:
-          return 'outline';
-      }
+export function StandardStatusBadge({ 
+  status, 
+  variant,
+  className 
+}: StandardStatusBadgeProps) {
+  // Auto-determine variant based on status if not provided
+  const getVariant = (statusText: string): "default" | "secondary" | "destructive" | "outline" => {
+    if (variant) return variant;
+    
+    const normalizedStatus = statusText.toLowerCase();
+    
+    if (normalizedStatus.includes('disponível') || 
+        normalizedStatus.includes('disponivel') || 
+        normalizedStatus.includes('ativo')) {
+      return 'default'; // Green-ish in most themes
     }
-
-    // Para status de ativos
-    switch (status.toUpperCase()) {
-      case 'DISPONÍVEL':
-      case 'DISPONIVEL':
-        return 'success';
-      case 'ALUGADO':
-      case 'ASSINATURA':
-      case 'EM USO':
-        return 'default';
-      case 'BLOQUEADO':
-      case 'MANUTENÇÃO':
-      case 'MANUTENCAO':
-        return 'destructive';
-      case 'SEM DADOS':
-        return 'warning';
-      default:
-        return 'outline';
+    
+    if (normalizedStatus.includes('locação') || 
+        normalizedStatus.includes('locacao') || 
+        normalizedStatus.includes('alocado') ||
+        normalizedStatus.includes('em uso')) {
+      return 'secondary'; // Blue-ish
     }
+    
+    if (normalizedStatus.includes('manutenção') || 
+        normalizedStatus.includes('manutencao') ||
+        normalizedStatus.includes('problema')) {
+      return 'outline'; // Warning-ish
+    }
+    
+    if (normalizedStatus.includes('bloqueado') || 
+        normalizedStatus.includes('crítico') ||
+        normalizedStatus.includes('critico') ||
+        normalizedStatus.includes('erro')) {
+      return 'destructive'; // Red
+    }
+    
+    return 'default';
   };
 
-  const variant: VariantProps<typeof badgeVariants>["variant"] =
-    getStatusVariant(status, type);
+  const badgeVariant = getVariant(status);
 
   return (
-    <Badge
-      variant={variant}
-      className={cn("text-xs font-neue-haas", className)}
+    <Badge 
+      variant={badgeVariant}
+      className={cn("text-xs font-medium", className)}
     >
       {status}
     </Badge>
   );
-};
+}

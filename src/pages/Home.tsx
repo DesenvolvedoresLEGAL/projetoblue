@@ -25,25 +25,25 @@ import { StandardPageHeader } from "@/components/ui/standard-page-header";
 const Home: React.FC = () => {
   // Use the consolidated dashboard assets hook
   const dashboard = useDashboardAssets();
-  // Use dashboard stats for PieChart data
+  // Use optimized dashboard stats hook
   const dashboardStats = useDashboardStats();
   // Use recent activities hook
   const recentActivities = useDashboardRecentActivities();
 
   const isMobile = useIsMobile();
 
-  // Safe loading state check
+  // Safe loading state check with granular control
   const isLoading = dashboard.problemAssets.isLoading || 
                    dashboard.assetsStats.isLoading || 
                    dashboard.statusDistribution.isLoading ||
                    dashboardStats.isLoading ||
                    recentActivities.isLoading;
 
-  // Safe error state check
+  // Safe error state check with partial data support
   const hasError = dashboard.problemAssets.error || 
                    dashboard.assetsStats.error || 
                    dashboard.statusDistribution.error ||
-                   dashboardStats.error ||
+                   (dashboardStats.isError && !dashboardStats.data) ||
                    recentActivities.error;
 
   // Processing lease assets by type using the 'type' property
@@ -92,12 +92,10 @@ const Home: React.FC = () => {
 
   // Debug logging para verificar os dados
   if (import.meta.env.DEV) console.log('Dashboard Stats:', dashboard.assetsStats.data);
-  if (import.meta.env.DEV) console.log('Chips Total:', dashboard.assetsStats.data.chips.total);
-  if (import.meta.env.DEV) console.log('Speedys Total:', dashboard.assetsStats.data.speedys.total);
-  if (import.meta.env.DEV) console.log('Equipment Total:', dashboard.assetsStats.data.equipment.total);
+  if (import.meta.env.DEV) console.log('Optimized Stats:', dashboardStats.data);
 
-  // Loading state for the entire dashboard
-  if (isLoading) {
+  // Loading state for the entire dashboard with partial data support
+  if (isLoading && !dashboardStats.data && !dashboard.assetsStats.data) {
     return (
       <div className="space-y-4 md:space-y-6 p-4 md:p-6 flex flex-col items-center justify-center min-h-[70vh]">
         <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-legal-primary animate-spin" />
@@ -109,8 +107,8 @@ const Home: React.FC = () => {
     );
   }
 
-  // Error state - only shown if critical data failed to load
-  if (hasError && !dashboard.assetsStats.data) {
+  // Error state - only shown if critical data failed to load and no partial data available
+  if (hasError && !dashboard.assetsStats.data && !dashboardStats.data) {
     return (
       <div className="space-y-4 p-4 md:p-6 flex flex-col items-center justify-center min-h-[70vh]">
         <div className="p-3 md:p-4 bg-red-100 dark:bg-red-950/30 rounded-full">
@@ -124,7 +122,10 @@ const Home: React.FC = () => {
             Não foi possível carregar os dados necessários. Verifique sua conexão e tente novamente.
           </p>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={() => {
+              dashboardStats.refetch();
+              window.location.reload();
+            }} 
             className="mt-4 bg-legal-primary hover:bg-legal-primary-light text-white"
           >
             Tentar Novamente
@@ -134,28 +135,37 @@ const Home: React.FC = () => {
     );
   }
 
+  // Use optimized stats data when available, fallback to legacy data
+  const statsData = dashboardStats.data || {
+    totalAssets: dashboard.assetsStats.data?.chips?.total || 0,
+    activeClients: 0,
+    assetsWithIssues: 0
+  };
+
   return (
     <ErrorBoundary>
-
       <StandardPageHeader
         icon={LayoutDashboard}
         title="Dashboard LEGAL"
         description="Sistema de Gestão de Ativos"
-      >
-      </StandardPageHeader>
+      />
 
       <div className="space-y-4 md:space-y-6 pb-6 md:pb-10 px-4 md:px-0">
         {/* Header with Sync Status */}
         <div className="flex flex-col space-y-3 md:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          </div>
-          
           {/* Sync Status Alert - High Priority UX Improvement */}
           <SyncStatusAlert 
             lastSync="Há 2 minutos"
             isOnline={true}
             isSyncing={false}
           />
+
+          {/* Show partial loading indicator if some data is available */}
+          {isLoading && (dashboardStats.data || dashboard.assetsStats.data) && (
+            <div className="text-sm text-muted-foreground text-center">
+              Atualizando dados...
+            </div>
+          )}
         </div>
 
         {/* Inventory Cards - Enhanced with LEGAL Identity and Mobile Responsive */}
@@ -163,7 +173,7 @@ const Home: React.FC = () => {
           <StatsSummaryCard
             title="Total de Chips"
             description="Cartões SIM para conectividade móvel"
-            data={dashboard.assetsStats.data.chips}
+            data={dashboard.assetsStats.data?.chips || { total: 0, available: 0, rented: 0 }}
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?solution=CHIP"
             actionText="Gerenciar Chips"
@@ -172,7 +182,7 @@ const Home: React.FC = () => {
           <StatsSummaryCard
             title="Total de Speedys 5G"
             description="Roteadores 5G de alta velocidade"
-            data={dashboard.assetsStats.data.speedys}
+            data={dashboard.assetsStats.data?.speedys || { total: 0, available: 0, rented: 0 }}
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?solution=SPEEDY+5G"
             actionText="Gerenciar Speedys"
@@ -181,7 +191,7 @@ const Home: React.FC = () => {
           <StatsSummaryCard
             title="Total de Equipamentos"
             description="Dispositivos e infraestrutura de rede"
-            data={dashboard.assetsStats.data.equipment}
+            data={dashboard.assetsStats.data?.equipment || { total: 0, available: 0, rented: 0 }}
             isLoading={dashboard.assetsStats.isLoading}
             actionLink="/assets/inventory?exclude_solutions=CHIP,SPEEDY+5G"
             actionText="Gerenciar Equipamentos"
@@ -245,10 +255,9 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
+        {/* Lease & Subscription Cards - Mobile Responsive */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <LeaseAssetsCard />
-          
           <SubscriptionAssetsCard />
         </div>
 
@@ -258,7 +267,10 @@ const Home: React.FC = () => {
             activities={recentActivities.data || []}
             isLoading={recentActivities.isLoading}
           />
-          <RentedAssetsCard />
+          <RentedAssetsCard 
+            assets={dashboard.allAssets.data}
+            isLoading={dashboard.allAssets.isLoading}
+          />
         </div>
       </div>
     </ErrorBoundary>
