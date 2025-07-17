@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { generateMockAssociations } from '../data/mockData';
 import { ClientAssociationGroup, AssociationWithRelations } from '../types/associationsTypes';
 
