@@ -14,12 +14,14 @@ import { PaginationControls } from '../components/PaginationControls';
 import { SearchResultHighlight } from '../components/SearchResultHighlight';
 import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
 import { usePagination } from '../hooks/usePagination';
+import { useAssociationFilters } from '../hooks/useAssociationFilters';
 import { AssociationWithRelations } from '../types/associationsTypes';
 import ChipTypeIndicator from '../components/ChipTypeIndicator';
 import EmptyState from '../components/states/EmptyState';
 import MobileStats from '../components/mobile/MobileStats';
 import MobileFilters from '../components/mobile/MobileFilters';
 import AssociationCard from '../components/mobile/AssociationCard';
+import AssociationFilters from '../components/filters/AssociationFilters';
 import { toast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 11;
@@ -33,13 +35,24 @@ const AssociationsList: React.FC = () => {
   const { isMobile } = useResponsiveLayout();
   const { clientGroups, stats, loading, initialLoading, error, refresh } = useAssociationsList();
 
+  // Sistema de filtros
+  const {
+    filters,
+    filteredGroups: filteredGroupsByFilters,
+    updateFilter,
+    resetFilters,
+    hasActiveFilters,
+    getFilterOptionCount
+  } = useAssociationFilters({ clientGroups });
+
+  // Sistema de busca (aplicado após filtros)
   const {
     filteredGroups,
     searchType,
     totalMatches,
     isSearching
   } = useAssociationsSearch({
-    clientGroups,
+    clientGroups: filteredGroupsByFilters,
     searchTerm
   });
 
@@ -63,7 +76,10 @@ const AssociationsList: React.FC = () => {
       setSelectedAssociation(null);
       setEndingAssociationId(null);
       refresh();
-      toast.success("A associação foi finalizada com sucesso.");
+      toast({
+        title: "Sucesso",
+        description: "A associação foi finalizada com sucesso."
+      });
     }
   });
 
@@ -99,12 +115,24 @@ const AssociationsList: React.FC = () => {
       await endAssociation(selectedAssociation, exitDate, notes);
     } catch (error) {
       setEndingAssociationId(null);
-      toast.error("Não foi possível finalizar a associação. Tente novamente.");
+      toast({
+        title: "Erro",
+        description: "Não foi possível finalizar a associação. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleClearSearch = () => {
     setSearchTerm('');
+  };
+
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    updateFilter('status', newFilters.status);
+    updateFilter('associationType', newFilters.associationType);
+    updateFilter('assetType', newFilters.assetType);
+    updateFilter('manufacturer', newFilters.manufacturer);
+    updateFilter('dateRange', newFilters.dateRange);
   };
 
   // Loading inicial com skeleton
@@ -178,6 +206,18 @@ const AssociationsList: React.FC = () => {
         )}
       </div>
 
+      {/* Filtros - Desktop */}
+      {!isMobile && (
+        <AssociationFilters
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onResetFilters={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+          getFilterOptionCount={getFilterOptionCount}
+          totalResults={totalMatches}
+        />
+      )}
+
       {/* Search Bar - Mobile vs Desktop */}
       {isMobile ? (
         <MobileFilters
@@ -186,6 +226,11 @@ const AssociationsList: React.FC = () => {
           searchType={searchType}
           isSearching={isSearching}
           totalMatches={totalMatches}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onResetFilters={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+          getFilterOptionCount={getFilterOptionCount}
         />
       ) : (
         <div className="bg-card rounded-lg border p-6">
@@ -349,10 +394,11 @@ const AssociationsList: React.FC = () => {
 
       {/* Footer com informações */}
       <div className="text-sm text-muted-foreground text-center">
-        {searchTerm.trim() ? (
+        {searchTerm.trim() || hasActiveFilters ? (
           <>
             Mostrando {totalMatches} {totalMatches === 1 ? 'cliente' : 'clientes'} encontrado
             {totalMatches !== 1 ? 's' : ''} de {stats.totalClients} total
+            {hasActiveFilters && ' (com filtros aplicados)'}
           </>
         ) : (
           <>
