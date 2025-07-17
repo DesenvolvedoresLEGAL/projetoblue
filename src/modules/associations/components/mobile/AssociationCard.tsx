@@ -9,7 +9,7 @@ import MobileExpandedView from './MobileExpandedView';
 
 interface AssociationCardProps {
   group: ClientAssociationGroup;
-  onEndAssociation: (association: any) => void;
+  onEndAssociation: (association: unknown) => void;
   endingAssociationId: string | null;
   searchTerm: string;
   searchType: string;

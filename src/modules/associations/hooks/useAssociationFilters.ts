@@ -286,7 +286,7 @@ export const useAssociationFilters = ({
     return options;
   }, [clientGroups, allManufacturers]);
 
-  const updateFilter = (key: keyof AssociationFilters, value: any) => {
+  const updateFilter = (key: keyof AssociationFilters, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value

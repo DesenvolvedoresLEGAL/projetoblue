@@ -108,7 +108,8 @@ export const getAssetLogsWithRelations = async (): Promise<AssetLogWithRelations
     }
 
     // Mapear os dados para a interface esperada, lidando com assoc_id NULL
-    const mappedData = data.map((log: any) => ({
+
+    const mappedData = (data as unknown as AssetLogWithRelationsRaw[]).map((log: AssetLogWithRelationsRaw) => ({
       id: log.id,
       date: log.date,
       event: log.event,
