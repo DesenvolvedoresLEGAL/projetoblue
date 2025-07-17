@@ -31,7 +31,8 @@ export const associationService = {
           nome,
           empresa,
           responsavel,
-          contato,
+
+          contato::text,
           email,
           cnpj,
           created_at,
