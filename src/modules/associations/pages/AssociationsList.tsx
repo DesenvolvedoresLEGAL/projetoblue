@@ -84,10 +84,7 @@ const AssociationsList: React.FC = () => {
       setSelectedAssociation(null);
       setEndingAssociationId(null);
       refresh();
-      toast({
-        title: "Sucesso",
-        description: "A associação foi finalizada com sucesso.",
-      });
+      toast.success("A associação foi finalizada com sucesso.");
     }
   });
 
@@ -123,11 +120,7 @@ const AssociationsList: React.FC = () => {
       await endAssociation(selectedAssociation, exitDate, notes);
     } catch (error) {
       setEndingAssociationId(null);
-      toast({
-        title: "Erro",
-        description: "Não foi possível finalizar a associação. Tente novamente.",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível finalizar a associação. Tente novamente.");
     }
   };
 

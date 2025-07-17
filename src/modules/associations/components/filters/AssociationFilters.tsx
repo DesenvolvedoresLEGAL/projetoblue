@@ -69,11 +69,6 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
                 <SelectItem key={option.value} value={option.value.toString()}>
                   <div className="flex items-center justify-between w-full">
                     <span>{option.label}</span>
-                    {option.count !== undefined && (
-                      <span className="text-muted-foreground text-xs ml-2">
-                        ({option.count})
-                      </span>
-                    )}
                   </div>
                 </SelectItem>
               ))}
@@ -100,11 +95,6 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
                 <SelectItem key={option.value} value={option.value.toString()}>
                   <div className="flex items-center justify-between w-full">
                     <span>{option.label}</span>
-                    {option.count !== undefined && (
-                      <span className="text-muted-foreground text-xs ml-2">
-                        ({option.count})
-                      </span>
-                    )}
                   </div>
                 </SelectItem>
               ))}
@@ -129,11 +119,6 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
                 <SelectItem key={option.value} value={option.value.toString()}>
                   <div className="flex items-center justify-between w-full">
                     <span>{option.label}</span>
-                    {option.count !== undefined && (
-                      <span className="text-muted-foreground text-xs ml-2">
-                        ({option.count})
-                      </span>
-                    )}
                   </div>
                 </SelectItem>
               ))}
@@ -167,11 +152,6 @@ const AssociationFilters: React.FC<AssociationFiltersProps> = ({
                 >
                   <div className="flex items-center justify-between w-full">
                     <span>{option.label}</span>
-                    {option.count !== undefined && !option.isDisabled && (
-                      <span className="text-muted-foreground text-xs ml-2">
-                        ({option.count})
-                      </span>
-                    )}
                   </div>
                 </SelectItem>
               ))}

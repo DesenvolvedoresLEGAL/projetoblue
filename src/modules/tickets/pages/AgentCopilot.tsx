@@ -155,7 +155,7 @@ const AgentCopilot = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast("Copiado para a área de transferência");
+    toast.info("Copiado para a área de transferência");
   };
 
   return (
