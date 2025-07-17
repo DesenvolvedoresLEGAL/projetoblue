@@ -73,7 +73,7 @@ const AssociationRow: React.FC<AssociationRowProps> = ({
       </div>
 
       {/* Detalhes dos ativos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {hasEquipment && association.equipment && (
           <AssetDetailsView
             asset={association.equipment}
@@ -103,7 +103,7 @@ const AssociationRow: React.FC<AssociationRowProps> = ({
             {association.equipment_pass && (
               <div>
                 <span className="text-muted-foreground">Senha: </span>
-                <span className="font-mono">••••••••</span>
+                <span className="font-mono">{association.equipment_pass}</span>
               </div>
             )}
           </div>

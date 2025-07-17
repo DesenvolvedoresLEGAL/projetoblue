@@ -2,7 +2,7 @@
 import React from 'react';
 import { Asset } from '../types/associationsTypes';
 import { Badge } from '@/components/ui/badge';
-import { Chip, Router, Smartphone } from 'lucide-react';
+import { Router, Smartphone } from 'lucide-react';
 import AssetTypeIndicator from './AssetTypeIndicator';
 
 interface AssetDetailsViewProps {
