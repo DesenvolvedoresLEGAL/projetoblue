@@ -2,8 +2,6 @@
 import React from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MobileFiltersDrawer from './MobileFiltersDrawer';
-import { AssociationFilters } from '../../types/filterTypes';
 
 interface MobileFiltersProps {
   searchTerm: string;
@@ -11,12 +9,6 @@ interface MobileFiltersProps {
   searchType: string;
   isSearching: boolean;
   totalMatches: number;
-  // Novos props para filtros
-  filters: AssociationFilters;
-  onFiltersChange: (filters: AssociationFilters) => void;
-  onResetFilters: () => void;
-  hasActiveFilters: boolean;
-  getFilterOptionCount: (filterType: keyof AssociationFilters, optionValue: string | number) => number;
 }
 
 const MobileFilters: React.FC<MobileFiltersProps> = ({
@@ -24,12 +16,7 @@ const MobileFilters: React.FC<MobileFiltersProps> = ({
   onSearchChange,
   searchType,
   isSearching,
-  totalMatches,
-  filters,
-  onFiltersChange,
-  onResetFilters,
-  hasActiveFilters,
-  getFilterOptionCount
+  totalMatches
 }) => {
   return (
     <div className="bg-card rounded-lg border p-4 space-y-4">
@@ -47,38 +34,29 @@ const MobileFilters: React.FC<MobileFiltersProps> = ({
           autoComplete="off"
         />
       </div>
-
-      {/* Botão de filtros e resultados */}
-      <div className="flex items-center justify-between">
-        <MobileFiltersDrawer
-          filters={filters}
-          onFiltersChange={onFiltersChange}
-          onResetFilters={onResetFilters}
-          hasActiveFilters={hasActiveFilters}
-          getFilterOptionCount={getFilterOptionCount}
-          totalResults={totalMatches}
-        />
-        
-        {/* Resultados da busca */}
-        {searchTerm.trim() && (
-          <div className="text-sm text-muted-foreground">
+      
+      {/* Resultados da busca */}
+      {searchTerm.trim() && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
             {isSearching ? (
               "Buscando..."
             ) : (
               <>
-                {totalMatches} {totalMatches === 1 ? 'resultado' : 'resultados'}
+                {totalMatches} {totalMatches === 1 ? 'resultado' : 'resultados'} encontrado
+                {totalMatches !== 1 ? 's' : ''}
               </>
             )}
-            {searchType && (
-              <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded mt-1">
-                {searchType === 'client_name' ? 'Nome/Empresa' : 
-                 searchType === 'iccid' ? 'Chip' : 
-                 searchType === 'radio' ? 'Equipamento' : 'Geral'}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          </span>
+          {searchType && (
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+              {searchType === 'client_name' ? 'Nome/Empresa' : 
+               searchType === 'equipment_serial' ? 'Equipamento' : 
+               searchType === 'chip_iccid' ? 'Chip' : 'Geral'}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };
