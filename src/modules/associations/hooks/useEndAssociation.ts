@@ -19,17 +19,8 @@ export const useEndAssociation = (options?: UseEndAssociationOptions) => {
     try {
       setIsLoading(true);
       
-      // Simular chamada à API - na implementação real, usar associationService
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simular atualização dos dados mockados
-      const updatedAssociation = {
-        ...association,
-        exit_date: exitDate,
-        status: false,
-        notes: notes ? `${association.notes || ''} | Finalizada: ${notes}` : association.notes,
-        updated_at: new Date().toISOString()
-      };
+
+      const data = await associationService.endAssociation(association.uuid, exitDate, notes);   
       
       toast.success('Associação finalizada com sucesso!');
       
@@ -37,7 +28,7 @@ export const useEndAssociation = (options?: UseEndAssociationOptions) => {
         options.onSuccess();
       }
       
-      return updatedAssociation;
+      return data;
     } catch (error) {
       console.error('Erro ao finalizar associação:', error);
       toast.error('Erro ao finalizar associação. Tente novamente.');
