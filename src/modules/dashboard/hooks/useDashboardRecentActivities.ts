@@ -26,6 +26,19 @@ interface AssociationLogFromDB {
       empresa: string;
     };
   } | null;
+  association_equipment: {
+    equipment: {
+      radio: string;
+      serial_number: string;
+      model: string;
+    }
+  } | null;
+  association_chip: {
+    chip: {
+      iccid: number;
+      line_number: number;
+    }
+  } | null;
 }
 
 interface FetchRecentEventsResult {
@@ -105,7 +118,9 @@ export function useDashboardRecentActivities() {
           const user = details?.user;
           const newAssociation = details?.new_record;
           const oldAssociation = details?.old_record;
-          const association = e.association_client;
+          const association_client = e.association_client;
+          const association_equipments = e.association_equipment;
+          const association_chips = e.association_chip;
 
           // Determine performed by user
           let performedBy = "Sistema";
@@ -122,7 +137,8 @@ export function useDashboardRecentActivities() {
           }
 
           console.log('LALALALLALALLALALALLALALLA');
-          console.log(e.association_client);
+          console.log(e.association_equipment);
+          console.log(e.association_chip);
           console.log('LALALALLALALLALALALLALALLA');
           
           return {
@@ -139,7 +155,8 @@ export function useDashboardRecentActivities() {
               new_record: newAssociation || {} as AssociationRecord,
               old_record: oldAssociation,
             },
-            client_name: association.client?.empresa,
+            client_name: association_client.client?.empresa,
+            asset_names: association_equipment.equipment
           };
         });
 

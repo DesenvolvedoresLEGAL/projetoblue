@@ -82,8 +82,17 @@ export interface RecentActivityAsset extends RecentActivity {
   status_before: string; // JOIN WITH ASSET_STATUS
 }
 
+export interface AssociationAsset {
+  radio: string;
+  iccid: number;
+  line_number: number;
+  serial_number: string;
+  model: string;
+}
+
 export interface RecentActivityAssociation extends RecentActivity {
   association_id: string;
   client_name: string;
+  asset_names: AssociationAsset;
   details: AssociationLogDetails; // OLD AND NEW ASSETS JSONB
 }

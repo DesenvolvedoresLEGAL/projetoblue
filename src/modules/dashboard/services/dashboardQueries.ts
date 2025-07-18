@@ -26,6 +26,19 @@ interface AssociationLogResponse {
       empresa: string;
     };
   } | null;
+  association_equipment: {
+    equipment: {
+      radio: string;
+      serial_number: string;
+      model: string;
+    }
+  } | null;
+  association_chip: {
+    chip: {
+      iccid: number;
+      line_number: number;
+    }
+  } | null;
 }
 
 // Fetch total assets count
@@ -115,14 +128,19 @@ export const fetchRecentEvents = async () => {
         association_client:associations!association_logs_association_uuid_fkey(
           client:clients(empresa)
         ),
-        association_asset:associations!association_logs_association_uuid_fkey(
-          asset:assets(
+      association_equipment:associations!association_logs_association_uuid_fkey(
+        equipment:assets!equipment_id_fkey(
           radio,
-          iccid,
-          line_number,
-          serial_number
-          )
+          serial_number,
+          model
         )
+      ),
+      association_chip:associations!association_logs_association_uuid_fkey(
+        chip:assets!chip_id_fkey(
+          iccid,
+          line_number
+        )
+      )
       `
       )
       .order("created_at", { ascending: false })
