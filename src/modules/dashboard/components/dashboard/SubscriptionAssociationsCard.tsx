@@ -69,8 +69,8 @@ export const SubscriptionAssociationsCard: React.FC<SubscriptionAssociationsCard
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col justify-between space-y-4">
-        <div>
+<CardContent className="flex-1 flex flex-col space-y-4">
+        <div className="flex-grow">
           <div className="text-3xl font-bold text-[#03F9FF] mb-4">
             {totalActive.toLocaleString()}
           </div>
@@ -91,47 +91,48 @@ export const SubscriptionAssociationsCard: React.FC<SubscriptionAssociationsCard
               ))}
             </div>
           )}
+        </div>
 
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">Distribuição por Tipo</h4>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">CHIPs</span>
-                <span className="font-semibold text-[#4D2BFB]">{distributionByType.chips}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#4D2BFB] h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${getPercentage(distributionByType.chips)}%` }}
-                ></div>
-              </div>
+        {/* Seção de distribuição fixada no final */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-muted-foreground">Distribuição por Tipo</h4>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">CHIPs</span>
+              <span className="font-semibold text-[#4D2BFB]">{distributionByType.chips}</span>
             </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Speedys 5G</span>
-                <span className="font-semibold text-[#03F9FF]">{distributionByType.speedys}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#03F9FF] h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${getPercentage(distributionByType.speedys)}%` }}
-                ></div>
-              </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-[#4D2BFB] h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${getPercentage(distributionByType.chips)}%` }}
+              ></div>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Equipamentos</span>
-                <span className="font-semibold text-[#020CBC]">{distributionByType.equipment}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#020CBC] h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${getPercentage(distributionByType.equipment)}%` }}
-                ></div>
-              </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Speedys 5G</span>
+              <span className="font-semibold text-[#03F9FF]">{distributionByType.speedys}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-[#03F9FF] h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${getPercentage(distributionByType.speedys)}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Equipamentos</span>
+              <span className="font-semibold text-[#020CBC]">{distributionByType.equipment}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-[#020CBC] h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${getPercentage(distributionByType.equipment)}%` }}
+              ></div>
             </div>
           </div>
         </div>

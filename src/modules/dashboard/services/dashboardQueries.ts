@@ -1,5 +1,70 @@
 import { supabase } from "@/integrations/supabase/client";
 
+interface Manufacturer {
+  name: string;
+}
+
+interface AssetSolution {
+  solution: string;
+}
+
+interface Client {
+  uuid: string;
+  empresa: string;
+  responsavel: string;
+  contato: number;
+  email: string;
+  cnpj: string;
+}
+
+interface Equipment {
+  uuid: string;
+  solution_id: number;
+  status_id: number;
+  model: string;
+  serial_number: string;
+  radio: string;
+  manufacturer: Manufacturer;
+  asset_solutions: AssetSolution;
+}
+
+interface Chip {
+  uuid: string;
+  solution_id: number;
+  status_id: number;
+  line_number: number;
+  iccid: string;
+  manufacturer: Manufacturer;
+  asset_solutions: AssetSolution;
+}
+
+interface AssociationType {
+  id: number;
+  type: string;
+}
+
+export interface AssociationsResponse {
+  uuid: string;
+  client_id: string;
+  equipment_id: string;
+  chip_id: string;
+  entry_date: string;
+  exit_date: string | null;
+  association_type_id: number;
+  plan_id: number;
+  plan_gb: number;
+  equipment_ssid: string;
+  equipment_pass: string;
+  status: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  clients: Client;
+  equipment: Equipment;
+  chip: Chip;
+  association_types: AssociationType;
+}
+
 // Interfaces para tipagem das respostas
 interface AssetLogResponse {
   uuid: string;
@@ -238,62 +303,66 @@ export const fetchStatuses = async () => {
 };
 
 // Fetch active associations with all related data
-export const fetchActiveAssociations = async () => {
-  const today = new Date().toISOString().split("T")[0];
-
-  return await supabase
-    .from("associations")
-    .select(
-      `
-      uuid,
-      client_id,
-      equipment_id,
-      chip_id,
-      entry_date,
-      exit_date,
-      association_type_id,
-      plan_id,
-      plan_gb,
-      equipment_ssid,
-      equipment_pass,
-      status,
-      notes,
-      created_at,
-      updated_at,
-      clients!inner(
-        uuid,
-        nome,
-        empresa,
-        responsavel,
-        contato,
-        email,
-        cnpj
-      ),
-      equipment:assets!equipment_id_fkey(
-        uuid,
-        solution_id,
-        status_id,
-        model,
-        serial_number,
-        radio,
-        asset_solutions!inner(solution)
-      ),
-      chip:assets!chip_id_fkey(
-        uuid,
-        solution_id,
-        status_id,
-        line_number,
-        iccid,
-        asset_solutions!inner(solution)
-        manufacturer:manufacturers!inner(name)
-      ),
-      association_types!inner(
-        id,
-        type
-      )
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const fetchActiveAssociations = async (): Promise<{data: AssociationsResponse[], error: any}> => {
+const {data, error} = await supabase
+  .from("associations")
+  .select(
     `
+    uuid,
+    client_id,
+    equipment_id,
+    chip_id,
+    entry_date,
+    exit_date,
+    association_type_id,
+    plan_id,
+    plan_gb,
+    equipment_ssid,
+    equipment_pass,
+    status,
+    notes,
+    created_at,
+    updated_at,
+    clients!client_id_fkey(
+      uuid,
+      empresa,
+      responsavel,
+      contato,
+      email,
+      cnpj
+    ),
+    equipment:assets!equipment_id_fkey(
+      uuid,
+      solution_id,
+      status_id,
+      model,
+      serial_number,
+      radio,
+      asset_solutions!inner(solution),
+      manufacturer:manufacturers!inner(name)
+    ),
+    chip:assets!chip_id_fkey(
+      uuid,
+      solution_id,
+      status_id,
+      line_number,
+      iccid,
+      asset_solutions!fk_assets_solutions(solution),
+      manufacturer:manufacturers!assets_manufacturer_id_fkey(name)
+    ),
+    association_types!association_type_id_fkey(
+      id,
+      type
     )
-    .eq("status", true)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  `
+  )
+  .eq("status", true)
+  .is("deleted_at", null)
+  .order("created_at", { ascending: false });
+
+  console.log('SHUSHUSHUSHUSHUHSUHSHSU')
+  console.log(data)
+
+  return {data: data, error};
 };
