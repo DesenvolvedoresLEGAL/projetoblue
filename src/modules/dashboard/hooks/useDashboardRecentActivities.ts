@@ -1,16 +1,36 @@
-
 import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@modules/dashboard/services/dashboardQueries';
+import { AssetLogDetails, AssetRecord, AssociationLogDetails, AssociationRecord, RecentActivity, RecentActivityAsset, RecentActivityAssociation, User } from '@modules/dashboard/types/recentActivitiesTypes'; 
 
-export interface RecentActivity {
-  id: number;
-  type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
-  description: string;
-  assetName?: string;
-  clientName?: string;
-  timestamp: string;
-  details?: Record<string, unknown>;
-  performedBy?: string; // NEW: User who performed the action
+// Interfaces para melhor tipagem das respostas do Supabase
+interface AssetLogFromDB {
+  uuid: string;
+  user_id: string;
+  event: string;
+  details: AssetLogDetails;
+  created_at: string;
+  updated_at: string;
+  status_after: { status: string } | null;
+  status_before: { status: string } | null;
+}
+
+interface AssociationLogFromDB {
+  uuid: string;
+  user_id: string;
+  event: string;
+  details: AssociationLogDetails;
+  created_at: string;
+  updated_at: string;
+  association_client: {
+    client: {
+      empresa: string;
+    };
+  } | null;
+}
+
+interface FetchRecentEventsResult {
+  recentAssets: AssetLogFromDB[];
+  recentAssociations: AssociationLogFromDB[];
 }
 
 export function useDashboardRecentActivities() {
@@ -19,129 +39,126 @@ export function useDashboardRecentActivities() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Fetching recent activities...');
+          console.log('Fetching recent activities...');
         }
         
-        const recentEventsResult = await dashboardQueries.fetchEnhancedRecentEvents();
+        const recentEventsResult = await dashboardQueries.fetchRecentEvents();
         
-        if (recentEventsResult.error) {
-          throw recentEventsResult.error;
+        if (!recentEventsResult.recentAssets?.length && !recentEventsResult.recentAssociations?.length) {
+          return [];
         }
 
-        const assetEvents = recentEventsResult.data || [];
-        
-        const assetActivities: RecentActivity[] = assetEvents.map(event => {
-          let type: RecentActivity['type'] = 'status_updated';
-          let description = 'Atividade registrada';
-          let assetName = 'Asset desconhecido';
-          let clientName: string | undefined;
+        const assetEvents = recentEventsResult.recentAssets || [];
+        const associationEvents = recentEventsResult.recentAssociations || [];
 
-          const details = event.details as Record<string, unknown>;
-          
+        // Map asset events to RecentActivityAsset
+        const assetActivities: RecentActivityAsset[] = assetEvents.map((e) => {
+          const details = e.details;
+          const user = details?.user;
+          const newAsset = details?.new_record;
+          const oldAsset = details?.old_record;
+
           // Determine performed by user
-          let performedBy = 'Sistema'; // Default fallback
-          if ((event as { user_email?: string }).user_email) {
-            performedBy = (event as { user_email?: string }).user_email as string;
-          } else if (details?.username && details.username !== 'system') {
-            performedBy = details.username;
+          let performedBy = "Sistema";
+          if (user?.email) {
+            performedBy = user.email;
+          } else if (user?.username && user.username !== "system") {
+            performedBy = user.username;
           }
           
-          // Extrair nome do ativo de forma mais robusta
-          if (details?.radio) {
-            assetName = details.radio;
-          } else if (details?.line_number) {
-            assetName = `Linha ${details.line_number}`;
-          } else if (details?.asset_id) {
-            assetName = details.asset_id.toString().substring(0, 8);
-          } else if (details?.iccid) {
-            assetName = details.iccid;
-          } else if (details?.serial_number) {
-            assetName = details.serial_number;
+          // Extract asset name more robustly
+          let assetName = 'Não identificado';
+          if (newAsset?.radio) {
+            assetName = newAsset.radio;
+          } else if (newAsset?.line_number) {
+            assetName = `Linha ${newAsset.line_number}`;
+          } else if (newAsset?.uuid) {
+            assetName = newAsset.uuid.substring(0, 8);
+          } else if (newAsset?.iccid) {
+            assetName = newAsset.iccid;
+          } else if (newAsset?.serial_number) {
+            assetName = newAsset.serial_number;
           }
-
-          // Extrair nome do cliente
-          if (details?.client_name) {
-            clientName = details.client_name;
-          }
-
-          // Determinar tipo de ativo baseado na solução
-          const getAssetType = (): string => {
-            if (details?.solution_name || details?.solution) {
-              const solution = (details.solution_name || details.solution).toLowerCase();
-              if (solution.includes('chip') || solution.includes('simcard')) {
-                return 'CHIP';
-              } else if (solution.includes('speedy') || solution.includes('5g')) {
-                return 'SPEEDY 5G';
-              } else {
-                return 'EQUIPAMENTO';
-              }
-            }
-            return 'ATIVO';
-          };
-
-          const assetType = getAssetType();
-
-          // Gerar mensagens mais descritivas baseadas no tipo de evento
-          switch (event.event) {
-            case 'ASSET_CRIADO':
-              type = 'asset_created';
-              description = `${assetType} ${assetName} cadastrado no sistema`;
-              break;
-
-            case 'ASSOCIATION_CREATED': {
-              type = 'association_created';
-              const clientInfo = clientName ? ` à empresa ${clientName}` : '';
-              description = `${assetType} ${assetName} associado${clientInfo}`;
-              break;
-            }
-              
-            case 'ASSOCIATION_REMOVED':
-              type = 'association_ended';
-              description = `${assetType} ${assetName} desassociado`;
-              break;
-              
-            case 'STATUS_UPDATED':
-            case 'ASSOCIATION_STATUS_UPDATED': {
-              type = 'status_updated';
-              const oldStatus = details?.old_status_name || details?.old_status?.status || '';
-              const newStatus = details?.new_status_name || details?.new_status?.status || '';
-
-              if (oldStatus && newStatus) {
-                description = `${assetType} ${assetName} alterado de ${oldStatus} para ${newStatus}`;
-              } else if (newStatus) {
-                description = `${assetType} ${assetName} com status atualizado para ${newStatus}`;
-              } else {
-                description = `${assetType} ${assetName} com status atualizado`;
-              }
-              break;
-            }
-              
-            default:
-              description = `${assetType} ${assetName} - ${event.event}`;
-          }
-
+          
           return {
-            id: event.id,
-            type,
-            description,
+            uuid: e.uuid,
+            user_id: e.user_id,
+            event: e.event,
+            created_at: e.created_at,
+            updated_at: e.updated_at,
+            performedBy,
+            asset_id: newAsset?.uuid || '',
             assetName,
-            clientName,
-            timestamp: event.date,
-            details,
-            performedBy // NEW: Include performed by information
+            details: {
+              user: user || {} as User,
+              new_record: newAsset || {} as AssetRecord,
+              old_record: oldAsset,
+            },
+            status_after: e.status_after?.status || '',
+            status_before: e.status_before?.status || '',
           };
         });
 
-        // Ordenar por data (mais recente primeiro)
-        assetActivities.sort((a, b) => {
-          const dateA = new Date(a.timestamp);
-          const dateB = new Date(b.timestamp);
+        // Map association events to RecentActivityAssociation
+        const associationActivities: RecentActivityAssociation[] = associationEvents.map((e) => {
+          const details = e.details;
+          const user = details?.user;
+          const newAssociation = details?.new_record;
+          const oldAssociation = details?.old_record;
+          const association = e.association_client;
+
+          // Determine performed by user
+          let performedBy = "Sistema";
+          if (user?.email) {
+            performedBy = user.email;
+          } else if (user?.username && user.username !== "system") {
+            performedBy = user.username;
+          }
+
+          // Extract association details
+          let associationName = 'Associação';
+          if (newAssociation?.client_id && newAssociation?.equipment_id) {
+            associationName = `Associação ${newAssociation.client_id}-${newAssociation.equipment_id}`;
+          }
+
+          console.log('LALALALLALALLALALALLALALLA');
+          console.log(e.association_client);
+          console.log('LALALALLALALLALALALLALALLA');
+          
+          return {
+            uuid: e.uuid,
+            user_id: e.user_id,
+            event: e.event,
+            created_at: e.created_at,
+            updated_at: e.updated_at,
+            performedBy,
+            association_id: newAssociation?.uuid || '',
+            associationName,
+            details: {
+              user: user || {} as User,
+              new_record: newAssociation || {} as AssociationRecord,
+              old_record: oldAssociation,
+            },
+            client_name: association.client?.empresa,
+          };
+        });
+
+        // Combine and sort by date (most recent first)
+        const allActivities: RecentActivity[] = [
+          ...assetActivities,
+          ...associationActivities
+        ];
+
+        return allActivities.sort((a, b) => {
+          const dateA = new Date(a.created_at);
+          const dateB = new Date(b.created_at);
           return dateB.getTime() - dateA.getTime();
         });
 
-        return assetActivities.slice(0, 10);
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching recent activities:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching recent activities:', error);
+        }
         return [];
       }
     },
