@@ -10,7 +10,8 @@ import { RecentActivity, RecentActivityAsset, RecentActivityAssociation } from '
 import { formatPhoneNumber } from '@/utils/formatters';
 
 interface RecentActivitiesCardProps {
-  activities: RecentActivity[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  activities: any[]; // RecentActivity[] | RecentActivityAsset[] | RecentActivityAssociation[]
   isLoading?: boolean;
 }
 
