@@ -12,6 +12,9 @@ interface AssetLogFromDB {
   updated_at: string;
   status_after: { status: string } | null;
   status_before: { status: string } | null;
+  manufacturer: {
+    manufacturer: {name: string;};
+  };
 }
 
 interface AssociationLogFromDB {
@@ -70,6 +73,7 @@ export function useDashboardRecentActivities() {
           const user = details?.user;
           const newAsset = details?.new_record;
           const oldAsset = details?.old_record;
+          const manufacturer = e.manufacturer.manufacturer;
 
           // Determine performed by user
           let performedBy = "Sistema";
@@ -109,6 +113,7 @@ export function useDashboardRecentActivities() {
             },
             status_after: e.status_after?.status || '',
             status_before: e.status_before?.status || '',
+            manufacturer_name: manufacturer.name
           };
         });
 
@@ -119,8 +124,8 @@ export function useDashboardRecentActivities() {
           const newAssociation = details?.new_record;
           const oldAssociation = details?.old_record;
           const association_client = e.association_client;
-          const association_equipments = e.association_equipment;
-          const association_chips = e.association_chip;
+          const association_equipment = e.association_equipment;
+          const association_chip = e.association_chip;
 
           // Determine performed by user
           let performedBy = "Sistema";
@@ -156,7 +161,8 @@ export function useDashboardRecentActivities() {
               old_record: oldAssociation,
             },
             client_name: association_client.client?.empresa,
-            asset_names: association_equipment.equipment
+            equipment: association_equipment.equipment,
+            chip: association_chip.chip
           };
         });
 

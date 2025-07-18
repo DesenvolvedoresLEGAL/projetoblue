@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface AssetLogResponse {
   uuid: string;
   user_id: string;
+  asset_id: string;
   event: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: any; // JSONB field
@@ -11,6 +12,9 @@ interface AssetLogResponse {
   updated_at: string;
   status_before: { status: string } | null;
   status_after: { status: string } | null;
+  manufacturer: {
+    manufacturer: {name: string;};
+  };
 }
 
 interface AssociationLogResponse {
@@ -103,12 +107,16 @@ export const fetchRecentEvents = async () => {
         `
         uuid,
         user_id,
+        asset_id,
         event,
         details,
         created_at,
         updated_at,
         status_before:asset_status!asset_logs_status_before_id_fkey(status),
-        status_after:asset_status!asset_logs_status_after_id_fkey(status)
+        status_after:asset_status!asset_logs_status_after_id_fkey(status),
+        manufacturer:assets!asset_logs_asset_id_fkey(
+          manufacturer:manufacturers!assets_manufacturer_id_fkey(name)
+        )
       `
       )
       .order("created_at", { ascending: false })
@@ -138,7 +146,8 @@ export const fetchRecentEvents = async () => {
       association_chip:associations!association_logs_association_uuid_fkey(
         chip:assets!chip_id_fkey(
           iccid,
-          line_number
+          line_number,
+          manufacturer:manufacturers(name)
         )
       )
       `
