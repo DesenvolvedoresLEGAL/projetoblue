@@ -295,6 +295,5 @@ export const fetchActiveAssociations = async () => {
     )
     .eq("status", true)
     .is("deleted_at", null)
-    .or(`exit_date.is.null,exit_date.gte.${today}`)
     .order("created_at", { ascending: false });
 };
