@@ -32,8 +32,24 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   }
 
   // Determina se a atividade é um ativo ou uma associação
-  const getActivityType = (activity: RecentActivityAsset | RecentActivityAssociation): 'ATIVO' | 'ASSOCIAÇÃO' => {
-    return 'asset_id' in activity ? 'ATIVO' : 'ASSOCIAÇÃO';
+  const getActivityType = (activity: RecentActivityAsset | RecentActivityAssociation): 'Chip' | 'Speedy 5G' | 'Equipamento' | 'Associação' => {
+    if ('asset_id' in activity) {
+      switch (activity.details.new_record.solution_id) {
+        case 11:
+          return 'Chip';
+          break;
+        case 1:
+        case 2:
+        case 4:
+          return 'Speedy 5G';
+          break;
+        default:
+          return 'Equipamento';
+        break;
+      }
+    } else {
+      return 'Associação';
+    }
   };
 
   // Retorna a descrição baseada no tipo de evento
