@@ -6,11 +6,11 @@ import { Bell, ExternalLink, User } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { capitalize } from '@/utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
-import { RecentActivityAsset, RecentActivityAssociation } from '../../types/recentActivitiesTypes';
+import { RecentActivity, RecentActivityAsset, RecentActivityAssociation } from '../../types/recentActivitiesTypes';
 import { formatPhoneNumber } from '@/utils/formatters';
 
 interface RecentActivitiesCardProps {
-  activities: (RecentActivityAsset | RecentActivityAssociation)[];
+  activities: RecentActivity[];
   isLoading?: boolean;
 }
 

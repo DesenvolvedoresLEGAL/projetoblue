@@ -123,7 +123,7 @@ export function useDashboardRecentActivities() {
         });
 
         // Map association events to RecentActivityAssociation
-        const associationActivities: RecentActivityAssociation[] = associationEvents.map((e) => {
+        const associationActivities: RecentActivity[] = associationEvents.map((e) => {
           const details = e.details;
           const user = details?.user;
           const newAssociation = details?.new_record;
