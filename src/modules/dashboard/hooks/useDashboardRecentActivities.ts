@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import * as dashboardQueries from '@modules/dashboard/services/dashboardQueries';
-import { AssetLogDetails, AssetRecord, AssociationLogDetails, AssociationRecord, RecentActivity, RecentActivityAsset, RecentActivityAssociation, User } from '@modules/dashboard/types/recentActivitiesTypes'; 
+import { AssetLogDetails, AssetRecord, AssociationChip, AssociationLogDetails, AssociationRecord, RecentActivity, RecentActivityAsset, RecentActivityAssociation, User } from '@modules/dashboard/types/recentActivitiesTypes'; 
 
 // Interfaces para melhor tipagem das respostas do Supabase
 interface AssetLogFromDB {
@@ -40,6 +40,11 @@ interface AssociationLogFromDB {
     chip: {
       iccid: number;
       line_number: number;
+      manufacturer: {
+        manufacturer: {
+          name: string;
+        };
+      };
     }
   } | null;
 }
@@ -142,7 +147,6 @@ export function useDashboardRecentActivities() {
           }
 
           console.log('LALALALLALALLALALALLALALLA');
-          console.log(e.association_equipment);
           console.log(e.association_chip);
           console.log('LALALALLALALLALALALLALALLA');
           
@@ -180,7 +184,7 @@ export function useDashboardRecentActivities() {
 
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching recent activities:', error);
+          console.error('Error fetching recent activities:', error.message);
         }
         return [];
       }

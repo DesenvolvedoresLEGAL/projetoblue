@@ -102,24 +102,45 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
     }
   }
 
-  const getEventChange = (activity: RecentActivityAsset | RecentActivityAssociation) => {
-    if ('asset_id' in activity) {
-      const before_status = getAssetStatusText(activity.details.old_record.status_id);
-      const after_status = getAssetStatusText(activity.details.new_record.status_id);
-      return `${before_status} -> ${after_status}`;
-    } else {
+const getEventChange = (activity: RecentActivityAsset | RecentActivityAssociation) => {
+  if ('asset_id' in activity) {
+    // Caso de RecentActivityAsset
+    const before_status = getAssetStatusText(activity.details.old_record.status_id);
+    const after_status = getAssetStatusText(activity.details.new_record.status_id);
+    return `${before_status} -> ${after_status}`;
+  } else {
+    // Caso de RecentActivityAssociation
+    // Verificar se old_record existe antes de acessá-lo
+    if (activity.details.old_record) {
       const before_status = getAssociationStatusText(activity.details.old_record.status);
       const after_status = getAssociationStatusText(activity.details.new_record.status);
-
       return `${before_status} -> ${after_status}`;
     }
+    
+    // Verificar equipment e chip antes de acessá-los
+    if (activity.equipment) {
+      if (activity.chip) {
+        // Se tiver equipment e chip, mostrar ambos
+        return `${activity.equipment.radio} / ${formatPhoneNumber(activity.chip.line_number.toString())} (${activity.chip.manufacturer.name})`;
+      }
+      // Se tiver apenas equipment
+      return activity.equipment.radio;
+    } else if (activity.chip) {
+      // Se tiver apenas chip
+      return `${formatPhoneNumber(activity.chip.line_number.toString())} (${activity.chip.manufacturer.name})`;
+    }
+    
+    // Caso nenhuma condição seja atendida
+    return 'Sem detalhes';
   }
+}
 
   // Retorna um nome descritivo para a atividade
 const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociation) => {
   if ('asset_id' in activity) {
     // É um RecentActivityAsset
     const newRecord = activity.details.new_record;
+    const manufacturer = activity.manufacturer_name;
     
     // Verificar se existe radio
     if (newRecord?.radio) {
@@ -129,23 +150,14 @@ const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociati
     
     // Verificar se existe line_number e formatá-lo
     if (newRecord?.line_number) {
-      return `Chip: ${formatPhoneNumber(newRecord.line_number.toString())}`;
-    }
-    
-    // Verificar outros identificadores do asset
-    if (newRecord?.serial_number) {
-      return newRecord.serial_number;
-    }
-    
-    if (newRecord?.iccid) {
-      return newRecord.iccid;
+      return `Chip da ${manufacturer}: ${formatPhoneNumber(newRecord.line_number.toString())}`;
     }
     
     return 'Ativo';
   } else {
     // É um RecentActivityAssociation
     const associationActivity = activity as RecentActivityAssociation;
-    
+
     // Usar o nome do cliente da association_client
     if (associationActivity.client_name) {
       return `Cliente: ${capitalize(associationActivity.client_name)}`;
@@ -226,7 +238,7 @@ const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociati
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                         {getEventDescription(activity)}
                       </Badge>
-                      {activity.event === 'UPDATE' ? (
+                      {activity.event === 'UPDATE' || !('asset_id' in activity) ? (
                         <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                           {getEventChange(activity)}
                         </Badge>

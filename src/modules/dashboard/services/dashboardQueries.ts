@@ -13,7 +13,9 @@ interface AssetLogResponse {
   status_before: { status: string } | null;
   status_after: { status: string } | null;
   manufacturer: {
-    manufacturer: {name: string;};
+    manufacturer: {
+      name: string;
+    };
   };
 }
 
@@ -35,13 +37,18 @@ interface AssociationLogResponse {
       radio: string;
       serial_number: string;
       model: string;
-    }
+    };
   } | null;
   association_chip: {
     chip: {
       iccid: number;
       line_number: number;
-    }
+      manufacturer: {
+        manufacturer: {
+          name: string;
+        };
+      };
+    };
   } | null;
 }
 
@@ -147,7 +154,7 @@ export const fetchRecentEvents = async () => {
         chip:assets!chip_id_fkey(
           iccid,
           line_number,
-          manufacturer:manufacturers(name)
+          manufacturer:manufacturers!assets_manufacturer_id_fkey(name)
         )
       )
       `
@@ -158,36 +165,36 @@ export const fetchRecentEvents = async () => {
     // Executar ambas as queries
     const [
       { data: recentAssetsData, error: recentAssetsError },
-      { data: recentAssociationsData, error: recentAssociationsError }
-    ] = await Promise.all([
-      recentAssetsQuery,
-      recentAssociationsQuery
-    ]);
+      { data: recentAssociationsData, error: recentAssociationsError },
+    ] = await Promise.all([recentAssetsQuery, recentAssociationsQuery]);
 
     // Tratar erros
     if (recentAssetsError) {
-      console.error('Error fetching recent assets:', recentAssetsError);
+      console.error("Error fetching recent assets:", recentAssetsError);
     }
-    
+
     if (recentAssociationsError) {
-      console.error('Error fetching recent associations:', recentAssociationsError);
+      console.error(
+        "Error fetching recent associations:",
+        recentAssociationsError
+      );
     }
 
     // Debug log para associations (remover em produção)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Recent associations data:', recentAssociationsData);
+    if (process.env.NODE_ENV === "development") {
+      console.log("Recent associations data:", recentAssociationsData);
     }
 
     return {
       recentAssets: (recentAssetsData as AssetLogResponse[]) || [],
-      recentAssociations: (recentAssociationsData as unknown as AssociationLogResponse[]) || []
+      recentAssociations:
+        (recentAssociationsData as unknown as AssociationLogResponse[]) || [],
     };
-
   } catch (error) {
-    console.error('Error in fetchRecentEvents:', error);
+    console.error("Error in fetchRecentEvents:", error);
     return {
       recentAssets: [],
-      recentAssociations: []
+      recentAssociations: [],
     };
   }
 };
@@ -278,6 +285,7 @@ export const fetchActiveAssociations = async () => {
         line_number,
         iccid,
         asset_solutions!inner(solution)
+        manufacturer:manufacturers!inner(name)
       ),
       association_types!inner(
         id,

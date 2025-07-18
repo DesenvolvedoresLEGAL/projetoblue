@@ -92,6 +92,9 @@ export interface AssociationEquipment {
 export interface AssociationChip {
   iccid: number;
   line_number: number;
+  manufacturer: {
+    name: string;
+  };
 }
 
 export interface RecentActivityAssociation extends RecentActivity {
