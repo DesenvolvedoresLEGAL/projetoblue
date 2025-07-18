@@ -45,7 +45,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
           break;
         default:
           return 'Equipamento';
-        break;
+          break;
       }
     } else {
       return 'Associação';
@@ -56,7 +56,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   const getEventDescription = (activity: RecentActivityAsset | RecentActivityAssociation) => {
     const event = activity.event;
     const type = capitalize(getActivityType(activity));
-    
+
     switch (event.toUpperCase()) {
       case 'INSERT':
         return `${type} criado`;
@@ -68,6 +68,52 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
         return `Evento de ${type.toLowerCase()}`;
     }
   };
+
+
+  // Função para mapear status_id para texto legível
+  const getAssetStatusText = (statusId: number | null): string => {
+    switch (statusId) {
+      case 1:
+        return 'disponível';
+      case 2:
+        return 'em locação';
+      case 3:
+        return 'em assinatura';
+      case 4:
+        return 'sem dados';
+      case 5:
+        return 'bloqueado';
+      case 6:
+        return 'em manutenção';
+      case 7:
+        return 'desatualizado';
+      case 8:
+        return 'extraviado';
+      default:
+        return 'status desconhecido';
+    }
+  };
+
+  const getAssociationStatusText = (status: boolean) => {
+    if (status) {
+      return 'ativa';
+    } else {
+      return 'inativa';
+    }
+  }
+
+  const getEventChange = (activity: RecentActivityAsset | RecentActivityAssociation) => {
+    if ('asset_id' in activity) {
+      const before_status = getAssetStatusText(activity.details.old_record.status_id);
+      const after_status = getAssetStatusText(activity.details.new_record.status_id);
+      return `${before_status} -> ${after_status}`;
+    } else {
+      const before_status = getAssociationStatusText(activity.details.old_record.status);
+      const after_status = getAssociationStatusText(activity.details.new_record.status);
+
+      return `${before_status} -> ${after_status}`;
+    }
+  }
 
   // Retorna um nome descritivo para a atividade
   const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociation) => {
@@ -134,7 +180,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                   </div>
                   <div className="pr-24">
                     <p className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
-                      {getActivityName(activity)} - {activity.event}
+                      {getActivityName(activity)}
                     </p>
                     {/* Display performed by user */}
                     {activity.details.user && (
@@ -150,11 +196,11 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
                         {getEventDescription(activity)}
                       </Badge>
-                      {activity.event && (
+                      {activity.event === 'UPDATE' ? (
                         <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                          Status: {activity.event}
+                          {getEventChange(activity)}
                         </Badge>
-                      )}
+                      ) : ''}
                     </div>
                   </div>
                 </div>
