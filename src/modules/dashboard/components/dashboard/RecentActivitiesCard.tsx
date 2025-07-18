@@ -116,14 +116,44 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
   }
 
   // Retorna um nome descritivo para a atividade
-  const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociation) => {
-    if ('asset_id' in activity) {
-      return activity.details.new_record.radio || formatPhoneNumber(activity.details.new_record.line_number.toString()) || 'Ativo';
-    } else {
-      // TODO: Adicionar cliente à association logs com join
-      return capitalize(activity.client_name) || 'Associação';
+const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociation) => {
+  if ('asset_id' in activity) {
+    // É um RecentActivityAsset
+    const newRecord = activity.details.new_record;
+    
+    // Verificar se existe radio
+    if (newRecord?.radio) {
+      if (newRecord?.solution_id === 1) return `Speedy: ${newRecord.radio}`;
+      return `Equipamento: ${newRecord.radio}`;
     }
-  };
+    
+    // Verificar se existe line_number e formatá-lo
+    if (newRecord?.line_number) {
+      return `Chip: ${formatPhoneNumber(newRecord.line_number.toString())}`;
+    }
+    
+    // Verificar outros identificadores do asset
+    if (newRecord?.serial_number) {
+      return newRecord.serial_number;
+    }
+    
+    if (newRecord?.iccid) {
+      return newRecord.iccid;
+    }
+    
+    return 'Ativo';
+  } else {
+    // É um RecentActivityAssociation
+    const associationActivity = activity as RecentActivityAssociation;
+    
+    // Usar o nome do cliente da association_client
+    if (associationActivity.client_name) {
+      return `Cliente: ${capitalize(associationActivity.client_name)}`;
+    }
+    
+    return 'Associação';
+  }
+};
 
   if (isLoading) {
     return (

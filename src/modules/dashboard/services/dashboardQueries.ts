@@ -114,6 +114,14 @@ export const fetchRecentEvents = async () => {
         updated_at,
         association_client:associations!association_logs_association_uuid_fkey(
           client:clients(empresa)
+        ),
+        association_asset:associations!association_logs_association_uuid_fkey(
+          asset:assets(
+          radio,
+          iccid,
+          line_number,
+          serial_number
+          )
         )
       `
       )
