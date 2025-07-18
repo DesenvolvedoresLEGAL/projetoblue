@@ -6,39 +6,8 @@ import { Bell, ExternalLink, User } from "lucide-react";
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { capitalize } from '@/utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
-
-// interface RecentActivity {
-//   id: number;
-//   type: 'asset_created' | 'association_created' | 'association_ended' | 'status_updated';
-//   description: string;
-//   assetName?: string;
-//   clientName?: string;
-//   timestamp: string;
-//   details?: Record<string, unknown>;
-//   performedBy?: string; // NEW: User who performed the action
-// }
-
-interface RecentActivityAsset {
-  uuid: string;
-  user_id: string;
-  asset_id: string;
-  event: string;
-  status_after: string; // JOIN WITH ASSET_STATUS
-  status_before: string; // JOIN WITH ASSET_STATUS
-  details: Record<string, unknown>; // OLD AND NEW ASSETS JSONB
-  created_at: string;
-  updated_at: string;
-}
-
-interface RecentActivityAssociation {
-  uuid: string;
-  user_id: string;
-  association_id: string;
-  event: string;
-  details: Record<string, unknown>; // OLD AND NEW ASSOCIATION JSONB
-  created_at: string;
-  updated_at: string;
-}
+import { RecentActivityAsset, RecentActivityAssociation } from '../../types/recentActivitiesTypes';
+import { formatPhoneNumber } from '@/utils/formatters';
 
 interface RecentActivitiesCardProps {
   activities: (RecentActivityAsset | RecentActivityAssociation)[];
@@ -46,86 +15,51 @@ interface RecentActivitiesCardProps {
 }
 
 export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
-  activities,
+  activities = [],
   isLoading = false
 }) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  const getAssetTypeBadge = (description: string, details?: Record<string, unknown>): string => {
-    // Usar detalhes da solução se disponível
-    if (details?.solution) {
-      const solution = details.solution.toLowerCase();
-      if (solution.includes('chip') || solution.includes('simcard')) {
-        return 'CHIP';
-      } else if (solution.includes('speedy') || solution.includes('5g')) {
-        return 'SPEEDY 5G';
-      } else {
-        return 'EQUIPAMENTO';
-      }
-    }
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    return date.toLocaleString('pt-BR', options);
+  }
+
+  // Determina se a atividade é um ativo ou uma associação
+  const getActivityType = (activity: RecentActivityAsset | RecentActivityAssociation): 'ATIVO' | 'ASSOCIAÇÃO' => {
+    return 'asset_id' in activity ? 'ATIVO' : 'ASSOCIAÇÃO';
+  };
+
+  // Retorna a descrição baseada no tipo de evento
+  const getEventDescription = (activity: RecentActivityAsset | RecentActivityAssociation) => {
+    const event = activity.event;
+    const type = capitalize(getActivityType(activity));
     
-    // Fallback para descrição
-    if (description.includes('CHIP') || description.includes('chip')) {
-      return 'CHIP';
-    }
-    if (description.includes('SPEEDY') || description.includes('speedy')) {
-      return 'SPEEDY 5G';
-    }
-    if (description.includes('equipamento') || description.includes('EQUIPAMENTO')) {
-      return 'EQUIPAMENTO';
-    }
-    return 'ATIVO';
-  };
-
-  const getStatusBadge = (details?: Record<string, unknown>): string => {
-    if (details?.new_status?.status) {
-      return details.new_status.status;
-    }
-    if (details?.status_after) {
-      return details.status_after;
-    }
-    return 'disponível';
-  };
-
-  const getEventTypeBadge = (type: string): string => {
-    switch (type) {
-      case 'asset_created':
-        return 'ASSET CRIADO';
-      case 'association_created':
-        return 'ASSOCIAÇÃO CRIADA';
-      case 'association_ended':
-        return 'ASSOCIAÇÃO REMOVIDA';
-      case 'status_updated':
-        return 'STATUS ATUALIZADO';
+    switch (event.toUpperCase()) {
+      case 'INSERT':
+        return `${type} criado`;
+      case 'UPDATE':
+        return `${type} atualizado`;
+      case 'DELETE':
+        return `${type} removido`;
       default:
-        return 'EVENTO';
+        return `Evento de ${type.toLowerCase()}`;
     }
   };
 
-  const formatTimestamp = (timestamp: string): string => {
-    try {
-      if (!timestamp || timestamp === 'undefined' || timestamp === 'null') {
-        return 'Data não disponível';
-      }
-
-      const date = new Date(timestamp);
-      
-      if (isNaN(date.getTime())) {
-        if (import.meta.env.DEV) console.warn('Invalid timestamp:', timestamp);
-        return 'Data inválida';
-      }
-
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      if (import.meta.env.DEV) console.error('Error formatting timestamp:', error, 'Input:', timestamp);
-      return 'Erro na data';
+  // Retorna um nome descritivo para a atividade
+  const getActivityName = (activity: RecentActivityAsset | RecentActivityAssociation) => {
+    if ('asset_id' in activity) {
+      return activity.details.new_record.radio || formatPhoneNumber(activity.details.new_record.line_number.toString()) || 'Ativo';
+    } else {
+      // TODO: Adicionar cliente à association logs com join
+      return capitalize(activity.client_name) || 'Associação';
     }
   };
 
@@ -161,7 +95,7 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
             <span className="text-[#4D2BFB] font-semibold">Atividades Recentes</span>
           </div>
           <Badge variant="secondary" className="bg-[#E3F2FD] text-[#1976D2] text-xs">
-            {activities.length} eventos
+            Eventos: {activities.length}
           </Badge>
         </CardTitle>
         <CardDescription className="text-sm text-gray-600">
@@ -178,31 +112,33 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
           <>
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {activities.map((activity, index) => (
-                <div key={activity.id || index} className="relative p-4 bg-[#f7fafd] rounded-lg border border-gray-100">
+                <div key={activity.uuid || index} className="relative p-4 bg-[#f7fafd] rounded-lg border border-gray-100">
                   <div className="absolute top-3 right-3 text-xs text-gray-500">
-                    {formatTimestamp(activity.timestamp)}
+                    {formatTimestamp(activity.created_at)}
                   </div>
                   <div className="pr-24">
                     <p className="text-sm font-medium text-gray-900 mb-2 leading-relaxed">
-                      {activity.description}
+                      {getActivityName(activity)} - {activity.event}
                     </p>
-                    {/* NEW: Display performed by user */}
-                    {activity.performedBy && (
+                    {/* Display performed by user */}
+                    {activity.details.user && (
                       <div className="flex items-center gap-1 mb-2 text-xs text-gray-600">
                         <User className="h-3 w-3" />
-                        <span>por {activity.performedBy}</span>
+                        <span>por {activity.details.user.username}</span>
                       </div>
                     )}
                     <div className="flex flex-wrap gap-1">
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {getAssetTypeBadge(activity.description, activity.details) === "ATIVO" ? "ASSOCIAÇÃO" : getAssetTypeBadge(activity.description, activity.details)}
+                        {getActivityType(activity)}
                       </Badge>
                       <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {getStatusBadge(activity.details)}
+                        {getEventDescription(activity)}
                       </Badge>
-                      <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
-                        {capitalize(getEventTypeBadge(activity.type))}
-                      </Badge>
+                      {activity.event && (
+                        <Badge variant="outline" className="bg-[#E3F2FD] text-[#1976D2] border-[#1976D2] text-xs">
+                          Status: {activity.event}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -210,8 +146,8 @@ export const RecentActivitiesCard: React.FC<RecentActivitiesCardProps> = ({
             </div>
             <div className="pt-3 border-t border-gray-100">
               <Button variant="outline"
-              onClick={() => navigate('/assets/history')}
-              className="w-full h-10 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5">
+                onClick={() => navigate('/assets/history')}
+                className="w-full h-10 border-[#4D2BFB] text-[#4D2BFB] hover:bg-[#4D2BFB]/5">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver Histórico Completo
               </Button>
