@@ -59,9 +59,6 @@ export function useDashboardRecentActivities() {
     queryKey: ['dashboard', 'recent-activities'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-         
-        }
         
         const recentEventsResult = await dashboardQueries.fetchRecentEvents();
         
@@ -183,9 +180,6 @@ export function useDashboardRecentActivities() {
         });
 
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-         
-        }
         return [];
       }
     },

@@ -50,8 +50,7 @@ export const associationQueries = {
       
       return associations;
     } catch (error) {
-      
-      throw error;
+      return error;
     }
   }
 };

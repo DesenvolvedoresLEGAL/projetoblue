@@ -45,6 +45,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       setAssociationTypes(data || []);
     } catch (error) {
      
+      return error;
     }
   };
 

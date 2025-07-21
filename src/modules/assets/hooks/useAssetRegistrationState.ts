@@ -103,7 +103,7 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
           try {
             (form.setValue as any)(key, value);
           } catch (error) {
-            
+            return;
           }
         },
 

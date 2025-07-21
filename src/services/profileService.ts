@@ -42,7 +42,6 @@ export const profileService = {
           last_login: data.last_login || new Date().toISOString(),
           is_active: data.is_active !== false, // Default to true if undefined
           is_approved: data.is_approved !== false, // Default to true if undefined
-          bits_referral_code: data.bits_referral_code,
           updated_at: data.updated_at,
           deleted_at: data.deleted_at // Incluir deleted_at no retorno
         };
@@ -79,7 +78,7 @@ export const profileService = {
           .single();
           
         if (insertError) {
-          
+          throw insertError;
         } else {
           
           return {
@@ -91,7 +90,6 @@ export const profileService = {
             last_login: newProfileData.last_login || new Date().toISOString(),
             is_active: newProfileData.is_active !== false,
             is_approved: newProfileData.is_approved !== false,
-            bits_referral_code: newProfileData.bits_referral_code,
             updated_at: newProfileData.updated_at,
             deleted_at: newProfileData.deleted_at
           };

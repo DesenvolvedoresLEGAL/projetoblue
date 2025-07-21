@@ -13,9 +13,6 @@ export function useDashboardSystemStatus() {
     queryKey: ['dashboard', 'system-status'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         // Buscar último evento para determinar última atividade
         const recentEventsResult = await dashboardQueries.fetchRecentEvents();

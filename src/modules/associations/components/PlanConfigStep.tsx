@@ -31,6 +31,7 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
       setPlans(data || []);
     } catch (error) {
      
+      return error;
     }
   };
 

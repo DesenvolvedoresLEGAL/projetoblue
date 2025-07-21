@@ -25,9 +25,6 @@ export function useDashboardStatusByType() {
     queryKey: ['dashboard', 'status-by-type'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         // Use the detailed breakdown query that includes both asset_solutions and asset_status
         const detailedBreakdownResult = await dashboardQueries.fetchDetailedStatusBreakdown();
@@ -91,7 +88,7 @@ export function useDashboardStatusByType() {
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 60000,

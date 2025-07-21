@@ -49,9 +49,6 @@ export const useDashboardCards = () => {
       try {
         // Use the API service to fetch problem assets
         const assets = await assetService.listProblemAssets();
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         // Get status names for mapping
         const { data: statuses } = await supabase
@@ -74,16 +71,13 @@ export const useDashboardCards = () => {
           };
         });
         
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         return {
           count: items.length,
           items: items.slice(0, 5) // Keep slice only for display items, not count
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -94,9 +88,6 @@ export const useDashboardCards = () => {
     queryFn: async () => {
       try {
         const assets = await assetService.getAssetsByStatus(2);
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
 
         const items = assets.map((asset) => {
           const normalized = normalizeAsset(asset);
@@ -107,18 +98,14 @@ export const useDashboardCards = () => {
             status: normalized.status,
           };
         });
-        
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
+
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
         
-        throw error;
-      }
+        return error;      }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -128,9 +115,6 @@ export const useDashboardCards = () => {
     queryFn: async () => {
       try {
         const assets = await assetService.getAssetsByStatus(3);
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
 
         const items = assets.map((asset) => {
           const normalized = normalizeAsset(asset);
@@ -141,18 +125,14 @@ export const useDashboardCards = () => {
             status: normalized.status,
           };
         });
-        
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
+      
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
         
-        throw error;
-      }
+        return error;      }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -219,13 +199,6 @@ export const useDashboardCards = () => {
         // Equipamentos: tudo que não é chip nem speedy
         const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
         
-        if (process.env.NODE_ENV === 'development') {
-          
-          
-          
-          
-          
-        }
         
         // Count available and unavailable assets
         const availableChips = chips.filter(a => a.status_id === availableStatusId);
@@ -264,15 +237,11 @@ export const useDashboardCards = () => {
             onSubscription: onSubscriptionEquipment.length
           }
         };
-        
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
+
         return result;
       } catch (error) {
         
-        throw error;
-      }
+        return error;      }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -317,8 +286,7 @@ export const useDashboardCards = () => {
         });
       } catch (error) {
         
-        throw error;
-      }
+        return error;      }
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -347,8 +315,7 @@ export const useDashboardCards = () => {
         }));
       } catch (error) {
         
-        throw error;
-      }
+        return error;      }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

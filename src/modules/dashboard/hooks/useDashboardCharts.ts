@@ -21,9 +21,6 @@ export function useDashboardCharts() {
     queryKey: ['dashboard', 'charts'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         const [
           statusSummaryResult,
@@ -72,7 +69,7 @@ export function useDashboardCharts() {
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 60000,

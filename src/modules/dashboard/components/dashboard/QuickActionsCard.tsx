@@ -18,12 +18,6 @@ export const QuickActionsCard: React.FC = () => {
   const assets = useAssetsData();
   const { canCreateAssets, canManageAssociations, canExportData } = usePermissions();
 
-  const handleImportCSV = () => {
-    if (process.env.NODE_ENV === 'development') {
-      
-    }
-  };
-
   const handleExport = (format: 'csv' | 'excel') => {
     try {
       const data = assets.data.assets;
@@ -80,9 +74,7 @@ export const QuickActionsCard: React.FC = () => {
         XLSX.writeFile(wb, `${fileName}.xlsx`);
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        
-      }
+      return error;
     }
   };
 
@@ -137,17 +129,6 @@ export const QuickActionsCard: React.FC = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </RoleGuard>
-
-        <RoleGuard requiredRole="suporte">
-          <Button 
-            className={`legal-button w-full ${isMobile ? 'h-12 text-base' : 'h-10'}`}
-            variant="outline"
-            onClick={() => handleImportCSV()}
-          >
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Importar Dados (.csv)
-          </Button>
         </RoleGuard>
       </CardContent>
     </Card>

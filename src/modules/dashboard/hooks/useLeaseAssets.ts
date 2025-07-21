@@ -14,9 +14,6 @@ export const useLeaseAssets = () => {
     queryKey: ['dashboard', 'lease-assets'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         const today = new Date().toISOString().split('T')[0];
         
@@ -48,10 +45,6 @@ export const useLeaseAssets = () => {
         if (error) {
           
           throw new Error(`Failed to fetch lease assets: ${error.message}`);
-        }
-
-        if (process.env.NODE_ENV === 'development') {
-          
         }
 
         // Contar por tipo de solução
@@ -86,14 +79,11 @@ export const useLeaseAssets = () => {
           }
         });
 
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         return counts;
         
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

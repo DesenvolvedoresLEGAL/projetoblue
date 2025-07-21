@@ -51,7 +51,7 @@ export const useAssetAssociationState = () => {
         return parsedState;
       }
     } catch (error) {
-      
+      return;
     }
     
     // Default state com configuração inicial correta
@@ -78,7 +78,7 @@ export const useAssetAssociationState = () => {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       
     } catch (error) {
-      
+      return;
     }
   }, [state]);
 
@@ -138,7 +138,7 @@ export const useAssetAssociationState = () => {
       sessionStorage.removeItem(STORAGE_KEY);
       
     } catch (error) {
-      
+      return;
     }
   };
   

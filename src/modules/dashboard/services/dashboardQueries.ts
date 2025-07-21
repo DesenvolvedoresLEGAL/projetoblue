@@ -233,10 +233,6 @@ export const fetchRecentEvents = async () => {
       { data: recentAssociationsData, error: recentAssociationsError },
     ] = await Promise.all([recentAssetsQuery, recentAssociationsQuery]);
 
-    // Tratar erros
-    if (recentAssetsError) {
-     
-    }
 
     if (recentAssociationsError) {
       console.error(
@@ -245,10 +241,6 @@ export const fetchRecentEvents = async () => {
       );
     }
 
-    // Debug log para associations (remover em produção)
-    if (process.env.NODE_ENV === "development") {
-     
-    }
 
     return {
       recentAssets: (recentAssetsData as AssetLogResponse[]) || [],

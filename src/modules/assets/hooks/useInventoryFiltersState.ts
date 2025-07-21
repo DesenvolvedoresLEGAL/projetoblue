@@ -45,7 +45,7 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
           } as InventoryFiltersState;
         }
       } catch (error) {
-        
+      return error;
       }
     }
     
@@ -59,7 +59,7 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
         localStorage.removeItem(STORAGE_KEY);
         
       } catch (error) {
-        
+      return error;
       }
     }
   }, [resetOnMount]);
@@ -71,7 +71,7 @@ export const useInventoryFiltersState = (options: UseInventoryFiltersStateOption
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         
       } catch (error) {
-        
+        return error;
       }
     }
   }, [state, shouldPersist]);

@@ -38,11 +38,6 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
         }
       });
 
-      if (missingVariables.length > 0) {
-        
-      } else {
-        
-      }
     };
 
     // Validação de contraste (simulação básica)
@@ -53,11 +48,6 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
           const styles = getComputedStyle(element);
           const bgColor = styles.backgroundColor;
           const textColor = styles.color;
-          
-          // Log para análise manual de contraste
-          if (bgColor && textColor) {
-            
-          }
         });
       }
     };

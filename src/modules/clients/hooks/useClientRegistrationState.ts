@@ -37,7 +37,7 @@ export function useClientRegistrationState() {
         setFormData(parsedData);
       }
     } catch (error) {
-      
+      return error;
     } finally {
       setIsFormDataLoaded(true);
     }
@@ -51,7 +51,7 @@ export function useClientRegistrationState() {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(debouncedFormData));
       
     } catch (error) {
-      
+      return error;
     }
   }, [debouncedFormData, isFormDataLoaded]);
 
@@ -69,7 +69,7 @@ export function useClientRegistrationState() {
       sessionStorage.removeItem(STORAGE_KEY);
       setFormData(defaultFormData);
     } catch (error) {
-      
+      return error;
     }
   }, []);
 

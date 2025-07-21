@@ -28,9 +28,6 @@ export function useDashboardAssociations() {
     queryKey: ['dashboard', 'associations'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         const [
           activeAssociationsResult,
@@ -97,7 +94,7 @@ export function useDashboardAssociations() {
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 60000, // 1 minute

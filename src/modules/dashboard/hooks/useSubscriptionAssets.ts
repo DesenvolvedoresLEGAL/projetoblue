@@ -14,10 +14,6 @@ export const useSubscriptionAssets = () => {
     queryKey: ['dashboard', 'subscription-assets'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
-        
         const today = new Date().toISOString().split('T')[0];
         
         // Query para buscar ativos atualmente em assinatura (association_type_id = 2)
@@ -46,12 +42,7 @@ export const useSubscriptionAssets = () => {
           .or(`exit_date.is.null,exit_date.gte.${today}`);
 
         if (error) {
-          
           throw new Error(`Failed to fetch subscription assets: ${error.message}`);
-        }
-
-        if (process.env.NODE_ENV === 'development') {
-          
         }
 
         // Contar por tipo de solução
@@ -86,14 +77,11 @@ export const useSubscriptionAssets = () => {
           }
         });
 
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
+        if (process.env.NODE_ENV === 'development') { /* empty */ }
         return counts;
         
       } catch (error) {
-        
-        throw error;
+        return error;
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutos

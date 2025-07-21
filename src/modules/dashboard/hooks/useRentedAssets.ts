@@ -22,10 +22,6 @@ export const useRentedAssets = () => {
   return useQuery({
     queryKey: ['rented-assets'],
     queryFn: async () => {
-      if (process.env.NODE_ENV === 'development') {
-        
-      }
-      
       const { data, error } = await supabase
         .from('assets')
         .select(`
@@ -45,10 +41,6 @@ export const useRentedAssets = () => {
       if (error) {
         
         throw error;
-      }
-
-      if (process.env.NODE_ENV === 'development') {
-        
       }
       return data as RentedAsset[] || [];
     },

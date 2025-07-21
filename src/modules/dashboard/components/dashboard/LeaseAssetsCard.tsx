@@ -11,10 +11,6 @@ import { toast } from '@/utils/toast';
 export const LeaseAssetsCard: React.FC = () => {
   const { data: leaseAssetsByType, isLoading, error } = useLeaseAssets();
 
-  // Log para debugging
-  if (error) {
-    
-  }
 
   return (
     <Card className="h-full flex flex-col">

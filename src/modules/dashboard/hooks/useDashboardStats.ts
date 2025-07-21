@@ -45,9 +45,6 @@ export function useDashboardStats() {
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         // Parallel queries for better performance
         const [
@@ -68,17 +65,6 @@ export function useDashboardStats() {
           dashboardQueries.fetchDetailedStatusBreakdown()
         ]);
 
-        // Log query results for debugging
-        if (process.env.NODE_ENV === 'development') {
-          
-          
-          
-          
-          
-          
-          
-        }
-
         // Error handling for individual queries
         if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
         if (activeClientsResult.error) throw new Error(`Active clients query error: ${activeClientsResult.error.message}`);
@@ -91,11 +77,6 @@ export function useDashboardStats() {
         // Fetch additional data needed for mapping
         const solutionsResult = await dashboardQueries.fetchSolutions();
         const statusResult = await dashboardQueries.fetchStatuses();
-        
-        if (process.env.NODE_ENV === 'development') {
-          
-          
-        }
         
         if (solutionsResult.error) throw new Error(`Solutions query error: ${solutionsResult.error.message}`);
         if (statusResult.error) throw new Error(`Status query error: ${statusResult.error.message}`);
@@ -182,7 +163,7 @@ export function useDashboardStats() {
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 2 * 60 * 1000, // 2 minutos

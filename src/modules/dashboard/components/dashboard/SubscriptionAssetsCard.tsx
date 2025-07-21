@@ -11,11 +11,6 @@ import { toast } from '@/utils/toast';
 export const SubscriptionAssetsCard: React.FC = () => {
   const { data: subscriptionAssetsByType, isLoading, error } = useSubscriptionAssets();
 
-  // Log para debugging
-  if (error) {
-    
-  }
-
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2 md:pb-3">

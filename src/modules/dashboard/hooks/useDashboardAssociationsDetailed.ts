@@ -21,9 +21,6 @@ export function useDashboardAssociationsDetailed() {
     queryKey: ['dashboard', 'associations-detailed-optimized'],
     queryFn: async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          
-        }
         
         const activeAssociationsResult = await dashboardQueries.fetchActiveAssociations();
         
@@ -60,18 +57,13 @@ export function useDashboardAssociationsDetailed() {
           };
         };
         
-        if (process.env.NODE_ENV === 'development') {
-          
-          
-        }
-        
         return {
           rental: processAssociationsResponse(rentalAssociations),
           subscription: processAssociationsResponse(subscriptionAssociations)
         };
       } catch (error) {
         
-        throw error;
+        return error;
       }
     },
     staleTime: 60000, // Cache por 1 minuto

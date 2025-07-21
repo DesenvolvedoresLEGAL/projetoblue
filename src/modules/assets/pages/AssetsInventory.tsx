@@ -100,6 +100,7 @@ const AssetsInventory = () => {
     setCurrentPage(1);
     setShouldFetch(true);
     refetch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, refetch]);
   
   const handleSearchTermChange = useCallback((value: string) => {

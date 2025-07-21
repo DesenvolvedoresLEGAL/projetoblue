@@ -38,7 +38,7 @@ class IdempotencyService {
     }
 
     
-    return entry.result;
+    return entry.result as T;
   }
 
   clearCache(key?: string): void {
@@ -60,10 +60,6 @@ class IdempotencyService {
         this.cache.delete(key);
         cleanedCount++;
       }
-    }
-
-    if (cleanedCount > 0) {
-      
     }
   }
 

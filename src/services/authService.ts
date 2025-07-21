@@ -252,9 +252,8 @@ export const authService = {
   async signOut() {
     try {
       return await supabase.auth.signOut();
-    } catch (error: unknown) {
-      
-      throw error;
+    } catch (error) { 
+      return error;
     }
   },
 
