@@ -20,19 +20,36 @@ interface ClientSelectionStepProps {
 export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state, dispatch }) => {
   const [clients, setClients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newClient, setNewClient] = useState({
-    nome: "",
-    empresa: "",
-    responsavel: "",
-    contato: "",
-    email: "",
-    cnpj: ""
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(() => {
+    const savedIsCreateModalOpen = localStorage.getItem('isCreateModalOpen');
+    if (savedIsCreateModalOpen) {
+      return savedIsCreateModalOpen === 'true';
+    }
+    return false;
+  });
+  const [newClient, setNewClient] = useState(() => {
+    const savedClient = localStorage.getItem('newClient');
+    if (savedClient) {
+      return JSON.parse(savedClient);
+    }
+    return {
+      nome: "",
+      empresa: "",
+      responsavel: "",
+      contato: "",
+      email: "",
+      cnpj: ""
+    }
   });
 
   useEffect(() => {
     fetchClients();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('newClient', JSON.stringify(newClient));
+    localStorage.setItem('isCreateModalOpen', String(isCreateModalOpen));
+  }, [newClient, isCreateModalOpen]);
 
   const fetchClients = async () => {
     try {
