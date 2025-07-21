@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Users, Phone, Building, Smartphone, Router } from 'lucide-react';
+import { ChevronDown, ChevronRight, Users, Phone, Building, Smartphone, Router, XCircle } from 'lucide-react';
 import { useAssociationsList } from '../hooks/useAssociationsList';
 import { useEndAssociation } from '../hooks/useEndAssociation';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout';
@@ -10,13 +10,14 @@ import { useAssociationTypes } from '../hooks/useAssociationTypes';
 import { formatPhone } from '../utils/associationFormatters';
 import ExpandedAssociations from '../components/ExpandedAssociations';
 import EndAssociationModal from '../components/EndAssociationModal';
+import EndGroupModal from '../components/EndGroupModal';
 import AssociationsListSkeleton from '../components/AssociationsListSkeleton';
 import { SearchBar } from '../components/SearchBar';
 import { PaginationControls } from '../components/PaginationControls';
 import { SearchResultHighlight } from '../components/SearchResultHighlight';
 import { useAssociationsSearch } from '../hooks/useAssociationsSearch';
 import { usePagination } from '../hooks/usePagination';
-import { AssociationWithRelations } from '../types/associationsTypes';
+import { AssociationWithRelations, ClientAssociationGroup } from '../types/associationsTypes';
 import ChipTypeIndicator from '../components/ChipTypeIndicator';
 import EmptyState from '../components/states/EmptyState';
 import MobileStats from '../components/mobile/MobileStats';
@@ -24,6 +25,7 @@ import MobileFilters from '../components/mobile/MobileFilters';
 import AssociationCard from '../components/mobile/AssociationCard';
 import AssociationFilters from '../components/filters/AssociationFilters';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -32,6 +34,11 @@ const AssociationsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAssociation, setSelectedAssociation] = useState<AssociationWithRelations | null>(null);
   const [endingAssociationId, setEndingAssociationId] = useState<string | null>(null);
+  
+  // Estados para encerramento de grupo
+  const [isEndGroupModalOpen, setIsEndGroupModalOpen] = useState(false);
+  const [selectedGroupForEnd, setSelectedGroupForEnd] = useState<ClientAssociationGroup | null>(null);
+  const [isEndingGroup, setIsEndingGroup] = useState(false);
 
   const { isMobile } = useResponsiveLayout();
   const { clientGroups, stats, loading, initialLoading, error, refresh } = useAssociationsList();
@@ -53,7 +60,6 @@ const AssociationsList: React.FC = () => {
     associationTypes
   });
 
-  // Depois aplicar busca nos dados já filtrados
   const {
     filteredGroups,
     searchType,
@@ -94,6 +100,9 @@ const AssociationsList: React.FC = () => {
       if (selectedAssociation) {
         setSelectedAssociation(null);
       }
+      if (isEndGroupModalOpen) {
+        setIsEndGroupModalOpen(false);
+      }
     },
     isEnabled: true
   });
@@ -122,6 +131,38 @@ const AssociationsList: React.FC = () => {
       setEndingAssociationId(null);
       toast.error("Não foi possível finalizar a associação. Tente novamente.");
     }
+  };
+
+  const handleEndAssociationGroup = async (group: ClientAssociationGroup, exitDate: string, notes?: string) => {
+    const activeAssociations = group.associations.filter(a => a.status);
+    
+    if (activeAssociations.length === 0) {
+      toast.info("Não há associações ativas para encerrar.");
+      return;
+    }
+
+    try {
+      setIsEndingGroup(true);
+      
+      await Promise.all(
+        activeAssociations.map(association => endAssociation(association, exitDate, notes))
+      );
+      
+      toast.success(`Todas as ${activeAssociations.length} associações do cliente ${group.client.nome} foram encerradas com sucesso.`);
+      refresh();
+    } catch (error) {
+      toast.error("Erro ao encerrar uma ou mais associações. Algumas podem ter sido finalizadas.");
+    } finally {
+      setIsEndingGroup(false);
+    }
+  };
+
+  const handleConfirmEndGroup = async (exitDate: string, notes?: string) => {
+    if (!selectedGroupForEnd) return;
+
+    await handleEndAssociationGroup(selectedGroupForEnd, exitDate, notes);
+    setIsEndGroupModalOpen(false);
+    setSelectedGroupForEnd(null);
   };
 
   const handleClearSearch = () => {
@@ -251,14 +292,31 @@ const AssociationsList: React.FC = () => {
       ) : isMobile ? (
         <div className="space-y-4">
           {paginatedData.map((group) => (
-            <AssociationCard
-              key={group.client.uuid}
-              group={group}
-              onEndAssociation={handleEndAssociation}
-              endingAssociationId={endingAssociationId}
-              searchTerm={searchTerm}
-              searchType={searchType}
-            />
+            <div key={group.client.uuid} className="space-y-2">
+              <AssociationCard
+                group={group}
+                onEndAssociation={handleEndAssociation}
+                endingAssociationId={endingAssociationId}
+                searchTerm={searchTerm}
+                searchType={searchType}
+              />
+              {/* Botão Encerrar Grupo para Mobile */}
+              {group.activeAssociations > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedGroupForEnd(group);
+                    setIsEndGroupModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 text-destructive border-destructive/20 hover:bg-destructive/5"
+                  disabled={isEndingGroup}
+                >
+                  <XCircle className="h-4 w-4" />
+                  Encerrar Grupo ({group.activeAssociations} ativas)
+                </Button>
+              )}
+            </div>
           ))}
         </div>
       ) : (
@@ -272,6 +330,7 @@ const AssociationsList: React.FC = () => {
                   <th className="text-left p-4 font-medium text-foreground">Tipos</th>
                   <th className="text-left p-4 font-medium text-foreground">Contato</th>
                   <th className="text-left p-4 font-medium text-foreground">Responsável</th>
+                  <th className="text-center p-4 font-medium text-foreground">Ações</th>
                   <th className="w-12 p-4"></th>
                 </tr>
               </thead>
@@ -280,8 +339,7 @@ const AssociationsList: React.FC = () => {
                   const mainRow = (
                     <tr
                       key={`client-${group.client.uuid}`}
-                      className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                      onClick={() => toggleRow(group.client.uuid)}
+                      className="border-b hover:bg-muted/30 transition-colors"
                     >
                       <td className="p-4">
                         <div className="space-y-1">
@@ -338,6 +396,28 @@ const AssociationsList: React.FC = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex justify-center">
+                          {group.activeAssociations > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedGroupForEnd(group);
+                                setIsEndGroupModalOpen(true);
+                              }}
+                              className="flex items-center gap-1 text-destructive border-destructive/20 hover:bg-destructive/5"
+                              disabled={isEndingGroup}
+                            >
+                              <XCircle className="h-4 w-4" />
+                              Encerrar Grupo
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div 
+                          className="flex justify-center cursor-pointer"
+                          onClick={() => toggleRow(group.client.uuid)}
+                        >
                           {expandedRows.has(group.client.uuid) ? (
                             <ChevronDown className="h-5 w-5 text-muted-foreground" />
                           ) : (
@@ -352,7 +432,7 @@ const AssociationsList: React.FC = () => {
                     return [
                       mainRow,
                       <tr key={`expanded-${group.client.uuid}`} className="animate-fade-in">
-                        <td colSpan={6} className="p-0">
+                        <td colSpan={7} className="p-0">
                           <ExpandedAssociations
                             associations={group.associations}
                             clientName={group.client.nome}
@@ -410,6 +490,15 @@ const AssociationsList: React.FC = () => {
         association={selectedAssociation}
         onConfirm={handleConfirmEndAssociation}
         isLoading={isEndingAssociation}
+      />
+
+      {/* Modal de Finalizar Grupo */}
+      <EndGroupModal
+        isOpen={isEndGroupModalOpen}
+        onOpenChange={setIsEndGroupModalOpen}
+        group={selectedGroupForEnd}
+        onConfirm={handleConfirmEndGroup}
+        isLoading={isEndingGroup}
       />
     </div>
   );
