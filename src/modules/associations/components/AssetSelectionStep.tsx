@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatPhoneForDisplay } from "@/utils/clientMappers";
 import { capitalize } from "@/utils/stringUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AssetSelectionStepProps {
   state: any;
@@ -85,7 +86,8 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
       asset.radio?.toLowerCase().includes(searchLower) ||
       asset.serial_number?.toLowerCase().includes(searchLower) ||
       asset.model?.toLowerCase().includes(searchLower) ||
-      asset.asset_solutions?.solution?.toLowerCase().includes(searchLower)
+      asset.asset_solutions?.solution?.toLowerCase().includes(searchLower) ||
+      asset.manufacturers.name.toLowerCase().includes(searchLower)
     );
   });
 
@@ -110,6 +112,49 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
             className="pl-10"
           />
         </div>
+        <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Fabricante/Operadora
+                  </label>
+                  <Select
+                    value={searchTerm}
+                    onValueChange={(value) => {
+                      // Ignorar separadores
+                      if (value.startsWith('separator_')) return;
+                      setSearchTerm(value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione fabricante" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem 
+                          key={1} 
+                          value={"Vivo"}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>Vivo</span>
+                          </div>
+                        </SelectItem>
+                      <SelectItem 
+                          key={1} 
+                          value={"Tim"}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>Tim</span>
+                          </div>
+                        </SelectItem>
+                      <SelectItem 
+                          key={1} 
+                          value={"Claro"}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>Claro</span>
+                          </div>
+                        </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
       </div>
 
       {state.selectedAssets.length > 0 && (
