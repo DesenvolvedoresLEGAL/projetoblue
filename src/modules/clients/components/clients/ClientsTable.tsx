@@ -148,7 +148,7 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client-logs'] });
     } catch (error) {
-      if (import.meta.env.DEV) console.error('Erro ao excluir cliente:', error);
+      
       toast.error("Erro ao excluir cliente. Tente novamente.");
     }
   };

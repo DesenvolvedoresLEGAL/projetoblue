@@ -10,7 +10,7 @@ class IdempotencyService {
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutos
 
   cacheResult<T>(key: string, result: T, ttl: number = this.DEFAULT_TTL): void {
-    if (import.meta.env.DEV) console.log('[IdempotencyService] Cacheando resultado para chave:', key);
+    
     
     this.cache.set(key, {
       result,
@@ -26,27 +26,27 @@ class IdempotencyService {
     const entry = this.cache.get(key);
     
     if (!entry) {
-      if (import.meta.env.DEV) console.log('[IdempotencyService] Nenhum resultado cacheado encontrado para:', key);
+      
       return null;
     }
 
     // Verificar se o cache expirou
     if (Date.now() - entry.timestamp > entry.ttl) {
-      if (import.meta.env.DEV) console.log('[IdempotencyService] Cache expirado para chave:', key);
+      
       this.cache.delete(key);
       return null;
     }
 
-    if (import.meta.env.DEV) console.log('[IdempotencyService] Resultado cacheado encontrado para:', key);
+    
     return entry.result;
   }
 
   clearCache(key?: string): void {
     if (key) {
-      if (import.meta.env.DEV) console.log('[IdempotencyService] Limpando cache específico:', key);
+      
       this.cache.delete(key);
     } else {
-      if (import.meta.env.DEV) console.log('[IdempotencyService] Limpando todo o cache');
+      
       this.cache.clear();
     }
   }
@@ -63,7 +63,7 @@ class IdempotencyService {
     }
 
     if (cleanedCount > 0) {
-      if (import.meta.env.DEV) console.log(`[IdempotencyService] Limpeza automática: ${cleanedCount} entradas expiradas removidas`);
+      
     }
   }
 

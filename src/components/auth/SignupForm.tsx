@@ -46,13 +46,13 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
-        if (import.meta.env.DEV) console.error('Erro ao verificar username:', error);
+        
         setUsernameAvailable(null);
       } else {
         setUsernameAvailable(!data);
       }
     } catch (err) {
-      if (import.meta.env.DEV) console.error('Erro na verificação de username:', err);
+      
       setUsernameAvailable(null);
     } finally {
       setCheckingUsername(false);
@@ -99,15 +99,7 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
                     isPasswordStrengthValid && 
                     isConfirmPasswordValid;
     
-    if (import.meta.env.DEV) console.log('Validade do formulário:', {
-      isEmailValid,
-      isUsernameValid,
-      isPasswordValid,
-      isPasswordStrengthValid,
-      isConfirmPasswordValid,
-      formIsValid: isValid
-    });
-    
+
     setFormIsValid(isValid);
   }, [email, username, password, confirmPassword, passwordStrength, usernameAvailable]);
 
@@ -117,38 +109,38 @@ export const SignupForm = ({ onSubmit, error, isLoading = false }: SignupFormPro
     
     // Verifica novamente todos os campos antes de enviar
     if (!email || !email.includes('@') || !email.includes('.')) {
-      if (import.meta.env.DEV) console.log('Email inválido no envio:', email);
+      
       return;
     }
     
     if (!username || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-      if (import.meta.env.DEV) console.log('Username inválido no envio:', username);
+      
       return;
     }
     
     if (usernameAvailable !== true) {
-      if (import.meta.env.DEV) console.log('Username não disponível no envio');
+      
       return;
     }
     
     if (!password || password.length < 6) {
-      if (import.meta.env.DEV) console.log('Senha muito curta no envio:', { passwordLength: password.length });
+      
       return;
     }
     
     if (password !== confirmPassword) {
-      if (import.meta.env.DEV) console.log('Senhas não conferem no envio');
+      
       setPasswordsMatch(false);
       return;
     }
     
     const passwordStr = checkPasswordStrength(password);
     if (passwordStr === 'weak') {
-      if (import.meta.env.DEV) console.log('Senha fraca no envio');
+      
       return;
     }
     
-    if (import.meta.env.DEV) console.log('Formulário válido, enviando dados:', { email, username });
+    
     await onSubmit(e);
   };
 

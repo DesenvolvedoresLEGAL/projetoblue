@@ -42,7 +42,7 @@ export function useFormHandlers(
   };
 
   const onSubmitChip = (formData: ChipFormValues) => {
-    if (import.meta.env.DEV) console.log('[onSubmitChip] Starting chip submission with data:', formData);
+    
     
     const createData = {
       type: "CHIP" as const,
@@ -54,24 +54,24 @@ export function useFormHandlers(
       status_id: formData.status_id,
     };
 
-    if (import.meta.env.DEV) console.log('[onSubmitChip] Calling mutation with:', createData);
+    
 
     createAssetMutation.mutate(createData, {
       onSuccess: () => {
-        if (import.meta.env.DEV) console.log('[onSubmitChip] Success callback executed');
+        
         clearState();
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => navigate("/assets/management"), 2000);
       },
       onError: (error) => {
-        if (import.meta.env.DEV) console.error('[onSubmitChip] Error callback executed:', error);
+        
       }
     });
   };
 
   const onSubmitEquipment = (formData: EquipmentFormValues) => {
-    if (import.meta.env.DEV) console.log('[onSubmitEquipment] Starting equipment submission with data:', formData);
+    
 
     // Inherit factory values for current fields if they are empty
     const currentData = {
@@ -81,11 +81,11 @@ export function useFormHandlers(
       admin_pass: formData.admin_pass || formData.admin_pass_fabrica,
     };
 
-    if (import.meta.env.DEV) console.log('[onSubmitEquipment] Current credentials after inheritance:', currentData);
+    
 
     // Check password strength for factory password (which is mandatory)
     if (passwordStrength === "weak" && !allowWeakPassword) {
-      if (import.meta.env.DEV) console.log('[onSubmitEquipment] Blocking submission due to weak factory password');
+      
       equipmentForm.setError("admin_pass_fabrica", { 
         type: "manual", 
         message: "Use uma senha mais forte ou marque para permitir senha fraca." 
@@ -114,18 +114,18 @@ export function useFormHandlers(
       admin_pass: currentData.admin_pass,
     };
 
-    if (import.meta.env.DEV) console.log('[onSubmitEquipment] Calling mutation with:', createData);
+    
 
     createAssetMutation.mutate(createData, {
       onSuccess: (data) => {
-        if (import.meta.env.DEV) console.log('[onSubmitEquipment] Success callback executed with data:', data);
+        
         clearState();
         chipForm.reset();
         equipmentForm.reset();
         setTimeout(() => navigate("/assets/management"), 2000);
       },
       onError: (error) => {
-        if (import.meta.env.DEV) console.error('[onSubmitEquipment] Error callback executed:', error);
+        
       }
     });
   };

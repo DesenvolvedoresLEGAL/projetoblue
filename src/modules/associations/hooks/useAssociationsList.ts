@@ -19,9 +19,9 @@ export const useAssociationsList = () => {
   } = useQuery({
     queryKey: ['associations', refreshKey],
     queryFn: async () => {
-      console.log('Fetching associations...');
+     
       const data = await associationService.getAll();
-      console.log('Associations fetched:', data.length);
+     
       return data;
     },
     staleTime: 30 * 1000, // 30 segundos

@@ -120,7 +120,7 @@ export const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
         .single();
 
       if (error) {
-        if (import.meta.env.DEV) console.error('Erro ao atualizar cliente:', error);
+        
         const friendlyMessage = showFriendlyError(error, 'update');
         throw error;
       }
@@ -129,7 +129,7 @@ export const ClientEditDialog: React.FC<ClientEditDialogProps> = ({
       onClose();
       
     } catch (error) {
-      if (import.meta.env.DEV) console.error('Erro ao atualizar cliente:', error);
+      
       const friendlyMessage = showFriendlyError(error, 'update');
       toast.error(friendlyMessage);
     } finally {

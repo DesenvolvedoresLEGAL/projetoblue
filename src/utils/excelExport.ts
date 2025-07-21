@@ -16,7 +16,7 @@ export interface ExportData {
 }
 
 export const exportToExcel = (assets: AssetWithRelations[], filename?: string) => {
-  if (import.meta.env.DEV) console.log('Iniciando exportação de', assets.length, 'ativos');
+  
   
   // Mapear dados para formato de exportação
   const exportData: ExportData[] = assets.map((asset) => {
@@ -61,7 +61,7 @@ export const exportToExcel = (assets: AssetWithRelations[], filename?: string) =
     };
   });
 
-  if (import.meta.env.DEV) console.log('Dados preparados para exportação:', exportData.slice(0, 3)); // Log primeiros 3 itens
+   // Log primeiros 3 itens
 
   // Criar workbook e worksheet
   const workbook = XLSX.utils.book_new();
@@ -91,6 +91,6 @@ export const exportToExcel = (assets: AssetWithRelations[], filename?: string) =
   // Salvar arquivo
   XLSX.writeFile(workbook, finalFilename);
   
-  if (import.meta.env.DEV) console.log('Exportação concluída:', finalFilename);
+  
   return finalFilename;
 };

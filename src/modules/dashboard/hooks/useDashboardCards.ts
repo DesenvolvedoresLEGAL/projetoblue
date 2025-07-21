@@ -50,7 +50,7 @@ export const useDashboardCards = () => {
         // Use the API service to fetch problem assets
         const assets = await assetService.listProblemAssets();
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Raw problem assets data:', assets);
+          
         }
         
         // Get status names for mapping
@@ -75,14 +75,14 @@ export const useDashboardCards = () => {
         });
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Transformed problem assets:', items);
+          
         }
         return {
           count: items.length,
           items: items.slice(0, 5) // Keep slice only for display items, not count
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching problem assets:", error);
+        
         throw error;
       }
     },
@@ -95,7 +95,7 @@ export const useDashboardCards = () => {
       try {
         const assets = await assetService.getAssetsByStatus(2);
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Raw on-lease assets:', assets);
+          
         }
 
         const items = assets.map((asset) => {
@@ -109,14 +109,14 @@ export const useDashboardCards = () => {
         });
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Transformed on-lease assets:', items);
+          
         }
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching on-lease assets:", error);
+        
         throw error;
       }
     },
@@ -129,7 +129,7 @@ export const useDashboardCards = () => {
       try {
         const assets = await assetService.getAssetsByStatus(3);
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Raw subscription assets:', assets);
+          
         }
 
         const items = assets.map((asset) => {
@@ -143,14 +143,14 @@ export const useDashboardCards = () => {
         });
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Transformed subscription assets:', items);
+          
         }
         return {
           count: items.length, // Full count for statistics
           items: items.slice(0, 5) // Slice only for display items
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching subscription assets:", error);
+        
         throw error;
       }
     },
@@ -174,7 +174,7 @@ export const useDashboardCards = () => {
             : "Problemas detectados na rede"
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error checking network status:", error);
+        
         return {
           isOperational: false,
           message: "Não foi possível verificar o status da rede"
@@ -220,11 +220,11 @@ export const useDashboardCards = () => {
         const equipment = (assets || []).filter(a => a.solution_id !== 11 && a.solution_id !== 1);
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Assets categorization debug:');
-          if (import.meta.env.DEV) console.log('Total assets:', assets?.length);
-          if (import.meta.env.DEV) console.log('Chips (solution_id=11):', chips.length);
-          if (import.meta.env.DEV) console.log('Speedys (solution_id=1):', speedy.length);
-          if (import.meta.env.DEV) console.log('Equipment (outros):', equipment.length);
+          
+          
+          
+          
+          
         }
         
         // Count available and unavailable assets
@@ -266,11 +266,11 @@ export const useDashboardCards = () => {
         };
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Final stats result:', result);
+          
         }
         return result;
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching assets statistics:", error);
+        
         throw error;
       }
     },
@@ -316,7 +316,7 @@ export const useDashboardCards = () => {
           };
         });
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching recent alerts:", error);
+        
         throw error;
       }
     },
@@ -346,7 +346,7 @@ export const useDashboardCards = () => {
           count
         }));
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error fetching status distribution:", error);
+        
         throw error;
       }
     },

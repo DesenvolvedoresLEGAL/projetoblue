@@ -44,7 +44,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
       if (errorAssets) throw errorAssets;
       setAssets(dataAssets || []);
     } catch (error) {
-      console.error("Erro ao buscar ativos:", error);
+     
       toast.error('Erro ao carregar ativos disponíveis.');
     } finally {
       setLoading(false);

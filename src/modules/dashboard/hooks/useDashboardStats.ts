@@ -46,7 +46,7 @@ export function useDashboardStats() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Fetching dashboard stats...');
+          
         }
         
         // Parallel queries for better performance
@@ -70,13 +70,13 @@ export function useDashboardStats() {
 
         // Log query results for debugging
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Total assets result:', totalAssetsResult);
-          if (import.meta.env.DEV) console.log('Active clients result:', activeClientsResult);
-          if (import.meta.env.DEV) console.log('Assets with issues result:', assetsWithIssuesResult);
-          if (import.meta.env.DEV) console.log('Recent assets result:', recentAssetsResult);
-          if (import.meta.env.DEV) console.log('Recent events result:', recentEventsResult);
-          if (import.meta.env.DEV) console.log('Status summary result:', statusSummaryResult);
-          if (import.meta.env.DEV) console.log('Detailed breakdown result:', detailedBreakdownResult);
+          
+          
+          
+          
+          
+          
+          
         }
 
         // Error handling for individual queries
@@ -93,8 +93,8 @@ export function useDashboardStats() {
         const statusResult = await dashboardQueries.fetchStatuses();
         
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Solutions result:', solutionsResult);
-          if (import.meta.env.DEV) console.log('Status result:', statusResult);
+          
+          
         }
         
         if (solutionsResult.error) throw new Error(`Solutions query error: ${solutionsResult.error.message}`);
@@ -181,7 +181,7 @@ export function useDashboardStats() {
           detailedStatusData
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error('💥 Error fetching dashboard stats:', error);
+        
         throw error;
       }
     },

@@ -154,7 +154,7 @@ export function useAssetManagement() {
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
-          if (import.meta.env.DEV) console.error('Error fetching assets:', error);
+          
           throw new Error(error.message);
         }
 
@@ -186,7 +186,7 @@ export function useAssetManagement() {
           .single();
 
         if (error) {
-          if (import.meta.env.DEV) console.error(`Error fetching asset ${id}:`, error);
+          
           throw new Error(error.message);
         }
 
@@ -239,7 +239,7 @@ export function useAssetManagement() {
         .single();
 
       if (error) {
-        if (import.meta.env.DEV) console.error('Error creating asset:', error);
+        
         const friendlyMessage = showFriendlyError(error, 'create');
         throw new Error(friendlyMessage);
       }
@@ -251,7 +251,7 @@ export function useAssetManagement() {
       toast.success('Ativo criado com sucesso');
     },
     onError: (error: Error) => {
-      if (import.meta.env.DEV) console.error('Asset creation failed:', error);
+      
       toast.error(error.message);
     },
   });
@@ -283,7 +283,7 @@ export function useAssetManagement() {
         .eq('uuid', id);
 
       if (error) {
-        if (import.meta.env.DEV) console.error(`Error updating asset ${id}:`, error);
+        
         const friendlyMessage = showFriendlyError(error, 'update');
         throw new Error(friendlyMessage);
       }
@@ -296,7 +296,7 @@ export function useAssetManagement() {
       toast.success('Ativo atualizado com sucesso');
     },
     onError: (error: Error) => {
-      if (import.meta.env.DEV) console.error('Asset update failed:', error);
+      
       toast.error(error.message);
     },
   });
@@ -312,7 +312,7 @@ export function useAssetManagement() {
         .eq('uuid', id);
 
       if (error) {
-        if (import.meta.env.DEV) console.error(`Error deleting asset ${id}:`, error);
+        
         const friendlyMessage = showFriendlyError(error, 'delete');
         throw new Error(friendlyMessage);
       }
@@ -325,7 +325,7 @@ export function useAssetManagement() {
       toast.success('Ativo excluído com sucesso');
     },
     onError: (error: Error) => {
-      if (import.meta.env.DEV) console.error('Asset deletion failed:', error);
+      
       toast.error(error.message);
     },
   });
@@ -341,7 +341,7 @@ export function useAssetManagement() {
         .eq('uuid', id);
 
       if (error) {
-        if (import.meta.env.DEV) console.error(`Error updating asset status ${id}:`, error);
+        
         const friendlyMessage = showFriendlyError(error, 'update');
         throw new Error(friendlyMessage);
       }
@@ -354,7 +354,7 @@ export function useAssetManagement() {
       toast.success('Status atualizado com sucesso');
     },
     onError: (error: Error) => {
-      if (import.meta.env.DEV) console.error('Status update failed:', error);
+      
       toast.error(error.message);
     },
   });
@@ -474,7 +474,7 @@ export function usePlans() {
       const { data, error } = await supabase.from('plans').select('*').is('deleted_at', null);
       
       if (error) {
-        if (import.meta.env.DEV) console.error("Error fetching plans:", error);
+        
         toast.error("Failed to fetch plans");
         return [];
       }

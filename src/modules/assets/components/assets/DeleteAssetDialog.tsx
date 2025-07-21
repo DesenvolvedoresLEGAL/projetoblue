@@ -36,19 +36,19 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
     setIsCheckingAssociation(true);
     
     try {
-      if (import.meta.env.DEV) console.log('Checking associations before deleting asset:', asset.uuid);
+      
       
       const activeAssociations = await assetService.checkActiveAssociations(asset.uuid);
       
       if (activeAssociations.length > 0) {
-        if (import.meta.env.DEV) console.log('Asset has active associations, blocking deletion:', activeAssociations);
+        
         setAssociationData(activeAssociations);
         setShowWarningModal(true);
         setIsCheckingAssociation(false);
         return;
       }
       
-      if (import.meta.env.DEV) console.log('No active associations found, proceeding with deletion');
+      
       setIsCheckingAssociation(false);
       setIsDeleting(true);
       
@@ -62,7 +62,7 @@ const DeleteAssetDialog = ({ isOpen, onClose, asset, onAssetDeleted }: DeleteAss
         toast.error("Não foi possível excluir o ativo. Tente novamente ou entre em contato com o suporte.");
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error('Erro ao verificar associações ou excluir ativo:', error);
+      
       const friendlyMessage = showFriendlyError(error, 'delete');
       toast.error(friendlyMessage);
     } finally {

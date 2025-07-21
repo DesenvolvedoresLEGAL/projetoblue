@@ -47,7 +47,7 @@ export const useAssetHistory = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
-        if (import.meta.env.DEV) console.error('Error fetching asset history:', error);
+        
         throw error;
       }
 
@@ -80,7 +80,7 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
         .order('created_at', { ascending: false });
       
       if (error) {
-        if (import.meta.env.DEV) console.error(`Error fetching asset history for ${assetId}:`, error);
+        
         throw error;
       }
 
@@ -96,7 +96,7 @@ export const useAssetHistoryByAssetId = (assetId: string) => {
           try {
             parsedDetails = (row.details as Record<string, unknown>) || {};
           } catch (e) {
-            if (import.meta.env.DEV) console.warn('Failed to parse details for history entry:', row.uuid);
+            
             parsedDetails = {};
           }
 

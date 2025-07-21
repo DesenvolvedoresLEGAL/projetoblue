@@ -33,11 +33,11 @@ export function useClientRegistrationState() {
       const savedData = sessionStorage.getItem(STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        if (import.meta.env.DEV) console.log('[ClientRegistrationState] Loaded data from sessionStorage:', parsedData);
+        
         setFormData(parsedData);
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error loading from sessionStorage:', error);
+      
     } finally {
       setIsFormDataLoaded(true);
     }
@@ -49,9 +49,9 @@ export function useClientRegistrationState() {
     
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(debouncedFormData));
-      if (import.meta.env.DEV) console.log('[ClientRegistrationState] Saved data to sessionStorage:', debouncedFormData);
+      
     } catch (error) {
-      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error saving to sessionStorage:', error);
+      
     }
   }, [debouncedFormData, isFormDataLoaded]);
 
@@ -64,12 +64,12 @@ export function useClientRegistrationState() {
   }, []);
 
   const clearState = useCallback(() => {
-    if (import.meta.env.DEV) console.log('[ClientRegistrationState] Clearing state and sessionStorage');
+    
     try {
       sessionStorage.removeItem(STORAGE_KEY);
       setFormData(defaultFormData);
     } catch (error) {
-      if (import.meta.env.DEV) console.error('[ClientRegistrationState] Error clearing sessionStorage:', error);
+      
     }
   }, []);
 

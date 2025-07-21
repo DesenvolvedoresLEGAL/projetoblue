@@ -22,7 +22,7 @@ export function useDashboardCharts() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          if (import.meta.env.DEV) console.log('Fetching dashboard charts data...');
+          
         }
         
         const [
@@ -71,7 +71,7 @@ export function useDashboardCharts() {
           associationsHistory
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching dashboard charts:', error);
+        
         throw error;
       }
     },

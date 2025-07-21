@@ -17,7 +17,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       setTheme(newTheme);
       localStorage.setItem('legal-theme', newTheme);
       
-      if (import.meta.env.DEV) console.log(`🎨 LEGAL Theme changed to: ${newTheme}`);
+      
       
       // QA: Verificar se animações estão habilitadas antes de criar ripple
       const animationsEnabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,14 +83,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
           meta.content = themeColor;
           document.head.appendChild(meta);
         }
-        
-        // QA: Log detalhado para debugging
-        if (import.meta.env.DEV) console.log(`🎨 LEGAL Theme applied: ${theme}`, {
-          timestamp: new Date().toISOString(),
-          colorScheme: themeColor,
-          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-          highContrast: window.matchMedia('(prefers-contrast: high)').matches
-        });
       });
       
       const timeoutId = setTimeout(() => {
@@ -111,7 +103,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         if (!savedTheme) {
           const newTheme = e.matches ? 'dark' : 'light';
           setTheme(newTheme);
-          if (import.meta.env.DEV) console.log(`🎨 LEGAL Theme auto-changed to: ${newTheme} (system preference)`);
+          
         }
       };
       

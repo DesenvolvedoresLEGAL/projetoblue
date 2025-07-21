@@ -75,7 +75,7 @@ export function useAuthSession(
         if (!isMounted) return;
         
         if (profile) {
-          if (import.meta.env.DEV) console.log('Profile fetched successfully:', profile.email);
+          
           
           // Normalizar role considerando sinônimos
           profile.role = toUserRole(profile.role);
@@ -90,20 +90,20 @@ export function useAuthSession(
           profileService
             .updateLastLogin(userId)
             .catch(err => {
-              if (import.meta.env.DEV) console.warn('Non-critical: Failed to update last_login:', err);
+              
             });
         } else {
           // Retry logic with exponential backoff
           if (profileRetries < maxRetries) {
             profileRetries++;
-            if (import.meta.env.DEV) console.log(`Profile fetch attempt ${profileRetries} failed, retrying in ${retryDelay * profileRetries}ms`);
+            
             setTimeout(() => {
               if (isMounted) {
                 fetchProfileWithRetry(userId);
               }
             }, retryDelay * profileRetries);
           } else {
-            if (import.meta.env.DEV) console.error('Failed to fetch profile after multiple attempts');
+            
             updateState({ 
               profile: null,
               isLoading: false,
@@ -112,19 +112,19 @@ export function useAuthSession(
             
             // Não mostrar toast de erro em caso de falha do perfil
             // O usuário conseguiu fazer login, então vamos deixar passar
-            if (import.meta.env.DEV) console.warn('Profile fetch failed but continuing with basic auth state');
+            
           }
         }
         } catch (error: unknown) {
         if (!isMounted) return;
         
-        if (import.meta.env.DEV) console.error('Error fetching profile:', error);
+        
         
         const errorObj = error as { message?: string };
         
         // Se o erro é relacionado a auth (403, token issues), não fazer retry
         if (errorObj.message?.includes('403') || errorObj.message?.includes('Forbidden')) {
-          if (import.meta.env.DEV) console.warn('Auth error detected, stopping retries and continuing with basic state');
+          
           updateState({ 
             isLoading: false,
             error: null // Não mostrar erro para o usuário
@@ -140,7 +140,7 @@ export function useAuthSession(
             }
           }, retryDelay * profileRetries);
         } else {
-          if (import.meta.env.DEV) console.warn('Profile loading failed after max retries, continuing without profile');
+          
           updateState({ 
             isLoading: false,
             error: null // Não bloquear o usuário por problemas de perfil
@@ -157,7 +157,7 @@ export function useAuthSession(
         // Clear loading state if session check takes too long
         const timeoutId = setTimeout(() => {
           if (isMounted) {
-            if (import.meta.env.DEV) console.log('Auth session check timed out');
+            
             updateState({ isLoading: false });
           }
         }, 10000); // Aumentado de 5000 para 8000
@@ -165,7 +165,7 @@ export function useAuthSession(
         // First set up the auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, currentSession) => {
-            if (import.meta.env.DEV) console.log('Auth state changed:', event, currentSession?.user?.email);
+            
             
             // Update the user state immediately
             debouncedUpdateState({
@@ -200,9 +200,9 @@ export function useAuthSession(
 
         // Then check for an existing session
         try {
-          if (import.meta.env.DEV) console.log('Checking for existing session...');
+          
           const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (import.meta.env.DEV) console.log('Existing session:', currentSession?.user?.email || 'None');
+          
           
           // Clear timeout since we got a response
           clearTimeout(timeoutId);
@@ -232,12 +232,12 @@ export function useAuthSession(
                 setIsDialogOpen(true);
               }
             } catch (err) {
-              if (import.meta.env.DEV) console.error('Error refreshing session:', err);
+              return;
             }
           }, 2 * 60 * 60 * 1000);
         } catch (error) {
           clearTimeout(timeoutId);
-          if (import.meta.env.DEV) console.error('Error checking session:', error);
+          
           updateState({ isLoading: false });
         }
 
@@ -250,7 +250,7 @@ export function useAuthSession(
           }
         };
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Critical error in auth setup:', error);
+        
         if (isMounted) {
           updateState({ isLoading: false, error: null }); // Não mostrar erro crítico
         }

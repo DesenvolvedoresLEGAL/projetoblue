@@ -26,13 +26,13 @@ export const formatDateForDisplay = (dateInput: string | Date | null | undefined
     }
     
     if (!isValid(date)) {
-      if (import.meta.env.DEV) console.warn('Data inválida recebida:', dateInput);
+      
       return dateInput.toString();
     }
     
     return format(date, 'dd/MM/yyyy', { locale: ptBR });
   } catch (error) {
-    if (import.meta.env.DEV) console.error('Erro ao formatar data:', dateInput, error);
+    
     return dateInput?.toString() || '-';
   }
 };
@@ -53,13 +53,13 @@ export const formatDateTimeForDisplay = (dateInput: string | Date | null | undef
     }
     
     if (!isValid(date)) {
-      if (import.meta.env.DEV) console.warn('Data inválida recebida:', dateInput);
+      
       return dateInput.toString();
     }
     
     return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
   } catch (error) {
-    if (import.meta.env.DEV) console.error('Erro ao formatar data/hora:', dateInput, error);
+    
     return dateInput?.toString() || '-';
   }
 };

@@ -50,7 +50,7 @@ const AssetHistory = () => {
         .select('id, status');
       
       if (error) {
-        if (import.meta.env.DEV) console.error('Error fetching status:', error);
+        
         return [];
       }
       
@@ -75,7 +75,7 @@ const AssetHistory = () => {
         .order('created_at', { ascending: false });
       
       if (assetLogsError) {
-        if (import.meta.env.DEV) console.error('Error fetching asset logs:', assetLogsError);
+        
         throw assetLogsError;
       }
       
@@ -86,7 +86,7 @@ const AssetHistory = () => {
         .order('created_at', { ascending: false });
       
       if (associationLogsError) {
-        if (import.meta.env.DEV) console.error('Error fetching association logs:', associationLogsError);
+        
         throw associationLogsError;
       }
       

@@ -44,7 +44,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       if (error) throw error;
       setAssociationTypes(data || []);
     } catch (error) {
-      console.error("Erro ao buscar tipos de associação:", error);
+     
     }
   };
 
@@ -59,7 +59,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Erro ao buscar soluções:', error);
+     
       return [];
     }
   };
@@ -77,7 +77,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Erro ao buscar chips disponíveis:', error);
+     
       return [];
     }
   };

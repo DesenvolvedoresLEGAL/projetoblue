@@ -8,7 +8,7 @@ export const handleAssetError = (
   error: PostgrestError | Error | unknown,
   context: string
 ) => {
-  if (import.meta.env.DEV) console.error(`${context}:`, error);
+  
   const friendlyMessage = showFriendlyError(error, context.toLowerCase());
   toast.error(friendlyMessage);
 };

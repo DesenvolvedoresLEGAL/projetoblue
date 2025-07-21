@@ -55,7 +55,7 @@ export function useDashboardAssets() {
         
         return { chips, speedys, equipment };
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error calculating assets stats:', error);
+        
         return { 
           chips: { total: 0, available: 0, unavailable: 0 }, 
           speedys: { total: 0, available: 0, unavailable: 0 }, 
@@ -83,7 +83,7 @@ export function useDashboardAssets() {
             : asset.radio
         }));
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching on-lease assets:', error);
+        
         return [];
       }
     },
@@ -107,7 +107,7 @@ export function useDashboardAssets() {
             : `${asset.marca} ${asset.status}`
         }));
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching on-subscription assets:', error);
+        
         return [];
       }
     },
@@ -123,7 +123,7 @@ export function useDashboardAssets() {
         const result = await assetService.statusByType();
         return Array.isArray(result) ? result : [];
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching status distribution:', error);
+        
         return [];
       }
     },
@@ -167,7 +167,7 @@ export function useDashboardAssets() {
           .filter(log => log.date && !isNaN(new Date(log.date).getTime())) // Filter out invalid dates
           .sort((a, b) => b.timestamp - a.timestamp); // Sort by most recent first
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching recent alerts:', error);
+        
         return [];
       }
     },

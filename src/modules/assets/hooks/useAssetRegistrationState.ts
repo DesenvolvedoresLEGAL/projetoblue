@@ -103,7 +103,7 @@ export const useAssetRegistrationState = create<AssetRegistrationState>()(
           try {
             (form.setValue as any)(key, value);
           } catch (error) {
-            if (import.meta.env.DEV) console.warn(`Could not set form value for key: ${String(key)}`, error);
+            
           }
         },
 

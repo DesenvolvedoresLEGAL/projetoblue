@@ -30,7 +30,7 @@ export const ProblemAssetsCard: React.FC = () => {
           };
         });
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Error fetching problem assets:', error);
+        
         return [];
       }
     }

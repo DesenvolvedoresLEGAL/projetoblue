@@ -30,7 +30,7 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
       if (error) throw error;
       setPlans(data || []);
     } catch (error) {
-      console.error("Erro ao buscar planos:", error);
+     
     }
   };
 

@@ -33,7 +33,7 @@ export const useRentedAssetsRanking = () => {
     queryKey: ['assets', 'ranking', 'rented-days'],
     queryFn: async (): Promise<RankedAsset[]> => {
       try {
-        if (import.meta.env.DEV) console.log('Buscando ranking de ativos por dias locados...');
+        
         
         const { data, error } = await supabase
           .from('assets')
@@ -57,12 +57,12 @@ export const useRentedAssetsRanking = () => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          if (import.meta.env.DEV) console.error('Erro na query de ranking:', error);
+          
           toast.error(`Erro ao carregar ranking: ${error.message}`);
           throw error;
         }
 
-        if (import.meta.env.DEV) console.log(`Ranking carregado com ${data?.length || 0} ativos`);
+        
 
         const mappedAssets = (data || []).map((asset, index) => ({
           ...asset,
@@ -83,7 +83,7 @@ export const useRentedAssetsRanking = () => {
 
         return mappedAssets;
       } catch (err) {
-        if (import.meta.env.DEV) console.error('Erro detalhado ao buscar ranking:', err);
+        
         
         if (err instanceof Error) {
           toast.error(`Erro ao buscar ranking: ${err.message}`);

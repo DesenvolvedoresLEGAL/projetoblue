@@ -224,7 +224,7 @@ export const useAssetsData = (options?: {
         );
 
       if (error) {
-        if (import.meta.env.DEV) console.error('Error fetching assets data:', error);
+        
         throw error;
       }
 
@@ -284,7 +284,7 @@ export const useAssetData = (assetId: string) => {
         .single();
 
       if (error) {
-        if (import.meta.env.DEV) console.error(`Error fetching asset data for ${assetId}:`, error);
+        
         throw error;
       }
 
@@ -307,7 +307,7 @@ export const useAssetsStats = () => {
         .is('deleted_at', null);
 
       if (error) {
-        if (import.meta.env.DEV) console.error('Error fetching assets stats:', error);
+        
         throw error;
       }
 

@@ -24,7 +24,7 @@ const STEPS = [
 export const AssociationFlow = () => {
   const [currentStep, setCurrentStep] = useState((): number => {
     const savedStep = localStorage.getItem('wizardStep');
-    console.log("[SAVEDSTEP] ", savedStep);
+   
     console.log(!isNaN(parseInt(savedStep)) ? parseInt(savedStep) : 1)
     return isNaN(parseInt(savedStep)) ? 1 : parseInt(savedStep);
   });
@@ -65,7 +65,7 @@ export const AssociationFlow = () => {
       localStorage.removeItem('wizardStep');
       localStorage.removeItem('wizardState');
     } catch (error) {
-      console.error("Erro ao criar associação:", error);
+     return;
     }
   };
 

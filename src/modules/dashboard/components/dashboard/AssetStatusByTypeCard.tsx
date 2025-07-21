@@ -28,7 +28,7 @@ export function AssetStatusByTypeCard() {
       const { data, error } = await supabase.rpc('status_by_asset_type');
       
       if (error) {
-        if (import.meta.env.DEV) console.error("Error fetching status by type:", error);
+        
         throw new Error(error.message);
       }
       

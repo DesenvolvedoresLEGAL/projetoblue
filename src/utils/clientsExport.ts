@@ -26,7 +26,7 @@ export interface ClientExportData {
 }
 
 export const exportClientsToCSV = (clients: Client[], filename?: string) => {
-  if (import.meta.env.DEV) console.log('Iniciando exportação de', clients.length, 'clientes');
+  
   
   // Mapear dados para formato de exportação
   const exportData: ClientExportData[] = clients.map((client) => {
@@ -60,7 +60,7 @@ export const exportClientsToCSV = (clients: Client[], filename?: string) => {
     };
   });
 
-  if (import.meta.env.DEV) console.log('Dados preparados para exportação:', exportData.slice(0, 3)); // Log primeiros 3 itens
+   // Log primeiros 3 itens
 
   // Converter para CSV
   const csvContent = convertToCSV(exportData);
@@ -71,7 +71,7 @@ export const exportClientsToCSV = (clients: Client[], filename?: string) => {
   // Download do arquivo
   downloadCSV(csvContent, finalFilename);
   
-  if (import.meta.env.DEV) console.log('Exportação concluída:', finalFilename);
+  
   return finalFilename;
 };
 

@@ -53,7 +53,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
     } catch (error) {
       const friendlyMessage = showFriendlyError(error, 'update');
       toast.error(friendlyMessage);
-      if (import.meta.env.DEV) console.error("Error updating asset status:", error);
+      
     } finally {
       setIsLoading(false);
       setConfirmDialogOpen(false);

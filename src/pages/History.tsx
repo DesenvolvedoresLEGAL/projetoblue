@@ -156,7 +156,7 @@ export default function HistoryPage() {
   };
 
   const handleRetry = () => {
-    if (import.meta.env.DEV) console.log('Tentando recarregar dados do histórico...');
+    
     refetch();
     toast.info("Recarregando dados do histórico...");
   };

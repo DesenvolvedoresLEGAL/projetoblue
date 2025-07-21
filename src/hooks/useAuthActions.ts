@@ -30,20 +30,20 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
   const signUp = useCallback(async (email: string, password: string, role?: UserRole): Promise<{ data: AuthResponse['data']; error: AuthError | null; profileCreated: boolean }> => {
     // Prevent duplicate operations
     if (isAuthProcessing) {
-      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
+      
       return { data: { user: null, session: null }, error: { message: 'Operation in progress' } as AuthError, profileCreated: false };
     }
     
     try {
       setIsAuthProcessing(true);
-      if (import.meta.env.DEV) console.log('AuthContext: Iniciando processo de cadastro');
+      
       updateState({ isLoading: true, error: null });
       
       setTechnicalError(null);
       
       const validation = authService.validateSignUpData({ email, password, role });
       if (!validation.isValid) {
-        if (import.meta.env.DEV) console.error('Erro de validação:', validation.error);
+        
         
         const friendlyMessage = showFriendlyError(validation.error, 'validation');
         
@@ -74,18 +74,18 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
         if (data?.user) {
           if (!profileCreated) {
-            if (import.meta.env.DEV) console.log('Tentando criar perfil manualmente já que o trigger parece ter falhado');
+            
             
             const profileResult = await createProfileManually(data.user.id, email, role || DEFAULT_USER_ROLE);
             if (profileResult.success) {
-              if (import.meta.env.DEV) console.log('Perfil criado manualmente com sucesso após falha do trigger');
+              
               toast.success("Conta criada com sucesso! Você já pode fazer login.");
             } else {
-              if (import.meta.env.DEV) console.warn('Falha ao criar perfil manualmente:', profileResult.error);
+              
               toast.warning("Conta criada, mas pode haver inconsistências no perfil. Entre em contato com o suporte se encontrar problemas.");
             }
           } else {
-            if (import.meta.env.DEV) console.log('Usuário e perfil criados com sucesso:', data.user.id);
+            
             toast.success("Conta criada com sucesso! Você já pode fazer login.");
           }
           
@@ -95,7 +95,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           return { data, error: null, profileCreated: true };
         } else {
-          if (import.meta.env.DEV) console.error('Usuário não foi criado, dados incompletos:', data);
+          
           const friendlyMessage = showFriendlyError('Falha ao criar usuário: dados incompletos retornados', 'create');
           const techError = {
             message: 'Falha ao criar usuário: dados incompletos retornados',
@@ -107,7 +107,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           throw new Error(friendlyMessage);
         }
       } catch (error: unknown) {
-        if (import.meta.env.DEV) console.error('Erro não tratado no processo de cadastro:', error);
+        
       
       const errorObj = error as { message?: string; category?: AuthErrorCategory; stack?: string };
       const friendlyMessage = showFriendlyError(error, 'create');
@@ -133,7 +133,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   // NOVA FUNÇÃO: Cria perfil manualmente com retry logic
   const createProfileManually = async (userId: string, userEmail: string, userRole: UserRole): Promise<{success: boolean, error?: string}> => {
-    if (import.meta.env.DEV) console.log('Tentando criar perfil manualmente para:', {userId, userEmail, userRole});
+    
     
     const maxRetries = 3;
     let attempt = 0;
@@ -142,7 +142,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       try {
         if (attempt > 0) {
           const delayMs = Math.pow(2, attempt) * 1000;
-          if (import.meta.env.DEV) console.log(`Tentativa ${attempt+1}/${maxRetries} após delay de ${delayMs}ms`);
+          
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
         
@@ -161,21 +161,21 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           .single();
         
         if (error) {
-          if (import.meta.env.DEV) console.error(`Tentativa ${attempt+1} falhou:`, error);
+          
           attempt++;
           continue;
         }
         
         if (data) {
-          if (import.meta.env.DEV) console.log('Perfil criado manualmente:', data);
+          
           return { success: true };
         } else {
-          if (import.meta.env.DEV) console.warn(`Perfil não encontrado após criação manual na tentativa ${attempt+1}`);
+          
           attempt++;
           continue;
         }
       } catch (err) {
-        if (import.meta.env.DEV) console.error(`Erro na tentativa ${attempt+1} de criar perfil:`, err);
+        
         attempt++;
       }
     }
@@ -188,7 +188,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (isAuthProcessing) {
-      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
+      
       return;
     }
     
@@ -202,7 +202,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
         throw { message: friendlyMessage, category: AuthErrorCategory.INVALID_EMAIL };
       }
       
-      if (import.meta.env.DEV) console.log('AuthContext: Iniciando login para:', email);
+      
       const { data, error } = await authService.signIn(email, password);
       
       if (error) {
@@ -219,14 +219,14 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       }
 
       if (data.user) {
-        if (import.meta.env.DEV) console.log('Login bem-sucedido para:', email);
+        
         try {
           // Incluir perfis soft-deletados para validação
           let userProfile = await profileService.fetchUserProfile(data.user.id, true);
-          if (import.meta.env.DEV) console.log('Perfil obtido após login:', userProfile);
+          
           
           if (!userProfile) {
-            if (import.meta.env.DEV) console.warn('Perfil não encontrado, tentando criar perfil básico');
+            
             
             // Criar perfil básico diretamente
             const { data: profileData, error: profileError } = await supabase
@@ -243,7 +243,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
               .single();
             
             if (profileError) {
-              if (import.meta.env.DEV) console.error('Falha ao criar perfil básico:', profileError);
+              
               userProfile = {
                 id: data.user.id,
                 email: data.user.email || email,
@@ -254,7 +254,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
                 is_active: true,
                 is_approved: true
               };
-              if (import.meta.env.DEV) console.log('Usando perfil mínimo para continuar o login');
+              
             } else {
               userProfile = {
                 id: profileData.id,
@@ -274,7 +274,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           // NOVA VALIDAÇÃO: Verificar se usuário foi excluído (soft delete)
           if (userProfile.deleted_at) {
-            if (import.meta.env.DEV) console.log('Tentativa de login com perfil excluído:', userProfile);
+            
             await authService.signOut(); // Forçar logout
             throw { 
               message: 'Esta conta foi desativada. Entre em contato com o administrador para mais informações.',
@@ -283,7 +283,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           }
           
           if (userProfile.is_active === false) {
-            if (import.meta.env.DEV) console.log('Perfil inativo, fazendo logout:', userProfile);
+            
             await authService.signOut();
             throw { 
               message: 'Sua conta está desativada. Entre em contato com o administrador para reativá-la.',
@@ -293,7 +293,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           
           // NOVA VALIDAÇÃO: Verificar se usuário foi aprovado
           if (userProfile.is_approved === false) {
-            if (import.meta.env.DEV) console.log('Perfil não aprovado, fazendo logout:', userProfile);
+            
             await authService.signOut();
             throw { 
               message: 'Sua conta ainda não foi aprovada. Entre em contato com o administrador.',
@@ -311,7 +311,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           profileService
             .updateLastLogin(data.user.id)
             .catch(err => {
-              if (import.meta.env.DEV) console.error(err);
+              
             });
           
           toastLoginSuccess(userProfile);
@@ -320,7 +320,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           navigate(from, { replace: true });
           
         } catch (profileError: unknown) {
-          if (import.meta.env.DEV) console.error('Erro ao verificar perfil após login:', profileError);
+          
           
           const errorObj = profileError as { message?: string; category?: AuthErrorCategory };
           
@@ -334,7 +334,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           }
           
           if (errorObj.message?.includes('403') || errorObj.message?.includes('profile')) {
-            if (import.meta.env.DEV) console.warn('Problema com perfil, mas login foi bem-sucedido. Continuando com dados básicos.');
+            
             
             const basicProfile = {
               id: data.user.id,
@@ -370,7 +370,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
             context: { userId: data.user.id, email: data.user.email }
           });
           
-          if (import.meta.env.DEV) console.warn('Erro no perfil, mas mantendo usuário logado');
+          
           updateState({ 
             user: data.user,
             profile: null,
@@ -379,7 +379,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
           });
         }
       } else {
-        if (import.meta.env.DEV) console.error('Login falhou, dados incompletos:', data);
+        
         const friendlyMessage = showFriendlyError('Falha no login: dados incompletos retornados', 'authentication');
         throw {
           message: friendlyMessage,
@@ -388,7 +388,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       }
       
       } catch (error: unknown) {
-      if (import.meta.env.DEV) console.error('Erro durante o login:', error);
+      
       
       const errorObj = error as { message?: string; category?: AuthErrorCategory };
       const friendlyMessage = showFriendlyError(error, 'authentication');
@@ -402,7 +402,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
 
   const signOut = useCallback(async (role?: UserRole) => {
     if (isAuthProcessing) {
-      if (import.meta.env.DEV) console.log('Auth operation already in progress. Ignoring duplicate request.');
+      
       return;
     }
     
@@ -424,7 +424,7 @@ export function useAuthActions(updateState: (state: Partial<AuthState>) => void)
       }
       navigate('/login');
       } catch (error: unknown) {
-      if (import.meta.env.DEV) console.error('Erro ao fazer logout:', error);
+      
       const friendlyMessage = showFriendlyError(error, 'authentication');
       toast.error(friendlyMessage);
       updateState({ isLoading: false });

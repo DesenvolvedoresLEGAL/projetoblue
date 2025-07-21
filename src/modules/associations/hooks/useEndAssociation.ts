@@ -30,7 +30,7 @@ export const useEndAssociation = (options?: UseEndAssociationOptions) => {
       
       return data;
     } catch (error) {
-      console.error('Erro ao finalizar associação:', error);
+     
       toast.error('Erro ao finalizar associação. Tente novamente.');
       throw error;
     } finally {

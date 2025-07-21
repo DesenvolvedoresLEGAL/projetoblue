@@ -139,13 +139,13 @@ O tema inclui validadores automáticos que verificam:
 ### Logs de Debug
 ```javascript
 // Verificar estado do tema
-console.log('🎨 LEGAL Theme - Estado atual');
+
 
 // Validar variáveis CSS
-console.log('✅ Variáveis CSS validadas');
+
 
 // Verificar acessibilidade
-console.log('🔍 A11y - Elementos validados');
+
 ```
 
 ## Performance

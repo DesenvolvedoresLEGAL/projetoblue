@@ -12,13 +12,13 @@ export const associationTypesService = {
         .order('id');
 
       if (error) {
-        console.error('Erro ao buscar tipos de associação:', error);
+       
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('Erro no serviço de tipos de associação:', error);
+     
       throw error;
     }
   }

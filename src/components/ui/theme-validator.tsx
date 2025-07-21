@@ -39,9 +39,9 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
       });
 
       if (missingVariables.length > 0) {
-        if (import.meta.env.DEV) console.warn('🎨 LEGAL Theme QA: Variáveis CSS não definidas:', missingVariables);
+        
       } else {
-        if (import.meta.env.DEV) console.log('✅ LEGAL Theme QA: Todas as variáveis CSS estão definidas corretamente');
+        
       }
     };
 
@@ -56,7 +56,7 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
           
           // Log para análise manual de contraste
           if (bgColor && textColor) {
-            if (import.meta.env.DEV) console.log(`🔍 Contraste - Elemento: ${element.tagName}, BG: ${bgColor}, Text: ${textColor}`);
+            
           }
         });
       }
@@ -67,7 +67,7 @@ export const ThemeValidator: React.FC<ThemeValidatorProps> = ({ children }) => {
     validateContrast();
     
     // Log do estado atual do tema
-    if (import.meta.env.DEV) console.log(`🎨 LEGAL Theme QA - Tema atual: ${theme}`);
+    
     
   }, [theme]);
 

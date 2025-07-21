@@ -20,18 +20,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Create hasMinimumRole function bound to current user role
   const hasMinimumRoleForUser = (requiredRole: UserRole) => 
     hasMinimumRole(userRole, requiredRole);
-  
-  // Log auth state changes to help with debugging
-  useEffect(() => {
-    if (import.meta.env.DEV) console.log('Auth state updated:', { 
-      isAuthenticated: !!state.user && !!state.profile,
-      hasUser: !!state.user,
-      hasProfile: !!state.profile,
-      userRole,
-      isLoading: state.isLoading,
-      hasError: !!state.error
-    });
-  }, [state.user, state.profile, state.isLoading, state.error, userRole]);
 
   return (
     <AuthContext.Provider

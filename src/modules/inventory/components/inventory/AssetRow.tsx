@@ -75,7 +75,7 @@ const AssetRow = ({
         toast.error("Não foi possível excluir o ativo.");
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Erro ao excluir ativo:", error);
+      
       toast.error("Ocorreu um erro ao excluir o ativo.");
     } finally {
       setIsDeleting(false);
@@ -111,7 +111,7 @@ const AssetRow = ({
         toast.error("Não foi possível atualizar o status do ativo.");
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Erro ao atualizar status:", error);
+      
       toast.error("Ocorreu um erro ao atualizar o status do ativo.");
     } finally {
       setIsUpdatingStatus(false);

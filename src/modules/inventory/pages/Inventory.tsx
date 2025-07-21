@@ -147,7 +147,7 @@ const Inventory = () => {
       
       toast.success("Export completed successfully");
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Export error:", error);
+      
       toast.error("Failed to export data");
     } finally {
       setExportLoading(false);

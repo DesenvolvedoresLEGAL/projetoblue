@@ -35,14 +35,14 @@ export function useRegisterAsset() {
 
   // Reset mutation state when asset type changes
   useEffect(() => {
-    if (import.meta.env.DEV) console.log('[useRegisterAsset] Asset type changed to:', assetType);
+    
     
     // Reset success state when changing asset type
     setShowSuccess(false);
     
     // Reset mutation state to prevent interference
     if (formHandlers.createAssetMutation.isSuccess || formHandlers.createAssetMutation.isError) {
-      if (import.meta.env.DEV) console.log('[useRegisterAsset] Resetting mutation state due to asset type change');
+      
       formHandlers.createAssetMutation.reset();
     }
   }, [assetType, formHandlers.createAssetMutation]);
@@ -76,7 +76,7 @@ export function useRegisterAsset() {
     });
 
     if (formHandlers.createAssetMutation.isSuccess) {
-      if (import.meta.env.DEV) console.log('[useRegisterAsset] Setting showSuccess to true for asset type:', assetType);
+      
       setShowSuccess(true);
     }
   }, [
@@ -89,7 +89,7 @@ export function useRegisterAsset() {
   // Reset success state when starting a new submission
   useEffect(() => {
     if (formHandlers.createAssetMutation.isPending) {
-      if (import.meta.env.DEV) console.log('[useRegisterAsset] Mutation is pending, resetting showSuccess');
+      
       setShowSuccess(false);
     }
   }, [formHandlers.createAssetMutation.isPending]);

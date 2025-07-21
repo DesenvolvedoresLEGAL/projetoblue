@@ -62,7 +62,7 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
       if (error) throw error;
       setClients(data || []);
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Erro ao buscar clientes:", error);
+      
       toast.error('Erro ao carregar clientes');
     }
   };
@@ -99,7 +99,7 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
 
       toast.message('Cliente criado com sucesso!');
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Erro ao criar cliente:", error);
+      
       toast.error("Erro ao criar cliente");
     }
   };

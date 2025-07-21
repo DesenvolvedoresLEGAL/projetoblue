@@ -235,7 +235,7 @@ export const fetchRecentEvents = async () => {
 
     // Tratar erros
     if (recentAssetsError) {
-      console.error("Error fetching recent assets:", recentAssetsError);
+     
     }
 
     if (recentAssociationsError) {
@@ -247,7 +247,7 @@ export const fetchRecentEvents = async () => {
 
     // Debug log para associations (remover em produção)
     if (process.env.NODE_ENV === "development") {
-      console.log("Recent associations data:", recentAssociationsData);
+     
     }
 
     return {
@@ -256,7 +256,7 @@ export const fetchRecentEvents = async () => {
         (recentAssociationsData as unknown as AssociationLogResponse[]) || [],
     };
   } catch (error) {
-    console.error("Error in fetchRecentEvents:", error);
+   
     return {
       recentAssets: [],
       recentAssociations: [],

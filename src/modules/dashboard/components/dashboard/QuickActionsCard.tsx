@@ -20,7 +20,7 @@ export const QuickActionsCard: React.FC = () => {
 
   const handleImportCSV = () => {
     if (process.env.NODE_ENV === 'development') {
-      if (import.meta.env.DEV) console.log('IMPORT CSV');
+      
     }
   };
 
@@ -81,7 +81,7 @@ export const QuickActionsCard: React.FC = () => {
       }
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        if (import.meta.env.DEV) console.log(`ERRO DE EXPORTAÇÃO:===>>>> ${error}`);
+        
       }
     }
   };

@@ -39,7 +39,7 @@ export const useAssetAssociationState = () => {
       const savedState = sessionStorage.getItem(STORAGE_KEY);
       if (savedState) {
         const parsedState = JSON.parse(savedState);
-        if (import.meta.env.DEV) console.log('🔄 Restored asset association state from sessionStorage:', parsedState);
+        
 
         if (parsedState.generalConfig) {
           parsedState.generalConfig.startDate = new Date(parsedState.generalConfig.startDate);
@@ -51,7 +51,7 @@ export const useAssetAssociationState = () => {
         return parsedState;
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.warn('⚠️ Failed to restore asset association state from sessionStorage:', error);
+      
     }
     
     // Default state com configuração inicial correta
@@ -68,7 +68,7 @@ export const useAssetAssociationState = () => {
         rentedDays: 0
       } as AssociationGeneralConfig
     };
-    if (import.meta.env.DEV) console.log('🆕 Initialized new asset association state:', defaultState);
+    
     return defaultState;
   });
 
@@ -76,29 +76,29 @@ export const useAssetAssociationState = () => {
   useEffect(() => {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      if (import.meta.env.DEV) console.log('💾 Saved asset association state to sessionStorage:', state);
+      
     } catch (error) {
-      if (import.meta.env.DEV) console.warn('⚠️ Failed to save asset association state to sessionStorage:', error);
+      
     }
   }, [state]);
 
   const setCurrentStep = (step: 'client' | 'assets' | 'summary') => {
-    if (import.meta.env.DEV) console.log('📍 Changing step from', state.currentStep, 'to', step);
+    
     setState(prevState => ({ ...prevState, currentStep: step }));
   };
 
   const setSelectedClient = (client: Client | null) => {
-    if (import.meta.env.DEV) console.log('👤 Setting selected client:', client);
+    
     setState(prevState => ({ ...prevState, selectedClient: client }));
   };
 
   const setSelectedAssets = (assets: SelectedAsset[]) => {
-    if (import.meta.env.DEV) console.log('📦 Setting selected assets:', assets.length, 'assets');
+    
     setState(prevState => ({ ...prevState, selectedAssets: assets }));
   };
 
   const setGeneralConfig = (config: AssociationGeneralConfig | null) => {
-    if (import.meta.env.DEV) console.log('⚙️ Setting general config:', config);
+    
     setState(prevState => ({ ...prevState, generalConfig: config }));
   };
 
@@ -117,7 +117,7 @@ export const useAssetAssociationState = () => {
   };
 
   const clearState = () => {
-    if (import.meta.env.DEV) console.log('🗑️ Clearing asset association state');
+    
     const defaultState: AssetAssociationState = {
       selectedAssets: [],
       currentStep: 'client' as const,
@@ -136,9 +136,9 @@ export const useAssetAssociationState = () => {
     // Also clear from sessionStorage
     try {
       sessionStorage.removeItem(STORAGE_KEY);
-      if (import.meta.env.DEV) console.log('🗑️ Cleared asset association state from sessionStorage');
+      
     } catch (error) {
-      if (import.meta.env.DEV) console.warn('⚠️ Failed to clear asset association state from sessionStorage:', error);
+      
     }
   };
   

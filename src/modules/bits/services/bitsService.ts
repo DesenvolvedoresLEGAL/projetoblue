@@ -18,7 +18,7 @@
 
 // // Utility function to handle errors
 // const handleError = (error: Error, message: string) => {
-//   if (import.meta.env.DEV) console.error(`BITS Error: ${message}`, error);
+//   
 //   toast.error(message);
 //   throw error;
 // };

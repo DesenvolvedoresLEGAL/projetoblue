@@ -95,7 +95,7 @@ export const formatBrazilianDateTime = (dateString: string): string => {
     
     // Check if date is valid
     if (isNaN(date.getTime())) {
-      if (import.meta.env.DEV) console.warn('Invalid date string:', dateString);
+      
       return 'Data inválida';
     }
 
@@ -107,7 +107,7 @@ export const formatBrazilianDateTime = (dateString: string): string => {
       minute: '2-digit'
     });
   } catch (error) {
-    if (import.meta.env.DEV) console.error('Error formatting date:', error, 'Input:', dateString);
+    
     return 'Data inválida';
   }
 };

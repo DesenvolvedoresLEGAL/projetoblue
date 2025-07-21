@@ -96,7 +96,7 @@ const mockComments: TicketComment[] = [
 // Service functions
 export const fetchTickets = async (filters?: Partial<Ticket>): Promise<Ticket[]> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Fetching tickets with filters:', filters);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -116,7 +116,7 @@ export const fetchTickets = async (filters?: Partial<Ticket>): Promise<Ticket[]>
 
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Fetching ticket by ID:', id);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -127,7 +127,7 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
 
 export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt'>): Promise<Ticket> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Creating new ticket:', ticketData);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));
@@ -148,7 +148,7 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'createdAt' |
 
 export const updateTicket = async (id: string, updates: Partial<Ticket>): Promise<Ticket> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Updating ticket:', id, updates);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 600));
@@ -172,7 +172,7 @@ export const updateTicket = async (id: string, updates: Partial<Ticket>): Promis
 
 export const fetchTicketComments = async (ticketId: string): Promise<TicketComment[]> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Fetching comments for ticket:', ticketId);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 400));
@@ -182,7 +182,7 @@ export const fetchTicketComments = async (ticketId: string): Promise<TicketComme
 
 export const addTicketComment = async (comment: Omit<TicketComment, 'id' | 'createdAt'>): Promise<TicketComment> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Adding comment to ticket:', comment);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -201,7 +201,7 @@ export const addTicketComment = async (comment: Omit<TicketComment, 'id' | 'crea
 
 export const assignTicket = async (ticketId: string, assigneeId: string, assigneeName: string): Promise<Ticket> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Assigning ticket:', ticketId, 'to', assigneeId);
+  
   
   // Update the ticket
   const updatedTicket = await updateTicket(ticketId, { 
@@ -227,7 +227,7 @@ export const getAgentPerformance = async (agentId: string): Promise<{
   customerSatisfaction: number;
 }> => {
   // In a real implementation, this would call the API
-  if (import.meta.env.DEV) console.log('Getting performance for agent:', agentId);
+  
   
   // Wait to simulate network delay
   await new Promise(resolve => setTimeout(resolve, 700));

@@ -46,7 +46,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           });
         }
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Erro ao criar asset:', error);
+        
         const friendlyMessage = showFriendlyError(error, 'create');
         setError(friendlyMessage);
         throw error;
@@ -72,7 +72,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
         throw new Error('Falha ao atualizar o ativo');
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Erro ao atualizar asset:', error);
+        
         const friendlyMessage = showFriendlyError(error, 'update');
         setError(friendlyMessage);
         throw error;
@@ -96,7 +96,7 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
         return false;
       } catch (error) {
-        if (import.meta.env.DEV) console.error('Erro ao deletar asset:', error);
+        
         const friendlyMessage = showFriendlyError(error, 'delete');
         setError(friendlyMessage);
         throw error;
@@ -161,20 +161,20 @@ const AssetProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     getAssetsByType,
     getClientById,
     associateAssetToClient: async (assetId: string, clientId: string) => {
-      if (import.meta.env.DEV) console.log('Associating asset', assetId, 'to client', clientId);
+      
     },
     removeAssetFromClient: async (assetId: string, clientId: string) => {
-      if (import.meta.env.DEV) console.log('Removing asset', assetId, 'from client', clientId);
+      
     },
     addHistoryEntry,
     getAssetHistory,
     getClientHistory,
     getExpiredSubscriptions: () => [],
     returnAssetsToStock: (assetIds: string[]) => {
-      if (import.meta.env.DEV) console.log('Returning assets to stock:', assetIds);
+      
     },
     extendSubscription: (assetId: string, newEndDate: string) => {
-      if (import.meta.env.DEV) console.log('Extending subscription for asset', assetId, 'to', newEndDate);
+      
     },
   }), [
     assets,

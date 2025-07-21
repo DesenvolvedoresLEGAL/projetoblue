@@ -56,12 +56,12 @@ export const assetService = {
   
   clearCache: () => {
     // Placeholder para compatibilidade - o React Query gerencia o cache
-    if (import.meta.env.DEV) console.log('Cache cleared');
+    
   },
   
   clearCacheByPattern: (pattern: string) => {
     // Placeholder para compatibilidade - o React Query gerencia o cache
-    if (import.meta.env.DEV) console.log('Cache cleared by pattern:', pattern);
+    
   }
 };
 

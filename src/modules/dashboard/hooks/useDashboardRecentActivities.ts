@@ -60,7 +60,7 @@ export function useDashboardRecentActivities() {
     queryFn: async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('Fetching recent activities...');
+         
         }
         
         const recentEventsResult = await dashboardQueries.fetchRecentEvents();
@@ -146,9 +146,9 @@ export function useDashboardRecentActivities() {
             associationName = `Associação ${newAssociation.client_id}-${newAssociation.equipment_id}`;
           }
 
-          console.log('LALALALLALALLALALALLALALLA');
-          console.log(e.association_chip);
-          console.log('LALALALLALALLALALALLALALLA');
+         
+         
+         
           
           return {
             uuid: e.uuid,
@@ -184,7 +184,7 @@ export function useDashboardRecentActivities() {
 
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('Error fetching recent activities:', error.message);
+         
         }
         return [];
       }
