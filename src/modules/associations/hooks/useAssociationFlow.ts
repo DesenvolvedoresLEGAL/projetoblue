@@ -32,6 +32,13 @@ const initialState: AssociationState = {
   associationType: 1, // Default: aluguel
 };
 
+/**
+ * Reduzidor responsável por atualizar o estado da associação conforme o tipo de ação recebida.
+ *
+ * @param {AssociationState} state Estado atual da associação.
+ * @param {AssociationAction} action Ação a ser processada, contendo o tipo da ação e um payload (opcional).
+ * @returns {AssociationState} Novo estado resultante após o processamento da ação.
+ */
 function associationReducer(state: AssociationState, action: AssociationAction): AssociationState {
   switch (action.type) {
     case 'SET_CLIENT':
@@ -61,6 +68,16 @@ function associationReducer(state: AssociationState, action: AssociationAction):
   }
 }
 
+/**
+ * Hook personalizado para gerenciar o fluxo de associação de ativos.
+ * Utiliza um reducer para controlar o estado e fornece uma função para verificar se o usuário pode avançar para a próxima etapa do fluxo.
+ *
+ * @returns {{
+ *   state: AssociationState,
+ *   dispatch: React.Dispatch<AssociationAction>,
+ *   canProceed: (step: number) => boolean
+ * }} Objeto contendo o estado, o dispatcher e a função de validação de avanço.
+ */
 export const useAssociationFlow = () => {
   const [state, dispatch] = useReducer(associationReducer, initialState);
 
@@ -83,6 +100,16 @@ export const useAssociationFlow = () => {
     }
   }, [state]);
 
+/**
+ * Função responsável por criar associações entre cliente, equipamentos e chips, de acordo com a configuração definida no estado.
+ *
+ * Agrupa os ativos selecionados em equipamentos e chips. Processa primeiro os equipamentos que exigem chip, garantindo que cada equipamento tenha o chip principal configurado.
+ * Evita duplicidade de chips marcando-os como usados à medida que são associados. Associa chips restantes como backup, se não foram utilizados.
+ * Cria todas as associações utilizando o serviço de associação. Em caso de sucesso, exibe uma notificação e reseta o estado; em caso de erro, exibe mensagem de erro e interrompe o fluxo.
+ *
+ * @returns {Promise<void>} Nada. Executa efeitos colaterais ao criar associações.
+ * @throws {Error} Caso algum equipamento que exija chip não tenha chip principal configurado.
+ */
 const createAssociation = useCallback(async () => {
   try {
     // Group assets by type
