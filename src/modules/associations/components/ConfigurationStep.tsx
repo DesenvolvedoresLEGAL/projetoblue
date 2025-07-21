@@ -69,7 +69,8 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
         .select('*')
         .eq('solution_id', 11)
         .eq('status_id', 1)
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .not('uuid', 'in', `(${state.selectedAssets.map((asset: any) => `'${asset.uuid}'`).join(',')})`);
 
       if (error) throw error;
       return data || [];
