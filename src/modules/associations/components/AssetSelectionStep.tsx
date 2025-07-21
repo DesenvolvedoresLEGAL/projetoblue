@@ -31,7 +31,8 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
         .select(`
           *,
           asset_solutions!inner(solution),
-          asset_status!inner(status)
+          asset_status!inner(status),
+          manufacturers!inner(name)
         `)
         .eq('status_id', 1)
         .is('deleted_at', null)
