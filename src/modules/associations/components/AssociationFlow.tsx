@@ -63,6 +63,7 @@ export const AssociationFlow = () => {
       // Reset flow or navigate away
       setCurrentStep(1);
       localStorage.removeItem('wizardStep');
+      localStorage.removeItem('wizardState');
     } catch (error) {
       console.error("Erro ao criar associação:", error);
     }
