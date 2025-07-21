@@ -79,7 +79,18 @@ function associationReducer(state: AssociationState, action: AssociationAction):
  * }} Objeto contendo o estado, o dispatcher e a função de validação de avanço.
  */
 export const useAssociationFlow = () => {
-  const [state, dispatch] = useReducer(associationReducer, initialState);
+  const [state, dispatch] = useReducer(associationReducer, initialState, () => {
+    const savedState = localStorage.getItem('wizardState');
+    if (savedState && savedState !== "undefined") {
+      try {
+        return JSON.parse(savedState);
+      } catch {
+        // Se não conseguir fazer parse, retorna initialState
+        return initialState;
+      }
+    }
+    return initialState;
+  });
 
   const canProceed = useCallback((step: number): boolean => {
     switch (step) {

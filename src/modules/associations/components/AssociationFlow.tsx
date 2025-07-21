@@ -35,7 +35,8 @@ export const AssociationFlow = () => {
 
   useEffect(() => {
     localStorage.setItem('wizardStep', String(currentStep));
-  }, [currentStep]);
+    localStorage.setItem('wizardState', JSON.stringify(state));
+  }, [currentStep, state]);
 
   useEffect(() => {
     const savedStep = localStorage.getItem('wizardStep');
