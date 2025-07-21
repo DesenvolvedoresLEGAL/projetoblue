@@ -6,16 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { History, Search, Filter, Calendar, User, FileText } from 'lucide-react';
+import { History, Search, Filter, Calendar, User, FileText, ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AssetHistoryEntry } from '@/types/assetHistory';
 import { AssetLog } from '@/types/asset';
+import { StandardPageHeader } from '@/components/ui/standard-page-header';
+import { useNavigate } from 'react-router-dom';
 
 const AssetHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const navigate = useNavigate();
 
   // Query to fetch asset history
   const { data: historyData = [], isLoading, error } = useQuery({
@@ -117,12 +120,20 @@ const AssetHistory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <History className="h-6 w-6 text-legal-primary" />
-          <h1 className="text-2xl font-bold text-legal-dark">Histórico de Ativos</h1>
-        </div>
-      </div>
+      <StandardPageHeader
+            icon={History}
+            title="Histórico de Alterações"
+            description="Histórico de movimentações de ativos"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center w-8 h-8 p-0 hover:bg-legal-primary/10 hover:text-legal-primary dark:hover:bg-legal-secondary/10 dark:hover:text-legal-secondary transition-all duration-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </StandardPageHeader>
 
       <Card>
         <CardHeader>
