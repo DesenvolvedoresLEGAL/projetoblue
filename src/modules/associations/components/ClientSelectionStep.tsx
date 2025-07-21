@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Search, Plus, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { formatPhoneForStorage } from "@/utils/phoneFormatter";
+import { formatCNPJ } from "@/utils/formatters";
 
 interface ClientSelectionStepProps {
   state: any;
@@ -150,7 +152,7 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
                     id="contato"
                     type="tel"
                     value={newClient.contato}
-                    onChange={(e) => setNewClient(prev => ({ ...prev, contato: e.target.value }))}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, contato: formatPhoneForStorage(e.target.value) }))}
                   />
                 </div>
                 <div>
@@ -167,7 +169,7 @@ export const ClientSelectionStep: React.FC<ClientSelectionStepProps> = ({ state,
                   <Input
                     id="cnpj"
                     value={newClient.cnpj}
-                    onChange={(e) => setNewClient(prev => ({ ...prev, cnpj: e.target.value }))}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, cnpj: formatCNPJ(e.target.value) }))}
                   />
                 </div>
                 <Button onClick={handleCreateClient} className="w-full">
