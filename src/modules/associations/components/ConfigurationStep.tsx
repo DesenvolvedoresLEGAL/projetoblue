@@ -82,12 +82,12 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   };
 
   const handleDateChange = (field: 'entryDate' | 'exitDate', value: string) => {
-    dispatch({ 
-      type: 'SET_DATES', 
-      payload: { 
+    dispatch({
+      type: 'SET_DATES',
+      payload: {
         ...state,
-        [field]: value 
-      } 
+        [field]: value
+      }
     });
   };
 
@@ -203,13 +203,13 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
           <CardContent className="space-y-4">
             {equipmentAssets.map((asset: any) => {
               const config = state.assetConfiguration[asset.uuid] || {};
-              
+
               return (
                 <div key={asset.uuid} className="p-4 border rounded-lg space-y-3">
                   <h4 className="font-medium">
                     {asset.radio || asset.serial_number || asset.model || "Equipamento"}
                   </h4>
-                  
+
                   <div className="grid gap-3 md:grid-cols-2">
                     <div>
                       <Label htmlFor={`ssid-${asset.uuid}`}>SSID da Rede</Label>
@@ -273,37 +273,45 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                   <div className="space-y-3">
                     <Label>Chip Principal</Label>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
-                      {chipAssets.map((chip) => {
-                        const isSelected = config.chip_id === chip.uuid;
-                        return (
-                          <Card
-                            key={chip.uuid}
-                            className={`cursor-pointer transition-colors hover:border-primary ${
-                              isSelected ? 'border-primary bg-primary/5' : ''
-                            }`}
-                            onClick={() => handleChipSelect(asset.uuid, chip.uuid)}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-xs">
-                                      CHIP
-                                    </Badge>
-                                    {isSelected && <Plus className="h-4 w-4 text-primary" />}
+                      {chipAssets
+                        .filter(chip => {
+                          // chip selecionado em algum equipamento?
+                          const selectedIn = Object.entries(state.assetConfiguration)
+                            .find(([assetId, config]) => config?.chip_id === chip.uuid);
+
+                          // chip não foi selecionado OU está selecionado neste próprio asset
+                          return !selectedIn || selectedIn[0] === asset.uuid;
+                        })
+                        .map((chip) => {
+                          const isSelected = config.chip_id === chip.uuid;
+                          return (
+                            <Card
+                              key={chip.uuid}
+                              className={`cursor-pointer transition-colors hover:border-primary ${isSelected ? 'border-primary bg-primary/5' : ''
+                                }`}
+                              onClick={() => handleChipSelect(asset.uuid, chip.uuid)}
+                            >
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        CHIP
+                                      </Badge>
+                                      {isSelected && <Plus className="h-4 w-4 text-primary" />}
+                                    </div>
+                                    <p className="font-medium">{chip.iccid || 'Sem ICCID'}</p>
+                                    {chip.line_number && (
+                                      <p className="text-sm text-muted-foreground">
+                                        Linha: {chip.line_number}
+                                      </p>
+                                    )}
                                   </div>
-                                  <p className="font-medium">{chip.iccid || 'Sem ICCID'}</p>
-                                  {chip.line_number && (
-                                    <p className="text-sm text-muted-foreground">
-                                      Linha: {chip.line_number}
-                                    </p>
-                                  )}
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                       {chipAssets.length === 0 && (
                         <p className="text-center text-muted-foreground py-4">Nenhum chip disponível</p>
                       )}
