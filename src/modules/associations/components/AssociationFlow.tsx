@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,27 @@ const STEPS = [
 ];
 
 export const AssociationFlow = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState((): number => {
+    const savedStep = localStorage.getItem('wizardStep');
+    console.log("[SAVEDSTEP] ", savedStep);
+    console.log(!isNaN(parseInt(savedStep)) ? parseInt(savedStep) : 1)
+    return isNaN(parseInt(savedStep)) ? 1 : parseInt(savedStep);
+  });
   const { state, dispatch, canProceed, createAssociation, isLoading } = useAssociationFlow();
 
   const currentStepData = STEPS.find(step => step.id === currentStep);
   const CurrentStepComponent = currentStepData?.component;
+
+  useEffect(() => {
+    localStorage.setItem('wizardStep', String(currentStep));
+  }, [currentStep]);
+
+  useEffect(() => {
+    const savedStep = localStorage.getItem('wizardStep');
+    if (savedStep) {
+      setCurrentStep(Number(savedStep));
+    }
+  }, []); // array vazio: roda só no mount
 
   const handleNext = () => {
     if (currentStep < STEPS.length && canProceed(currentStep)) {
@@ -45,6 +61,7 @@ export const AssociationFlow = () => {
       await createAssociation();
       // Reset flow or navigate away
       setCurrentStep(1);
+      localStorage.removeItem('wizardStep');
     } catch (error) {
       console.error("Erro ao criar associação:", error);
     }
