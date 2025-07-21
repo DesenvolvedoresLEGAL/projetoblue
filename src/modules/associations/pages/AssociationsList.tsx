@@ -395,6 +395,18 @@ const AssociationsList: React.FC = () => {
                         <span className="text-foreground">{group.client.responsavel}</span>
                       </td>
                       <td className="p-4">
+                        <div 
+                          className="flex justify-center cursor-pointer"
+                          onClick={() => toggleRow(group.client.uuid)}
+                        >
+                          {expandedRows.has(group.client.uuid) ? (
+                            <ChevronDown className="h-6 w-6 font-extrabold text-black" />
+                          ) : (
+                            <ChevronRight className="h-6 w-6 font-extrabold text-black" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4">
                         <div className="flex justify-center">
                           {group.activeAssociations > 0 && (
                             <Button
@@ -410,18 +422,6 @@ const AssociationsList: React.FC = () => {
                               <XCircle className="h-4 w-4" />
                               Encerrar Grupo
                             </Button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div 
-                          className="flex justify-center cursor-pointer"
-                          onClick={() => toggleRow(group.client.uuid)}
-                        >
-                          {expandedRows.has(group.client.uuid) ? (
-                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
                           )}
                         </div>
                       </td>
