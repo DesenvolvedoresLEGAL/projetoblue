@@ -10,6 +10,7 @@ import { Search, Monitor, Smartphone, Plus, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatPhoneForDisplay } from "@/utils/clientMappers";
+import { capitalize } from "@/utils/stringUtils";
 
 interface AssetSelectionStepProps {
   state: any;
@@ -169,7 +170,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                         <p className="font-medium">{getAssetDisplayName(asset)}</p>
                         <p className="text-sm text-muted-foreground">{asset.manufacturers.name}</p>
                         {asset.model && (
-                          <p className="text-sm text-muted-foreground">{asset.model}</p>
+                          <p className="text-sm text-muted-foreground">Model: {asset.model}</p>
                         )}
                         {asset.serial_number && (
                           <p className="text-xs text-muted-foreground">SN: {asset.serial_number}</p>
@@ -217,10 +218,10 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                           <p className="font-medium">
                             Linha: {formatPhoneForDisplay(asset.line_number.toString())}
                           </p>
+                          <p className="text-sm font-bold">{capitalize(asset.manufacturers.name)}</p>
                         {asset.iccid && (
                           <p className="text-sm text-muted-foreground">{asset.iccid || "Sem ICCID"}</p>
                         )}
-                        <p className="text-sm text-muted-foreground">{asset.manufacturers.name}</p>
                       </div>
                     </div>
                   </CardContent>
