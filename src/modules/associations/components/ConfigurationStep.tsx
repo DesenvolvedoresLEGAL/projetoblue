@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Settings, Plus } from "lucide-react";
+import { Calendar, Settings, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,6 +24,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const [associationTypes, setAssociationTypes] = useState<any[]>([]);
   const [solutions, setSolutions] = useState<any[]>([]);
   const [availableChips, setAvailableChips] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchAssociationTypes();
@@ -121,8 +122,18 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     }
   };
 
+  const filteredAssets = availableChips.filter(chip => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      chip.iccid?.toLowerCase().includes(searchLower) ||
+      chip.line_number?.toString().toLowerCase().includes(searchLower) ||
+      chip.asset_solutions?.solution?.toLowerCase().includes(searchLower)
+    );
+  });
+
   const equipmentAssets = state.selectedAssets.filter((asset: any) => asset.solution_id !== 11);
   const assetsWithSpecificSolutions = state.selectedAssets.filter((asset: any) => [1, 4, 2].includes(asset.solution_id));
+  const chipAssets = filteredAssets.filter(asset => asset.solution_id === 11);
 
   return (
     <div className="space-y-6">
@@ -237,6 +248,20 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="asset-search">Buscar Ativos</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="asset-search"
+                  placeholder="Digite ICCID ou número da linha..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
             {assetsWithSpecificSolutions.map((asset: any) => {
               const config = state.assetConfiguration[asset.uuid] || {};
 
@@ -248,7 +273,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                   <div className="space-y-3">
                     <Label>Chip Principal</Label>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
-                      {availableChips.map((chip) => {
+                      {chipAssets.map((chip) => {
                         const isSelected = config.chip_id === chip.uuid;
                         return (
                           <Card
@@ -279,7 +304,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                           </Card>
                         );
                       })}
-                      {availableChips.length === 0 && (
+                      {chipAssets.length === 0 && (
                         <p className="text-center text-muted-foreground py-4">Nenhum chip disponível</p>
                       )}
                     </div>
