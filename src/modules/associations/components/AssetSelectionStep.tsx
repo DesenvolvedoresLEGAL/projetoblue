@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Monitor, Smartphone, Plus, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { formatPhoneForDisplay } from "@/utils/clientMappers";
 
 interface AssetSelectionStepProps {
   state: any;
@@ -166,6 +167,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                           {isSelected && <Plus className="h-4 w-4 text-primary" />}
                         </div>
                         <p className="font-medium">{getAssetDisplayName(asset)}</p>
+                        <p className="text-sm text-muted-foreground">{asset.manufacturers.name}</p>
                         {asset.model && (
                           <p className="text-sm text-muted-foreground">{asset.model}</p>
                         )}
@@ -212,12 +214,13 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                           </Badge>
                           {isSelected && <Plus className="h-4 w-4 text-primary" />}
                         </div>
-                        <p className="font-medium">{asset.iccid || "Sem ICCID"}</p>
-                        {asset.line_number && (
-                          <p className="text-sm text-muted-foreground">
-                            Linha: {asset.line_number}
+                          <p className="font-medium">
+                            Linha: {formatPhoneForDisplay(asset.line_number.toString())}
                           </p>
+                        {asset.iccid && (
+                          <p className="text-sm text-muted-foreground">{asset.iccid || "Sem ICCID"}</p>
                         )}
+                        <p className="text-sm text-muted-foreground">{asset.manufacturers.name}</p>
                       </div>
                     </div>
                   </CardContent>
