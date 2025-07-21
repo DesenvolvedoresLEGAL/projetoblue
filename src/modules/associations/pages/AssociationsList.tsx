@@ -25,7 +25,7 @@ import AssociationCard from '../components/mobile/AssociationCard';
 import AssociationFilters from '../components/filters/AssociationFilters';
 import { toast } from '@/hooks/use-toast';
 
-const ITEMS_PER_PAGE = 11;
+const ITEMS_PER_PAGE = 6;
 
 const AssociationsList: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -214,7 +214,7 @@ const AssociationsList: React.FC = () => {
           manufacturerOptions={manufacturerOptions}
           onFilterChange={updateFilter}
           onClearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
+          hasActiveFilters={!!hasActiveFilters}
         />
       )}
 
