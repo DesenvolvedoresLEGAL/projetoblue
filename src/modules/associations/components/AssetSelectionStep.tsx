@@ -114,7 +114,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
         </div>
         <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Fabricante/Operadora
+                    Operadora
                   </label>
                   <Select
                     value={searchTerm}
@@ -125,7 +125,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione fabricante" />
+                      <SelectValue placeholder="Selecione a operadora" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem 
