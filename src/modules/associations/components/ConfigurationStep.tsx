@@ -30,6 +30,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     fetchAssociationTypes();
     fetchSolutions().then(setSolutions);
     fetchAvailableChips().then(setAvailableChips);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAssociationTypes = async () => {
@@ -277,7 +278,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                         .filter(chip => {
                           // chip selecionado em algum equipamento?
                           const selectedIn = Object.entries(state.assetConfiguration)
-                            .find(([assetId, config]) => config?.chip_id === chip.uuid);
+                            .find(([assetId, config]: [string, { chip_id?: string }]) => config?.chip_id === chip.uuid);
 
                           // chip não foi selecionado OU está selecionado neste próprio asset
                           return !selectedIn || selectedIn[0] === asset.uuid;
