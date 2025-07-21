@@ -231,28 +231,6 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                       />
                     </div>
                   </div>
-                  
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor={`admin_user-${asset.uuid}`}>Configurações de administrador</Label>
-                      <Input
-                        id={`ssid-${asset.uuid}`}
-                        placeholder="Usuário admin"
-                        value={config.admin_user || ''}
-                        onChange={(e) => handleAssetConfig(asset.uuid, 'admin_user', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`admin_pass-${asset.uuid}`}>Senha do admin</Label>
-                      <Input
-                        id={`admin_pass-${asset.uuid}`}
-                        type="password"
-                        placeholder="Senha da rede WiFi"
-                        value={config.admin_pass || ''}
-                        onChange={(e) => handleAssetConfig(asset.uuid, 'admin_pass', e.target.value)}
-                      />
-                    </div>
-                  </div>
                 </div>
               );
             })}
