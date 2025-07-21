@@ -53,7 +53,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
 
   const handleAssetToggle = (asset: any) => {
     const isSelected = state.selectedAssets.some((a: any) => a.uuid === asset.uuid);
-    
+
     if (isSelected) {
       const newAssets = state.selectedAssets.filter((a: any) => a.uuid !== asset.uuid);
       dispatch({ type: 'SET_ASSETS', payload: newAssets });
@@ -113,48 +113,48 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
           />
         </div>
         <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Operadora
-                  </label>
-                  <Select
-                    value={searchTerm}
-                    onValueChange={(value) => {
-                      // Ignorar separadores
-                      if (value.startsWith('separator_')) return;
-                      setSearchTerm(value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a operadora" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem 
-                          key={1} 
-                          value={"Vivo"}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span>Vivo</span>
-                          </div>
-                        </SelectItem>
-                      <SelectItem 
-                          key={1} 
-                          value={"Tim"}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span>Tim</span>
-                          </div>
-                        </SelectItem>
-                      <SelectItem 
-                          key={1} 
-                          value={"Claro"}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <span>Claro</span>
-                          </div>
-                        </SelectItem>
-                    </SelectContent>
-                  </Select>
+          <label className="text-sm font-medium text-foreground">
+            Operadora
+          </label>
+          <Select
+            value={searchTerm}
+            onValueChange={(value) => {
+              // Ignorar separadores
+              if (value.startsWith('separator_')) return;
+              setSearchTerm(value);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a operadora" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                key={1}
+                value={"Vivo"}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>Vivo</span>
                 </div>
+              </SelectItem>
+              <SelectItem
+                key={1}
+                value={"Tim"}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>Tim</span>
+                </div>
+              </SelectItem>
+              <SelectItem
+                key={1}
+                value={"Claro"}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>Claro</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {state.selectedAssets.length > 0 && (
@@ -196,11 +196,10 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
             {equipmentAssets.map((asset) => {
               const isSelected = state.selectedAssets.some((a: any) => a.uuid === asset.uuid);
               return (
-                <Card 
+                <Card
                   key={asset.uuid}
-                  className={`cursor-pointer transition-colors hover:border-primary ${
-                    isSelected ? 'border-primary bg-primary/5' : ''
-                  }`}
+                  className={`cursor-pointer transition-colors hover:border-primary ${isSelected ? 'border-primary bg-primary/5' : ''
+                    }`}
                   onClick={() => handleAssetToggle(asset)}
                 >
                   <CardContent className="p-3">
@@ -244,11 +243,10 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
             {chipAssets.map((asset) => {
               const isSelected = state.selectedAssets.some((a: any) => a.uuid === asset.uuid);
               return (
-                <Card 
+                <Card
                   key={asset.uuid}
-                  className={`cursor-pointer transition-colors hover:border-primary ${
-                    isSelected ? 'border-primary bg-primary/5' : ''
-                  }`}
+                  className={`cursor-pointer transition-colors hover:border-primary ${isSelected ? 'border-primary bg-primary/5' : ''
+                    }`}
                   onClick={() => handleAssetToggle(asset)}
                 >
                   <CardContent className="p-3">
@@ -260,10 +258,10 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
                           </Badge>
                           {isSelected && <Plus className="h-4 w-4 text-primary" />}
                         </div>
-                          <p className="font-medium">
-                            Linha: {formatPhoneForDisplay(asset.line_number.toString())}
-                          </p>
-                          <p className="text-sm font-bold">{capitalize(asset.manufacturers.name)}</p>
+                        <p className="font-medium">
+                          Linha: {formatPhoneForDisplay(asset.line_number.toString())}
+                        </p>
+                        <p className="text-sm font-bold">{capitalize(asset.manufacturers.name)}</p>
                         {asset.iccid && (
                           <p className="text-sm text-muted-foreground">{asset.iccid || "Sem ICCID"}</p>
                         )}
