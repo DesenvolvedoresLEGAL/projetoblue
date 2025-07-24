@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { formatPhoneForDisplay } from "@/utils/clientMappers";
 import { capitalize } from "@/utils/stringUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatPhoneForStorage } from "@/utils/phoneFormatter";
 
 interface AssetSelectionStepProps {
   state: any;
@@ -83,6 +84,7 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
     const searchLower = searchTerm.toLowerCase();
     return (
       asset.iccid?.toLowerCase().includes(searchLower) ||
+      asset.line_number?.toString().toLowerCase().includes(formatPhoneForStorage(searchLower)) ||
       asset.radio?.toLowerCase().includes(searchLower) ||
       asset.serial_number?.toLowerCase().includes(searchLower) ||
       asset.model?.toLowerCase().includes(searchLower) ||
