@@ -64,7 +64,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 60000, // 1 minute
+      staleTime: 2 * 60 * 60 * 1000, // 2 hours
     },
   },
 });
@@ -75,8 +75,6 @@ const App = () => (
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
-          <AssetProvider>
-            <DataUsageProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -410,8 +408,6 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </TooltipProvider>
-            </DataUsageProvider>
-          </AssetProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
