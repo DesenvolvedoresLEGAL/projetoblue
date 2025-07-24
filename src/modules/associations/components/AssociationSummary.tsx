@@ -11,7 +11,8 @@ import {
   Smartphone,
   User
 } from "lucide-react";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AssociationSummaryProps {
   state: any;
@@ -19,6 +20,36 @@ interface AssociationSummaryProps {
 }
 
 export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state }) => {
+  const [allChips, setAllChips] = useState<any[]>([]);
+
+  // Buscar informações dos chips principais configurados
+  useEffect(() => {
+    const fetchChipsData = async () => {
+      // Extrair IDs dos chips principais configurados
+      const principalChipIds = Object.values(state.assetConfiguration)
+        .map((config: any) => config?.chip_id)
+        .filter(Boolean);
+
+      if (principalChipIds.length > 0) {
+        try {
+          const { data, error } = await supabase
+            .from('assets')
+            .select(`*,
+              manufacturer:manufacturers(id, name)`)
+            .in('uuid', principalChipIds);
+
+          if (!error) {
+            setAllChips(data || []);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar chips:', error);
+        }
+      }
+    };
+
+    fetchChipsData();
+  }, [state.assetConfiguration]);
+
   const getAssetDisplayName = (asset: any) => {
     if (asset.solution_id === 11) {
       return asset.iccid || asset.line_number || "Chip sem identificação";
@@ -59,6 +90,22 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
     }
   }
 
+  // Função para encontrar chip principal de um equipamento
+  const getPrincipalChipForEquipment = (equipmentId: string) => {
+    const config = state.assetConfiguration[equipmentId];
+    if (!config?.chip_id) return null;
+
+    // Primeiro procurar nos chips carregados da API
+    let chip = allChips.find(c => c.uuid === config.chip_id);
+    
+    // Se não encontrar, procurar nos selectedAssets (caso ainda esteja lá)
+    if (!chip) {
+      chip = state.selectedAssets.find((c: any) => c.uuid === config.chip_id);
+    }
+
+    return chip;
+  };
+
   return (
     <div className="space-y-6">
       <Card className="border-green-200 bg-green-50">
@@ -89,7 +136,7 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
           {/* Assets Information */}
           <div>
             <h3 className="font-semibold mb-3">
-              Ativos Selecionados ({state.selectedAssets.length})
+              Ativos Selecionados
             </h3>
             
             <div className="space-y-4">
@@ -102,6 +149,8 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
                   <div className="pl-6 space-y-2">
                     {equipmentAssets.map((asset) => {
                       const config = state.assetConfiguration[asset.uuid];
+                      const principalChip = getPrincipalChipForEquipment(asset.uuid);
+                      
                       return (
                         <div key={asset.uuid} className="p-3 bg-white border rounded">
                           <div className="flex items-center justify-between">
@@ -112,6 +161,29 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
                               </Badge>
                             </div>
                           </div>
+
+                          {/* Chip Principal associado */}
+                          {principalChip && (
+                            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Smartphone className="h-3 w-3 text-blue-600" />
+                                <span className="text-xs font-medium text-blue-800">CHIP PRINCIPAL</span>
+                              </div>
+                              <p className="text-sm font-medium">{getAssetDisplayName(principalChip)}</p>
+                              {principalChip.line_number && (
+                                <p className="text-xs text-muted-foreground">
+                                  Linha: {principalChip.line_number}
+                                </p>
+                              )}
+                              {principalChip.manufacturer?.name && (
+                                <p className="text-xs text-muted-foreground">
+                                  Operadora: {principalChip.manufacturer.name}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Configurações do equipamento */}
                           {config && (config.ssid || config.password) && (
                             <div className="mt-2 text-sm text-muted-foreground">
                               {config.ssid && <p>SSID: {config.ssid}</p>}
@@ -129,18 +201,23 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
                 <div>
                   <h4 className="flex items-center text-sm font-medium mb-2">
                     <Smartphone className="mr-2 h-4 w-4" />
-                    Chips ({chipAssets.length})
+                    Chips Backup ({chipAssets.length})
                   </h4>
                   <div className="pl-6 space-y-2">
                     {chipAssets.map((asset) => (
                       <div key={asset.uuid} className="p-3 bg-white border rounded">
                         <p className="font-medium">{getAssetDisplayName(asset)}</p>
                         <Badge variant="outline" className="text-xs mt-1">
-                          CHIP
+                          CHIP BACKUP
                         </Badge>
                         {asset.line_number && (
                           <p className="text-sm text-muted-foreground mt-1">
                             Linha: {asset.line_number}
+                          </p>
+                        )}
+                        {asset.manufacturer?.name && (
+                          <p className="text-sm text-muted-foreground">
+                            Operadora: {asset.manufacturer.name}
                           </p>
                         )}
                       </div>
@@ -223,4 +300,4 @@ export const AssociationSummary: React.FC<AssociationSummaryProps> = ({ state })
       </Card>
     </div>
   );
-}
+};
