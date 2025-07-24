@@ -31,7 +31,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     fetchSolutions().then(setSolutions);
     fetchAvailableChips().then(setAvailableChips);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [availableChips]);
 
   const fetchAssociationTypes = async () => {
     try {
@@ -73,7 +73,7 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
         .eq('solution_id', 11)
         .eq('status_id', 1)
         .is('deleted_at', null)
-        .not('uuid', 'in', `(${state.selectedAssets.map((asset: any) => `'${asset.uuid}'`).join(',')})`);
+        .in('uuid', state.selectedAssets.map((asset: { uuid: any; }) => asset.uuid));
 
       if (error) throw error;
       return data || [];
