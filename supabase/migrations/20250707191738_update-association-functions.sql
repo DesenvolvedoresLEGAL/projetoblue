@@ -157,16 +157,13 @@ CREATE OR REPLACE VIEW public.v_active_clients WITH (security_invoker='on') AS
 
 CREATE OR REPLACE TRIGGER associations_log_trigger
   AFTER INSERT OR DELETE OR UPDATE ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.log_profile_change();
-CREATE OR REPLACE TRIGGER associations_status_log_trigger
-  AFTER INSERT OR DELETE OR UPDATE ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.log_and_update_status();
+  FOR EACH ROW EXECUTE FUNCTION log_profile_change();
 CREATE OR REPLACE TRIGGER check_availability_before_association
   BEFORE INSERT OR UPDATE ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.check_asset_availability();
+  FOR EACH ROW EXECUTE FUNCTION check_asset_availability();
 CREATE OR REPLACE TRIGGER prevent_rented_association_before
   BEFORE INSERT ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.prevent_rented_association();
+  FOR EACH ROW EXECUTE FUNCTION prevent_rented_association();
 CREATE OR REPLACE TRIGGER set_associations_updated_at
   BEFORE UPDATE ON public.associations
-  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
