@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Monitor, Smartphone, Plus, Minus } from "lucide-react";
+import { Search, Monitor, Smartphone, Plus, Minus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { formatPhoneForDisplay } from "@/utils/clientMappers";
@@ -111,6 +111,11 @@ export const AssetSelectionStep: React.FC<AssetSelectionStepProps> = ({ state, d
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
+          <button 
+          onClick={() => setSearchTerm("")}
+          className="absolute right-3 top-0 p-auto h-10 w-10 hover:bg-slate-500/20 hover:border-solid hover:rounded flex items-center justify-center">
+            <X className="w-4 text-muted-foreground" />
+          </button>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
