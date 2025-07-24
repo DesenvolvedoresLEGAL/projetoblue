@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,24 +13,19 @@ interface ConfigurationStepProps {
   dispatch: any;
 }
 
-interface Chip {
-  id: string;
-  number: string;
-  status: string;
-}
-
 export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dispatch }) => {
   const [associationTypes, setAssociationTypes] = useState<any[]>([]);
   const [solutions, setSolutions] = useState<any[]>([]);
   const [availableChips, setAvailableChips] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [principalChip, setPincipalChip] = useState<any>(null);
 
+  // Correção 1: Dependency array correta
   useEffect(() => {
     fetchAssociationTypes();
     fetchSolutions().then(setSolutions);
     fetchAvailableChips().then(setAvailableChips);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableChips]);
+  }, [state.selectedAssets]); // ✅ Agora atualiza quando selectedAssets muda
 
   const fetchAssociationTypes = async () => {
     try {
@@ -65,15 +59,17 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
     }
   };
 
+  // Correção 2: Buscar TODOS os chips disponíveis, não apenas os selecionados
   const fetchAvailableChips = async () => {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('*')
+        .select(`*,
+          manufacturer:manufacturers(id, name)`)
         .eq('solution_id', 11)
         .eq('status_id', 1)
-        .is('deleted_at', null)
-        .in('uuid', state.selectedAssets.map((asset: { uuid: any; }) => asset.uuid));
+        .is('deleted_at', null);
+        // ✅ Removido o filtro .in() para buscar todos os chips disponíveis
 
       if (error) throw error;
       return data || [];
@@ -114,14 +110,28 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const handleChipSelect = (assetId: string, chipId: string) => {
     const currentChip = state.assetConfiguration[assetId]?.chip_id;
     const newChipId = currentChip === chipId ? '' : chipId;
+    
     handleAssetConfig(assetId, 'chip_id', newChipId);
 
-    // If a chip is being set as the main chip and it exists in the
-    // selectedAssets list, remove it to avoid duplicates
-    if (newChipId && state.selectedAssets.some((a: any) => a.uuid === chipId)) {
-      const newAssets = state.selectedAssets.filter((a: any) => a.uuid !== chipId);
-      dispatch({ type: 'SET_ASSETS', payload: newAssets });
+    // Calcular o novo estado de selectedAssets de uma só vez
+    let newSelectedAssets = [...state.selectedAssets];
+
+    // 1. Se havia um chip anterior, restaurá-lo à lista (se não estiver já)
+    if (currentChip && currentChip !== newChipId) {
+      const chipToRestore = availableChips.find(chip => chip.uuid === currentChip);
+      
+      if (chipToRestore && !newSelectedAssets.some((a: any) => a.uuid === currentChip)) {
+        newSelectedAssets.push(chipToRestore);
+      }
     }
+
+    // 2. Se está selecionando um novo chip, removê-lo da lista
+    if (newChipId) {
+      newSelectedAssets = newSelectedAssets.filter((a: any) => a.uuid !== chipId);
+    }
+
+    // Dispatch uma única vez com o estado final
+    dispatch({ type: 'SET_ASSETS', payload: newSelectedAssets });
   };
 
   const filteredAssets = availableChips.filter(chip => {
@@ -135,7 +145,12 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
 
   const equipmentAssets = state.selectedAssets.filter((asset: any) => asset.solution_id !== 11);
   const assetsWithSpecificSolutions = state.selectedAssets.filter((asset: any) => [1, 4, 2].includes(asset.solution_id));
-  const chipAssets = filteredAssets.filter(asset => asset.solution_id === 11);
+  
+  // Correção 3: Filtrar apenas chips que estão em selectedAssets ou disponíveis
+  const chipAssets = filteredAssets.filter(asset => 
+    asset.solution_id === 11 && 
+    state.selectedAssets.some((selected: any) => selected.uuid === asset.uuid)
+  );
 
   return (
     <div className="space-y-6">
@@ -272,17 +287,50 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                   <h4 className="font-medium">
                     {asset.radio || asset.serial_number || asset.model || 'Equipamento'}
                   </h4>
+
+                  {/* Badge para chip selecionado */}
+                  {config.chip_id && (
+                    <div className="mb-3">
+                      <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                        Chip Selecionado: {
+                          availableChips.find(chip => chip.uuid === config.chip_id)?.iccid || config.chip_id
+                        } | Operadora: {
+                          availableChips.find(chip => chip.uuid === config.chip_id)?.manufacturer?.name || 'N/A'
+                        }
+                      </Badge>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     <Label>Chip Principal</Label>
                     <div className="space-y-3 max-h-60 overflow-y-auto">
-                      {chipAssets
+                      {availableChips
                         .filter(chip => {
-                          // chip selecionado em algum equipamento?
+                          // Mostrar apenas chips que:
+                          // 1. São do tipo chip (solution_id === 11)
+                          // 2. Estão nos selectedAssets OU estão selecionados neste equipamento
+                          if (chip.solution_id !== 11) return false;
+                          
+                          const isInSelectedAssets = state.selectedAssets.some((a: any) => a.uuid === chip.uuid);
+                          const isSelectedForThisAsset = config.chip_id === chip.uuid;
+                          
+                          return isInSelectedAssets || isSelectedForThisAsset;
+                        })
+                        .filter(chip => {
+                          // Aplicar filtro de busca
+                          const searchLower = searchTerm.toLowerCase();
+                          return (
+                            chip.iccid?.toLowerCase().includes(searchLower) ||
+                            chip.line_number?.toString().toLowerCase().includes(searchLower)
+                          );
+                        })
+                        .filter(chip => {
+                          // Não mostrar chips já selecionados em outros equipamentos
                           const selectedIn = Object.entries(state.assetConfiguration)
-                            .find(([assetId, config]: [string, { chip_id?: string }]) => config?.chip_id === chip.uuid);
-
-                          // chip não foi selecionado OU está selecionado neste próprio asset
-                          return !selectedIn || selectedIn[0] === asset.uuid;
+                            .find(([assetId, config]: [string, { chip_id?: string }]) => 
+                              config?.chip_id === chip.uuid && assetId !== asset.uuid
+                            );
+                          return !selectedIn;
                         })
                         .map((chip) => {
                           const isSelected = config.chip_id === chip.uuid;
@@ -308,13 +356,18 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
                                         Linha: {chip.line_number}
                                       </p>
                                     )}
+                                    {chip.manufacturer?.name && (
+                                      <p className="text-sm text-muted-foreground">
+                                        {chip.manufacturer.name}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
                           );
                         })}
-                      {chipAssets.length === 0 && (
+                      {availableChips.filter(chip => chip.solution_id === 11).length === 0 && (
                         <p className="text-center text-muted-foreground py-4">Nenhum chip disponível</p>
                       )}
                     </div>
