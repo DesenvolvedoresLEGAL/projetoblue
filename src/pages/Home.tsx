@@ -33,18 +33,18 @@ const Home: React.FC = () => {
   const isMobile = useIsMobile();
 
   // Safe loading state check
-  const isLoading = dashboard.problemAssets.isLoading || 
-                   dashboard.assetsStats.isLoading || 
-                   dashboard.statusDistribution.isLoading ||
-                   dashboardStats.isLoading ||
-                   recentActivities.isLoading;
+  const isLoading = dashboard.problemAssets.isLoading ||
+    dashboard.assetsStats.isLoading ||
+    dashboard.statusDistribution.isLoading ||
+    dashboardStats.isLoading ||
+    recentActivities.isLoading;
 
   // Safe error state check
-  const hasError = dashboard.problemAssets.error || 
-                   dashboard.assetsStats.error || 
-                   dashboard.statusDistribution.error ||
-                   dashboardStats.error ||
-                   recentActivities.error;
+  const hasError = dashboard.problemAssets.error ||
+    dashboard.assetsStats.error ||
+    dashboard.statusDistribution.error ||
+    dashboardStats.error ||
+    recentActivities.error;
 
   // Processing lease assets by type using the 'type' property
   const leaseAssetsByType = useMemo(() => {
@@ -53,10 +53,10 @@ const Home: React.FC = () => {
     }
 
     const chips = dashboard.onLeaseAssets.data.filter(asset => asset.type === 'CHIP').length;
-    const speedys = dashboard.onLeaseAssets.data.filter(asset => 
+    const speedys = dashboard.onLeaseAssets.data.filter(asset =>
       asset.type === 'EQUIPAMENTO' && asset.identifier.includes('SPEEDY')
     ).length;
-    const equipments = dashboard.onLeaseAssets.data.filter(asset => 
+    const equipments = dashboard.onLeaseAssets.data.filter(asset =>
       asset.type === 'EQUIPAMENTO' && !asset.identifier.includes('SPEEDY')
     ).length;
 
@@ -75,10 +75,10 @@ const Home: React.FC = () => {
     }
 
     const chips = dashboard.onSubscriptionAssets.data.filter(asset => asset.type === 'CHIP').length;
-    const speedys = dashboard.onSubscriptionAssets.data.filter(asset => 
+    const speedys = dashboard.onSubscriptionAssets.data.filter(asset =>
       asset.type === 'EQUIPAMENTO' && asset.identifier.includes('SPEEDY')
     ).length;
-    const equipments = dashboard.onSubscriptionAssets.data.filter(asset => 
+    const equipments = dashboard.onSubscriptionAssets.data.filter(asset =>
       asset.type === 'EQUIPAMENTO' && !asset.identifier.includes('SPEEDY')
     ).length;
 
@@ -91,10 +91,10 @@ const Home: React.FC = () => {
   }, [dashboard.onSubscriptionAssets.data, dashboard.onSubscriptionAssets.isLoading]);
 
   // Debug logging para verificar os dados
-  
-  
-  
-  
+
+
+
+
 
   // Loading state for the entire dashboard
   if (isLoading) {
@@ -123,8 +123,8 @@ const Home: React.FC = () => {
           <p className="text-sm md:text-base text-muted-foreground text-center max-w-md px-4">
             Não foi possível carregar os dados necessários. Verifique sua conexão e tente novamente.
           </p>
-          <Button 
-            onClick={() => window.location.reload()} 
+          <Button
+            onClick={() => window.location.reload()}
             className="mt-4 bg-legal-primary hover:bg-legal-primary-light text-white"
           >
             Tentar Novamente
@@ -176,73 +176,16 @@ const Home: React.FC = () => {
           />
         </div>
 
-        {/* Problem Cards - Conditional Display with Mobile Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <StatusCard
-            title="Chips com Problema"
-            description="Ativos que necessitam de atenção imediata"
-            items={dashboard.chipProblems.map(item => ({
-              id: item.uuid,
-              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
-              type: 'CHIP',
-              status: item.status
-            }))}
-            isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem&solution=11"
-            actionText="Resolver Problemas"
-            variant="destructive"
-            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
-            emptyMessage="Todos os chips estão funcionando perfeitamente."
-            isMobile={isMobile}
-          />
-
-          <StatusCard
-            title="Speedys com Problema"
-            description="Roteadores que precisam de manutenção"
-            items={dashboard.speedyProblems.map(item => ({
-              id: item.uuid,
-              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
-              type: 'EQUIPAMENTO',
-              status: item.status
-            }))}
-            isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem&solution=1"
-            actionText="Resolver Problemas"
-            variant="destructive"
-            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
-            emptyMessage="Todos os Speedys estão operacionais."
-            isMobile={isMobile}
-          />
-
-          <StatusCard
-            title="Equipamentos com Problema"
-            description="Infraestrutura que requer atenção"
-            items={dashboard.equipmentProblems.map(item => ({
-              id: item.uuid,
-              identifier: item.identifier || item.radio || item.line_number?.toString() || 'N/A',
-              type: 'EQUIPAMENTO',
-              status: item.status
-            }))}
-            isLoading={dashboard.problemAssets.isLoading}
-            actionLink="/assets/inventory?status=problem&exclude_solutions=1,11"
-            actionText="Resolver Problemas"
-            variant="destructive"
-            icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />}
-            emptyMessage="Toda infraestrutura está funcionando corretamente."
-            isMobile={isMobile}
-          />
-        </div>
-
         {/* Lease & Subscription Cards - Mobile Responsive - CORRIGIDO: Removidas props antigas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <LeaseAssetsCard />
-          
+
           <SubscriptionAssetsCard />
         </div>
 
         {/* Monitoring Cards - Mobile Responsive */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
-          <RecentActivitiesCard 
+          <RecentActivitiesCard
             activities={recentActivities.data || []}
             isLoading={recentActivities.isLoading}
           />
