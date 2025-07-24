@@ -7,7 +7,7 @@ export function Toaster() {
       position="bottom-right"
       toastOptions={{
         className: "border-border bg-background text-foreground",
-        duration: 4 * 1000, // 4 seconds
+        duration: 3.5 * 1000, // 3.5 seconds
       }}
     />
   );
