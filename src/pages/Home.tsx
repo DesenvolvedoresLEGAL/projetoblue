@@ -140,7 +140,7 @@ const Home: React.FC = () => {
       <StandardPageHeader
         icon={LayoutDashboard}
         title="Dashboard LEGAL"
-        description="Sistema de Gestão de Ativos"
+        description="Gestão e Inteligência de Negócios"
       >
       </StandardPageHeader>
 
