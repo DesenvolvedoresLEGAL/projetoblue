@@ -1,12 +1,9 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AssetProvider } from "@/context/AssetProvider";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { Layout } from "@/components/layout/Layout";
-import { DataUsageProvider } from "@/context/DataUsageProvider";
 import { AuthProvider } from "@/context/AuthProvider";
 import { AuthRoute } from "@/components/auth/AuthRoute";
 import { PrivateRoute } from "@/components/auth/PrivateRoute";
@@ -16,7 +13,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Home from "./pages/Home";
 import Dashboard from "@modules/dashboard/pages/Dashboard";
 import RegisterAsset from "@modules/assets/pages/RegisterAsset";
-import AssetsDashboard from "@modules/assets/pages/AssetsDashboard";
 import AssetsInventory from "@modules/assets/pages/AssetsInventory";
 import AssetsManagement from "@modules/assets/pages/AssetsManagement";
 import AssetsRanking from "@modules/assets/pages/AssetsRanking";
@@ -77,7 +73,6 @@ const App = () => (
         <AuthProvider>
               <TooltipProvider>
                 <Toaster />
-                <Sonner />
                 <Routes>
                   {/* Public authentication routes */}
                   <Route path="/login" element={<Login />} />
