@@ -164,6 +164,9 @@ CREATE OR REPLACE TRIGGER associations_status_log_trigger
 CREATE OR REPLACE TRIGGER check_availability_before_association
   BEFORE INSERT OR UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.check_asset_availability();
+CREATE OR REPLACE TRIGGER prevent_rented_association_before
+  BEFORE INSERT ON public.associations
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_rented_association();
 CREATE OR REPLACE TRIGGER set_associations_updated_at
   BEFORE UPDATE ON public.associations
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
