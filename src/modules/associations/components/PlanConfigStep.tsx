@@ -43,7 +43,7 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
       type: 'SET_PLAN', 
       payload: { 
         planId: planId,
-        planGb: selectedPlan?.tamanho_gb || state.planGb || 0
+        planGb: selectedPlan?.tamanho_gb !== -1 ? selectedPlan?.tamanho_gb : 0
       } 
     });
   };
@@ -80,7 +80,7 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
               <SelectContent>
                 {plans.map((plan) => (
                   <SelectItem key={plan.id} value={plan.id.toString()}>
-                    {plan.nome} {plan.tamanho_gb && `(${plan.tamanho_gb} GB)`}
+                    {plan.nome} {plan.tamanho_gb === -1 || plan.tamanho_gb === null ? '' :  `(${plan.tamanho_gb} GB)`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -88,16 +88,16 @@ export const PlanConfigStep: React.FC<PlanConfigStepProps> = ({ state, dispatch 
           </div>
 
           <div>
-            <Label htmlFor="plan-gb">Quantidade de GB</Label>
-            <Input
+            {state.planId !== 5 && (<Label htmlFor="plan-gb">Quantidade de GB</Label>)}
+            {state.planId !== 5 && (<Input
               id="plan-gb"
               type="number"
               min="0"
               placeholder="0"
               value={state.planGb || ''}
               onChange={(e) => handleGbChange(e.target.value)}
-            />
-            {selectedPlan && selectedPlan.tamanho_gb && (
+            />)}
+            {selectedPlan && selectedPlan.tamanho_gb && selectedPlan.tamanho_gb !== -1 && (
               <p className="text-sm text-muted-foreground mt-1">
                 Plano padrão: {selectedPlan.tamanho_gb} GB
               </p>
