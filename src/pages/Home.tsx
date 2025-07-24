@@ -144,19 +144,7 @@ const Home: React.FC = () => {
       >
       </StandardPageHeader>
 
-      <div className="space-y-4 md:space-y-6 pb-6 md:pb-10 px-4 md:px-0">
-        {/* Header with Sync Status */}
-        <div className="flex flex-col space-y-3 md:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          </div>
-          
-          {/* Sync Status Alert - High Priority UX Improvement */}
-          <SyncStatusAlert 
-            lastSync="Há 2 minutos"
-            isOnline={true}
-            isSyncing={false}
-          />
-        </div>
+      <div className="space-y-4 mt-3 md:space-y-6 pb-6 md:pb-10 px-4 md:px-0">
 
         {/* Inventory Cards - Enhanced with LEGAL Identity and Mobile Responsive */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
