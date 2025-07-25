@@ -24,7 +24,6 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   // Limpar associationType na primeira carga e mostrar toast
   useEffect(() => {
     dispatch({ type: 'SET_ASSOCIATION_TYPE', payload: null });
-    toast.info("Defina o tipo de associação");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -213,6 +212,11 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
               </div>
             ))}
           </RadioGroup>
+          {state.associationType === null && (
+            <p className="text-sm text-red-500 mt-2">
+              Por favor, selecione um tipo de associação.
+            </p>
+          )}
         </CardContent>
       </Card>
 
