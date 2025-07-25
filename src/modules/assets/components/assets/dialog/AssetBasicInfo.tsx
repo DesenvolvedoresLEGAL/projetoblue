@@ -19,7 +19,7 @@ export const AssetBasicInfo: React.FC<AssetBasicInfoProps> = ({ asset }) => {
       <div className="space-y-3">
         <div className="flex justify-between">
           <span className="font-medium text-sm">Identificador:</span>
-          <span className="text-sm">{asset.uuid}</span>
+          <span className="text-sm">{asset.radio || `...${asset.iccid.slice(asset.iccid.length - 6, asset.iccid.length)}`}</span>
         </div>
         
         <div className="flex justify-between">

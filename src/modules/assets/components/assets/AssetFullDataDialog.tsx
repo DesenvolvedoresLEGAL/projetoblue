@@ -52,7 +52,6 @@ const AssetFullDataDialog = ({ isOpen, onClose, asset }: AssetFullDataDialogProp
           <AssetBasicInfo asset={asset} />
           <AssetTechnicalDetails asset={asset} showPasswords={showPasswords} />
           <AssetNetworkConfig asset={asset} showPasswords={showPasswords} />
-          <AssetSystemInfo asset={asset} />
         </div>
       </DialogContent>
     </Dialog>
