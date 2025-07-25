@@ -134,8 +134,8 @@ const createAssociation = useCallback(async () => {
       if ([1, 2, 4].includes(equipment.solution_id)) {
         // Equipment that requires chip
         const configuredId = state.assetConfiguration[equipment.uuid]?.chip_id || null;
-        
-        if (!configuredId) {
+
+        if (!configuredId && chips.length > 0) {
           throw new Error(`Equipamento ${equipment.radio || equipment.serial_number} requer um chip principal.`);
         }
         
