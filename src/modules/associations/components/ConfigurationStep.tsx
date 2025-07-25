@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar, Settings, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface ConfigurationStepProps {
   state: any;
@@ -19,6 +20,13 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
   const [availableChips, setAvailableChips] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [principalChip, setPincipalChip] = useState<any>(null);
+
+  // Limpar associationType na primeira carga e mostrar toast
+  useEffect(() => {
+    dispatch({ type: 'SET_ASSOCIATION_TYPE', payload: null });
+    toast.info("Defina o tipo de associação");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Correção 1: Dependency array correta
   useEffect(() => {
@@ -189,11 +197,11 @@ export const ConfigurationStep: React.FC<ConfigurationStepProps> = ({ state, dis
       {/* Association Type */}
       <Card>
         <CardHeader>
-          <CardTitle>Tipo de Associação</CardTitle>
+          <CardTitle>Tipo de Associação *</CardTitle>
         </CardHeader>
         <CardContent>
           <RadioGroup
-            value={state.associationType?.toString()}
+            value={state.associationType?.toString() || ''}
             onValueChange={handleAssociationTypeChange}
           >
             {associationTypes.map((type) => (
