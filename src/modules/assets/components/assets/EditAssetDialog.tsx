@@ -29,7 +29,8 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
     handleStatusChange,
     handleManufacturerChange,
     handlePlanChange,
-    handleSubmit
+    handleSubmit,
+    handleSolutionChange
   } = useAssetEditForm({ asset, onAssetUpdated, onClose });
   
   // Fetch manufacturers and plans for dropdowns
@@ -86,6 +87,7 @@ const EditAssetDialog = ({ isOpen, onClose, asset, onAssetUpdated }: EditAssetDi
                 isChip={isChip}
                 handleStatusChange={handleStatusChange}
                 handleManufacturerChange={handleManufacturerChange}
+                handleSolutionChange={handleSolutionChange}
                 manufacturers={manufacturers}
               />
               
