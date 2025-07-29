@@ -15,6 +15,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<{
     model?: string;
+    solution_id: number;
     serial_number?: string;
     iccid?: string;
     line_number?: string;
@@ -27,7 +28,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     admin_pass?: string;
     ssid_atual?: string;
     pass_atual?: string;
-  }>({});
+  }>(null);
 
   // Determine if asset is a CHIP based on solution id
   const isChip = asset?.solucao?.id === 11;
@@ -47,6 +48,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
         rented_days: asset.rented_days?.toString() || '0',
         admin_user: asset.admin_user || 'admin',
         admin_pass: asset.admin_pass || '',
+        solution_id: asset.solution_id || undefined
       });
     }
   }, [asset]);
@@ -61,6 +63,12 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     const status_id = parseInt(value);
     
     setFormData(prev => ({ ...prev, status_id }));
+  };
+  
+  const handleSolutionChange = (value: string) => {
+    const solution_id = parseInt(value);
+    
+    setFormData(prev => ({ ...prev, solution_id }));
   };
 
   const handleManufacturerChange = (value: string) => {
@@ -82,12 +90,12 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     
     setIsLoading(true);
     
-    
     try {
       // Prepare data to update based on the asset type
       const dataToUpdate: Record<string, unknown> = {
         status_id: formData.status_id,
-        manufacturer_id: formData.manufacturer_id
+        manufacturer_id: formData.manufacturer_id,
+        solution_id: formData.solution_id
       };
       
       if (isChip) {
@@ -135,6 +143,7 @@ export const useAssetEditForm = ({ asset, onAssetUpdated, onClose }: UseAssetEdi
     handleStatusChange,
     handleManufacturerChange,
     handlePlanChange,
-    handleSubmit
+    handleSubmit,
+    handleSolutionChange
   };
 };
