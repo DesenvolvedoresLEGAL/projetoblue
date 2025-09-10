@@ -27,7 +27,17 @@ import {
 
 export function Sidebar() {
   const location = useLocation();
-  const { hasMinimumRole } = useAuth();
+  const { hasMinimumRole, userRole, isAuthenticated, user, profile } = useAuth();
+
+  // Temporary debug - REMOVER DEPOIS
+  console.log('🔍 DEBUG SIDEBAR:', {
+    isAuthenticated,
+    userRole,
+    hasSuporteRole: hasMinimumRole('suporte'),
+    user: user?.email,
+    profile: profile?.role,
+    hasMinimumRoleFunction: !!hasMinimumRole
+  });
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -37,6 +47,16 @@ export function Sidebar() {
     <div className="w-64 h-screen flex-shrink-0 bg-sidebar border-r">
       <div className="flex h-16 items-center border-b px-4">
         <NamedLogo size="sm" />
+      </div>
+      
+      {/* TEMPORARY DEBUG - REMOVER DEPOIS */}
+      <div className="px-4 py-2 bg-red-100 text-red-800 text-xs">
+        <div>🔍 DEBUG AUTH:</div>
+        <div>Autenticado: {isAuthenticated ? 'SIM' : 'NÃO'}</div>
+        <div>Role: {userRole || 'undefined'}</div>
+        <div>hasMinimumRole(suporte): {hasMinimumRole('suporte') ? 'SIM' : 'NÃO'}</div>
+        <div>User: {user?.email || 'não logado'}</div>
+        <div>Profile: {profile?.role || 'sem perfil'}</div>
       </div>
       
       <nav className="flex-1 overflow-auto py-4 px-3">
@@ -194,7 +214,7 @@ export function Sidebar() {
         </div>
 
         {/* Módulo 2 - Setup (Instalações) - Apenas para suporte ou admin */}
-        {hasMinimumRole('suporte') && (
+        {isAuthenticated && hasMinimumRole && hasMinimumRole('suporte') && (
           <div className="mb-6">
             <div className="flex items-center gap-2 px-3 mb-2">
               <Settings className="h-5 w-5 text-sidebar-foreground/70" />
