@@ -49,27 +49,6 @@ export function Sidebar() {
         <NamedLogo size="sm" />
       </div>
       
-      {/* TEMPORARY DEBUG - REMOVER DEPOIS */}
-      <div className="px-4 py-2 bg-red-100 text-red-800 text-xs">
-        <div>🔍 DEBUG AUTH DETALHADO:</div>
-        <div>✓ Autenticado: {isAuthenticated ? 'SIM' : 'NÃO'}</div>
-        <div>✓ Role: {userRole || 'undefined'}</div>
-        <div>✓ hasMinimumRole(suporte): {hasMinimumRole ? hasMinimumRole('suporte') ? 'SIM' : 'NÃO' : 'função não existe'}</div>
-        <div>✓ User: {user?.email || 'não logado'}</div>
-        <div>✓ Profile: {profile?.role || 'sem perfil'}</div>
-        <div>✓ Condição SETUP: {(() => {
-          const showSetup = isAuthenticated && profile && (profile.role === 'admin' || profile.role === 'suporte');
-          console.log('🔧 DEBUG SETUP MENU:', {
-            isAuthenticated,
-            profile,
-            userRole,
-            showSetup,
-            hasMinimumRoleFn: typeof hasMinimumRole,
-            profileRole: profile?.role
-          });
-          return showSetup ? 'DEVE APARECER' : 'NÃO DEVE APARECER';
-        })()}</div>
-      </div>
       
       <nav className="flex-1 overflow-auto py-4 px-3">
         {/* Módulo 1 - Inventário */}

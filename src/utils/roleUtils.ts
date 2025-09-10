@@ -92,21 +92,24 @@ export const isValidRole = (role: string): role is UserRole => {
  * Converte string para UserRole com validação
  */
 export const toUserRole = (role: string): UserRole => {
-  // Primeira verificação: role está diretamente em ROLE_HIERARCHY usando 'in' operator
-  const roleInHierarchy = role in ROLE_HIERARCHY;
+  if (!role) {
+    return 'cliente';
+  }
 
-  if (roleInHierarchy) {
+  // Primeira verificação: role está diretamente em ROLE_HIERARCHY
+  if (Object.prototype.hasOwnProperty.call(ROLE_HIERARCHY, role)) {
     return role as UserRole;
   }
 
-  // Segunda verificação: role está em ROLE_SYNONYMS usando 'in' operator
-  const roleInSynonyms = role in ROLE_SYNONYMS;
-
-  if (roleInSynonyms) {
+  // Segunda verificação: role está em ROLE_SYNONYMS
+  if (Object.prototype.hasOwnProperty.call(ROLE_SYNONYMS, role)) {
     const mappedRole = ROLE_SYNONYMS[role as keyof typeof ROLE_SYNONYMS];
     return mappedRole;
   }
 
+  // Log para debug quando role não é reconhecido
+  console.warn(`🔧 toUserRole: Role '${role}' não reconhecido, usando fallback 'cliente'`);
+
   // Fallback final
-  return 'cliente'; // fallback seguro
+  return 'cliente';
 };

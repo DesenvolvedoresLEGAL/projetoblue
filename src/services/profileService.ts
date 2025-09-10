@@ -27,10 +27,7 @@ export const profileService = {
       }
 
       if (data) {
-        
-        
-        // Normalizar role para garantir valor reconhecido
-        data.role = toUserRole(data.role as string);
+        console.log(`🔧 DEBUG: Dados do profile vindos do banco:`, data);
         
         // Map the profiles table fields to the UserProfile type
         return {

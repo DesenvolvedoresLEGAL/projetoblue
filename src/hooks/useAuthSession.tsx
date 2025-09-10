@@ -75,10 +75,7 @@ export function useAuthSession(
         if (!isMounted) return;
         
         if (profile) {
-          
-          
-          // Normalizar role considerando sinônimos
-          profile.role = toUserRole(profile.role);
+          console.log(`🔧 DEBUG: Profile carregado diretamente do banco:`, profile);
           
           updateState({ 
             profile,
