@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ClientsFilters } from '@modules/clients/components/clients/ClientsFilters';
 import { ClientsTable } from '@modules/clients/components/clients/ClientsTable';
@@ -15,6 +14,8 @@ interface Client {
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+  nome: string;
+  contato: string;
 }
 
 interface ClientLog {

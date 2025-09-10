@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface Client {
@@ -9,10 +8,18 @@ export interface Client {
   contato: string; // Mantendo como string para consistência
   email?: string;
   cnpj?: string;
-  telefones?: any;
+  telefones?: string[];
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+}
+
+export interface ClientFormData {
+  empresa: string;
+  responsavel: string;
+  telefones: string[];
+  email?: string;
+  cnpj?: string;
 }
 
 export interface ClientCreateData {

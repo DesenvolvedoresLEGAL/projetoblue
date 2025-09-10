@@ -40,7 +40,7 @@ export const QuickActionsCard: React.FC = () => {
         manufacturer_name: asset.manufacturer?.name ?? "",
         status_name: asset.status?.name ?? "",
         solucao_name: asset.solucao?.name ?? "",
-        plan_name: asset.plan?.name ?? ""
+        plan_name: asset.plan?.nome ?? ""
       }));
 
       if (format === 'csv') {

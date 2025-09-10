@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import type { AssetWithRelations } from '@/types/assetWithRelations';
+import { getStatusName, getSolutionName, getManufacturerName } from '@/utils/typeGuards';
 
 interface FilteredAssetsTableProps {
   assets: AssetWithRelations[];
@@ -22,14 +22,15 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
   
   // Helper function to get asset type label
   const getAssetTypeLabel = (asset: AssetWithRelations) => {
-    return asset.solucao?.solution || '-';
+    return getSolutionName(asset.solucao) || getManufacturerName(asset.manufacturer) || '-';
   };
   
   // Helper function to get status badge color
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: any) => {
     if (!status) return 'outline';
     
-    const statusLower = status.toLowerCase();
+    const statusText = getStatusName(status);
+    const statusLower = statusText.toLowerCase();
     if (statusLower === 'disponivel' || statusLower === 'disponível') {
       return 'default';
     } else if (statusLower.includes('bloqueado') || statusLower.includes('manut') || statusLower.includes('sem dados')) {
@@ -90,11 +91,11 @@ export function FilteredAssetsTable({ assets, isLoading, filters }: FilteredAsse
                     </TableCell>
                     <TableCell>{getAssetTypeLabel(asset)}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(asset.status?.status || '')}>
-                        {asset.status?.status || '-'}
+                      <Badge variant={getStatusBadgeVariant(asset.status)}>
+                        {getStatusName(asset.status) || '-'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{asset.manufacturer?.name || '-'}</TableCell>
+                    <TableCell>{getManufacturerName(asset.manufacturer) || '-'}</TableCell>
                     <TableCell>{formatRelativeTime(new Date(asset.created_at))}</TableCell>
                     <TableCell>
                       <Link to={`/assets/details/${asset.uuid}`}>

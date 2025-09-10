@@ -3,12 +3,14 @@ import { Client, ClientFormData } from '@/types/client';
 
 // Mapear dados do banco para o frontend
 export const mapDatabaseClientToFrontend = (
-  dbClient: Partial<Client> & Record<string, unknown>
+  dbClient: any
 ): Client => {
   return {
     uuid: dbClient.uuid,
-    empresa: dbClient.empresa || dbClient.nome, // Fallback para dados legados
+    nome: dbClient.nome || dbClient.empresa,
+    empresa: dbClient.empresa || dbClient.nome,
     responsavel: dbClient.responsavel || 'Responsável não informado',
+    contato: typeof dbClient.contato === 'number' ? dbClient.contato.toString() : dbClient.contato || '',
     telefones: Array.isArray(dbClient.telefones) ? dbClient.telefones : 
                dbClient.telefones ? JSON.parse(dbClient.telefones) : 
                dbClient.contato ? [dbClient.contato.toString()] : [],
@@ -16,10 +18,7 @@ export const mapDatabaseClientToFrontend = (
     cnpj: dbClient.cnpj,
     created_at: dbClient.created_at,
     updated_at: dbClient.updated_at,
-    deleted_at: dbClient.deleted_at,
-    // Campos legados para compatibilidade
-    nome: dbClient.nome,
-    contato: dbClient.contato
+    deleted_at: dbClient.deleted_at
   };
 };
 

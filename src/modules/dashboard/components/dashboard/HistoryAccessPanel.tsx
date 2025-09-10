@@ -45,7 +45,7 @@ export function HistoryAccessPanel() {
 
   // Helper function to format the event description
   const formatEventDescription = (event: string, details: Record<string, unknown> | null) => {
-    if (details?.description) return String(details.description);
+    if (details && typeof details === 'object' && details.description) return String(details.description);
     
     if (event.includes('CRIADO')) {
       return 'Ativo registrado no sistema';
@@ -54,7 +54,7 @@ export function HistoryAccessPanel() {
     } else if (event === 'INSERT') {
       return 'Ativo associado a cliente';
     } else if (event === 'UPDATE') {
-      return details?.exit_date ? 'Ativo desassociado de cliente' : 'Atualização na associação';
+      return details && typeof details === 'object' && details.exit_date ? 'Ativo desassociado de cliente' : 'Atualização na associação';
     }
     
     return event;
@@ -62,7 +62,7 @@ export function HistoryAccessPanel() {
 
   // Helper function to extract asset identifier
   const getAssetIdentifier = (details: Record<string, unknown> | null) => {
-    if (!details) return 'N/A';
+    if (!details || typeof details !== 'object') return 'N/A';
     
     if (details.radio) return String(details.radio);
     if (details.serial_number) return String(details.serial_number);
@@ -123,13 +123,13 @@ export function HistoryAccessPanel() {
                           </div>
                         </TableCell>
                         <TableCell className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
-                          {formatEventDescription(event.event, event.details)}
+                          {formatEventDescription(event.event, typeof event.details === 'object' && event.details !== null ? event.details as Record<string, unknown> : null)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <PackageCheck className="h-4 w-4 text-legal-primary dark:text-legal-secondary" />
                             <span className="font-neue-haas text-legal-dark dark:text-text-primary-dark">
-                              {getAssetIdentifier(event.details)}
+                              {getAssetIdentifier(typeof event.details === 'object' && event.details !== null ? event.details as Record<string, unknown> : null)}
                             </span>
                           </div>
                         </TableCell>

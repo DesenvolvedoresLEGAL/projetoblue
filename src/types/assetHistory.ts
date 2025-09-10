@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export interface AssetHistoryEntry {
-  id: number; // Changed from string to number to match database
+  id: number | string; // Support both for compatibility
   date: string;
   event: string;
   description: string;
@@ -18,6 +18,11 @@ export interface AssetHistoryEntry {
   status_after_id?: number;
   assoc_id?: number;
   deleted_at?: string;
+  // Additional properties used in components
+  action?: string;
+  operationType?: string;
+  assets?: { id: string; type: string; identifier: string }[];
+  comments?: string;
 }
 
 export interface AssociationLogEntry {

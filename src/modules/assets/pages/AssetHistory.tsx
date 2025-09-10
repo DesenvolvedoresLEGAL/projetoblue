@@ -669,13 +669,13 @@ const AssetHistory = () => {
                           <div className="text-4xl">📋</div>
                           <div>
                             <p className="text-legal-primary dark:text-legal-secondary font-medium">
-                              {search || logTypeFilter !== "all"
+                              {searchTerm || logTypeFilter !== "all"
                                 ? "Nenhum registro encontrado com os filtros aplicados"
                                 : "Nenhum registro de atividade encontrado"
                               }
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              {search || logTypeFilter !== "all"
+                              {searchTerm || logTypeFilter !== "all"
                                 ? "Tente ajustar os filtros de busca ou limpar os campos"
                                 : "Os registros aparecerão aqui conforme as atividades acontecem no sistema"
                               }

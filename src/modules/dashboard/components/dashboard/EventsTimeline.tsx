@@ -37,13 +37,13 @@ function TimelineEvent({ event, isLast }: TimelineEventProps) {
   let Icon = Activity;
   let iconColor = "text-gray-500";
   
-  if (event.action === "CREATE") {
+  if (event.action === "CREATE" || event.event?.includes("CREATE") || event.event?.includes("CRIADO")) {
     Icon = Package;
     iconColor = "text-green-500";
-  } else if (event.action === "UPDATE") {
+  } else if (event.action === "UPDATE" || event.event?.includes("UPDATE") || event.event?.includes("ATUALIZADO")) {
     Icon = Activity;
     iconColor = "text-blue-500";
-  } else if (event.action === "STATUS_CHANGE") {
+  } else if (event.action === "STATUS_CHANGE" || event.event?.includes("STATUS")) {
     Icon = Activity;
     iconColor = "text-amber-500";
   }
@@ -64,11 +64,12 @@ function TimelineEvent({ event, isLast }: TimelineEventProps) {
       </div>
       
       <div className="pb-6">
-        <h3 className="font-medium">{event.description || `Asset ${event.assetIds[0].substring(0, 8)} ${event.action}`}</h3>
+        <h3 className="font-medium">{event.description || `Asset ${event.assetIds?.[0]?.substring(0, 8) || event.id} ${event.action || event.event}`}</h3>
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <Clock className="h-3 w-3" /> {formattedTime}
         </p>
-        {event.details && <p className="text-sm mt-1">{event.details}</p>}
+        {event.details && typeof event.details === 'string' && <p className="text-sm mt-1">{event.details}</p>}
+        {event.details && typeof event.details === 'object' && <p className="text-sm mt-1">{JSON.stringify(event.details)}</p>}
       </div>
     </div>
   );
