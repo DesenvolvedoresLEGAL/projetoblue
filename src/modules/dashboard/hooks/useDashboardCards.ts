@@ -60,14 +60,13 @@ export const useDashboardCards = () => {
           .from('asset_solutions')
           .select('id, solution');
           
-        // Transform data for the dashboard using the utility function
         const items = assets.map(asset => {
-          const normalized = normalizeAsset(asset);
+          const normalized: any = normalizeAsset(asset);
           return {
             uuid: normalized.uuid,
             identifier: normalized.identifier,
             type: normalized.type,
-            status: normalized.status
+            status: normalized.status?.name || normalized.status
           };
         });
         
@@ -90,12 +89,12 @@ export const useDashboardCards = () => {
         const assets = await assetService.getAssetsByStatus(2);
 
         const items = assets.map((asset) => {
-          const normalized = normalizeAsset(asset);
+          const normalized: any = normalizeAsset(asset);
           return {
             id: normalized.id,
             identifier: normalized.identifier,
             type: normalized.type,
-            status: normalized.status,
+            status: normalized.status?.name || normalized.status,
           };
         });
 
@@ -117,12 +116,12 @@ export const useDashboardCards = () => {
         const assets = await assetService.getAssetsByStatus(3);
 
         const items = assets.map((asset) => {
-          const normalized = normalizeAsset(asset);
+          const normalized: any = normalizeAsset(asset);
           return {
             id: normalized.id,
             identifier: normalized.identifier,
             type: normalized.type,
-            status: normalized.status,
+            status: normalized.status?.name || normalized.status,
           };
         });
       
@@ -269,19 +268,19 @@ export const useDashboardCards = () => {
 
         
         // Transform logs to alerts format
-        return (logs || []).map(log => {
+        return (logs || []).map((log, index) => {
           // Extract asset type and description from details
           const details = log.details as Record<string, unknown> || {};
           const solutionId = details.solution_id;
           
           return {
-            id: log.id,
-            date: log.date ? new Date(log.date).toLocaleString().replace(',', '') : 'N/A',
+            id: log.uuid || `log_${index}`,
+            date: log.created_at ? new Date(log.created_at).toLocaleString().replace(',', '') : 'N/A',
             assetType: solutionId === 11 ? 'Chip' : 'Equipamento',
             description: log.event || 'Evento registrado',
             name: solutionId === 11 ? details?.line_number || [] : details?.radio || [],
-            old_status: m.get(details.old_status),
-            new_status: m.get(details.new_status)
+            old_status: m.get(Number(details.status_before_id)),
+            new_status: m.get(Number(details.status_after_id))
           };
         });
       } catch (error) {

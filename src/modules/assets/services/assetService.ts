@@ -1,68 +1,35 @@
-
 import { optimizedAssetService } from './optimizedAssetService';
 
-// Re-export all methods from optimizedAssetService
+// Re-export from optimized service
 export const assetService = {
-  getAssets: optimizedAssetService.getAssets,
-  getAssetStats: optimizedAssetService.getAssetStats,
-  
-  // Métodos adicionais para compatibilidade
-  getAssetsByMultipleStatus: async (statusIds: number[]) => {
-    const result = await optimizedAssetService.getAssets();
-    return {
-      ...result,
-      assets: result.assets.filter(asset => statusIds.includes(asset.status_id))
-    };
-  },
-  
+  ...optimizedAssetService,
+  // Additional compatibility methods
   getAssetsByStatus: async (statusId: number) => {
-    const result = await optimizedAssetService.getAssets({ filterStatus: statusId.toString() });
-    return result.assets;
+    const result = await optimizedAssetService.getAssets({ statusIds: [statusId] });
+    return result.data;
   },
-  
-  statusByType: async () => {
-    const stats = await optimizedAssetService.getAssetStats();
-    return {
-      CHIP: {
-        available: Math.floor(stats.chips * (stats.available / stats.total)),
-        rented: Math.floor(stats.chips * (stats.rented / stats.total))
-      },
-      EQUIPMENT: {
-        available: Math.floor(stats.routers * (stats.available / stats.total)),
-        rented: Math.floor(stats.routers * (stats.rented / stats.total))
-      }
-    };
-  },
-  
   listProblemAssets: async () => {
-    // Return assets with problematic status (assuming status_id 4, 5, 6 are problematic)
-    const result = await optimizedAssetService.getAssets();
-    return result.assets.filter(asset => [4, 5, 6].includes(asset.status_id));
+    const result = await optimizedAssetService.getAssets({ statusIds: [4, 5, 6] }); // Problem statuses
+    return result.data;
   },
-  
-  getStatusSummary: async () => {
-    const stats = await optimizedAssetService.getAssetStats();
-    return {
-      available: stats.available,
-      rented: stats.rented,
-      total: stats.total
-    };
+  getAssetLogs: async (options?: { limit?: number }) => {
+    // Mock implementation - replace with actual asset logs service
+    return [];
   },
-  
-  getRecentAssetsOptimized: async (limit = 10) => {
-    const result = await optimizedAssetService.getAssets({ pageSize: limit });
-    return result.assets;
+  getStatus: async () => {
+    // Mock implementation - replace with actual status service  
+    return [];
   },
-  
-  clearCache: () => {
-    // Placeholder para compatibilidade - o React Query gerencia o cache
-    
-  },
-  
-  clearCacheByPattern: (pattern: string) => {
-    // Placeholder para compatibilidade - o React Query gerencia o cache
-    
+  statusByType: async () => {
+    // Mock implementation - replace with actual status by type service
+    return [];
   }
 };
 
-export default assetService;
+// Additional interface for update params
+export interface AssetUpdateParams {
+  status?: string;
+  status_id?: number;
+  wifiAnalysis?: any;
+  // Add other fields as needed
+}

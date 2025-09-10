@@ -64,7 +64,7 @@ export function useDashboardOptimized() {
       assetsWithIssues: assetsWithIssuesQuery.data?.count || 0,
       statusSummary,
       recentAssets: recentAssetsQuery.data || [],
-      recentEvents: recentEventsQuery.data?.data || [],
+      recentEvents: recentEventsQuery.data?.recentAssets || [],
       pieChartData: statusSummary.map(item => ({
         status: item.status,
         total: item.count

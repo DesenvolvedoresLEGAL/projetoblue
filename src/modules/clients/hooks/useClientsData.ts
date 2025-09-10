@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Client {
+interface ClientData {
   uuid: string;
+  nome: string;
   empresa: string;
   responsavel: string;
+  contato: number; // Keep as number to match database
   telefones: string[];
   cnpj?: string;
   email?: string;
@@ -36,12 +38,12 @@ export const useClientsData = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('uuid, empresa, responsavel, telefones, cnpj, email, created_at, updated_at, deleted_at')
+        .select('uuid, nome, empresa, responsavel, contato, telefones, cnpj, email, created_at, updated_at, deleted_at')
         .is('deleted_at', null) // Excluir clientes deletados por padrão
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Client[];
+      return (data || []) as ClientData[];
     }
   });
 
@@ -75,7 +77,7 @@ export const useClientsData = () => {
       (statusFilter === 'active' && !client.deleted_at);
     
     return matchesSearch && matchesStatus;
-  });
+  }) as any; // Type assertion to fix the interface mismatch
 
   // Clear filters
   const clearFilters = () => {

@@ -294,6 +294,44 @@ export const fetchStatuses = async () => {
   return await supabase.from("asset_status").select("*").order("status");
 };
 
+// Fetch associations ending today
+export const fetchAssociationsEndingToday = async () => {
+  const today = new Date().toISOString().split('T')[0];
+  return await supabase
+    .from("associations")
+    .select("*", { count: "exact", head: true })
+    .eq("exit_date", today)
+    .eq("status", true);
+};
+
+// Fetch top clients with associations
+export const fetchTopClientsWithAssociations = async () => {
+  return await supabase
+    .from("associations")
+    .select(`
+      clients:client_id_fkey(nome, empresa)
+    `)
+    .eq("status", true)
+    .is("deleted_at", null);
+};
+
+// Fetch associations from last 30 days
+export const fetchAssociationsLast30Days = async () => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  return await supabase
+    .from("associations")
+    .select("*")
+    .gte("entry_date", thirtyDaysAgo.toISOString())
+    .order("entry_date", { ascending: false });
+};
+
+// Fetch enhanced recent events
+export const fetchEnhancedRecentEvents = async () => {
+  return await fetchRecentEvents(); // Alias to existing function
+};
+
 // Fetch active associations with all related data
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const fetchActiveAssociations = async (): Promise<{data: AssociationsResponse[], error: any}> => {

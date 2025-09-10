@@ -52,7 +52,6 @@ export function useDashboardStats() {
           activeClientsResult,
           assetsWithIssuesResult,
           recentAssetsResult,
-          recentEventsResult,
           statusSummaryResult,
           detailedBreakdownResult
         ] = await Promise.all([
@@ -60,19 +59,13 @@ export function useDashboardStats() {
           dashboardQueries.fetchActiveClients(),
           dashboardQueries.fetchAssetsWithIssues(),
           dashboardQueries.fetchRecentAssets(),
-          dashboardQueries.fetchRecentEvents(),
           dashboardQueries.fetchStatusSummary(),
           dashboardQueries.fetchDetailedStatusBreakdown()
         ]);
 
-        // Error handling for individual queries
-        if (totalAssetsResult.error) throw new Error(`Total assets query error: ${totalAssetsResult.error.message}`);
-        if (activeClientsResult.error) throw new Error(`Active clients query error: ${activeClientsResult.error.message}`);
-        if (assetsWithIssuesResult.error) throw new Error(`Problem assets query error: ${assetsWithIssuesResult.error.message}`);
-        if (recentAssetsResult.error) throw new Error(`Recent assets query error: ${recentAssetsResult.error.message}`);
-        if (recentEventsResult.error) throw new Error(`Recent events query error: ${recentEventsResult.error.message}`);
-        if (statusSummaryResult.error) throw new Error(`Status summary query error: ${statusSummaryResult.error.message}`);
-        if (detailedBreakdownResult.error) throw new Error(`Detailed breakdown query error: ${detailedBreakdownResult.error.message}`);
+        // Fetch recent events separately
+        const recentEventsData = await dashboardQueries.fetchRecentEvents();
+        if (!recentEventsData) throw new Error('Failed to fetch recent events');
         
         // Fetch additional data needed for mapping
         const solutionsResult = await dashboardQueries.fetchSolutions();
@@ -106,7 +99,7 @@ export function useDashboardStats() {
         }) || [];
 
         // Process recent events data - CORRIGIDO tratamento com type safety
-        const processedRecentEvents = recentEventsResult.data?.map((event, index) => {
+        const processedRecentEvents = (recentEventsData as any)?.recentAssets?.map((event: any, index: number) => {
           // Safe type casting for details object
           const details = event.details && typeof event.details === 'object' && event.details !== null 
             ? event.details as Record<string, unknown>
@@ -120,7 +113,7 @@ export function useDashboardStats() {
             id: event.id || index,
             type: event.event || 'UNKNOWN',
             description,
-            time: formatRelativeTime(event.date || new Date().toISOString()),
+            time: formatRelativeTime(event.created_at || new Date().toISOString()),
             asset_id,
             asset_name
           };

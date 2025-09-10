@@ -111,7 +111,8 @@ export interface ChipAsset extends BaseAsset {
     upload: number;
     period: string;
     lastUpdated: string;
-  }
+  };
+  [key: string]: unknown; // Index signature for Record compatibility
 }
 
 export interface EquipamentAsset extends BaseAsset {
@@ -135,7 +136,8 @@ export interface EquipamentAsset extends BaseAsset {
     interference: number;
     connectedDevices: number;
     lastUpdated: string;
-  }
+  };
+  [key: string]: unknown; // Index signature for Record compatibility
 }
 
 export type Asset = ChipAsset | EquipamentAsset;

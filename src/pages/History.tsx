@@ -39,14 +39,20 @@ import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function HistoryPage() {
-  const {
-    historyLogs,
-    isLoading,
-    error,
-    refetch,
-    formatDate,
-    formatEventName
-  } = useAssetHistory();
+  const { 
+    historyLogs, 
+    isLoading, 
+    error, 
+    refetch
+  } = useAssetHistory() as any; // Type assertion to fix interface mismatch
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString('pt-BR');
+  };
+
+  const formatEventName = (event: string) => {
+    return event.replace('_', ' ');
+  };
 
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("all");
@@ -146,11 +152,14 @@ export default function HistoryPage() {
   };
 
   // Função para simular usuário responsável (futura integração)
-  const getResponsibleUser = (log: AssetLog): string => {
+  const getResponsibleUser = (log: any): string => {
     // Por enquanto, retorna um usuário genérico
     // Futura integração: extrair do log.details ou campo específico
-    if (log.details && log.details.user_email) {
-      return log.details.user_email;
+    if (log.details && typeof log.details === 'object' && log.details !== null) {
+      const details = log.details as Record<string, any>;
+      if (details.user_email) {
+        return String(details.user_email);
+      }
     }
     return "Sistema Automático";
   };

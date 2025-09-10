@@ -18,9 +18,11 @@ interface RecentAlert {
   id: string;
   date: string;
   assetType: string;
+  description: string;
   new_status?: { status: string };
   event?: string;
-  name?: string | string[];
+  name: string; // Make required and string only
+  timestamp?: number;
 }
 
 interface DashboardData {
@@ -86,9 +88,14 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
                           <div className="space-y-2">
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm font-medium leading-relaxed legal-text group-hover:text-legal-dark dark:group-hover:text-legal-primary transition-colors">
-                                  {improveEventMessage(alert)}
-                                </p>
+                                 <p className="text-xs md:text-sm font-medium leading-relaxed legal-text group-hover:text-legal-dark dark:group-hover:text-legal-primary transition-colors">
+                                   {improveEventMessage({
+                                     ...alert,
+                                     type: alert.assetType,
+                                     assetName: alert.name || 'N/A',
+                                     description: alert.description
+                                   } as any)}
+                                 </p>
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
@@ -126,9 +133,9 @@ export const StandardizedRecentAlertsCard: React.FC<StandardizedRecentAlertsCard
                           {alert.new_status?.status && (
                             <p><strong>Status:</strong> {alert.new_status.status}</p>
                           )}
-                          {alert.name && (
-                            <p><strong>Ativo:</strong> {Array.isArray(alert.name) ? alert.name.join(', ') : alert.name}</p>
-                          )}
+                           {alert.name && (
+                             <p><strong>Ativo:</strong> {alert.name}</p>
+                           )}
                         </div>
                       </TooltipContent>
                     </Tooltip>

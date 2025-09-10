@@ -36,7 +36,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
   const handleStatusSelect = (statusId: number, statusName: string) => {
     if (asset.statusId === statusId) return;
     
-    setSelectedStatus({ id: statusId, status: statusName });
+    setSelectedStatus({ id: statusId, status: statusName as AssetStatus });
     setConfirmDialogOpen(true);
   };
   
@@ -47,7 +47,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
     try {
       await updateAsset(asset.id, {
         status: selectedStatus.status,
-        statusId: selectedStatus.id
+        status_id: selectedStatus.id
       });
       toast.success(`Status alterado para ${selectedStatus.status} com sucesso`);
     } catch (error) {
@@ -106,7 +106,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
             <AlertDialogTitle>Confirmar alteração de status</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja alterar o status do ativo para "{selectedStatus?.status}"?
-              {(selectedStatus?.status === "Bloqueado" || selectedStatus?.status === "BLOQUEADO") && (
+              {(selectedStatus?.status === "BLOQUEADO") && (
                 <p className="mt-2 text-red-500 font-semibold">
                   Atenção: Bloquear um ativo pode afetar os serviços relacionados.
                 </p>
@@ -118,7 +118,7 @@ const AssetStatusDropdown = ({ asset, statusRecords }: AssetStatusDropdownProps)
             <AlertDialogAction 
               onClick={handleConfirmStatusChange}
               disabled={isLoading}
-              className={selectedStatus?.status === "Bloqueado" || selectedStatus?.status === "BLOQUEADO" ? "bg-red-500 hover:bg-red-600" : ""}
+              className={selectedStatus?.status === "BLOQUEADO" ? "bg-red-500 hover:bg-red-600" : ""}
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

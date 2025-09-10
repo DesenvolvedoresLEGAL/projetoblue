@@ -46,8 +46,13 @@ export function useDashboardAssociations() {
         if (topClientsResult.error) throw topClientsResult.error;
         if (last30DaysResult.error) throw last30DaysResult.error;
 
-        // Process active associations
-        const activeAssociations: ActiveAssociationRow[] = activeAssociationsResult.data || [];
+        // Process active associations - convert to expected format
+        const rawAssociations: any[] = activeAssociationsResult.data || [];
+        const activeAssociations: ActiveAssociationRow[] = rawAssociations.map(assoc => ({
+          association_id: assoc.association_type_id || 1,
+          assets: assoc.equipment || assoc.chip ? { solution_id: assoc.equipment?.solution_id || assoc.chip?.solution_id } : null,
+          clients: assoc.clients ? { nome: assoc.clients.nome, empresa: assoc.clients.empresa } : null
+        }));
         const byType = {
           aluguel: activeAssociations.filter(a => a.association_id === 1).length,
           assinatura: activeAssociations.filter(a => a.association_id === 2).length,

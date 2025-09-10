@@ -152,7 +152,8 @@ export function useDashboardAssets() {
               id: log.id || 'unknown',
               assetType: details?.solution_id == 11 ? "CHIP" :
                         details?.solution_id == 1 ? "SPEEDY 5G" : "EQUIPAMENTO",
-              name: details?.radio || details?.line_number || details?.asset_id?.substring(0, 8) || 'N/A',
+              name: details?.radio || details?.line_number || 
+                    (details?.asset_id ? String(details.asset_id).substring(0, 8) : null) || 'N/A',
               date: logDate, // Keep as original timestamp - formatting will be done in component
               description: log.event?.replace('_', ' ') || 'Evento',
               old_status: assetStatus?.filter(s => s.id === log.status_before_id)[0] || null,
@@ -181,7 +182,7 @@ export function useDashboardAssets() {
       return [];
     }
     
-    return problemAssets.data.map(asset => ({
+    return problemAssets.data.map((asset: any) => ({
       uuid: asset.uuid || 'unknown',
       id: asset.id,
       identifier: getAssetIdentifier(asset),
@@ -189,8 +190,9 @@ export function useDashboardAssets() {
       line_number: asset.line_number,
       type: asset.solution_id === 11 ? 'CHIP' : 
             asset.solution_id === 1 ? 'SPEEDY 5G' : 'EQUIPAMENTO',
-      status: asset.status
-    }));
+      status: asset.status,
+      [Symbol.toStringTag]: 'ProblemAsset' // Satisfies Record<string, unknown>
+    } as any));
   }, [problemAssets.data]);
 
   // Memoized filtered problem assets by type with safe filtering

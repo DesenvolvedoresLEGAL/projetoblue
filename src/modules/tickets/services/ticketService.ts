@@ -108,7 +108,7 @@ export const fetchTickets = async (filters?: Partial<Ticket>): Promise<Ticket[]>
   
   return mockTickets.filter(ticket => {
     return Object.entries(filters).every(([key, value]) => {
-      // @ts-expect-error - dynamic key access
+      // @ts-expect-error - Legacy code compatibility - dynamic key access
       return ticket[key] === value;
     });
   });
