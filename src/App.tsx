@@ -54,6 +54,11 @@ import QualityAudit from "@modules/tickets/pages/QualityAudit";
 import AgentCopilot from "@modules/tickets/pages/AgentCopilot";
 import TicketIntegrations from "@modules/tickets/pages/TicketIntegrations";
 
+// Setup Pages
+import { SetupDashboard } from "@modules/setup/pages/SetupDashboard";
+import { SetupScanner } from "@modules/setup/pages/SetupScanner";
+import { SetupInstallation } from "@modules/setup/pages/SetupInstallation";
+
 // Configure React Query client with global settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -172,6 +177,42 @@ const App = () => (
                         element={
                           <AuthRoute requiredRole="suporte">
                             <AssociationsList />
+                          </AuthRoute>
+                        }
+                      />
+                    </Route>
+
+                    {/* Setup module routes - Requires suporte or above */}
+                    <Route path="setup">
+                      <Route
+                        index
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupDashboard />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="dashboard"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupDashboard />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="scan"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupScanner />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path=":id"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupInstallation />
                           </AuthRoute>
                         }
                       />

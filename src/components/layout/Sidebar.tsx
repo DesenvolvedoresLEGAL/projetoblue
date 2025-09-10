@@ -13,6 +13,8 @@ import {
   Wifi,
   Package,
   Building,
+  Settings,
+  QrCode,
 } from "lucide-react";
 import { NamedLogo } from "@/components/ui/namedlogo";
 import {
@@ -189,8 +191,70 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Manter links existentes para funcionalidade atual */}
-        <div className="flex flex-col gap-1">
+        {/* Módulo 2 - Setup (Instalações) */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 px-3 mb-2">
+            <Settings className="h-5 w-5 text-sidebar-foreground/70" />
+            <span className="font-medium text-sidebar-foreground/90">Setup</span>
+          </div>
+          <p className="text-xs text-sidebar-foreground/60 px-3 mb-3">
+            Gerencie instalações, desinstalações e evidências
+          </p>
+          
+          <div className="flex flex-col gap-1">
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to="/setup"
+                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                      isActive("/setup") || location.pathname.startsWith("/setup")
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    }`}
+                    aria-label="Setup Dashboard - Painel do técnico"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">Painel do técnico</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to="/setup/scan"
+                    className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+                      isActive("/setup/scan")
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    }`}
+                    aria-label="Scanner QR - Iniciar instalação"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    <span>Scanner QR</span>
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right">Iniciar instalação via QR Code</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+
+        {/* Módulo 3 - Operacional (Links existentes) */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 px-3 mb-2">
+            <ActivitySquare className="h-5 w-5 text-sidebar-foreground/70" />
+            <span className="font-medium text-sidebar-foreground/90">Operacional</span>
+          </div>
+          <p className="text-xs text-sidebar-foreground/60 px-3 mb-3">
+            Ferramentas operacionais e de suporte
+          </p>
+          
+          <div className="flex flex-col gap-1">
           <NavLink
             to="/register-asset"
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
@@ -238,6 +302,7 @@ export function Sidebar() {
             <Wifi className="h-4 w-4" />
             <span>WiFi Analyzer</span>
           </NavLink>
+          </div>
         </div>
       </nav>
       

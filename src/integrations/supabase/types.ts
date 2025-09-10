@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -593,6 +593,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          row_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          row_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          row_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
       client_logs: {
         Row: {
           client_id: string
@@ -634,6 +667,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      client_signatures: {
+        Row: {
+          created_at: string
+          id: string
+          is_encrypted: boolean | null
+          iv: string | null
+          setup_id: string
+          signed_at: string
+          signer_name: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_encrypted?: boolean | null
+          iv?: string | null
+          setup_id: string
+          signed_at?: string
+          signer_name: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_encrypted?: boolean | null
+          iv?: string | null
+          setup_id?: string
+          signed_at?: string
+          signer_name?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_signatures_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_signatures_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "vw_setups_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
@@ -785,36 +866,39 @@ export type Database = {
         }
         Relationships: []
       }
-      operation_locks: {
+      orders: {
         Row: {
-          acquired_at: string
+          address: Json
           created_at: string
-          expires_at: string
+          customer_id: string
           id: string
-          operation_data: Json | null
-          operation_type: string
-          resource_id: string
-          user_id: string | null
+          qr_code: string | null
+          scheduled_at: string | null
+          status: string
+          type: Database["public"]["Enums"]["order_type"]
+          updated_at: string
         }
         Insert: {
-          acquired_at?: string
+          address: Json
           created_at?: string
-          expires_at?: string
+          customer_id: string
           id?: string
-          operation_data?: Json | null
-          operation_type: string
-          resource_id: string
-          user_id?: string | null
+          qr_code?: string | null
+          scheduled_at?: string | null
+          status?: string
+          type: Database["public"]["Enums"]["order_type"]
+          updated_at?: string
         }
         Update: {
-          acquired_at?: string
+          address?: Json
           created_at?: string
-          expires_at?: string
+          customer_id?: string
           id?: string
-          operation_data?: Json | null
-          operation_type?: string
-          resource_id?: string
-          user_id?: string | null
+          qr_code?: string | null
+          scheduled_at?: string | null
+          status?: string
+          type?: Database["public"]["Enums"]["order_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -926,6 +1010,234 @@ export type Database = {
         }
         Relationships: []
       }
+      setup_assets: {
+        Row: {
+          created_at: string
+          firmware_version: string | null
+          id: string
+          last_seen_at: string | null
+          model: string
+          order_id: string | null
+          qr_code: string | null
+          serial: string
+          setup_id: string | null
+          status: Database["public"]["Enums"]["asset_status_setup"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firmware_version?: string | null
+          id?: string
+          last_seen_at?: string | null
+          model: string
+          order_id?: string | null
+          qr_code?: string | null
+          serial: string
+          setup_id?: string | null
+          status?: Database["public"]["Enums"]["asset_status_setup"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firmware_version?: string | null
+          id?: string
+          last_seen_at?: string | null
+          model?: string
+          order_id?: string | null
+          qr_code?: string | null
+          serial?: string
+          setup_id?: string | null
+          status?: Database["public"]["Enums"]["asset_status_setup"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_assets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setup_assets_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setup_assets_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "vw_setups_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setups: {
+        Row: {
+          approved_at: string | null
+          completed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          id: string
+          order_id: string
+          region: string | null
+          rejected_reason: string | null
+          status: Database["public"]["Enums"]["setup_status"]
+          technician_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          order_id: string
+          region?: string | null
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["setup_status"]
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          order_id?: string
+          region?: string | null
+          rejected_reason?: string | null
+          status?: Database["public"]["Enums"]["setup_status"]
+          technician_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setups_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setups_photos: {
+        Row: {
+          created_at: string
+          id: string
+          is_encrypted: boolean | null
+          iv: string | null
+          setup_id: string
+          storage_path: string
+          taken_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_encrypted?: boolean | null
+          iv?: string | null
+          setup_id: string
+          storage_path: string
+          taken_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_encrypted?: boolean | null
+          iv?: string | null
+          setup_id?: string
+          storage_path?: string
+          taken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setups_photos_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setups_photos_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "vw_setups_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      speed_tests: {
+        Row: {
+          created_at: string
+          download_mbps: number
+          id: string
+          ping_ms: number
+          setup_id: string
+          taken_at: string
+          upload_mbps: number
+        }
+        Insert: {
+          created_at?: string
+          download_mbps: number
+          id?: string
+          ping_ms: number
+          setup_id: string
+          taken_at?: string
+          upload_mbps: number
+        }
+        Update: {
+          created_at?: string
+          download_mbps?: number
+          id?: string
+          ping_ms?: number
+          setup_id?: string
+          taken_at?: string
+          upload_mbps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speed_tests_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "setups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speed_tests_setup_id_fkey"
+            columns: ["setup_id"]
+            isOneToOne: false
+            referencedRelation: "vw_setups_detailed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_devices: {
+        Row: {
+          fcm_token: string
+          id: string
+          platform: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          fcm_token: string
+          id?: string
+          platform: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          fcm_token?: string
+          id?: string
+          platform?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_active_clients: {
@@ -968,56 +1280,52 @@ export type Database = {
           },
         ]
       }
+      vw_setups_detailed: {
+        Row: {
+          address: Json | null
+          approved_at: string | null
+          asset_serials: string[] | null
+          completed_at: string | null
+          created_at: string | null
+          customer_id: string | null
+          delivered_at: string | null
+          id: string | null
+          order_id: string | null
+          order_scheduled_at: string | null
+          order_type: Database["public"]["Enums"]["order_type"] | null
+          photos_count: number | null
+          region: string | null
+          rejected_reason: string | null
+          signatures_count: number | null
+          speed_tests_count: number | null
+          status: Database["public"]["Enums"]["setup_status"] | null
+          technician_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setups_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
-      acquire_operation_lock: {
-        Args: {
-          p_operation_type: string
-          p_resource_id: string
-          p_operation_data?: Json
-          p_timeout_minutes?: number
-        }
-        Returns: Json
-      }
       admin_delete_user: {
         Args: { user_id: string }
         Returns: boolean
-      }
-      admin_list_users: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          role: Database["public"]["Enums"]["user_role_enum"]
-          is_active: boolean
-          is_approved: boolean
-          created_at: string
-          last_login: string
-        }[]
-      }
-      admin_update_user_profile: {
-        Args: { user_id: string; profile_updates: Json }
-        Returns: boolean
-      }
-      admin_update_user_role: {
-        Args: {
-          user_id: string
-          new_role: Database["public"]["Enums"]["user_role_enum"]
-        }
-        Returns: boolean
-      }
-      cleanup_expired_locks: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
       detect_association_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {
           asset_id: string
+          corrected: boolean
           current_status_id: number
           expected_status_id: number
           issue_description: string
-          corrected: boolean
         }[]
       }
       has_minimum_role: {
@@ -1044,16 +1352,12 @@ export type Database = {
         Args: { profile_id: string }
         Returns: boolean
       }
-      release_operation_lock: {
-        Args: { p_lock_id: string }
-        Returns: boolean
-      }
       status_by_asset_type: {
         Args: Record<PropertyKey, never>
         Returns: {
-          type: string
-          status: string
           count: number
+          status: string
+          type: string
         }[]
       }
       update_all_rented_days: {
@@ -1080,8 +1384,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           asset_id: string
-          current_rented_days: number
           calculated_days: number
+          current_rented_days: number
           is_consistent: boolean
           message: string
         }[]
@@ -1095,8 +1399,16 @@ export type Database = {
         | "Sem Dados"
         | "Bloqueado"
         | "Manutenção"
+      asset_status_setup: "available" | "in_use" | "maintenance" | "retired"
       asset_type_enum: "chip" | "equipment"
       association_type_enum: "aluguel" | "assinatura"
+      order_type: "install" | "uninstall"
+      setup_status:
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "approved"
+        | "rejected"
       solution_type_enum:
         | "SPEEDY 5G"
         | "4BLACK"
@@ -1245,8 +1557,17 @@ export const Constants = {
         "Bloqueado",
         "Manutenção",
       ],
+      asset_status_setup: ["available", "in_use", "maintenance", "retired"],
       asset_type_enum: ["chip", "equipment"],
       association_type_enum: ["aluguel", "assinatura"],
+      order_type: ["install", "uninstall"],
+      setup_status: [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "approved",
+        "rejected",
+      ],
       solution_type_enum: [
         "SPEEDY 5G",
         "4BLACK",
