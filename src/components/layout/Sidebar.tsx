@@ -214,7 +214,7 @@ export function Sidebar() {
         </div>
 
         {/* Módulo 2 - Setup (Instalações) - Apenas para suporte ou admin */}
-        {isAuthenticated && hasMinimumRole && hasMinimumRole('suporte') && (
+        {isAuthenticated && (userRole === 'admin' || userRole === 'suporte' || hasMinimumRole('suporte')) && (
           <div className="mb-6">
             <div className="flex items-center gap-2 px-3 mb-2">
               <Settings className="h-5 w-5 text-sidebar-foreground/70" />
