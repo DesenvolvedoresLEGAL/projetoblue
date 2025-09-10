@@ -122,7 +122,13 @@ export function useDashboardWithFilters(): UseDashboardWithFiltersResult {
     dashboardStats,
     isLoading,
     isError,
-    filteredAssets,
+    filteredAssets: (filteredAssets || []).map(asset => ({
+      ...asset,
+      rented_days: 0,
+      updated_at: asset.created_at,
+      admin_user: '',
+      admin_pass: ''
+    })) as any,
     isFilteredLoading,
     filters,
     setFilters,

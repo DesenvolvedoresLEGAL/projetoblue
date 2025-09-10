@@ -17,6 +17,13 @@ export interface StandardizedEvent {
     to?: string;
   };
   client?: string;
+  event?: string;
+  asset_id?: string;
+  timestamp?: number;
+  details?: any;
+  name?: string;
+  old_status?: any;
+  new_status?: any;
 }
 
 /**
@@ -161,7 +168,7 @@ export const removeDuplicateEvents = <T extends {
         isDuplicate = true;
         
         // Keep the more informative event (prefer ASSOCIATION_CREATED over STATUS_UPDATED)
-        if (shouldReplaceEvent(existingEvent, event)) {
+        if (shouldReplaceEvent(existingEvent as any, event as any)) {
           uniqueEvents.delete(existingKey);
           break;
         }
@@ -185,7 +192,7 @@ export const removeDuplicateEvents = <T extends {
 /**
  * Determina qual evento deve ser mantido em caso de duplicatas
  */
-const shouldReplaceEvent = (existing: StandardizedEvent, incoming: StandardizedEvent): boolean => {
+const shouldReplaceEvent = (existing: any, incoming: any): boolean => {
   // Priority order: ASSOCIATION_CREATED > ASSET_CRIADO > STATUS_UPDATED > others
   const eventPriority = {
     'ASSOCIATION_CREATED': 4,
@@ -264,9 +271,9 @@ export const getEventTypeBadgeColor = (eventType: StandardizedEvent['type']): st
 /**
  * Melhora a mensagem de evento baseada nos detalhes disponíveis
  */
-export const improveEventMessage = (event: StandardizedEvent): string => {
+export const improveEventMessage = (event: any): string => {
   const details = event.details || {};
-  const assetName = event.name || details.radio || details.line_number || 'Ativo';
+  const assetName = event.assetName || event.name || details.radio || details.line_number || 'Ativo';
   const clientName = details.client_name || '';
   
   // Generate message based on event type

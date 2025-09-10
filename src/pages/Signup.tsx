@@ -51,17 +51,18 @@ const Signup = () => {
       // Corrigido: usando apenas 3 argumentos conforme a assinatura esperada
       const result = await signUp(email, password, 'cliente');
       
-      if (result && result.technicalError) {
-        setTechnicalErrorInfo(JSON.stringify(result.technicalError, null, 2));
+      if (result?.error) {
+        console.error('Auth error:', result.error);
+        toast.error('Erro no cadastro: ' + result.error.message);
+        setSignupError(result.error.message);
       }
       
     } catch (error: unknown) {
+      const err = error as Error;
       
-      
-      if (error.message || error.stack) {
-        setTechnicalErrorInfo(`Erro técnico: ${error.message || 'Erro desconhecido'}
-Stack: ${error.stack || 'N/A'}
-Categoria: ${error.category || 'Desconhecida'}
+      if (err?.message || err?.stack) {
+        setTechnicalErrorInfo(`Erro técnico: ${err?.message || 'Erro desconhecido'}
+Stack: ${err?.stack || 'N/A'}
 Timestamp: ${new Date().toISOString()}`);
       }
       

@@ -1,5 +1,5 @@
-
-import { Asset, AssetLog, AssetStatusByType } from "@/types/asset";
+import { Asset } from '@/types/asset';
+import { StandardizedEvent } from './eventFormatters';
 
 // Helper function to format relative time
 export function formatRelativeTime(date: Date | string): string {
@@ -39,7 +39,7 @@ export function processRecentAssets(
 }
 
 // Process recent events data
-export function processRecentEvents(eventsData: AssetLog[]) {
+export function processRecentEvents(eventsData: any[]) {
   return (eventsData || []).map(event => {
     const details = event.details as Record<string, unknown> | null;
     let description = event.event || 'Event logged';
@@ -47,10 +47,10 @@ export function processRecentEvents(eventsData: AssetLog[]) {
     
     // Extract more meaningful description and asset_name from details if available
     if (details && details.asset_id) {
-      asset_name = details.radio || details.asset_id.toString().substring(0, 8) || 'unknown';
+      asset_name = String(details.radio || details.asset_id || 'unknown').substring(0, 8);
       description = `${event.event} para ${asset_name}`;
     } else if (details && details.description) {
-      description = details.description;
+      description = String(details.description);
     }
     
     // Determine event type for color coding
@@ -73,14 +73,14 @@ export function processRecentEvents(eventsData: AssetLog[]) {
 }
 
 // Calculate status summary
-export function calculateStatusSummary(statusBreakdownData: AssetStatusByType[]) {
+export function calculateStatusSummary(statusBreakdownData: any[]) {
   let active = 0;
   let warning = 0;
   let critical = 0;
   
   if (statusBreakdownData) {
-    statusBreakdownData.forEach((item: AssetStatusByType) => {
-      const status = item.status?.toLowerCase() || '';
+    statusBreakdownData.forEach((item: any) => {
+      const status = String(item.status || '').toLowerCase();
       if (status.includes('active') || status.includes('disponível')) {
         active += item.count || 0;
       } else if (status.includes('warning') || status.includes('aviso')) {
@@ -92,4 +92,12 @@ export function calculateStatusSummary(statusBreakdownData: AssetStatusByType[])
   }
   
   return { active, warning, critical };
+}
+
+export function formatString(input: unknown, maxLength: number = 50): string {
+  return String(input || '').substring(0, maxLength) + '...';
+}
+
+export function formatItemDescription(item: unknown): string {
+  return String(item || '').substring(0, 50) + '...';
 }

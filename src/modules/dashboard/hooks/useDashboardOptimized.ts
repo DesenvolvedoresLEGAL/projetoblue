@@ -64,7 +64,14 @@ export function useDashboardOptimized() {
       assetsWithIssues: assetsWithIssuesQuery.data?.count || 0,
       statusSummary,
       recentAssets: recentAssetsQuery.data || [],
-      recentEvents: recentEventsQuery.data?.recentAssets || [],
+      recentEvents: (recentEventsQuery.data?.recentAssets || []).map(asset => ({
+        id: asset.uuid || '',
+        type: 'other' as const,
+        assetType: 'Asset',
+        assetName: (asset as any)?.details?.radio || (asset as any)?.details?.line_number?.toString() || 'N/A',
+        description: asset.event || 'Asset activity',
+        date: asset.created_at || new Date().toISOString()
+      })),
       pieChartData: statusSummary.map(item => ({
         status: item.status,
         total: item.count

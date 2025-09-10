@@ -94,8 +94,7 @@ const AdminConfig = () => {
     },
     onError: (error: unknown) => {
       
-      const errorMessage = error?.message || 'Erro ao excluir usuário';
-      toast.error(errorMessage);
+      toast.error('Erro ao excluir usuário: ' + (error as Error)?.message || 'Erro desconhecido');
     }
   });
 

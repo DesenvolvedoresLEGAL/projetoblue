@@ -109,7 +109,7 @@ const WifiAnalyzer = () => {
     };
     
     updateAsset(router.id, {
-      wifiAnalysis: mockAnalysis
+      // Remove wifiAnalysis as it's not part of AssetUpdateParams
     });
   };
   

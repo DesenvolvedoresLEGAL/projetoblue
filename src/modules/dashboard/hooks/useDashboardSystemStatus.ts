@@ -17,12 +17,8 @@ export function useDashboardSystemStatus() {
         // Buscar último evento para determinar última atividade
         const recentEventsResult = await dashboardQueries.fetchRecentEvents();
         
-        if (recentEventsResult.error) {
-          throw recentEventsResult.error;
-        }
-
-        const lastEvent = recentEventsResult.data?.[0];
-        const lastSyncTime = lastEvent?.date || new Date().toISOString();
+        const lastEvent = recentEventsResult?.recentAssets?.[0];
+        const lastSyncTime = lastEvent?.created_at || new Date().toISOString();
         
         // Calcular tempo desde última sync
         const lastSyncDate = new Date(lastSyncTime);

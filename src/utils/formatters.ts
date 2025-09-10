@@ -72,15 +72,17 @@ export const capitalize = (str: string): string => {
 export const getAssetIdentifier = (asset: Record<string, unknown>): string => {
   // Verificar se é um objeto de associação (tem asset_solution_name)
   if (asset.asset_solution_name) {
-    if (asset.asset_solution_name?.toUpperCase() === "CHIP" || asset.asset_solution_id === 11) {
-      return asset.asset_line_number?.toString() || asset.asset_iccid || "N/A";
+    const solutionName = String(asset.asset_solution_name || '');
+    if (solutionName.toUpperCase() === "CHIP" || asset.asset_solution_id === 11) {
+      return String(asset.asset_line_number || asset.asset_iccid || "N/A");
     }
-    return asset.asset_radio || "N/A";
+    return String(asset.asset_radio || "N/A");
   }
   
   // Lógica original para objetos de ativo direto
-  if (asset.solucao?.toUpperCase() === "CHIP" || asset.solution_id === 11) {
-    return asset.line_number?.toString() || asset.iccid || "N/A";
+  const solutionType = String(asset.solucao || '');
+  if (solutionType.toUpperCase() === "CHIP" || asset.solution_id === 11) {
+    return String(asset.line_number || asset.iccid || "N/A");
   }
-  return asset.radio || "N/A";
+  return String(asset.radio || "N/A");
 };

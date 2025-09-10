@@ -30,9 +30,10 @@ export function translateError(error: unknown, context?: string): TranslatedErro
   }
 
   // Extrair mensagem do erro
-  const errorMessage = error?.message || error?.error_description || String(error);
-  const errorCode = error?.code || error?.status;
-  const errorDetails = error?.details || '';
+  const err = error as any;
+  const errorMessage = err?.message || err?.error_description || String(error);
+  const errorCode = err?.code || err?.status;
+  const errorDetails = err?.details || '';
 
   // Detectar categoria do erro
   const category = detectErrorCategory(error, errorMessage, errorCode);
@@ -127,7 +128,8 @@ function detectErrorCategory(error: unknown, message: string, code?: string): Er
 
 // Traduzir erros de constraint específicos
 function translateConstraintError(error: unknown, message: string, context?: string): string {
-  const constraint = error?.constraint || '';
+  const err = error as any;
+  const constraint = err?.constraint || '';
   const lowerMessage = message.toLowerCase();
 
   // ICCID duplicado
