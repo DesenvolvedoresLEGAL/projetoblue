@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, FileChartColumnIncreasing, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
+import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, FileChartColumnIncreasing, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, QrCode, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";
 import { useLocation } from "react-router-dom";
@@ -16,6 +16,7 @@ export function StaticNavigation({
   const location = useLocation();
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({
     dashboard: true, // Dashboard module starts open by default
+    setup: false,
     assets: false,
     topology: false,
     tools: false,
@@ -38,6 +39,8 @@ export function StaticNavigation({
   useEffect(() => {
     if (location.pathname === "/" || location.pathname.includes("/dashboard")) {
       setOpenModules(prev => ({ ...prev, dashboard: true }));
+    } else if (location.pathname.includes("/setup")) {
+      setOpenModules(prev => ({ ...prev, setup: true }));
     } else if (location.pathname.includes("/assets")) {
       setOpenModules(prev => ({ ...prev, assets: true }));
     } else if (location.pathname.includes("/topology")) {
@@ -104,6 +107,30 @@ export function StaticNavigation({
           onClose={isMobile ? onClose : undefined}
         />
       </div>
+
+      {/* Setup Section - Requires suporte or above */}
+      <NavigationModule
+        id="setup"
+        title="Setup"
+        icon={Settings}
+        isActive={isModuleActive(['/setup'])}
+        isOpen={openModules.setup}
+        onToggle={() => toggleModule('setup')}
+        requiredRole="suporte"
+      >
+        <NavigationItem
+          to="/setup"
+          icon={LayoutDashboard}
+          label="Dashboard"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/scan"
+          icon={QrCode}
+          label="Scanner QR"
+          onClose={isMobile ? onClose : undefined}
+        />
+      </NavigationModule>
 
       {/* Assets Section - Requires suporte or above */}
       <NavigationModule
