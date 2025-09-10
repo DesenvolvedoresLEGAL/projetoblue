@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { Award, BarChart3, BookOpen, Bot, Boxes, ChartColumn, Cog, FileChartColumnIncreasing, Gift, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, Plus, PlusCircle, Puzzle, QrCode, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Zap } from "lucide-react";
+import { Award, BarChart3, BookOpen, Bot, Boxes, Camera, ChartColumn, Cog, FileChartColumnIncreasing, FileText, Gift, HardHat, Inbox, KeyRound, LayoutDashboard, LogIn, Package, PackageSearch, PenTool, Plus, PlusCircle, Puzzle, QrCode, ScrollText, Settings, Share2, Shield, ShieldCheck, TrendingUp, User, UserCog, Users, Wrench, Zap } from "lucide-react";
 import { NavigationItem } from "./NavigationItem";
 import { NavigationModule } from "./NavigationModule";
 import { useLocation } from "react-router-dom";
@@ -129,6 +129,57 @@ export function StaticNavigation({
           icon={QrCode}
           label="Scanner QR"
           onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/orders"
+          icon={FileText}
+          label="Pedidos"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/execution"
+          icon={Wrench}
+          label="Setups em Execução"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/evidence"
+          icon={Camera}
+          label="Evidências"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/signatures"
+          icon={PenTool}
+          label="Assinaturas"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/technician"
+          icon={HardHat}
+          label="Painel Técnico"
+          onClose={isMobile ? onClose : undefined}
+        />
+        <NavigationItem
+          to="/setup/supervision"
+          icon={ShieldCheck}
+          label="Supervisão"
+          onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
+        />
+        <NavigationItem
+          to="/setup/reports"
+          icon={BarChart3}
+          label="Relatórios"
+          onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
+        />
+        <NavigationItem
+          to="/setup/config"
+          icon={Cog}
+          label="Configurações"
+          onClose={isMobile ? onClose : undefined}
+          requiredRole="admin"
         />
       </NavigationModule>
 
