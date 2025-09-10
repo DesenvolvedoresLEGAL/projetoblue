@@ -58,6 +58,14 @@ import TicketIntegrations from "@modules/tickets/pages/TicketIntegrations";
 import { SetupDashboard } from "@modules/setup/pages/SetupDashboard";
 import { SetupScanner } from "@modules/setup/pages/SetupScanner";
 import { SetupInstallation } from "@modules/setup/pages/SetupInstallation";
+import { SetupOrders } from "@modules/setup/pages/SetupOrders";
+import { SetupExecution } from "@modules/setup/pages/SetupExecution";
+import { SetupEvidence } from "@modules/setup/pages/SetupEvidence";
+import { SetupSignatures } from "@modules/setup/pages/SetupSignatures";
+import { SetupTechnician } from "@modules/setup/pages/SetupTechnician";
+import { SetupSupervision } from "@modules/setup/pages/SetupSupervision";
+import { SetupReports } from "@modules/setup/pages/SetupReports";
+import { SetupConfig } from "@modules/setup/pages/SetupConfig";
 
 // Configure React Query client with global settings
 const queryClient = new QueryClient({
@@ -205,6 +213,70 @@ const App = () => (
                         element={
                           <AuthRoute requiredRole="suporte">
                             <SetupScanner />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="orders"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupOrders />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="execution"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupExecution />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="evidence"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupEvidence />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="signatures"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupSignatures />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="technician"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupTechnician />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="supervision"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupSupervision />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="reports"
+                        element={
+                          <AuthRoute requiredRole="suporte">
+                            <SetupReports />
+                          </AuthRoute>
+                        }
+                      />
+                      <Route
+                        path="config"
+                        element={
+                          <AuthRoute requiredRole="admin">
+                            <SetupConfig />
                           </AuthRoute>
                         }
                       />
