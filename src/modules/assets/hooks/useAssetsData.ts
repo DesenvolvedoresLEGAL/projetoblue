@@ -47,7 +47,7 @@ const transformDatabaseAsset = (dbAsset: DatabaseAsset): Asset => {
   // Determine type based on solution_id
   const isChip = dbAsset.solution_id === 11;
   const status = dbAsset.status?.status as AssetStatus || 'DISPONÍVEL';
-  const solucao = mapSolutionToType(dbAsset.solution_id, dbAsset.solucao?.solution);
+  const solucao = mapSolutionToType(dbAsset.solution_id);
 
   if (isChip) {
     const chipAsset: ChipAsset = {

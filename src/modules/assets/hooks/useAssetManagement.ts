@@ -363,7 +363,7 @@ export function useAssetManagement() {
    * Transform database record to frontend Asset type
    */
   function mapDbToAsset(dbAsset: IDbAssetUnmapped): Asset {
-    const solutionType = mapSolutionToType(dbAsset.solution_id, dbAsset.asset_solutions?.solution);
+    const solutionType = mapSolutionToType(dbAsset.solution_id);
     
     const baseAsset = {
       id: String(dbAsset.uuid || ''),

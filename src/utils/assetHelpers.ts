@@ -1,5 +1,5 @@
 // Minimal asset helpers to replace deleted file
-import { AssetType } from '@/types/asset';
+import { AssetType, SolutionType } from '@/types/asset';
 
 export class AssetHelpers {
   static isChipAsset(solutionId: number): boolean {
@@ -15,8 +15,8 @@ export class AssetHelpers {
   }
 }
 
-export const mapSolutionToType = (solutionId: number): string => {
-  return solutionId === 11 ? 'CHIP' : 'EQUIPMENT';
+export const mapSolutionToType = (solutionId: number): SolutionType => {
+  return solutionId === 11 ? 'CHIP' : 'SPEEDY 5G';
 };
 
 export const safeParseNumber = (value: unknown): number => {
