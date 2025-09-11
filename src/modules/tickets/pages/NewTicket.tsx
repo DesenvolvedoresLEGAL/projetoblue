@@ -146,51 +146,6 @@ const NewTicket = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Preview Card */}
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader>
-              <CardTitle className="text-[#020CBC] font-neue-haas text-lg">Pré-visualização</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {formData.subject && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">ASSUNTO</Label>
-                  <p className="font-medium">{formData.subject}</p>
-                </div>
-              )}
-              
-              {formData.priority && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">PRIORIDADE</Label>
-                  <div className={`inline-block px-2 py-1 rounded text-xs font-medium border mt-1 ${getPriorityColor(formData.priority)}`}>
-                    {formData.priority}
-                  </div>
-                </div>
-              )}
-              
-              {formData.category && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">CATEGORIA</Label>
-                  <p className="text-sm">{formData.category}</p>
-                </div>
-              )}
-              
-              {formData.customer && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">CLIENTE</Label>
-                  <p className="text-sm">{formData.customer}</p>
-                </div>
-              )}
-              
-              {formData.assignee && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">RESPONSÁVEL</Label>
-                  <p className="text-sm">{formData.assignee}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Quick Tips */}
           <Card className="border-[#4D2BFB]/20">
             <CardHeader>
