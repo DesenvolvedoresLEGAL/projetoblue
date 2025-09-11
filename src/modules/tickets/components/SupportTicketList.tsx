@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { listTickets, SupportTicket } from "../services/ticketService";
 import { TicketCard } from "./TicketCard";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SupportTicketsList() {
+    const {user} = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +13,8 @@ export default function SupportTicketsList() {
     async function fetchTickets() {
       try {
         setLoading(true);
-        const data = await listTickets();
+        const userId = user.id;
+        const data = await listTickets(userId);
         setTickets(data);
       } catch (err) {
         setError("Falha ao carregar os tickets");
