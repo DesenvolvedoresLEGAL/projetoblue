@@ -3,8 +3,9 @@ import { FormControl, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import createTicket from '@modules/tickets/services/ticketService'; // Ajuste o path conforme sua estrutura
-import React, { useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import createTicket, { Category, listCategories } from '@modules/tickets/services/ticketService'; // Ajuste o path conforme sua estrutura
+import React, { useEffect, useState } from 'react';
 
 const TicketForm: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -24,9 +25,31 @@ const TicketForm: React.FC = () => {
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const [categorias, setCategorias] = useState<Category[]>([]);
+
+    useEffect(() => {
+        const fetchCategorias = async () => {
+            try {
+                const data = await listCategories();
+                setCategorias(data);
+            } catch (error) {
+                console.error("Erro ao buscar categorias", error);
+            }
+        };
+
+        fetchCategorias();
+    }, []);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleCategoriaChange = (value: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            categoria_id: value,
+        }));
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,147 +91,167 @@ const TicketForm: React.FC = () => {
         }
     };
 
-  return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Criar Novo Ticket</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    return (
+        <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-6">Criar Novo Ticket</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Nome do Solicitante */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Nome do Solicitante*</label>
-          <Input
-            type="text"
-            name="nome_solicitante"
-            value={formData.nome_solicitante}
-            onChange={handleChange}
-            required
-          />
+                {/* Nome do Solicitante */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Nome do Solicitante*</label>
+                    <Input
+                        type="text"
+                        name="nome_solicitante"
+                        value={formData.nome_solicitante}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Email do Solicitante */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Email do Solicitante*</label>
+                    <Input
+                        type="email"
+                        name="email_solicitante"
+                        value={formData.email_solicitante}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Assunto */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Assunto*</label>
+                    <Input
+                        type="text"
+                        name="assunto"
+                        value={formData.assunto}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Descrição */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Descrição*</label>
+                    <Textarea
+                        name="descricao"
+                        value={formData.descricao}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Categoria ID */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Categoria</label>
+                    <Select
+                        value={formData.categoria_id}
+                        onValueChange={(value) => handleCategoriaChange(value)}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categorias.map((categoria) => (
+                                <TooltipProvider key={categoria.id}>
+                                    <Tooltip delayDuration={100}>
+                                        <TooltipTrigger asChild>
+                                            <SelectItem value={categoria.id.toString()}>
+                                                {categoria.nome}
+                                            </SelectItem>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right" className="max-w-[200px]">
+                                            <p className="text-sm text-muted-foreground">
+                                                {categoria.descricao}
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Prioridade */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Prioridade</label>
+                    <Select
+                        value={formData.prioridade}
+                        onValueChange={(value) => handleChange({ target: { name: "prioridade", value } } as React.ChangeEvent<HTMLInputElement>)}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione a prioridade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="baixa">Baixa</SelectItem>
+                            <SelectItem value="media">Média</SelectItem>
+                            <SelectItem value="alta">Alta</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Status */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Status</label>
+                    <Select
+                        value={formData.status}
+                        onValueChange={(value) => handleChange({ target: { name: "prioridade", value } } as React.ChangeEvent<HTMLInputElement>)}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="aberto">Aberto</SelectItem>
+                            <SelectItem value="em andamento">Em andamento</SelectItem>
+                            <SelectItem value="fechado">Fechado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Atendente */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Atendente (opcional)</label>
+                    <Input
+                        type="text"
+                        name="atendente_nome"
+                        value={formData.atendente_nome}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                {/* Observações Internas */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Observações Internas</label>
+                    <Textarea
+                        name="observacoes_internas"
+                        value={formData.observacoes_internas}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                {/* Anexo */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Anexo (imagem)</label>
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                    />
+                </div>
+
+                {/* Botão */}
+                <Button type="submit" disabled={loading} className="w-full">
+                    {loading ? "Enviando..." : "Criar Ticket"}
+                </Button>
+
+                {/* Mensagens */}
+                {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
+                {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+            </form>
         </div>
-
-        {/* Email do Solicitante */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Email do Solicitante*</label>
-          <Input
-            type="email"
-            name="email_solicitante"
-            value={formData.email_solicitante}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Assunto */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Assunto*</label>
-          <Input
-            type="text"
-            name="assunto"
-            value={formData.assunto}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Descrição */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Descrição*</label>
-          <Textarea
-            name="descricao"
-            value={formData.descricao}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {/* Categoria ID */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Categoria ID</label>
-          <Input
-            type="number"
-            name="categoria_id"
-            value={formData.categoria_id}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Prioridade */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Prioridade</label>
-          <Select
-            value={formData.prioridade}
-            onValueChange={(value) => handleChange({ target: { name: "prioridade", value } } as React.ChangeEvent<HTMLInputElement>) }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a prioridade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="baixa">Baixa</SelectItem>
-              <SelectItem value="media">Média</SelectItem>
-              <SelectItem value="alta">Alta</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Status</label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => handleChange({ target: { name: "prioridade", value } } as React.ChangeEvent<HTMLInputElement>) }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="aberto">Aberto</SelectItem>
-              <SelectItem value="em andamento">Em andamento</SelectItem>
-              <SelectItem value="fechado">Fechado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Atendente */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Atendente (opcional)</label>
-          <Input
-            type="text"
-            name="atendente_nome"
-            value={formData.atendente_nome}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Observações Internas */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Observações Internas</label>
-          <Textarea
-            name="observacoes_internas"
-            value={formData.observacoes_internas}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Anexo */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Anexo (imagem)</label>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-        </div>
-
-        {/* Botão */}
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Enviando..." : "Criar Ticket"}
-        </Button>
-
-        {/* Mensagens */}
-        {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
-        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-      </form>
-    </div>
-  );
+    );
 };
 
 export default TicketForm;
