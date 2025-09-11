@@ -238,9 +238,7 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filterTickets(createdTickets).map((ticket) => (
-                  <TicketCard key={ticket.id} ticket={ticket} />
-                ))}
+                <SupportTicketsList />
                 
                 {filterTickets(createdTickets).length === 0 && (
                   <div className="text-center py-8">
