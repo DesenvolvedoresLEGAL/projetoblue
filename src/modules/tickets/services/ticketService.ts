@@ -22,6 +22,28 @@ export interface SupportTicket {
   tags: string[];
 }
 
+// Interface para Categoria
+export interface Category {
+  id: number;
+  nome: string;
+  descricao: string;
+}
+
+// Função para listar categorias
+export const listCategories = async (): Promise<Category[]> => {
+  try {
+    const endpoint = `/tickets_suporte/categorias`;
+
+    const response = await axiosInstance.get(endpoint);
+
+    return response.data as Category[];
+  } catch (error: any) {
+    console.error("❌ Erro ao listar as categorias:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+
 export const listTickets = async (): Promise<SupportTicket[]> => {
   try {
     // Monta a URL com o parâmetro lightsail
