@@ -11,8 +11,6 @@ import { StandardPageHeader } from "@/components/ui/standard-page-header";
 import { StandardFiltersCard } from "@/components/ui/standard-filters-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Search, Filter, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
-import { TicketCard } from '../components/TicketCard';
-import SupportTicketsList from '../components/SupportTicketList';
 
 const MyTickets = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -128,6 +126,52 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
     });
   };
 
+  const TicketCard = ({ ticket }: { ticket: typeof myTickets[0] }) => (
+    <Card key={ticket.id} className="border-l-4 border-l-[#4D2BFB] hover:bg-[#4D2BFB]/5 transition-colors cursor-pointer">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-sm text-[#4D2BFB] font-medium">{ticket.id}</span>
+            <Badge variant={getPriorityColor(ticket.priority)}>
+              {ticket.priority}
+            </Badge>
+            <div className="flex items-center gap-1">
+              {getStatusIcon(ticket.status)}
+              <Badge variant={getStatusColor(ticket.status)}>
+                {ticket.status}
+              </Badge>
+            </div>
+          </div>
+          <Button variant="outline" size="sm">
+            Abrir
+          </Button>
+        </div>
+        
+        <h3 className="font-semibold text-[#020CBC] mb-2">{ticket.subject}</h3>
+        <p className="text-sm text-muted-foreground mb-3">Cliente: {ticket.customer}</p>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Tempo gasto:</span>
+            <span className="ml-2 font-medium">{ticket.timeSpent}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Prazo:</span>
+            <span className="ml-2 font-medium">{new Date(ticket.deadline).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Criado:</span>
+            <span className="ml-2">{new Date(ticket.created).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Última atualização:</span>
+            <span className="ml-2">{ticket.lastUpdate}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <StandardPageHeader
@@ -208,7 +252,9 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <SupportTicketsList />
+                {filterTickets(assignedTickets).map((ticket) => (
+                  <TicketCard key={ticket.id} ticket={ticket} />
+                ))}
                 
                 {filterTickets(assignedTickets).length === 0 && (
                   <div className="text-center py-8">
