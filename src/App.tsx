@@ -190,13 +190,13 @@ const App = () => (
                       />
                     </Route>
 
-                    {/* Setup module routes - Requires suporte or above */}
+                     {/* Setup module routes - Requires suporte or above */}
                     <Route path="setup">
                       <Route
                         index
                         element={
                           <AuthRoute requiredRole="suporte">
-                            <SetupDashboard />
+                            <Navigate to="/setup/dashboard" replace />
                           </AuthRoute>
                         }
                       />
