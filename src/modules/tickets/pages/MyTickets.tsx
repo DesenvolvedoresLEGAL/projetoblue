@@ -225,42 +225,6 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="created" className="space-y-4">
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader>
-              <CardTitle className="text-[#020CBC] font-neue-haas">
-                Tickets Criados por Mim
-              </CardTitle>
-              <CardDescription>
-                Tickets que você criou e está acompanhando
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filterTickets(createdTickets).map((ticket) => (
-                  <TicketCard key={ticket.id} ticket={ticket} />
-                ))}
-                
-                {filterTickets(createdTickets).length === 0 && (
-                  <div className="text-center py-8">
-                    <Plus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                      Nenhum ticket criado
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Você ainda não criou nenhum ticket.
-                    </p>
-                    <Button className="mt-4 bg-[#4D2BFB] hover:bg-[#020CBC]">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Primeiro Ticket
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
