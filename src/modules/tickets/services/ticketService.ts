@@ -71,15 +71,16 @@ export const listCategories = async (): Promise<Category[]> => {
   }
 };
 
-
-export const listTickets = async (): Promise<SupportTicket[]> => {
+export const listTickets = async (userid?: string): Promise<SupportTicket[]> => {
   try {
-    // Monta a URL com o parâmetro lightsail
-    const endpoint = `/tickets_suporte/`;
+    // Monta a URL dinamicamente, adicionando uuid_solicitante só se userid existir
+    let endpoint = `/tickets_suporte`;
+    if (userid) {
+      endpoint += `?uuid_solicitante=${encodeURIComponent(userid)}`;
+    }
 
     const response = await axiosInstance.get(endpoint);
 
-    // Retorna o array de tickets
     return response.data as SupportTicket[];
   } catch (error: any) {
     console.error("❌ Erro ao listar os tickets:", error.response?.data || error.message);
@@ -92,6 +93,7 @@ const createTicket = async (
   ticketData: {
     nome_solicitante: string;
     email_solicitante: string;
+    uuid_solicitante: string;
     assunto: string;
     descricao: string;
     categoria_id?: number;
@@ -107,6 +109,8 @@ const createTicket = async (
 
     // Adiciona os dados do ticket como JSON no campo "data"
     formData.append("data", JSON.stringify(ticketData));
+
+    console.log(ticketData);
 
     // Adiciona a imagem, se fornecida
     if (imageFile) {
