@@ -29,6 +29,34 @@ export interface Category {
   descricao: string;
 }
 
+// Função para resolver um ticket
+export const resolveTicket = async (ticketId: number, ): Promise<any> => {
+  try {
+    const endpoint = `/tickets_suporte/${ticketId}/resolve`;
+
+    const response = await axiosInstance.patch(endpoint);
+
+    return response.data;
+  } catch (error: any) {
+    console.error(`❌ Erro ao resolver o ticket ${ticketId}:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Função para restaurar um ticket
+export const restoreTicket = async (ticketId: number): Promise<any> => {
+  try {
+    const endpoint = `/tickets_suporte/${ticketId}/restore`;
+
+    const response = await axiosInstance.patch(endpoint);
+
+    return response.data;
+  } catch (error: any) {
+    console.error(`❌ Erro ao restaurar o ticket ID ${ticketId}:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // Função para listar categorias
 export const listCategories = async (): Promise<Category[]> => {
   try {
