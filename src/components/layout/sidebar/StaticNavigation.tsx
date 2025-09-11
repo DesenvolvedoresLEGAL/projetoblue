@@ -105,6 +105,7 @@ export function StaticNavigation({
           icon={LayoutDashboard}
           label="Visão Geral"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
       </div>
 
