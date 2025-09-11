@@ -1,6 +1,5 @@
 import api from "@/services/api";
 
-
 // URL e Token - ajuste conforme necessário
 const API_URL = import.meta.env.API_URL;
 const API_TOKEN = import.meta.env.API_TOKEN;
@@ -12,6 +11,31 @@ const axiosInstance = api.create({
     Authorization: `Bearer ${API_TOKEN}`,
   },
 });
+
+export interface SupportTicket {
+  id: number;
+  assunto: string;
+  categoria: string | null;
+  nome_solicitante: string;
+  prioridade: string;
+  status: string;
+  tags: string[];
+}
+
+export const listTickets = async (): Promise<SupportTicket[]> => {
+  try {
+    // Monta a URL com o parâmetro lightsail
+    const endpoint = `/tickets_suporte/`;
+
+    const response = await axiosInstance.get(endpoint);
+
+    // Retorna o array de tickets
+    return response.data as SupportTicket[];
+  } catch (error: any) {
+    console.error("❌ Erro ao listar os tickets:", error.response?.data || error.message);
+    throw error;
+  }
+};
 
 // Função para criar ticket
 const createTicket = async (
