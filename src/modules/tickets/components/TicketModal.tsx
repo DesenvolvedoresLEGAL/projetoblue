@@ -103,7 +103,7 @@ export const TicketDetailsModal = ({
         }
     };
 
-    useCallback(() => {
+    useEffect(() => {
         setStatus(ticket.status);
     }, []);
 
