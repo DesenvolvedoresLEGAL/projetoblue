@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormControl, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -92,8 +93,12 @@ const TicketForm: React.FC = () => {
     };
 
     return (
-        <div className="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6">Criar Novo Ticket</h2>
+    <Card className="border-[#4D2BFB]/20">
+        <CardHeader>
+            <CardTitle className="text-[#020CBC] font-neue-haas">Informações do Ticket</CardTitle>
+            <CardDescription>Preencha os detalhes do novo ticket de suporte</CardDescription>
+        </CardHeader>
+        <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* Nome do Solicitante */}
@@ -250,7 +255,8 @@ const TicketForm: React.FC = () => {
                 {message && <p className="text-green-600 text-sm mt-2">{message}</p>}
                 {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
             </form>
-        </div>
+        </CardContent>
+    </Card>
     );
 };
 
