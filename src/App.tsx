@@ -319,7 +319,7 @@ const App = () => (
                       <Route
                         path="my-tickets"
                         element={
-                          <AuthRoute requiredRole="admin">
+                          <AuthRoute requiredRole="cliente">
                             <MyTickets />
                           </AuthRoute>
                         }
@@ -328,7 +328,7 @@ const App = () => (
                       <Route
                         path="new"
                         element={
-                          <AuthRoute requiredRole="admin">
+                          <AuthRoute requiredRole="cliente">
                             <NewTicket />
                           </AuthRoute>
                         }

@@ -227,19 +227,21 @@ export function StaticNavigation({
         isActive={isModuleActive(['/tickets'])}
         isOpen={openModules.tickets}
         onToggle={() => toggleModule('tickets')}
-        requiredRole="admin"
+        requiredRole="cliente"
       >
         <NavigationItem
           to="/tickets/dashboard"
           icon={LayoutDashboard}
           label="Dashboard"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/inbox"
           icon={Inbox}
           label="Caixa de Entrada"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/my-tickets"
@@ -258,30 +260,35 @@ export function StaticNavigation({
           icon={BookOpen}
           label="Base de Conhecimento"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/automation"
           icon={Zap}
           label="Automação e Regras"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/analytics"
           icon={TrendingUp}
           label="Análises & Relatórios"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/quality"
           icon={Shield}
           label="Qualidade & Auditoria"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
         <NavigationItem
           to="/tickets/copilot"
           icon={Bot}
           label="Copiloto do Agente (IA)"
           onClose={isMobile ? onClose : undefined}
+          requiredRole="suporte"
         />
       </NavigationModule>
 
