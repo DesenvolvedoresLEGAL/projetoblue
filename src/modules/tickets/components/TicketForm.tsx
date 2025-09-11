@@ -197,24 +197,6 @@ const TicketForm: React.FC = () => {
                     </Select>
                 </div>
 
-                {/* Status */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
-                    <Select
-                        value={formData.status}
-                        onValueChange={(value) => handleChange({ target: { name: "prioridade", value } } as React.ChangeEvent<HTMLInputElement>)}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="aberto">Aberto</SelectItem>
-                            <SelectItem value="em andamento">Em andamento</SelectItem>
-                            <SelectItem value="fechado">Fechado</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
                 {/* Atendente */}
                 <div>
                     <label className="block text-sm font-medium mb-1">Atendente (opcional)</label>
