@@ -5,13 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/context/AuthContext';
 import createTicket, { Category, listCategories } from '@modules/tickets/services/ticketService'; // Ajuste o path conforme sua estrutura
 import React, { useEffect, useState } from 'react';
 
 const TicketForm: React.FC = () => {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         nome_solicitante: '',
         email_solicitante: '',
+        uuid_solicitante: user.id,
         assunto: '',
         descricao: '',
         categoria_id: '',
@@ -29,6 +32,7 @@ const TicketForm: React.FC = () => {
     const [categorias, setCategorias] = useState<Category[]>([]);
 
     useEffect(() => {
+        console.log(user)
         const fetchCategorias = async () => {
             try {
                 const data = await listCategories();
@@ -76,6 +80,7 @@ const TicketForm: React.FC = () => {
             setFormData({
                 nome_solicitante: '',
                 email_solicitante: '',
+                uuid_solicitante: user.id.toString(),
                 assunto: '',
                 descricao: '',
                 categoria_id: '',
