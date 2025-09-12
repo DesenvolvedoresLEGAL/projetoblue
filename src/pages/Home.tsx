@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, LayoutDashboard } from "lucide-react";
 import { useDashboardAssets } from "@modules/dashboard/hooks/useDashboardAssets";
@@ -16,6 +16,8 @@ import { SyncStatusAlert } from "@modules/dashboard/components/dashboard/SyncSta
 import { OperadorasSection } from "@modules/dashboard/components/dashboard/OperadorasSection";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { StandardPageHeader } from "@/components/ui/standard-page-header";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Home dashboard component
@@ -31,6 +33,15 @@ const Home: React.FC = () => {
   const recentActivities = useDashboardRecentActivities();
 
   const isMobile = useIsMobile();
+
+  const { hasMinimumRole } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!hasMinimumRole("suporte")) {
+      navigate("/tickets/my-tickets");
+    }
+  }, []);
 
   // Safe loading state check
   const isLoading = dashboard.problemAssets.isLoading ||
