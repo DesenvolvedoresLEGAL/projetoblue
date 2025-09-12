@@ -391,8 +391,5 @@ const {data, error} = await supabase
   .is("deleted_at", null)
   .order("created_at", { ascending: false });
 
-  console.log('SHUSHUSHUSHUSHUHSUHSHSU')
-  console.log(data)
-
   return {data: data, error};
 };

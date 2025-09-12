@@ -94,12 +94,12 @@ export const SetupEvidence: React.FC = () => {
   });
 
   const handleViewEvidence = (evidenceId: string) => {
-    console.log('Visualizando evidência:', evidenceId);
+    // console.log('Visualizando evidência:', evidenceId);
     // TODO: Implementar visualização segura via Edge Function
   };
 
   const handleDownloadEvidence = (evidenceId: string) => {
-    console.log('Baixando evidência:', evidenceId);
+    // console.log('Baixando evidência:', evidenceId);
     // TODO: Implementar download via Edge Function decrypt_and_stream
   };
 

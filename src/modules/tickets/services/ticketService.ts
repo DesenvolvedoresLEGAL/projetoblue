@@ -110,7 +110,7 @@ const createTicket = async (
     // Adiciona os dados do ticket como JSON no campo "data"
     formData.append("data", JSON.stringify(ticketData));
 
-    console.log(ticketData);
+    // console.log(ticketData);
 
     // Adiciona a imagem, se fornecida
     if (imageFile) {

@@ -27,7 +27,7 @@ export const profileService = {
       }
 
       if (data) {
-        console.log(`🔧 DEBUG: Dados do profile vindos do banco:`, data);
+        // console.log(`🔧 DEBUG: Dados do profile vindos do banco:`, data);
         
         // Map the profiles table fields to the UserProfile type
         return {

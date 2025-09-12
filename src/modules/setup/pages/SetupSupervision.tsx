@@ -121,7 +121,7 @@ export const SetupSupervision: React.FC = () => {
 
   const handleViewDetails = (setup: SetupForApproval) => {
     setSelectedSetup(setup);
-    console.log('Visualizando detalhes do setup:', setup.id);
+    // console.log('Visualizando detalhes do setup:', setup.id);
     // TODO: Abrir modal ou navegar para página de detalhes
   };
 
@@ -137,7 +137,7 @@ export const SetupSupervision: React.FC = () => {
 
   const confirmApproval = () => {
     if (selectedSetup) {
-      console.log('Aprovando setup:', selectedSetup.id);
+      // console.log('Aprovando setup:', selectedSetup.id);
       // TODO: Implementar aprovação via API
       setIsApprovalDialogOpen(false);
       setSelectedSetup(null);
@@ -146,7 +146,7 @@ export const SetupSupervision: React.FC = () => {
 
   const confirmRejection = () => {
     if (selectedSetup && rejectionReason.trim()) {
-      console.log('Rejeitando setup:', selectedSetup.id, 'Motivo:', rejectionReason);
+      // console.log('Rejeitando setup:', selectedSetup.id, 'Motivo:', rejectionReason);
       // TODO: Implementar rejeição via API
       setIsRejectionDialogOpen(false);
       setSelectedSetup(null);
@@ -155,7 +155,7 @@ export const SetupSupervision: React.FC = () => {
   };
 
   const handleExportCSV = () => {
-    console.log('Exportando dados para CSV');
+    // console.log('Exportando dados para CSV');
     // TODO: Implementar export CSV
   };
 

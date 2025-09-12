@@ -25,7 +25,7 @@ export const AssociationFlow = () => {
   const [currentStep, setCurrentStep] = useState((): number => {
     const savedStep = localStorage.getItem('wizardStep');
    
-    console.log(!isNaN(parseInt(savedStep)) ? parseInt(savedStep) : 1)
+    // console.log(!isNaN(parseInt(savedStep)) ? parseInt(savedStep) : 1)
     return isNaN(parseInt(savedStep)) ? 1 : parseInt(savedStep);
   });
   const { state, dispatch, canProceed, createAssociation, isLoading } = useAssociationFlow();

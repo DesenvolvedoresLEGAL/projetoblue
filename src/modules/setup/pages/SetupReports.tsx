@@ -65,7 +65,7 @@ export const SetupReports: React.FC = () => {
   const [selectedMetric, setSelectedMetric] = useState('installation_time');
 
   const handleExportReport = () => {
-    console.log('Exportando relatório para BI');
+    // console.log('Exportando relatório para BI');
     // TODO: Implementar export para BLUE BI API
   };
 

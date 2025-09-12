@@ -130,17 +130,17 @@ export const SetupConfig: React.FC = () => {
   };
 
   const handleSaveConfig = () => {
-    console.log('Salvando configurações...');
+    // console.log('Salvando configurações...');
     // TODO: Implementar salvamento das configurações
   };
 
   const handleTestWebhook = (webhookId: string) => {
-    console.log('Testando webhook:', webhookId);
+    // console.log('Testando webhook:', webhookId);
     // TODO: Implementar teste de webhook
   };
 
   const handleRegenerateKey = () => {
-    console.log('Regenerando chave de criptografia...');
+    // console.log('Regenerando chave de criptografia...');
     // TODO: Implementar regeneração da chave
   };
 

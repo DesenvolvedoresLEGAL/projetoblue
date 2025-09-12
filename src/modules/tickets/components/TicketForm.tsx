@@ -32,7 +32,7 @@ const TicketForm: React.FC = () => {
     const [categorias, setCategorias] = useState<Category[]>([]);
 
     useEffect(() => {
-        console.log(user)
+        // console.log(user)
         const fetchCategorias = async () => {
             try {
                 const data = await listCategories();

@@ -30,14 +30,14 @@ export function Sidebar() {
   const { hasMinimumRole, userRole, isAuthenticated, user, profile } = useAuth();
 
   // Temporary debug - REMOVER DEPOIS
-  console.log('🔍 DEBUG SIDEBAR:', {
-    isAuthenticated,
-    userRole,
-    hasSuporteRole: hasMinimumRole('suporte'),
-    user: user?.email,
-    profile: profile?.role,
-    hasMinimumRoleFunction: !!hasMinimumRole
-  });
+  // console.log('🔍 DEBUG SIDEBAR:', {
+  //   isAuthenticated,
+  //   userRole,
+  //   hasSuporteRole: hasMinimumRole('suporte'),
+  //   user: user?.email,
+  //   profile: profile?.role,
+  //   hasMinimumRoleFunction: !!hasMinimumRole
+  // });
 
   const isActive = (path: string) => {
     return location.pathname === path;

@@ -78,17 +78,17 @@ export const SetupOrders: React.FC = () => {
   });
 
   const handleStartSetup = (orderId: string) => {
-    console.log('Iniciando setup para pedido:', orderId);
+    // console.log('Iniciando setup para pedido:', orderId);
     // TODO: Implementar lógica para iniciar setup
   };
 
   const handleAssignTechnician = (orderId: string) => {
-    console.log('Atribuindo técnico ao pedido:', orderId);
+    // console.log('Atribuindo técnico ao pedido:', orderId);
     // TODO: Implementar modal para atribuir técnico
   };
 
   const handleViewDetails = (orderId: string) => {
-    console.log('Visualizando detalhes do pedido:', orderId);
+    // console.log('Visualizando detalhes do pedido:', orderId);
     // TODO: Navegar para página de detalhes
   };
 

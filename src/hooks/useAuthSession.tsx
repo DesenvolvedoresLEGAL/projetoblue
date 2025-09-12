@@ -75,7 +75,7 @@ export function useAuthSession(
         if (!isMounted) return;
         
         if (profile) {
-          console.log(`🔧 DEBUG: Profile carregado diretamente do banco:`, profile);
+          // console.log(`🔧 DEBUG: Profile carregado diretamente do banco:`, profile);
           
           updateState({ 
             profile,

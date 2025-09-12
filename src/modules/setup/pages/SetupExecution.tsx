@@ -70,12 +70,12 @@ const stepLabels = {
 
 export const SetupExecution: React.FC = () => {
   const handleContinueSetup = (setupId: string) => {
-    console.log('Continuando setup:', setupId);
+    // console.log('Continuando setup:', setupId);
     // TODO: Navegar para o stepper de instalação
   };
 
   const handleCompleteSetup = (setupId: string) => {
-    console.log('Finalizando setup:', setupId);
+    // console.log('Finalizando setup:', setupId);
     // TODO: Implementar finalização do setup
   };
 

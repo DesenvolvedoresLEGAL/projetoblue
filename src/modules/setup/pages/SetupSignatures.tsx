@@ -85,17 +85,17 @@ export const SetupSignatures: React.FC = () => {
   });
 
   const handleViewSignature = (signatureId: string) => {
-    console.log('Visualizando assinatura:', signatureId);
+    // console.log('Visualizando assinatura:', signatureId);
     // TODO: Implementar visualização via Edge Function decrypt_and_stream
   };
 
   const handleDownloadSignature = (signatureId: string) => {
-    console.log('Baixando assinatura:', signatureId);
+    // console.log('Baixando assinatura:', signatureId);
     // TODO: Implementar download seguro
   };
 
   const handleSendEmail = (signatureId: string) => {
-    console.log('Enviando email para:', signatureId);
+    // console.log('Enviando email para:', signatureId);
     // TODO: Implementar reenvio de email via n8n
   };
 
