@@ -160,16 +160,12 @@ const NewTicket = () => {
                 <p>Tickets de alta prioridade são respondidos em até 2 horas</p>
               </div>
               <div className="flex items-start gap-2">
-                <User className="h-4 w-4 text-[#4D2BFB] mt-0.5 flex-shrink-0" />
-                <p>Atribuir um responsável acelera o processamento</p>
-              </div>
-              <div className="flex items-start gap-2">
                 <Tag className="h-4 w-4 text-[#4D2BFB] mt-0.5 flex-shrink-0" />
                 <p>Use tags para facilitar a busca e organização</p>
               </div>
               <div className="flex items-start gap-2">
                 <Upload className="h-4 w-4 text-[#4D2BFB] mt-0.5 flex-shrink-0" />
-                <p>Anexe screenshots ou logs para agilizar a resolução</p>
+                <p>Anexe screenshots para agilizar a resolução</p>
               </div>
             </CardContent>
           </Card>
