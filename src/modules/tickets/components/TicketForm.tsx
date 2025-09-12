@@ -14,6 +14,7 @@ const TicketForm: React.FC = () => {
     const [formData, setFormData] = useState({
         nome_solicitante: '',
         email_solicitante: '',
+        telefone_solicitante: '',
         uuid_solicitante: user.id,
         assunto: '',
         descricao: '',
@@ -80,6 +81,7 @@ const TicketForm: React.FC = () => {
             setFormData({
                 nome_solicitante: '',
                 email_solicitante: '',
+                telefone_solicitante: '',
                 uuid_solicitante: user.id.toString(),
                 assunto: '',
                 descricao: '',
@@ -125,6 +127,17 @@ const TicketForm: React.FC = () => {
                         type="email"
                         name="email_solicitante"
                         value={formData.email_solicitante}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1">Email do Solicitante*</label>
+                    <Input
+                        type="tel"
+                        name="telefone_solicitante"
+                        value={formData.telefone_solicitante}
                         onChange={handleChange}
                         required
                     />
@@ -200,27 +213,6 @@ const TicketForm: React.FC = () => {
                             <SelectItem value="alta">Alta</SelectItem>
                         </SelectContent>
                     </Select>
-                </div>
-
-                {/* Atendente */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Atendente (opcional)</label>
-                    <Input
-                        type="text"
-                        name="atendente_nome"
-                        value={formData.atendente_nome}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                {/* Observações Internas */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Observações Internas</label>
-                    <Textarea
-                        name="observacoes_internas"
-                        value={formData.observacoes_internas}
-                        onChange={handleChange}
-                    />
                 </div>
 
                 {/* Anexo */}
