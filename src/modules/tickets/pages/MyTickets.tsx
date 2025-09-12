@@ -84,7 +84,7 @@ const MyTickets = () => {
   ];
 
   const assignedTickets = myTickets.filter(ticket => ticket.category === 'assigned');
-const createdTickets = myTickets.filter(ticket => ticket.category === 'created');
+  const createdTickets = myTickets.filter(ticket => ticket.category === 'created');
   type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
 
   const getPriorityColor = (priority: string): BadgeVariant => {
@@ -119,11 +119,11 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
   const filterTickets = (tickets: typeof myTickets) => {
     return tickets.filter(ticket => {
       const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           ticket.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
+        ticket.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
       const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-      
+
       return matchesSearch && matchesStatus && matchesPriority;
     });
   };
@@ -152,7 +152,7 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
               className="pl-10"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />
@@ -186,80 +186,33 @@ const createdTickets = myTickets.filter(ticket => ticket.category === 'created')
         </div>
       </StandardFiltersCard>
 
-      <Tabs defaultValue="assigned" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="assigned">
-            Atribuídos a Mim ({filterTickets(assignedTickets).length})
-          </TabsTrigger>
-          <TabsTrigger value="created">
-            Criados por Mim ({filterTickets(createdTickets).length})
-          </TabsTrigger>
-        </TabsList>
+      <Card className="border-[#4D2BFB]/20">
+        <CardHeader>
+          <CardTitle className="text-[#020CBC] font-neue-haas">
+            Tickets Atribuídos a Mim
+          </CardTitle>
+          <CardDescription>
+            Tickets que foram designados para você resolver
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <SupportTicketsList />
 
-        <TabsContent value="assigned" className="space-y-4">
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader>
-              <CardTitle className="text-[#020CBC] font-neue-haas">
-                Tickets Atribuídos a Mim
-              </CardTitle>
-              <CardDescription>
-                Tickets que foram designados para você resolver
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <SupportTicketsList />
-                
-                {filterTickets(assignedTickets).length === 0 && (
-                  <div className="text-center py-8">
-                    <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                      Nenhum ticket atribuído
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Você não possui tickets atribuídos no momento.
-                    </p>
-                  </div>
-                )}
+            {filterTickets(assignedTickets).length === 0 && (
+              <div className="text-center py-8">
+                <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
+                  Nenhum ticket atribuído
+                </h3>
+                <p className="text-muted-foreground">
+                  Você não possui tickets atribuídos no momento.
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="created" className="space-y-4">
-          <Card className="border-[#4D2BFB]/20">
-            <CardHeader>
-              <CardTitle className="text-[#020CBC] font-neue-haas">
-                Tickets Criados por Mim
-              </CardTitle>
-              <CardDescription>
-                Tickets que você criou e está acompanhando
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <SupportTicketsList />
-                
-                {filterTickets(createdTickets).length === 0 && (
-                  <div className="text-center py-8">
-                    <Plus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                      Nenhum ticket criado
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Você ainda não criou nenhum ticket.
-                    </p>
-                    <Button className="mt-4 bg-[#4D2BFB] hover:bg-[#020CBC]">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Primeiro Ticket
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
