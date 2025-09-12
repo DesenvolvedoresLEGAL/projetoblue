@@ -46,6 +46,19 @@ const TicketForm: React.FC = () => {
         fetchCategorias();
     }, []);
 
+    const formatToInternational = (phone: string): string => {
+        // Remove tudo que não for número
+        const numeric = phone.replace(/\D/g, '');
+
+        // Adiciona +55 se tiver 11 dígitos (assumindo Brasil)
+        if (numeric.length === 11) {
+            return `+55${numeric}`;
+        }
+
+        // Retorna como está se já começar com + (já está formatado)
+        return phone.startsWith('+') ? phone : `+${numeric}`;
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -73,7 +86,8 @@ const TicketForm: React.FC = () => {
             // Conversão de categoria_id para número ou undefined
             const ticketData = {
                 ...formData,
-                categoria_id: formData.categoria_id ? Number(formData.categoria_id) : undefined
+                categoria_id: formData.categoria_id ? Number(formData.categoria_id) : undefined,
+                telefone_solicitante: formatToInternational(formData.telefone_solicitante)
             };
 
             const response = await createTicket(ticketData, image);
@@ -133,7 +147,7 @@ const TicketForm: React.FC = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1">Email do Solicitante*</label>
+                    <label className="block text-sm font-medium mb-1">Whatsapp do Solicitante*</label>
                     <Input
                         type="tel"
                         name="telefone_solicitante"
