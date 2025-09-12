@@ -13,11 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Search, Filter, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import { TicketCard } from '../components/TicketCard';
 import SupportTicketsList from '../components/SupportTicketList';
+import { useAuth } from '@/context/AuthContext';
 
 const MyTickets = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const { userRole } = useAuth();
 
   // Mock data para demonstração
   const myTickets = [
@@ -189,27 +191,21 @@ const MyTickets = () => {
       <Card className="border-[#4D2BFB]/20">
         <CardHeader>
           <CardTitle className="text-[#020CBC] font-neue-haas">
-            Tickets Atribuídos a Mim
+            Tickets de Suporte
           </CardTitle>
+          {userRole === 'suporte' ? (
           <CardDescription>
             Tickets que foram designados para você resolver
           </CardDescription>
+          ) : (
+          <CardDescription>
+            Tickets que foram abertos por você
+          </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <SupportTicketsList />
-
-            {filterTickets(assignedTickets).length === 0 && (
-              <div className="text-center py-8">
-                <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                  Nenhum ticket atribuído
-                </h3>
-                <p className="text-muted-foreground">
-                  Você não possui tickets atribuídos no momento.
-                </p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
